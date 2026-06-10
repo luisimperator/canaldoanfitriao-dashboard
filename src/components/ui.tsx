@@ -54,7 +54,9 @@ export function KpiCard({
       <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
         {label}
       </div>
-      <div className={`text-2xl font-bold mt-1 ${toneClass}`}>{value}</div>
+      <div className={`text-xl sm:text-2xl font-bold tabular-nums mt-1 ${toneClass}`}>
+        {value}
+      </div>
       {hint && <div className="text-xs text-slate-400 mt-1">{hint}</div>}
     </div>
   );

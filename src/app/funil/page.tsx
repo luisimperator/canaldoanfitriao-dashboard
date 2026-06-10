@@ -74,7 +74,7 @@ export default async function FunilPage() {
       />
       <DemoBanner show={data.isDemo} />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Leads no mês" value={num(leadsMonth)} />
         <KpiCard
           label="Mês anterior (total)"
