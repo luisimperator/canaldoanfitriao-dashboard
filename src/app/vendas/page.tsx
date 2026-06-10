@@ -57,7 +57,8 @@ export default async function VendasPage() {
       <DemoBanner show={data.isDemo} />
 
       <Card title="Vendas por vendedor" className="mb-4">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto -mx-5 px-5">
+        <table className="w-full text-sm min-w-[640px] tabular-nums">
           <thead>
             <tr className="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
               <th className="py-2">Vendedor</th>
@@ -85,6 +86,7 @@ export default async function VendasPage() {
             ))}
           </tbody>
         </table>
+        </div>
         <p className="text-xs text-slate-400 mt-3">
           “Leads por venda” = leads quentes encaminhados ao vendedor no mês ÷ vendas fechadas no
           mês. Quanto menor, melhor o aproveitamento.

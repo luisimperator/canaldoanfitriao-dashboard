@@ -21,9 +21,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen flex-col lg:flex-row">
           <Sidebar />
-          <main className="flex-1 px-6 py-8 lg:px-10 max-w-7xl">{children}</main>
+          <main className="w-full min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8 max-w-7xl">
+            {children}
+          </main>
         </div>
       </body>
     </html>

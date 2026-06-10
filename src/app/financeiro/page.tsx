@@ -36,7 +36,7 @@ export default async function FinanceiroPage() {
       />
       <DemoBanner show={data.isDemo} />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Entradas no mês" value={brl(inMonth)} tone="good" />
         <KpiCard label="Saídas no mês" value={brl(outMonth)} tone="bad" />
         <KpiCard
