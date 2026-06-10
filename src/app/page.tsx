@@ -71,7 +71,7 @@ export default async function VisaoGeralPage() {
       />
       <DemoBanner show={data.isDemo} />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Vendas hoje" value={num(salesToday.length)} />
         <KpiCard
           label="Vendas no mês"
@@ -110,7 +110,7 @@ export default async function VisaoGeralPage() {
           <SourcePie data={bySource} />
         </Card>
         <Card title="Funil (últimos 30 dias)" className="lg:col-span-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
             {stages.map((stage, i) => (
               <div key={stage.label} className="rounded-lg bg-slate-50 border border-slate-200 p-4">
                 <div className="text-xs text-slate-500">{stage.label}</div>
