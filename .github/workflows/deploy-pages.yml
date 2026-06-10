@@ -1,0 +1,55 @@
+# Publica a demo estática do dashboard no GitHub Pages.
+# O site roda em modo demo (dados gerados); rotas de API e force-dynamic
+# exigem servidor e são removidas só durante este build — o código real fica intacto.
+name: Deploy demo (GitHub Pages)
+
+on:
+  push:
+    branches:
+      - main
+      - claude/host-channel-dashboard-04tz1i
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - run: npm ci
+
+      - name: Remover partes que exigem servidor
+        run: |
+          rm -rf src/app/api
+          grep -rl 'force-dynamic' src/app --include='*.tsx' | xargs -r sed -i '/force-dynamic/d'
+
+      - name: Build estático
+        run: STATIC_EXPORT=1 npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
