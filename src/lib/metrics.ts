@@ -249,3 +249,205 @@ export function spendByCategory(
     .map(([category, total]) => ({ category, total: Math.round(total) }))
     .sort((a, b) => b.total - a.total);
 }
+
+// ---------- Diagnóstico de gargalo ----------
+// Compara os últimos 30 dias com os 30 anteriores e pontua cada possível
+// freio do crescimento; o maior score é o gargalo a atacar primeiro.
+
+export type BottleneckStatus = "ok" | "atencao" | "critico";
+
+export interface BottleneckSignal {
+  kind: "leads" | "conversao" | "time" | "midia";
+  label: string;
+  /** 0-100: quanto maior, mais esse fator trava o crescimento agora */
+  score: number;
+  status: BottleneckStatus;
+  headline: string;
+  detail: string;
+  action: string;
+}
+
+export interface BottleneckAnalysis {
+  primary: BottleneckSignal | null;
+  signals: BottleneckSignal[];
+  hasData: boolean;
+}
+
+function statusFor(score: number): BottleneckStatus {
+  return score >= 70 ? "critico" : score >= 40 ? "atencao" : "ok";
+}
+
+function fmtPct(ratio: number): string {
+  return `${Math.round(Math.abs(ratio) * 100)}%`;
+}
+
+function fmtBrl(value: number): string {
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  });
+}
+
+export function bottleneckAnalysis(
+  data: DashboardData,
+  today = isoToday()
+): BottleneckAnalysis {
+  const curStart = daysAgo(29, new Date(today));
+  const prevStart = daysAgo(59, new Date(today));
+  const prevEnd = daysAgo(30, new Date(today));
+
+  const leadsCur = inRange(data.leads, (l) => l.createdAt, curStart, today).length;
+  const leadsPrev = inRange(data.leads, (l) => l.createdAt, prevStart, prevEnd).length;
+  const salesCur = inRange(paidSales(data.sales), (s) => s.saleDate, curStart, today).length;
+  const salesPrev = inRange(paidSales(data.sales), (s) => s.saleDate, prevStart, prevEnd).length;
+
+  const leadsTrend = leadsPrev > 0 ? (leadsCur - leadsPrev) / leadsPrev : null;
+  const convCur = leadsCur > 0 ? salesCur / leadsCur : null;
+  const convPrev = leadsPrev > 0 ? salesPrev / leadsPrev : null;
+  const convTrend =
+    convCur !== null && convPrev !== null && convPrev > 0
+      ? (convCur - convPrev) / convPrev
+      : null;
+
+  const adCur = sum(inRange(data.adSpend, (a) => a.date, curStart, today).map((a) => a.amount));
+  const adPrev = sum(
+    inRange(data.adSpend, (a) => a.date, prevStart, prevEnd).map((a) => a.amount)
+  );
+  const cacCur = salesCur > 0 && adCur > 0 ? adCur / salesCur : null;
+  const cacPrev = salesPrev > 0 && adPrev > 0 ? adPrev / salesPrev : null;
+  const cacTrend = cacCur !== null && cacPrev !== null ? (cacCur - cacPrev) / cacPrev : null;
+
+  const capacity = capacityAnalysis(data, today);
+  const signals: BottleneckSignal[] = [];
+
+  // 1. Geração de leads (topo do funil)
+  {
+    const drop = leadsTrend !== null ? Math.max(0, -leadsTrend) : 0;
+    let score = 15;
+    if (drop >= 0.25) score = 85;
+    else if (drop >= 0.1) score = 55;
+    if (capacity.verdict === "falta_lead") score = Math.max(score, 75);
+    const trendTxt =
+      leadsTrend === null
+        ? `${leadsCur} leads nos últimos 30 dias (sem base de comparação anterior)`
+        : leadsTrend < 0
+          ? `${leadsCur} leads nos últimos 30 dias contra ${leadsPrev} nos 30 anteriores (queda de ${fmtPct(leadsTrend)})`
+          : `${leadsCur} leads nos últimos 30 dias contra ${leadsPrev} nos 30 anteriores (alta de ${fmtPct(leadsTrend)})`;
+    const gapTxt =
+      capacity.verdict === "falta_lead" && capacity.leadsGapForNextSeller !== null
+        ? ` Faltam ~${capacity.leadsGapForNextSeller} leads/mês para sustentar mais um vendedor.`
+        : "";
+    signals.push({
+      kind: "leads",
+      label: "Geração de leads",
+      score,
+      status: statusFor(score),
+      headline:
+        score >= 70
+          ? "Está entrando pouco lead"
+          : score >= 40
+            ? "Entrada de leads desacelerando"
+            : "Entrada de leads saudável",
+      detail: trendTxt + "." + gapTxt,
+      action:
+        score >= 40
+          ? "Aumente o investimento em mídia e reforce o orgânico: o topo do funil é o que está travando o resto."
+          : "Mantenha o ritmo de captação atual.",
+    });
+  }
+
+  // 2. Conversão (qualidade da venda)
+  {
+    const drop = convTrend !== null ? Math.max(0, -convTrend) : 0;
+    let score = 15;
+    if (drop >= 0.25) score = 90;
+    else if (drop >= 0.1) score = 60;
+    const convTxt =
+      convCur !== null && convPrev !== null
+        ? `A cada 100 leads, ${(convCur * 100).toFixed(1).replace(".", ",")} viram venda agora, contra ${(convPrev * 100).toFixed(1).replace(".", ",")} no período anterior`
+        : "Ainda não há vendas e leads suficientes para medir a conversão";
+    signals.push({
+      kind: "conversao",
+      label: "Conversão em venda",
+      score,
+      status: statusFor(score),
+      headline:
+        score >= 70
+          ? "Conversão caiu: o problema é vender melhor"
+          : score >= 40
+            ? "Conversão dando sinais de queda"
+            : "Conversão estável",
+      detail:
+        convTxt + (convTrend !== null && convTrend < 0 ? ` (queda de ${fmtPct(convTrend)}).` : "."),
+      action:
+        score >= 40
+          ? "Não adianta encher o funil: revise o roteiro com o time, ouça atendimentos e ataque as objeções mais comuns."
+          : "Aproveitamento dos leads está dentro do esperado.",
+    });
+  }
+
+  // 3. Capacidade do time
+  {
+    let score = 10;
+    if (capacity.verdict === "pode_contratar") score = 80;
+    else if (capacity.verdict === "quase") score = 45;
+    const detail =
+      capacity.supportedSellers !== null
+        ? `O volume atual de leads sustenta ${capacity.supportedSellers} vendedor(es) e o time tem ${capacity.activeSellers}. O vendedor mais produtivo fecha até ${capacity.sellerMonthlyCapacity} vendas/mês.`
+        : "Ainda não há histórico suficiente para estimar a capacidade do time.";
+    signals.push({
+      kind: "time",
+      label: "Capacidade do time",
+      score,
+      status: statusFor(score),
+      headline:
+        score >= 70
+          ? "Tem lead sobrando: falta gente pra atender"
+          : score >= 40
+            ? "Time perto do limite"
+            : "Time dá conta do volume atual",
+      detail,
+      action:
+        score >= 70
+          ? "Contrate (ou ative) mais um vendedor antes de investir mais em mídia — hoje há lead sendo desperdiçado."
+          : score >= 40
+            ? "Prepare a próxima contratação: no ritmo atual o time satura em breve."
+            : "Sem necessidade de contratar agora.",
+    });
+  }
+
+  // 4. Eficiência de mídia (CAC)
+  {
+    const rise = cacTrend !== null ? Math.max(0, cacTrend) : 0;
+    let score = 10;
+    if (rise >= 0.3) score = 70;
+    else if (rise >= 0.15) score = 50;
+    const detail =
+      cacCur !== null && cacPrev !== null
+        ? `Cada venda custou ${fmtBrl(cacCur)} em anúncios nos últimos 30 dias, contra ${fmtBrl(cacPrev)} no período anterior${cacTrend !== null && cacTrend > 0 ? ` (alta de ${fmtPct(cacTrend)})` : ""}.`
+        : "Sem dados suficientes de investimento em anúncios para calcular o custo por venda.";
+    signals.push({
+      kind: "midia",
+      label: "Eficiência de mídia",
+      score,
+      status: statusFor(score),
+      headline:
+        score >= 70
+          ? "Custo por venda disparou"
+          : score >= 40
+            ? "Custo por venda subindo"
+            : "Mídia com custo sob controle",
+      detail,
+      action:
+        score >= 40
+          ? "Revise campanhas e criativos: o mesmo dinheiro está trazendo menos venda que antes."
+          : "Eficiência de mídia dentro do esperado.",
+    });
+  }
+
+  signals.sort((a, b) => b.score - a.score);
+  const hasData = leadsCur + leadsPrev + salesCur + salesPrev > 0;
+  const primary = hasData && signals[0].score >= 40 ? signals[0] : null;
+  return { primary, signals, hasData };
+}
