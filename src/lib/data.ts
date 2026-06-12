@@ -28,6 +28,34 @@ export function getSupabase() {
   );
 }
 
+// O Supabase devolve no máximo 1000 linhas por consulta; com o histórico
+// completo de vendas é preciso paginar até varrer a tabela inteira.
+const PAGE = 1000;
+
+async function selectAll(
+  supabase: ReturnType<typeof getSupabase>,
+  table: string,
+  columns: string,
+  orderBy = "id"
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows: any[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(columns)
+      .order(orderBy, { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) {
+      throw new Error(`Erro ao consultar o Supabase (${table}): ${error.message}`);
+    }
+    rows.push(...(data ?? []));
+    if (!data || data.length < PAGE) break;
+  }
+  return rows;
+}
+
 export async function getDashboardData(): Promise<DashboardData> {
   if (!supabaseConfigured()) {
     return generateDemoData();
@@ -36,30 +64,27 @@ export async function getDashboardData(): Promise<DashboardData> {
   const supabase = getSupabase();
   const [sellers, leads, sales, adSpend, finCategories, finTransactions] =
     await Promise.all([
-      supabase.from("sellers").select("id, name, is_active"),
-      supabase
-        .from("leads")
-        .select("id, created_at, source, status, seller_id, pipeline_stage, name, phone, extra"),
-      supabase.from("sales").select("id, sale_date, amount, seller_id, product, status"),
-      supabase.from("ad_spend").select("date, platform, amount"),
-      supabase.from("fin_categories").select("id, group_name, name"),
-      supabase
-        .from("fin_transactions")
-        .select("id, transaction_date, amount, direction, description, counterparty, category_id"),
+      selectAll(supabase, "sellers", "id, name, is_active"),
+      selectAll(
+        supabase,
+        "leads",
+        "id, created_at, source, status, seller_id, pipeline_stage, name, phone, extra"
+      ),
+      selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status"),
+      selectAll(supabase, "ad_spend", "date, platform, amount", "date"),
+      selectAll(supabase, "fin_categories", "id, group_name, name"),
+      selectAll(
+        supabase,
+        "fin_transactions",
+        "id, transaction_date, amount, direction, description, counterparty, category_id"
+      ),
     ]);
 
-  const firstError =
-    sellers.error ?? leads.error ?? sales.error ?? adSpend.error ??
-    finCategories.error ?? finTransactions.error;
-  if (firstError) {
-    throw new Error(`Erro ao consultar o Supabase: ${firstError.message}`);
-  }
-
   return {
-    sellers: (sellers.data ?? []).map(
+    sellers: sellers.map(
       (r): Seller => ({ id: r.id, name: r.name, isActive: r.is_active })
     ),
-    leads: (leads.data ?? []).map(
+    leads: leads.map(
       (r): Lead => ({
         id: r.id,
         createdAt: String(r.created_at).slice(0, 10),
@@ -72,7 +97,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         extra: r.extra,
       })
     ),
-    sales: (sales.data ?? []).map(
+    sales: sales.map(
       (r): Sale => ({
         id: r.id,
         saleDate: String(r.sale_date).slice(0, 10),
@@ -82,13 +107,13 @@ export async function getDashboardData(): Promise<DashboardData> {
         status: r.status,
       })
     ),
-    adSpend: (adSpend.data ?? []).map(
+    adSpend: adSpend.map(
       (r): AdSpend => ({ date: String(r.date), platform: r.platform, amount: Number(r.amount) })
     ),
-    finCategories: (finCategories.data ?? []).map(
+    finCategories: finCategories.map(
       (r): FinCategory => ({ id: r.id, groupName: r.group_name, name: r.name })
     ),
-    finTransactions: (finTransactions.data ?? []).map(
+    finTransactions: finTransactions.map(
       (r): FinTransaction => ({
         id: r.id,
         transactionDate: String(r.transaction_date),
