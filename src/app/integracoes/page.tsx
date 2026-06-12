@@ -1,5 +1,6 @@
 import { listIntegrations } from "@/lib/integrations";
 import { Card, PageHeader } from "@/components/ui";
+import { SyncButton } from "@/components/SyncButton";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,7 @@ export default function IntegracoesPage() {
                 </code>
               ))}
             </div>
+            {item.configured && item.syncPath && <SyncButton path={item.syncPath} />}
           </Card>
         ))}
       </div>
