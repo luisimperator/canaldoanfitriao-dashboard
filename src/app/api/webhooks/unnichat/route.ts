@@ -50,9 +50,11 @@ export async function POST(req: NextRequest) {
   }
   const status = VALID_STATUS.includes(body.status) ? body.status : "frio";
 
-  // Campos além dos conhecidos (produto, tipo, estagio, numero-imoveis...)
+  // Campos além dos conhecidos (produto, tipo, numero-imoveis...)
   // são preservados em leads.extra.
-  const known = new Set(["contact_id", "name", "email", "phone", "status", "seller", "source"]);
+  const known = new Set([
+    "contact_id", "name", "email", "phone", "status", "seller", "source", "pipeline_stage",
+  ]);
   const extra: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(body)) {
     if (!known.has(k) && v !== null && v !== "") extra[k] = v;
@@ -68,20 +70,23 @@ export async function POST(req: NextRequest) {
     sellerId = seller?.id ?? null;
   }
 
-  const { error } = await supabase.from("leads").upsert(
-    {
-      unnichat_id: contactId,
-      name: body.name ?? null,
-      email: body.email ?? null,
-      phone: body.phone ?? null,
-      status,
-      seller_id: sellerId,
-      source: body.source ?? "outro",
-      extra,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "unnichat_id" }
-  );
+  // Atualização parcial: automações diferentes mandam pedaços diferentes
+  // (criação, mudança de etapa, atribuição a vendedor). Só sobrescreve o
+  // que veio preenchido, para uma automação não apagar dados da outra.
+  const row: Record<string, unknown> = {
+    unnichat_id: contactId,
+    updated_at: new Date().toISOString(),
+  };
+  if (body.name) row.name = body.name;
+  if (body.email) row.email = body.email;
+  if (body.phone) row.phone = body.phone;
+  if (VALID_STATUS.includes(body.status)) row.status = status;
+  if (sellerId) row.seller_id = sellerId;
+  if (body.source) row.source = body.source;
+  if (body.pipeline_stage) row.pipeline_stage = String(body.pipeline_stage);
+  if (Object.keys(extra).length > 0) row.extra = extra;
+
+  const { error } = await supabase.from("leads").upsert(row, { onConflict: "unnichat_id" });
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
