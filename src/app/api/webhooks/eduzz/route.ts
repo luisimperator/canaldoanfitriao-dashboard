@@ -48,8 +48,12 @@ export async function POST(req: NextRequest) {
   const saleDate = String(data.paidAt ?? data.createdAt ?? new Date().toISOString()).slice(0, 10);
   const product = String(data.items?.[0]?.name ?? data.product?.name ?? "Canal do Anfitrião");
 
-  // O vendedor é atribuído depois, cruzando com o lead do Unnichat
-  // (por e-mail/telefone) ou manualmente no Supabase.
+  // UTMs vêm em campos diferentes conforme a versão do payload; guarda o que houver.
+  const utm = data.utm ?? data.tracker ?? data.utmParameters ?? null;
+  await supabase.from("webhook_log").insert({ source: "eduzz", note: event, body });
+
+  // O vendedor é atribuído cruzando com o lead do Unnichat (por e-mail),
+  // ou pelo nome no utm_source (links individuais dos vendedores).
   const buyerEmail: string | null = data.buyer?.email ?? null;
   let sellerId: string | null = null;
   let leadId: string | null = null;
@@ -65,6 +69,21 @@ export async function POST(req: NextRequest) {
       await supabase.from("leads").update({ status: "convertido" }).eq("id", lead.id);
     }
   }
+  if (!sellerId && utm) {
+    const utmSource = String(utm.source ?? utm.utm_source ?? "").toLowerCase();
+    if (utmSource) {
+      const { data: sellers } = await supabase
+        .from("sellers")
+        .select("id, name")
+        .eq("is_active", true);
+      const match = (sellers ?? []).find((s) =>
+        utmSource.includes(
+          s.name.split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        )
+      );
+      sellerId = match?.id ?? null;
+    }
+  }
 
   const { error } = await supabase.from("sales").upsert(
     {
@@ -75,6 +94,7 @@ export async function POST(req: NextRequest) {
       status: "paga",
       seller_id: sellerId,
       lead_id: leadId,
+      utm,
     },
     { onConflict: "eduzz_invoice_id" }
   );
