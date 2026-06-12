@@ -54,13 +54,23 @@ export async function POST(req: NextRequest) {
 
   // Pings de teste sem corpo ou sem contact_id recebem 200
   // para a URL poder ser validada em painéis externos.
+  // Tudo que chega fica registrado em webhook_log para diagnóstico.
   let body;
   try {
     body = await req.json();
   } catch {
+    await supabase.from("webhook_log").insert({
+      source: "unnichat",
+      note: "corpo ausente ou JSON inválido",
+    });
     return NextResponse.json({ ok: true, action: "ping" });
   }
   const contactId = String(body.contact_id ?? "");
+  await supabase.from("webhook_log").insert({
+    source: "unnichat",
+    note: contactId ? "evento" : "sem contact_id (tratado como ping)",
+    body,
+  });
   if (!contactId) {
     return NextResponse.json({ ok: true, action: "ping" });
   }
