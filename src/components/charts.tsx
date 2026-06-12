@@ -61,16 +61,16 @@ export function SalesBySellerChart({
   data,
   sellers,
 }: {
-  data: Record<string, string | number>[]; // { month, [sellerName]: count }
+  data: Record<string, string | number>[]; // { month, [sellerName]: faturamento em R$ }
   sellers: string[];
 }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -24 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-        <Tooltip />
+        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
+        <Tooltip formatter={brlTooltip} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         {sellers.map((name, i) => (
           <Bar key={name} dataKey={name} fill={COLORS[i % COLORS.length]} radius={[3, 3, 0, 0]} />
