@@ -36,10 +36,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }
 
-  const body = await req.json();
+  // Pings de teste sem corpo ou sem contact_id recebem 200
+  // para a URL poder ser validada em painéis externos.
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ ok: true, action: "ping" });
+  }
   const contactId = String(body.contact_id ?? "");
   if (!contactId) {
-    return NextResponse.json({ error: "payload sem contact_id" }, { status: 400 });
+    return NextResponse.json({ ok: true, action: "ping" });
   }
   const status = VALID_STATUS.includes(body.status) ? body.status : "frio";
 
