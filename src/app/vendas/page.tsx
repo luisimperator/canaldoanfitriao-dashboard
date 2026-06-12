@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
 import {
   capacityAnalysis,
@@ -12,10 +13,48 @@ import { SalesBySellerChart } from "@/components/charts";
 
 export const dynamic = "force-dynamic";
 
-export default async function VendasPage() {
+function shiftMonth(mk: string, delta: number): string {
+  const [y, m] = mk.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function lastDayOf(mk: string): string {
+  const [y, m] = mk.split("-").map(Number);
+  return `${mk}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
+}
+
+function monthTitle(mk: string): string {
+  const [y, m] = mk.split("-").map(Number);
+  const label = new Date(y, m - 1, 1).toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+export default async function VendasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mes?: string }>;
+}) {
   const data = await getDashboardData();
   const today = isoToday();
-  const stats = sellerStats(data);
+  const currentMonth = monthKey(today);
+
+  const { mes } = await searchParams;
+  const selectedMonth =
+    mes && /^\d{4}-\d{2}$/.test(mes) && mes <= currentMonth ? mes : currentMonth;
+  const isCurrentMonth = selectedMonth === currentMonth;
+  const refDate = isCurrentMonth ? today : lastDayOf(selectedMonth);
+  const firstMonth = monthKey(
+    paidSales(data.sales).reduce(
+      (min, s) => (s.saleDate < min ? s.saleDate : min),
+      today
+    )
+  );
+
+  const stats = sellerStats(data, refDate);
   const cap = capacityAnalysis(data);
 
   // Série mensal de vendas por vendedor (últimos 6 meses)
@@ -57,12 +96,37 @@ export default async function VendasPage() {
       <DemoBanner show={data.isDemo} />
 
       <Card title="Vendas por vendedor" className="mb-4">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          {selectedMonth > firstMonth ? (
+            <Link
+              href={`/vendas?mes=${shiftMonth(selectedMonth, -1)}`}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+            >
+              ◀ {monthLabel(shiftMonth(selectedMonth, -1))}
+            </Link>
+          ) : (
+            <span className="px-3 py-1.5 text-sm text-slate-300">◀</span>
+          )}
+          <span className="min-w-44 text-center text-sm font-semibold text-slate-900">
+            {monthTitle(selectedMonth)}
+          </span>
+          {!isCurrentMonth ? (
+            <Link
+              href={`/vendas?mes=${shiftMonth(selectedMonth, 1)}`}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+            >
+              {monthLabel(shiftMonth(selectedMonth, 1))} ▶
+            </Link>
+          ) : (
+            <span className="px-3 py-1.5 text-sm text-slate-300">▶</span>
+          )}
+        </div>
         <div className="overflow-x-auto -mx-5 px-5">
         <table className="w-full text-sm min-w-[640px] tabular-nums">
           <thead>
             <tr className="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
               <th className="py-2">Vendedor</th>
-              <th className="py-2 text-right">Hoje</th>
+              {isCurrentMonth && <th className="py-2 text-right">Hoje</th>}
               <th className="py-2 text-right">No mês</th>
               <th className="py-2 text-right">Receita no mês</th>
               <th className="py-2 text-right">Mês anterior</th>
@@ -74,7 +138,7 @@ export default async function VendasPage() {
             {stats.map((s) => (
               <tr key={s.seller.id} className="border-b border-slate-50 last:border-0">
                 <td className="py-2.5 font-medium text-slate-900">{s.seller.name}</td>
-                <td className="py-2.5 text-right">{num(s.salesToday)}</td>
+                {isCurrentMonth && <td className="py-2.5 text-right">{num(s.salesToday)}</td>}
                 <td className="py-2.5 text-right font-semibold">{num(s.salesMonth)}</td>
                 <td className="py-2.5 text-right">{brl(s.revenueMonth)}</td>
                 <td className="py-2.5 text-right text-slate-500">{num(s.salesPrevMonth)}</td>
