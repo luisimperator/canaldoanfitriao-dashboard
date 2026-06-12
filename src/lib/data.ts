@@ -37,7 +37,9 @@ export async function getDashboardData(): Promise<DashboardData> {
   const [sellers, leads, sales, adSpend, finCategories, finTransactions] =
     await Promise.all([
       supabase.from("sellers").select("id, name, is_active"),
-      supabase.from("leads").select("id, created_at, source, status, seller_id, pipeline_stage"),
+      supabase
+        .from("leads")
+        .select("id, created_at, source, status, seller_id, pipeline_stage, name, phone, extra"),
       supabase.from("sales").select("id, sale_date, amount, seller_id, product, status"),
       supabase.from("ad_spend").select("date, platform, amount"),
       supabase.from("fin_categories").select("id, group_name, name"),
@@ -65,6 +67,9 @@ export async function getDashboardData(): Promise<DashboardData> {
         status: r.status,
         sellerId: r.seller_id,
         pipelineStage: r.pipeline_stage,
+        name: r.name,
+        phone: r.phone,
+        extra: r.extra,
       })
     ),
     sales: (sales.data ?? []).map(

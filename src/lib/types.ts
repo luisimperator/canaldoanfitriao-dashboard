@@ -25,6 +25,10 @@ export interface Lead {
   sellerId: string | null;
   /** etapa atual no pipeline do CRM (Unnichat) */
   pipelineStage?: string | null;
+  name?: string | null;
+  phone?: string | null;
+  /** campos adicionais vindos do Unnichat (produto, atendente etc.) */
+  extra?: Record<string, unknown> | null;
 }
 
 export interface Sale {

@@ -19,6 +19,22 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 const VALID_STATUS = ["frio", "lista_espera", "quente", "convertido", "perdido"];
 
+// Deduz o status do funil a partir do nome da etapa do CRM, para a
+// automação de etapa não precisar enviar status explícito.
+function stageToStatus(stage: string): string {
+  const s = stage.toLowerCase();
+  if (s.includes("ganhou") || s.includes("ganho")) return "convertido";
+  if (s.includes("perdeu") || s.includes("perdido")) return "perdido";
+  if (
+    s.includes("quente") || s.includes("negocia") ||
+    s.includes("follow") || s.includes("pagamento")
+  ) {
+    return "quente";
+  }
+  if (s.includes("espera")) return "lista_espera";
+  return "frio";
+}
+
 export async function POST(req: NextRequest) {
   const expectedKey = process.env.UNNICHAT_WEBHOOK_KEY;
   if (!expectedKey) {
@@ -68,6 +84,8 @@ export async function POST(req: NextRequest) {
       .ilike("name", String(body.seller))
       .maybeSingle();
     sellerId = seller?.id ?? null;
+    // Atendente que não é vendedor cadastrado fica registrado mesmo assim
+    if (!sellerId) extra.atendente = String(body.seller);
   }
 
   // Atualização parcial: automações diferentes mandam pedaços diferentes
@@ -81,6 +99,7 @@ export async function POST(req: NextRequest) {
   if (body.email) row.email = body.email;
   if (body.phone) row.phone = body.phone;
   if (VALID_STATUS.includes(body.status)) row.status = status;
+  else if (body.pipeline_stage) row.status = stageToStatus(String(body.pipeline_stage));
   if (sellerId) row.seller_id = sellerId;
   if (body.source) row.source = body.source;
   if (body.pipeline_stage) row.pipeline_stage = String(body.pipeline_stage);
