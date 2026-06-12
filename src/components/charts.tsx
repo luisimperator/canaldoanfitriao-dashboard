@@ -88,6 +88,32 @@ export function SalesBySellerChart({
   );
 }
 
+export function TeamHistoryChart({
+  data,
+}: {
+  data: { month: string; realizado: number; projecao: number }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <XAxis dataKey="month" tick={{ fontSize: 11 }} minTickGap={16} />
+        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
+        <Tooltip formatter={brlTooltip} />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Bar dataKey="realizado" name="Time comercial" stackId="t" fill="#e11d48" />
+        <Bar
+          dataKey="projecao"
+          name="Projeção (ritmo do mês)"
+          stackId="t"
+          fill="#fecdd3"
+          radius={[3, 3, 0, 0]}
+        />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
 export function CashflowChart({
   data,
 }: {
