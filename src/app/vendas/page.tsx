@@ -9,7 +9,7 @@ import {
 } from "@/lib/metrics";
 import { brl, monthLabel, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import { SalesBySellerChart } from "@/components/charts";
+import { SalesBySellerChart, TeamHistoryChart } from "@/components/charts";
 
 export const dynamic = "force-dynamic";
 
@@ -90,10 +90,18 @@ export default async function VendasPage({
       }
     }
   }
-  const teamHistory = teamMonths.map((mk) => ({
-    month: monthLabel(mk),
-    "Time comercial": Math.round(teamByMonth(mk)),
-  }));
+  // Mês corrente ganha a projeção pelo ritmo (run rate): faturado ÷ dias
+  // corridos × dias do mês, exibida como complemento visual da barra.
+  const dayOfMonth = Number(today.slice(8, 10));
+  const daysInMonth = Number(lastDayOf(currentMonth).slice(8, 10));
+  const teamHistory = teamMonths.map((mk) => {
+    const realizado = Math.round(teamByMonth(mk));
+    const projecao =
+      mk === currentMonth && dayOfMonth > 0
+        ? Math.max(0, Math.round((realizado / dayOfMonth) * daysInMonth) - realizado)
+        : 0;
+    return { month: monthLabel(mk), realizado, projecao };
+  });
   const teamTotal = teamMonths.reduce((acc, mk) => acc + teamByMonth(mk), 0);
 
   const capTone =
@@ -182,7 +190,7 @@ export default async function VendasPage({
           title={`Faturamento do time comercial — história completa (${brl(teamTotal)})`}
           className="mb-4"
         >
-          <SalesBySellerChart data={teamHistory} sellers={["Time comercial"]} />
+          <TeamHistoryChart data={teamHistory} />
         </Card>
       )}
 
