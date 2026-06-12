@@ -57,22 +57,22 @@ export default async function VendasPage({
   const stats = sellerStats(data, refDate);
   const cap = capacityAnalysis(data);
 
-  // Série mensal de vendas por vendedor (últimos 6 meses)
+  // Série mensal de faturamento por vendedor (últimos 6 meses)
   const sellerName = new Map(data.sellers.map((s) => [s.id, s.name]));
   const monthsSet = new Set<string>();
-  const counts = new Map<string, number>(); // `${month}|${sellerName}`
+  const revenue = new Map<string, number>(); // `${month}|${sellerName}`
   for (const sale of paidSales(data.sales)) {
     const mk = monthKey(sale.saleDate);
     monthsSet.add(mk);
     const name = sellerName.get(sale.sellerId) ?? "Sem vendedor";
     const key = `${mk}|${name}`;
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+    revenue.set(key, (revenue.get(key) ?? 0) + sale.amount);
   }
   const months = [...monthsSet].sort().slice(-6);
   const activeNames = data.sellers.filter((s) => s.isActive).map((s) => s.name);
   const monthly = months.map((mk) => {
     const row: Record<string, string | number> = { month: monthLabel(mk) };
-    for (const name of activeNames) row[name] = counts.get(`${mk}|${name}`) ?? 0;
+    for (const name of activeNames) row[name] = Math.round(revenue.get(`${mk}|${name}`) ?? 0);
     return row;
   });
 
@@ -158,7 +158,7 @@ export default async function VendasPage({
       </Card>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <Card title="Vendas por vendedor por mês">
+        <Card title="Faturamento por vendedor por mês">
           <SalesBySellerChart data={monthly} sellers={activeNames} />
         </Card>
 
