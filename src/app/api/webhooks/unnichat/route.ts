@@ -50,6 +50,14 @@ export async function POST(req: NextRequest) {
   }
   const status = VALID_STATUS.includes(body.status) ? body.status : "frio";
 
+  // Campos além dos conhecidos (produto, tipo, estagio, numero-imoveis...)
+  // são preservados em leads.extra.
+  const known = new Set(["contact_id", "name", "email", "phone", "status", "seller", "source"]);
+  const extra: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(body)) {
+    if (!known.has(k) && v !== null && v !== "") extra[k] = v;
+  }
+
   let sellerId: string | null = null;
   if (body.seller) {
     const { data: seller } = await supabase
@@ -69,6 +77,7 @@ export async function POST(req: NextRequest) {
       status,
       seller_id: sellerId,
       source: body.source ?? "outro",
+      extra,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "unnichat_id" }
