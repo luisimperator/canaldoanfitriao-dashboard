@@ -7,6 +7,7 @@ const links = [
   { href: "/", label: "Visão geral", icon: "◉" },
   { href: "/gargalo", label: "Gargalo", icon: "⚑" },
   { href: "/funil", label: "Funil de vendas", icon: "▼" },
+  { href: "/crm", label: "CRM", icon: "▦" },
   { href: "/vendas", label: "Vendas & time", icon: "▲" },
   { href: "/financeiro", label: "Financeiro", icon: "$" },
   { href: "/integracoes", label: "Integrações", icon: "⚙" },
