@@ -23,6 +23,8 @@ export interface Lead {
   source: LeadSource;
   status: LeadStatus;
   sellerId: string | null;
+  /** etapa atual no pipeline do CRM (Unnichat) */
+  pipelineStage?: string | null;
 }
 
 export interface Sale {

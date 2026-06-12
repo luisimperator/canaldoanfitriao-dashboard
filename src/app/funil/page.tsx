@@ -66,6 +66,16 @@ export default async function FunilPage() {
   const variation =
     leadsPrevMonth > 0 ? ((leadsMonth - leadsPrevMonth) / leadsPrevMonth) * 100 : null;
 
+  // Posição ATUAL de todos os contatos nas etapas do CRM (Unnichat)
+  const byPipelineStage = Object.entries(
+    data.leads.reduce<Record<string, number>>((acc, l) => {
+      if (!l.pipelineStage) return acc;
+      acc[l.pipelineStage] = (acc[l.pipelineStage] ?? 0) + 1;
+      return acc;
+    }, {})
+  ).sort(([, a], [, b]) => b - a);
+  const pipelineTotal = byPipelineStage.reduce((acc, [, n]) => acc + n, 0);
+
   return (
     <div>
       <PageHeader
@@ -144,6 +154,27 @@ export default async function FunilPage() {
         <Card title="Origem dos leads (30 dias)">
           <SourcePie data={bySource} />
         </Card>
+
+        {byPipelineStage.length > 0 && (
+          <Card title="Etapas do CRM (Unnichat) — posição atual" className="lg:col-span-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
+              {byPipelineStage.map(([stage, count]) => (
+                <div
+                  key={stage}
+                  className="rounded-lg bg-slate-50 border border-slate-200 p-4"
+                >
+                  <div className="text-xs text-slate-500">{stage}</div>
+                  <div className="text-xl font-bold tabular-nums text-slate-900 mt-1">
+                    {num(count)}
+                  </div>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    {num((count / pipelineTotal) * 100, 1)}% dos contatos
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );
