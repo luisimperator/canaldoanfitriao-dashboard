@@ -76,6 +76,26 @@ export default async function VendasPage({
     return row;
   });
 
+  // História completa do time comercial (todos os vendedores, atuais e antigos):
+  // total vendido pelo time em cada mês, do primeiro mês com venda atribuída até hoje.
+  const allSellerNames = data.sellers.map((s) => s.name);
+  const teamByMonth = (mk: string) =>
+    allSellerNames.reduce((a, n) => a + (revenue.get(`${mk}|${n}`) ?? 0), 0);
+  const teamMonths: string[] = [];
+  {
+    const withSeller = [...monthsSet].sort().filter((mk) => teamByMonth(mk) > 0);
+    if (withSeller.length > 0) {
+      for (let mk = withSeller[0]; mk <= currentMonth; mk = shiftMonth(mk, 1)) {
+        teamMonths.push(mk);
+      }
+    }
+  }
+  const teamHistory = teamMonths.map((mk) => ({
+    month: monthLabel(mk),
+    "Time comercial": Math.round(teamByMonth(mk)),
+  }));
+  const teamTotal = teamMonths.reduce((acc, mk) => acc + teamByMonth(mk), 0);
+
   const capTone =
     cap.verdict === "pode_contratar" ? "good" : cap.verdict === "quase" ? "warn" : "bad";
   const capHeadline =
@@ -156,6 +176,15 @@ export default async function VendasPage({
           mês. Quanto menor, melhor o aproveitamento.
         </p>
       </Card>
+
+      {teamHistory.length > 0 && (
+        <Card
+          title={`Faturamento do time comercial — história completa (${brl(teamTotal)})`}
+          className="mb-4"
+        >
+          <SalesBySellerChart data={teamHistory} sellers={["Time comercial"]} />
+        </Card>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card title="Faturamento por vendedor por mês">
