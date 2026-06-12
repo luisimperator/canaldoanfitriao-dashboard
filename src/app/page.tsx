@@ -31,6 +31,7 @@ export default async function VisaoGeralPage() {
 
   const sales = paidSales(data.sales);
   const salesToday = sales.filter((s) => s.saleDate === today);
+  const revenueToday = sum(salesToday.map((s) => s.amount));
   const salesMonth = sales.filter((s) => monthKey(s.saleDate) === month);
   const revenueMonth = sum(salesMonth.map((s) => s.amount));
 
@@ -72,11 +73,17 @@ export default async function VisaoGeralPage() {
       <DemoBanner show={data.isDemo} />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
-        <KpiCard label="Vendas hoje" value={num(salesToday.length)} />
         <KpiCard
-          label="Vendas no mês"
-          value={num(salesMonth.length)}
-          hint={`${brl(revenueMonth)} em receita`}
+          label="Faturamento hoje"
+          value={brl(revenueToday)}
+          tone="good"
+          hint={`${num(salesToday.length)} venda${salesToday.length === 1 ? "" : "s"}`}
+        />
+        <KpiCard
+          label="Faturamento no mês"
+          value={brl(revenueMonth)}
+          tone="good"
+          hint={`${num(salesMonth.length)} vendas`}
         />
         <KpiCard label="Leads hoje" value={num(leadsToday)} />
         <KpiCard label="Leads no mês" value={num(leadsMonth)} />
