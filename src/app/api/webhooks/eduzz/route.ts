@@ -24,13 +24,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }
 
-  const body = await req.json();
-  // Formato MyEduzz (webhook 2.0): { event: "myeduzz.invoice_paid", data: {...} }
+  // Pings de verificação da Eduzz chegam sem corpo ou sem fatura:
+  // responde 200 para a URL poder ser ativada no painel.
+  let body;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ ok: true, action: "ping" });
+  }
   const event: string = body.event ?? "";
   const data = body.data ?? {};
   const invoiceId = String(data.id ?? data.invoice_id ?? "");
   if (!invoiceId) {
-    return NextResponse.json({ error: "payload sem id de fatura" }, { status: 400 });
+    return NextResponse.json({ ok: true, action: "ping" });
   }
 
   if (event.includes("refund")) {
