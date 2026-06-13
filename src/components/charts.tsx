@@ -88,6 +88,36 @@ export function SalesBySellerChart({
   );
 }
 
+// Tooltip do gráfico do time: em meses fechados mostra só o realizado;
+// no mês corrente mostra o realizado e o total projetado pelo ritmo.
+function TeamTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { dataKey?: string | number; value?: number | string }[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  const realizado = Number(payload.find((p) => p.dataKey === "realizado")?.value ?? 0);
+  const gap = Number(payload.find((p) => p.dataKey === "projecao")?.value ?? 0);
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm">
+      <div className="font-semibold text-slate-900 mb-1">{label}</div>
+      <div className="text-slate-600">
+        Realizado: <span className="font-medium text-slate-900">{brlTooltip(realizado)}</span>
+      </div>
+      {gap > 0 && (
+        <div className="mt-0.5 text-rose-400">
+          Projetado p/ fim do mês:{" "}
+          <span className="font-medium">{brlTooltip(realizado + gap)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TeamHistoryChart({
   data,
 }: {
@@ -99,12 +129,12 @@ export function TeamHistoryChart({
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="month" tick={{ fontSize: 11 }} minTickGap={16} />
         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
-        <Tooltip formatter={brlTooltip} />
+        <Tooltip content={<TeamTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="realizado" name="Time comercial" stackId="t" fill="#e11d48" />
+        <Bar dataKey="realizado" name="Faturamento" stackId="t" fill="#e11d48" />
         <Bar
           dataKey="projecao"
-          name="Projeção (ritmo do mês)"
+          name="Projeção fim do mês (mês atual)"
           stackId="t"
           fill="#fecdd3"
           radius={[3, 3, 0, 0]}
