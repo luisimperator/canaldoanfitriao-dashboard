@@ -81,10 +81,21 @@ export function generateDemoData(today = new Date()): DashboardData {
       const f = rand();
       let status: LeadStatus;
       let sellerId: string | null = null;
+      let tags: string[] | null = null;
       if (f < 0.32) {
         status = "frio";
       } else if (f < 0.52) {
         status = "lista_espera";
+        // Lista de espera vem do Mailchimp já dividida por tag (motivo do
+        // atendimento ativo). Distribui entre os três baldes do time de vendas.
+        const t = rand();
+        tags = [
+          t < 0.5
+            ? "lista-de-espera"
+            : t < 0.8
+              ? "gigantes-super-interessados"
+              : "precisa de ajuda",
+        ];
       } else {
         sellerId = rand() < 0.5 ? "v1" : "v2";
         const c = rand();
@@ -95,7 +106,14 @@ export function generateDemoData(today = new Date()): DashboardData {
         else status = "perdido";
       }
 
-      leads.push({ id: `lead-${++leadSeq}`, createdAt: dayIso, source, status, sellerId });
+      leads.push({
+        id: `lead-${++leadSeq}`,
+        createdAt: dayIso,
+        source,
+        status,
+        sellerId,
+        extra: tags ? { tags } : null,
+      });
 
       if (status === "convertido" && sellerId) {
         // Venda fecha de 0 a 5 dias depois da captação

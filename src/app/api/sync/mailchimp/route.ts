@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { isSalesTeamTag } from "@/lib/leads";
 
 // Importa inscritos da lista do Mailchimp como leads, lendo as TAGS de cada
 // contato. Contatos com tag de time de vendas (lista-de-espera /
@@ -7,14 +8,8 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // os demais ficam "frio" (base / newsletter).
 // Requer MAILCHIMP_API_KEY (formato xxxx-usNN) e MAILCHIMP_LIST_ID.
 // Reconciliado por mailchimp_id; re-rodar atualiza tags/status sem duplicar
-// e sem mexer em pipeline_stage/seller_id (que vêm do Unnichat).
-
-// Tags que jogam o lead para o workflow do time de vendas.
-function isSalesTeamTag(tag: string): boolean {
-  return /lista.?de.?espera|gigantes.*interess|super.?interess|precisa.*ajuda/.test(
-    tag.toLowerCase()
-  );
-}
+// e sem mexer em pipeline_stage/seller_id/source (que vêm do Unnichat).
+// A classificação de tags do time de vendas mora em @/lib/leads.
 
 export async function POST() {
   const apiKey = process.env.MAILCHIMP_API_KEY;
@@ -68,7 +63,9 @@ export async function POST() {
         email: m.email_address,
         name: m.full_name || null,
         created_at: (m.timestamp_opt || new Date().toISOString()).slice(0, 10),
-        source: "meta_ads",
+        // source fica de fora: novos contatos herdam o default 'outro' e quem
+        // já existe preserva a origem real (vinda do Unnichat). Antes o
+        // Mailchimp carimbava 'meta_ads' em toda a base e poluía a origem.
         status: salesTeam ? "lista_espera" : "frio",
         extra: { tags: tagNames },
         updated_at: new Date().toISOString(),
