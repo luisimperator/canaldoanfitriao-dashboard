@@ -70,9 +70,18 @@ export default async function VendasPage({
   }
   const months = [...monthsSet].sort().slice(-6);
   const activeNames = data.sellers.filter((s) => s.isActive).map((s) => s.name);
+  const dayOfMonthNow = Number(today.slice(8, 10));
+  const daysInCurrentMonth = Number(lastDayOf(currentMonth).slice(8, 10));
   const monthly = months.map((mk) => {
     const row: Record<string, string | number> = { month: monthLabel(mk) };
-    for (const name of activeNames) row[name] = Math.round(revenue.get(`${mk}|${name}`) ?? 0);
+    for (const name of activeNames) {
+      const real = Math.round(revenue.get(`${mk}|${name}`) ?? 0);
+      row[name] = real;
+      row[`${name}__proj`] =
+        mk === currentMonth && dayOfMonthNow > 0
+          ? Math.max(0, Math.round((real / dayOfMonthNow) * daysInCurrentMonth) - real)
+          : 0;
+    }
     return row;
   });
 
@@ -196,7 +205,7 @@ export default async function VendasPage({
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card title="Faturamento por vendedor por mês">
-          <SalesBySellerChart data={monthly} sellers={activeNames} />
+          <SalesBySellerChart data={monthly} sellers={activeNames} projected />
         </Card>
 
         <Card title="Dá para contratar mais um vendedor?">
