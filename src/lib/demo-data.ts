@@ -93,8 +93,8 @@ export function generateDemoData(today = new Date()): DashboardData {
           t < 0.5
             ? "lista-de-espera"
             : t < 0.8
-              ? "gigantes-super-interessados"
-              : "precisa de ajuda",
+              ? "gigantes-superinteresasdos"
+              : "gigantes-espera",
         ];
       } else {
         sellerId = rand() < 0.5 ? "v1" : "v2";
