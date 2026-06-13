@@ -150,12 +150,18 @@ export function capacityAnalysis(data: DashboardData, today = isoToday()): Capac
   const sales30d = sales30dArr.length;
   const leadsPerSale = sales30d > 0 ? leads30d / sales30d : null;
 
-  // Capacidade: melhor mês de um vendedor nos últimos 3 meses completos
+  // Capacidade: melhor mês de um vendedor ATIVO nos últimos 3 meses completos.
+  // Vendas sem vendedor (anúncio/lançamento) não contam — senão esse balde
+  // gigante vira um "super-vendedor" e distorce toda a análise.
   const currentMonth = monthKey(today);
+  const activeSellerIds = new Set(
+    data.sellers.filter((s) => s.isActive).map((s) => s.id)
+  );
   const perSellerMonth = new Map<string, number>();
   for (const s of paidSales(data.sales)) {
     const mk = monthKey(s.saleDate);
     if (mk === currentMonth) continue; // mês corrente está incompleto
+    if (!s.sellerId || !activeSellerIds.has(s.sellerId)) continue;
     const key = `${s.sellerId}|${mk}`;
     perSellerMonth.set(key, (perSellerMonth.get(key) ?? 0) + 1);
   }
@@ -321,23 +327,20 @@ export function bottleneckAnalysis(
   const capacity = capacityAnalysis(data, today);
   const signals: BottleneckSignal[] = [];
 
-  // 1. Geração de leads (topo do funil)
+  // 1. Geração de leads (topo do funil) — só olha a TENDÊNCIA de entrada de
+  // leads. A questão de capacidade do time fica no sinal "time", para não
+  // gerar mensagem contraditória (ex.: "pouco lead" com leads em alta).
   {
     const drop = leadsTrend !== null ? Math.max(0, -leadsTrend) : 0;
     let score = 15;
     if (drop >= 0.25) score = 85;
     else if (drop >= 0.1) score = 55;
-    if (capacity.verdict === "falta_lead") score = Math.max(score, 75);
     const trendTxt =
       leadsTrend === null
         ? `${leadsCur} leads nos últimos 30 dias (sem base de comparação anterior)`
         : leadsTrend < 0
           ? `${leadsCur} leads nos últimos 30 dias contra ${leadsPrev} nos 30 anteriores (queda de ${fmtPct(leadsTrend)})`
           : `${leadsCur} leads nos últimos 30 dias contra ${leadsPrev} nos 30 anteriores (alta de ${fmtPct(leadsTrend)})`;
-    const gapTxt =
-      capacity.verdict === "falta_lead" && capacity.leadsGapForNextSeller !== null
-        ? ` Faltam ~${capacity.leadsGapForNextSeller} leads/mês para sustentar mais um vendedor.`
-        : "";
     signals.push({
       kind: "leads",
       label: "Geração de leads",
@@ -345,11 +348,11 @@ export function bottleneckAnalysis(
       status: statusFor(score),
       headline:
         score >= 70
-          ? "Está entrando pouco lead"
+          ? "Está entrando menos lead que antes"
           : score >= 40
             ? "Entrada de leads desacelerando"
             : "Entrada de leads saudável",
-      detail: trendTxt + "." + gapTxt,
+      detail: trendTxt + ".",
       action:
         score >= 40
           ? "Aumente o investimento em mídia e reforce o orgânico: o topo do funil é o que está travando o resto."
