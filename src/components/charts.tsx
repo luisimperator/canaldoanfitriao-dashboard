@@ -2,6 +2,7 @@
 
 // Gráficos do dashboard (recharts roda no cliente).
 
+import { Fragment } from "react";
 import {
   Bar,
   BarChart,
@@ -57,14 +58,52 @@ export function LeadsTrendChart({
   );
 }
 
+// Tooltip do faturamento por vendedor: realizado e, no mês corrente,
+// o total projetado pelo ritmo (realizado + projeção).
+function SellerTooltip({
+  active,
+  payload,
+  label,
+  sellers,
+}: {
+  active?: boolean;
+  payload?: { dataKey?: string | number; value?: number | string }[];
+  label?: string;
+  sellers?: string[];
+}) {
+  if (!active || !payload?.length || !sellers) return null;
+  const rows = sellers
+    .map((name, i) => {
+      const real = Number(payload.find((p) => p.dataKey === name)?.value ?? 0);
+      const gap = Number(payload.find((p) => p.dataKey === `${name}__proj`)?.value ?? 0);
+      return { name, real, gap, color: COLORS[i % COLORS.length] };
+    })
+    .filter((r) => r.real > 0 || r.gap > 0);
+  if (rows.length === 0) return null;
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm">
+      <div className="font-semibold text-slate-900 mb-1">{label}</div>
+      {rows.map((r) => (
+        <div key={r.name} className="text-slate-600">
+          <span style={{ color: r.color }}>●</span> {r.name}:{" "}
+          <span className="font-medium text-slate-900">{brlTooltip(r.real)}</span>
+          {r.gap > 0 && (
+            <span className="text-slate-400"> → proj. {brlTooltip(r.real + r.gap)}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SalesBySellerChart({
   data,
   sellers,
-  stacked = false,
+  projected = false,
 }: {
-  data: Record<string, string | number>[]; // { month, [sellerName]: faturamento em R$ }
+  data: Record<string, string | number>[]; // { month, [seller]: R$, [seller]__proj: R$ }
   sellers: string[];
-  stacked?: boolean;
+  projected?: boolean;
 }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
@@ -72,16 +111,30 @@ export function SalesBySellerChart({
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="month" tick={{ fontSize: 11 }} minTickGap={16} />
         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
-        <Tooltip formatter={brlTooltip} />
+        <Tooltip
+          content={<SellerTooltip sellers={sellers} />}
+          cursor={{ fill: "rgba(0,0,0,0.04)" }}
+        />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         {sellers.map((name, i) => (
-          <Bar
-            key={name}
-            dataKey={name}
-            stackId={stacked ? "time" : undefined}
-            fill={COLORS[i % COLORS.length]}
-            radius={stacked && i < sellers.length - 1 ? [0, 0, 0, 0] : [3, 3, 0, 0]}
-          />
+          <Fragment key={name}>
+            <Bar
+              dataKey={name}
+              stackId={name}
+              fill={COLORS[i % COLORS.length]}
+              radius={[3, 3, 0, 0]}
+            />
+            {projected && (
+              <Bar
+                dataKey={`${name}__proj`}
+                stackId={name}
+                fill={COLORS[i % COLORS.length]}
+                fillOpacity={0.3}
+                radius={[3, 3, 0, 0]}
+                legendType="none"
+              />
+            )}
+          </Fragment>
         ))}
       </BarChart>
     </ResponsiveContainer>
