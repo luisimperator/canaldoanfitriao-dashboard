@@ -18,8 +18,11 @@ const BUCKETS: { bucket: SalesTeamBucket; test: RegExp }[] = [
     test: /lista.?de.?espera/,
   },
   {
-    bucket: { key: "gigantes", label: "Gigantes / super interessados" },
-    test: /gigantes.*interess|super.?interess/,
+    bucket: { key: "gigantes", label: "Gigantes da Temporada" },
+    // Tag do Mailchimp que marca a lista de espera do high-ticket "Gigantes da
+    // Temporada" — basta conter "gigantes" (ex.: "Gigantes da Temporada",
+    // "gigantes-super-interessados").
+    test: /gigantes|super.?interess/,
   },
   {
     bucket: { key: "precisa_ajuda", label: "Precisa de ajuda" },
