@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-// Importa inscritos da lista do Mailchimp como leads (status inicial: frio).
+// Importa inscritos da lista do Mailchimp como leads, lendo as TAGS de cada
+// contato. Contatos com tag de time de vendas (lista-de-espera /
+// gigantes-super-interessados / precisa de ajuda) entram como "lista_espera";
+// os demais ficam "frio" (base / newsletter).
 // Requer MAILCHIMP_API_KEY (formato xxxx-usNN) e MAILCHIMP_LIST_ID.
-// Os leads são reconciliados por mailchimp_id, então rodar de novo não duplica.
+// Reconciliado por mailchimp_id; re-rodar atualiza tags/status sem duplicar
+// e sem mexer em pipeline_stage/seller_id (que vêm do Unnichat).
+
+// Tags que jogam o lead para o workflow do time de vendas.
+function isSalesTeamTag(tag: string): boolean {
+  return /lista.?de.?espera|gigantes.*interess|super.?interess|precisa.*ajuda/.test(
+    tag.toLowerCase()
+  );
+}
 
 export async function POST() {
   const apiKey = process.env.MAILCHIMP_API_KEY;
@@ -21,13 +32,15 @@ export async function POST() {
 
   const dc = apiKey.split("-").pop(); // datacenter vem no fim da key
   let imported = 0;
+  let listaEspera = 0;
   let offset = 0;
   const pageSize = 500;
 
   for (;;) {
     const url =
       `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members` +
-      `?count=${pageSize}&offset=${offset}&fields=members.id,members.email_address,members.full_name,members.timestamp_opt,total_items`;
+      `?count=${pageSize}&offset=${offset}` +
+      `&fields=members.id,members.email_address,members.full_name,members.timestamp_opt,members.tags,total_items`;
     const res = await fetch(url, {
       headers: { Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString("base64")}` },
       cache: "no-store",
@@ -42,28 +55,38 @@ export async function POST() {
       email_address: string;
       full_name: string;
       timestamp_opt: string;
+      tags?: { id: number; name: string }[];
     }[] = json.members ?? [];
     if (members.length === 0) break;
 
-    const rows = members.map((m) => ({
-      mailchimp_id: m.id,
-      email: m.email_address,
-      name: m.full_name || null,
-      created_at: (m.timestamp_opt || new Date().toISOString()).slice(0, 10),
-      source: "meta_ads", // origem predominante; ajuste com merge fields/UTM se quiser detalhar
-      status: "frio",
-    }));
-    const { error, count } = await supabase
+    const rows = members.map((m) => {
+      const tagNames = (m.tags ?? []).map((t) => t.name);
+      const salesTeam = tagNames.some(isSalesTeamTag);
+      if (salesTeam) listaEspera += 1;
+      return {
+        mailchimp_id: m.id,
+        email: m.email_address,
+        name: m.full_name || null,
+        created_at: (m.timestamp_opt || new Date().toISOString()).slice(0, 10),
+        source: "meta_ads",
+        status: salesTeam ? "lista_espera" : "frio",
+        extra: { tags: tagNames },
+        updated_at: new Date().toISOString(),
+      };
+    });
+    // ignoreDuplicates: false -> atualiza tags/status de quem já existe.
+    // pipeline_stage/seller_id/unnichat_id não entram aqui, então são preservados.
+    const { error } = await supabase
       .from("leads")
-      .upsert(rows, { onConflict: "mailchimp_id", ignoreDuplicates: true, count: "exact" });
+      .upsert(rows, { onConflict: "mailchimp_id" });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    imported += count ?? rows.length;
+    imported += rows.length;
 
     offset += pageSize;
     if (offset >= (json.total_items ?? 0)) break;
   }
 
-  return NextResponse.json({ ok: true, imported });
+  return NextResponse.json({ ok: true, imported, listaEspera });
 }
