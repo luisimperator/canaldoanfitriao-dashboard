@@ -31,6 +31,14 @@ export interface Lead {
   extra?: Record<string, unknown> | null;
 }
 
+export interface SaleUtm {
+  source?: string | null;
+  medium?: string | null;
+  campaign?: string | null;
+  content?: string | null;
+  term?: string | null;
+}
+
 export interface Sale {
   id: string;
   saleDate: string; // ISO date
@@ -38,6 +46,7 @@ export interface Sale {
   sellerId: string;
   product: string;
   status: "paga" | "reembolsada";
+  utm?: SaleUtm | null;
 }
 
 export interface AdSpend {
