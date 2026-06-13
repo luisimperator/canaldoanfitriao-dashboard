@@ -70,7 +70,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         "leads",
         "id, created_at, source, status, seller_id, pipeline_stage, name, phone, extra"
       ),
-      selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status"),
+      selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status, utm"),
       selectAll(supabase, "ad_spend", "date, platform, amount", "date"),
       selectAll(supabase, "fin_categories", "id, group_name, name"),
       selectAll(
@@ -105,6 +105,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         sellerId: r.seller_id,
         product: r.product,
         status: r.status,
+        utm: r.utm,
       })
     ),
     adSpend: adSpend.map(
