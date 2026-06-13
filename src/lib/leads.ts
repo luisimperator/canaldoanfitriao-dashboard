@@ -12,31 +12,26 @@ export interface SalesTeamBucket {
 }
 
 // Cada balde tem um rótulo amigável e os padrões de tag que caem nele.
+// Baseado nas tags REAIS da audiência "Anfitrião 5 Estrelas" no Mailchimp.
+// Lista de espera do time de vendas = Grupo 1 (qualquer tag de espera) +
+// Grupo 2 (gigantes super interessados, escrito com typo no Mailchimp).
+// Imersão Gigantes e coortes antigas ficam de fora (decisão do negócio).
 const BUCKETS: { bucket: SalesTeamBucket; test: RegExp }[] = [
   {
-    bucket: { key: "lista_de_espera", label: "Lista de espera" },
-    test: /lista.?de.?espera/,
+    bucket: { key: "espera", label: "Lista de espera" },
+    // Pega lista-de-espera, gigantes-espera, sad-espera-09-24, sad-07-23-espera,
+    // a5e-lista-de-espera, espera-lancamentos, sad-espera, lista-espera.
+    test: /espera/,
   },
   {
-    bucket: { key: "super_interessados", label: "Super interessados (Gigantes)" },
-    // Tag do Mailchimp "gigantes-super-interessados": LEADS muito interessados
-    // no high-ticket (a fila quente do time de vendas). NÃO confundir com o
-    // aluno que já comprou o "Gigantes da Temporada" — por isso o match exige
-    // "interess" e nunca pega só "gigantes" sozinho.
-    test: /super.?interess|gigantes.*interess/,
-  },
-  {
-    bucket: { key: "imersao_gigante", label: "Imersão Gigante" },
-    // Tag "imersao-gigante": também é LEAD (lista de espera), não aluno que já
-    // comprou a imersão. Match específico ("imersão" + "gigante") para não
-    // pegar tags/segmentos de aluno de imersão.
-    test: /imers[aã]o.?gigante/,
-  },
-  {
-    bucket: { key: "precisa_ajuda", label: "Precisa de ajuda" },
-    test: /precisa.*ajuda/,
+    bucket: { key: "super_interessados", label: "Gigantes super interessados" },
+    // Tag "gigantes-superinteresasdos" (escrita com erro de digitação no
+    // Mailchimp — "interesasdos") e variantes "super interessados". Exige
+    // "super" + "interes" para nunca pegar aluno ("aluno-gigantes").
+    test: /super.?interes/,
   },
 ];
+
 
 // Classifica UMA tag num balde do time de vendas, ou null se for tag comum
 // (base / newsletter / segmentações sem relação com o atendimento ativo).
