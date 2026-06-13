@@ -26,6 +26,13 @@ const BUCKETS: { bucket: SalesTeamBucket; test: RegExp }[] = [
     test: /super.?interess|gigantes.*interess/,
   },
   {
+    bucket: { key: "imersao_gigante", label: "Imersão Gigante" },
+    // Tag "imersao-gigante": também é LEAD (lista de espera), não aluno que já
+    // comprou a imersão. Match específico ("imersão" + "gigante") para não
+    // pegar tags/segmentos de aluno de imersão.
+    test: /imers[aã]o.?gigante/,
+  },
+  {
     bucket: { key: "precisa_ajuda", label: "Precisa de ajuda" },
     test: /precisa.*ajuda/,
   },
