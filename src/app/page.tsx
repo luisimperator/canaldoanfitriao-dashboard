@@ -34,6 +34,11 @@ export default async function VisaoGeralPage() {
   const revenueToday = sum(salesToday.map((s) => s.amount));
   const salesMonth = sales.filter((s) => monthKey(s.saleDate) === month);
   const revenueMonth = sum(salesMonth.map((s) => s.amount));
+  // Projeção do mês pelo ritmo atual (run rate): faturado ÷ dias corridos × dias do mês.
+  const dayOfMonth = Number(today.slice(8, 10));
+  const daysInMonth = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).getDate();
+  const projectedMonth =
+    dayOfMonth > 0 ? Math.round((revenueMonth / dayOfMonth) * daysInMonth) : revenueMonth;
 
   const leadsToday = data.leads.filter((l) => l.createdAt === today).length;
   const leadsMonth = data.leads.filter((l) => monthKey(l.createdAt) === month).length;
@@ -83,7 +88,7 @@ export default async function VisaoGeralPage() {
           label="Faturamento no mês"
           value={brl(revenueMonth)}
           tone="good"
-          hint={`${num(salesMonth.length)} vendas`}
+          hint={`${num(salesMonth.length)} vendas · projeção ${brl(projectedMonth)}`}
         />
         <KpiCard label="Leads hoje" value={num(leadsToday)} />
         <KpiCard label="Leads no mês" value={num(leadsMonth)} />
