@@ -35,6 +35,15 @@ export function listIntegrations(): IntegrationInfo[] {
         "Cadastre o webhook https://SEU_DOMINIO/api/webhooks/eduzz no painel da Eduzz (evento de fatura paga). Cada venda paga vira uma linha em `sales`.",
     },
     {
+      id: "tmb",
+      name: "TMB (pagamentos pix / boleto parcelado)",
+      role: "Pagamentos previstos e inadimplentes",
+      envVars: ["TMB_WEBHOOK_KEY"],
+      configured: has("TMB_WEBHOOK_KEY"),
+      howItWorks:
+        "Cadastre o webhook https://SEU_DOMINIO/api/webhooks/tmb?key=TMB_WEBHOOK_KEY no painel da TMB. Por enquanto o endpoint registra todo evento recebido (webhook_log) para mapearmos o formato real; depois construímos a visão de pagamentos previstos e inadimplência.",
+    },
+    {
       id: "meta_ads",
       name: "Meta Ads (tráfego)",
       role: "Importa o investimento diário em anúncios",
