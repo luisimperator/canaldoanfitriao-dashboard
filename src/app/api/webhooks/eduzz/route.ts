@@ -44,7 +44,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, action: "refunded" });
   }
 
-  const amount = Number(data.price?.value ?? data.paid?.value ?? data.value ?? 0);
+  // Valor pago COM juros de parcelamento (mesma base do histórico importado
+  // dos CSVs — coluna "Valor Total da Venda"). Cai para o preço do produto
+  // só se o valor pago não vier no payload.
+  const amount = Number(
+    data.paid?.value ?? data.price?.paid?.value ?? data.price?.value ?? data.value ?? 0
+  );
   const saleDate = String(data.paidAt ?? data.createdAt ?? new Date().toISOString()).slice(0, 10);
   const product = String(data.items?.[0]?.name ?? data.product?.name ?? "Canal do Anfitrião");
 
