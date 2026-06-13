@@ -1,6 +1,7 @@
 import { listIntegrations } from "@/lib/integrations";
 import { Card, PageHeader } from "@/components/ui";
 import { SyncButton } from "@/components/SyncButton";
+import { MailchimpTagsButton } from "@/components/MailchimpTagsButton";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export default function IntegracoesPage() {
               ))}
             </div>
             {item.configured && item.syncPath && <SyncButton path={item.syncPath} />}
+            {item.configured && item.id === "mailchimp" && <MailchimpTagsButton />}
           </Card>
         ))}
       </div>
