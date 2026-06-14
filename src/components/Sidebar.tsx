@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 const links = [
   { href: "/", label: "Visão geral", icon: "◉" },
@@ -14,8 +15,38 @@ const links = [
   { href: "/integracoes", label: "Integrações", icon: "⚙" },
 ];
 
-export function Sidebar() {
+// Navegação com estado "pendente": ao clicar, o item já fica destacado e mostra
+// um spinner na hora (feedback imediato), antes mesmo de a página carregar.
+// Sem isso, clicar no menu não dava retorno e dava a impressão de não ter
+// funcionado. O pendente é limpo quando a rota efetivamente muda.
+function useNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [pending, setPending] = useState<string | null>(null);
+
+  // Derivado: quando a rota chega no destino, o pendente "se apaga" sozinho
+  // (sem useEffect/setState, que o lint desaconselha).
+  const pendingHref = pending && pending !== pathname ? pending : null;
+
+  function navigate(href: string) {
+    if (href === pathname) return;
+    setPending(href);
+    startTransition(() => router.push(href));
+  }
+
+  return { pathname, pending: pendingHref, navigate };
+}
+
+function Spinner() {
+  return (
+    <span className="ml-auto h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+  );
+}
+
+export function Sidebar() {
+  const { pathname, pending, navigate } = useNav();
+
   return (
     <>
       {/* Celular: barra superior com navegação horizontal */}
@@ -28,18 +59,25 @@ export function Sidebar() {
         </div>
         <nav className="flex gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {links.map((link) => {
-            const active = pathname === link.href;
+            const active = pathname === link.href || pending === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm transition-colors ${
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(link.href);
+                }}
+                className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm transition-colors ${
                   active
                     ? "bg-rose-600 text-white font-semibold"
                     : "bg-slate-800 text-slate-300"
                 }`}
               >
                 {link.label}
+                {pending === link.href && (
+                  <span className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                )}
               </Link>
             );
           })}
@@ -56,11 +94,15 @@ export function Sidebar() {
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {links.map((link) => {
-            const active = pathname === link.href;
+            const active = pathname === link.href || pending === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(link.href);
+                }}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                   active
                     ? "bg-rose-600 text-white font-semibold"
@@ -69,6 +111,7 @@ export function Sidebar() {
               >
                 <span className="w-4 text-center text-xs opacity-80">{link.icon}</span>
                 {link.label}
+                {pending === link.href && <Spinner />}
               </Link>
             );
           })}
