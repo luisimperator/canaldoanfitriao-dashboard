@@ -4,6 +4,7 @@
 // Sem credenciais, cai no modo demo com dados gerados.
 
 import { createClient } from "@supabase/supabase-js";
+import { unstable_cache } from "next/cache";
 import { generateDemoData } from "./demo-data";
 import type {
   AdSpend,
@@ -56,11 +57,7 @@ async function selectAll(
   return rows;
 }
 
-export async function getDashboardData(): Promise<DashboardData> {
-  if (!supabaseConfigured()) {
-    return generateDemoData();
-  }
-
+async function fetchDashboardFromSupabase(): Promise<DashboardData> {
   const supabase = getSupabase();
   const [sellers, leads, sales, adSpend, finCategories, finTransactions] =
     await Promise.all([
@@ -127,4 +124,22 @@ export async function getDashboardData(): Promise<DashboardData> {
     ),
     isDemo: false,
   };
+}
+
+// Cacheia a leitura pesada (44k leads + 12k vendas, paginadas no Supabase) por
+// 60s no Data Cache do Next, compartilhada entre TODAS as páginas. A primeira
+// carga paga o custo; as navegações seguintes reusam o resultado, então trocar
+// de aba fica instantâneo. Os syncs (cron a cada 30min, webhooks) levam no
+// máximo ~60s pra refletir — aceitável num painel de acompanhamento.
+const getCachedDashboardData = unstable_cache(
+  fetchDashboardFromSupabase,
+  ["dashboard-data-v1"],
+  { revalidate: 60, tags: ["dashboard"] }
+);
+
+export async function getDashboardData(): Promise<DashboardData> {
+  if (!supabaseConfigured()) {
+    return generateDemoData();
+  }
+  return getCachedDashboardData();
 }
