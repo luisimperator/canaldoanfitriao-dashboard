@@ -137,20 +137,20 @@ export default async function VendasPage({
           {selectedMonth > firstMonth ? (
             <Link
               href={`/vendas?mes=${shiftMonth(selectedMonth, -1)}`}
-              className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
             >
               ◀ {monthLabel(shiftMonth(selectedMonth, -1))}
             </Link>
           ) : (
             <span className="px-3 py-1.5 text-sm text-slate-300">◀</span>
           )}
-          <span className="min-w-44 text-center text-sm font-semibold text-slate-50">
+          <span className="min-w-44 text-center text-sm font-semibold text-slate-900">
             {monthTitle(selectedMonth)}
           </span>
           {!isCurrentMonth ? (
             <Link
               href={`/vendas?mes=${shiftMonth(selectedMonth, 1)}`}
-              className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
             >
               {monthLabel(shiftMonth(selectedMonth, 1))} ▶
             </Link>
@@ -161,7 +161,7 @@ export default async function VendasPage({
         <div className="overflow-x-auto -mx-5 px-5">
         <table className="w-full text-sm min-w-[640px] tabular-nums">
           <thead>
-            <tr className="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-white/10">
+            <tr className="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
               <th className="py-2">Vendedor</th>
               {isCurrentMonth && <th className="py-2 text-right">Hoje</th>}
               <th className="py-2 text-right">No mês</th>
@@ -173,8 +173,8 @@ export default async function VendasPage({
           </thead>
           <tbody>
             {stats.map((s) => (
-              <tr key={s.seller.id} className="border-b border-white/5 last:border-0">
-                <td className="py-2.5 font-medium text-slate-50">{s.seller.name}</td>
+              <tr key={s.seller.id} className="border-b border-slate-50 last:border-0">
+                <td className="py-2.5 font-medium text-slate-900">{s.seller.name}</td>
                 {isCurrentMonth && <td className="py-2.5 text-right">{num(s.salesToday)}</td>}
                 <td className="py-2.5 text-right font-semibold">{num(s.salesMonth)}</td>
                 <td className="py-2.5 text-right">{brl(s.revenueMonth)}</td>
@@ -212,56 +212,56 @@ export default async function VendasPage({
           <div
             className={`rounded-lg px-4 py-3 mb-4 text-sm font-semibold ${
               capTone === "good"
-                ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                 : capTone === "warn"
-                  ? "bg-amber-500/10 text-amber-300 border border-amber-500/30"
-                  : "bg-rose-500/10 text-rose-300 border border-rose-500/30"
+                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                  : "bg-rose-50 text-rose-700 border border-rose-200"
             }`}
           >
             {capHeadline}
           </div>
           <dl className="space-y-2.5 text-sm">
             <div className="flex justify-between">
-              <dt className="text-slate-300">Leads captados (últimos 30 dias)</dt>
-              <dd className="font-semibold text-slate-50">{num(cap.leads30d)}</dd>
+              <dt className="text-slate-600">Leads captados (últimos 30 dias)</dt>
+              <dd className="font-semibold text-slate-900">{num(cap.leads30d)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-300">Vendas fechadas (últimos 30 dias)</dt>
-              <dd className="font-semibold text-slate-50">{num(cap.sales30d)}</dd>
+              <dt className="text-slate-600">Vendas fechadas (últimos 30 dias)</dt>
+              <dd className="font-semibold text-slate-900">{num(cap.sales30d)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-300">Leads necessários para 1 venda</dt>
-              <dd className="font-semibold text-slate-50">
+              <dt className="text-slate-600">Leads necessários para 1 venda</dt>
+              <dd className="font-semibold text-slate-900">
                 {cap.leadsPerSale !== null ? num(cap.leadsPerSale, 1) : "—"}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-300">Capacidade de 1 vendedor (vendas/mês)</dt>
-              <dd className="font-semibold text-slate-50">{num(cap.sellerMonthlyCapacity)}</dd>
+              <dt className="text-slate-600">Capacidade de 1 vendedor (vendas/mês)</dt>
+              <dd className="font-semibold text-slate-900">{num(cap.sellerMonthlyCapacity)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-300">Leads/mês para ocupar 1 vendedor</dt>
-              <dd className="font-semibold text-slate-50">
+              <dt className="text-slate-600">Leads/mês para ocupar 1 vendedor</dt>
+              <dd className="font-semibold text-slate-900">
                 {cap.leadsNeededPerSeller !== null ? num(cap.leadsNeededPerSeller) : "—"}
               </dd>
             </div>
-            <div className="flex justify-between border-t border-white/10 pt-2.5">
-              <dt className="text-slate-300">Vendedores que os leads atuais sustentam</dt>
-              <dd className="font-semibold text-slate-50">
+            <div className="flex justify-between border-t border-slate-100 pt-2.5">
+              <dt className="text-slate-600">Vendedores que os leads atuais sustentam</dt>
+              <dd className="font-semibold text-slate-900">
                 {cap.supportedSellers !== null
                   ? `${num(cap.supportedSellers)} (time atual: ${num(cap.activeSellers)})`
                   : "—"}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-300">
+              <dt className="text-slate-600">
                 Leads/mês que faltam para sustentar +1 vendedor
               </dt>
               <dd
                 className={`font-semibold ${
                   cap.leadsGapForNextSeller !== null && cap.leadsGapForNextSeller <= 0
                     ? "text-emerald-600"
-                    : "text-slate-50"
+                    : "text-slate-900"
                 }`}
               >
                 {cap.leadsGapForNextSeller !== null
