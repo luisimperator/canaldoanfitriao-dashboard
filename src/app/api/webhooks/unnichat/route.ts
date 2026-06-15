@@ -43,34 +43,39 @@ export async function POST(req: NextRequest) {
       { status: 501 }
     );
   }
-  if (req.nextUrl.searchParams.get("key") !== expectedKey) {
-    return NextResponse.json({ error: "chave inválida" }, { status: 401 });
-  }
 
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }
 
-  // Pings de teste sem corpo ou sem contact_id recebem 200
-  // para a URL poder ser validada em painéis externos.
-  // Tudo que chega fica registrado em webhook_log para diagnóstico.
+  // Diagnóstico: registra TODA requisição que chega — mesmo com chave errada —
+  // para sabermos se as automações do Unnichat estão de fato disparando.
+  const keyParam = req.nextUrl.searchParams.get("key");
+  const keyOk = keyParam === expectedKey;
   let body;
   try {
     body = await req.json();
   } catch {
-    await supabase.from("webhook_log").insert({
-      source: "unnichat",
-      note: "corpo ausente ou JSON inválido",
-    });
+    body = null;
+  }
+  await supabase.from("webhook_log").insert({
+    source: "unnichat",
+    note: keyOk
+      ? body
+        ? String(body.contact_id ?? "") ? "evento (key ok)" : "ping sem contact_id (key ok)"
+        : "corpo ausente (key ok)"
+      : `key invalida: ${keyParam ?? "ausente"}`,
+    body,
+  });
+
+  if (!keyOk) {
+    return NextResponse.json({ error: "chave inválida" }, { status: 401 });
+  }
+  if (!body) {
     return NextResponse.json({ ok: true, action: "ping" });
   }
   const contactId = String(body.contact_id ?? "");
-  await supabase.from("webhook_log").insert({
-    source: "unnichat",
-    note: contactId ? "evento" : "sem contact_id (tratado como ping)",
-    body,
-  });
   if (!contactId) {
     return NextResponse.json({ ok: true, action: "ping" });
   }
