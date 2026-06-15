@@ -78,39 +78,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const supabase = getSupabaseAdmin();
-  if (!supabase) {
-    return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
-  }
-
-  // Diagnóstico: registra TODA requisição que chega — mesmo com chave errada —
-  // para sabermos se as automações do Unnichat estão de fato disparando.
-  const keyParam = req.nextUrl.searchParams.get("key");
-  const keyOk = keyParam === expectedKey;
-  let body;
-  try {
-    body = await req.json();
-  } catch {
-    body = null;
-  }
-  await supabase.from("webhook_log").insert({
-    source: "unnichat",
-    note: keyOk
-      ? body
-        ? String(body.contact_id ?? "") ? "evento (key ok)" : "ping sem contact_id (key ok)"
-        : "corpo ausente (key ok)"
-      : `key invalida: ${keyParam ?? "ausente"}`,
-    body,
-  });
-
   if (!keyOk) {
     return NextResponse.json({ error: "chave inválida" }, { status: 401 });
   }
-  if (!body) {
-    return NextResponse.json({ ok: true, action: "ping" });
+  if (!supabase) {
+    return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }
-  const contactId = String(body.contact_id ?? "");
-  if (!contactId) {
+  if (!body || !contactId) {
     return NextResponse.json({ ok: true, action: "ping" });
   }
   const status = VALID_STATUS.includes(body.status) ? body.status : "frio";
