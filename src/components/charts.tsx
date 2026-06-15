@@ -256,6 +256,44 @@ export function CacRoasChart({
   );
 }
 
+// Barras simples reutilizável (contagem ou R$).
+export function BarsChart({
+  data,
+  xKey,
+  barKey,
+  name,
+  color = "#2dd4bf",
+  money = false,
+  height = 260,
+}: {
+  data: Record<string, string | number>[];
+  xKey: string;
+  barKey: string;
+  name: string;
+  color?: string;
+  money?: boolean;
+  height?: number;
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+        <XAxis dataKey={xKey} tick={{ fontSize: 11, fill: "#94a3b8" }} minTickGap={8} />
+        <YAxis
+          tick={{ fontSize: 11, fill: "#94a3b8" }}
+          tickFormatter={money ? (v) => `${Math.round(Number(v) / 1000)}k` : undefined}
+          allowDecimals={false}
+        />
+        <Tooltip
+          formatter={money ? brlTooltip : undefined}
+          cursor={{ fill: "rgba(255,255,255,0.04)" }}
+        />
+        <Bar dataKey={barKey} name={name} fill={color} radius={[3, 3, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
 export function SourcePie({ data }: { data: { name: string; value: number }[] }) {
   return (
     <ResponsiveContainer width="100%" height={240}>
