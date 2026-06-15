@@ -35,7 +35,7 @@ export function SyncButton({ path, label = "Sincronizar agora" }: { path: string
       <button
         onClick={run}
         disabled={state === "running"}
-        className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
+        className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
       >
         {state === "running" ? "Sincronizando..." : label}
       </button>
