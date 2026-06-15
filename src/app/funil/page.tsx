@@ -8,6 +8,7 @@ import {
   monthKey,
 } from "@/lib/metrics";
 import { num } from "@/lib/format";
+import { leadSalesTeamBucket } from "@/lib/leads";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { LeadsTrendChart, SourcePie } from "@/components/charts";
 
@@ -65,6 +66,20 @@ export default async function FunilPage() {
 
   const variation =
     leadsPrevMonth > 0 ? ((leadsMonth - leadsPrevMonth) / leadsPrevMonth) * 100 : null;
+
+  // Lista de espera do time de vendas: contatos que o Mailchimp marcou com
+  // tag de atendimento ativo (status lista_espera), agrupados pelo motivo
+  // (balde da tag). É o backlog que o time precisa puxar — por isso usa todos
+  // os contatos, não só a janela de 30 dias.
+  const waitingList = data.leads.filter((l) => l.status === "lista_espera");
+  const byWaitingBucket = Object.entries(
+    waitingList.reduce<Record<string, number>>((acc, l) => {
+      const label = leadSalesTeamBucket(l.extra)?.label ?? "Sem tag";
+      acc[label] = (acc[label] ?? 0) + 1;
+      return acc;
+    }, {})
+  ).sort(([, a], [, b]) => b - a);
+  const waitingTotal = waitingList.length;
 
   // Posição ATUAL de todos os contatos nas etapas do CRM (Unnichat)
   const byPipelineStage = Object.entries(
@@ -154,6 +169,34 @@ export default async function FunilPage() {
         <Card title="Origem dos leads (30 dias)">
           <SourcePie data={bySource} />
         </Card>
+
+        {waitingTotal > 0 && (
+          <Card
+            title="Lista de espera do time de vendas (por tag)"
+            className="lg:col-span-3"
+          >
+            <p className="text-xs text-slate-500 mb-3">
+              {num(waitingTotal)} contatos marcados no Mailchimp para atendimento
+              ativo, separados da base fria/newsletter.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
+              {byWaitingBucket.map(([label, count]) => (
+                <div
+                  key={label}
+                  className="rounded-lg bg-amber-50 border border-amber-200 p-4"
+                >
+                  <div className="text-xs text-amber-700">{label}</div>
+                  <div className="text-xl font-bold tabular-nums text-slate-900 mt-1">
+                    {num(count)}
+                  </div>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    {num((count / waitingTotal) * 100, 1)}% da lista
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {byPipelineStage.length > 0 && (
           <Card title="Etapas do CRM (Unnichat) — posição atual" className="lg:col-span-3">

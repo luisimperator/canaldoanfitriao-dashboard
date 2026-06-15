@@ -36,7 +36,41 @@ function stageToStatus(stage: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  const supabase = getSupabaseAdmin();
   const expectedKey = process.env.UNNICHAT_WEBHOOK_KEY;
+  const gotKey = req.nextUrl.searchParams.get("key");
+
+  // Lê o corpo cru (pings de validação podem vir vazios).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any = null;
+  let rawText = "";
+  try {
+    rawText = await req.text();
+    body = rawText ? JSON.parse(rawText) : null;
+  } catch {
+    body = null;
+  }
+  const contactId = body ? String(body.contact_id ?? "") : "";
+  const keyOk = Boolean(expectedKey) && gotKey === expectedKey;
+
+  // CAIXA-PRETA: registra TODA requisição recebida — inclusive com chave
+  // inválida/ausente — para conseguir diagnosticar a conexão com o Unnichat.
+  // Antes, chamadas com chave errada eram rejeitadas sem deixar rastro, então
+  // não dava para saber se o Unnichat estava chamando a URL (e como).
+  if (supabase) {
+    await supabase.from("webhook_log").insert({
+      source: "unnichat",
+      note: !expectedKey
+        ? "server sem UNNICHAT_WEBHOOK_KEY"
+        : !keyOk
+          ? "chave inválida ou ausente"
+          : contactId
+            ? "evento"
+            : "ping / sem contact_id",
+      body: body ?? (rawText ? { _raw: rawText.slice(0, 2000) } : null),
+    });
+  }
+
   if (!expectedKey) {
     return NextResponse.json(
       { error: "UNNICHAT_WEBHOOK_KEY não configurada no servidor." },
