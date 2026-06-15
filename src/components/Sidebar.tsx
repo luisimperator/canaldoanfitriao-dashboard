@@ -11,6 +11,7 @@ const links = [
   { href: "/crm", label: "CRM", icon: "▦" },
   { href: "/vendas", label: "Vendas & time", icon: "▲" },
   { href: "/origem", label: "Origem das vendas", icon: "◆" },
+  { href: "/cac", label: "CAC / ROAS", icon: "↗" },
   { href: "/financeiro", label: "Financeiro", icon: "$" },
   { href: "/integracoes", label: "Integrações", icon: "⚙" },
 ];

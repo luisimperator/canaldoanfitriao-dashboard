@@ -8,6 +8,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
   Legend,
   Line,
   LineChart,
@@ -214,6 +215,43 @@ export function CashflowChart({
         <Bar dataKey="saidas" name="Saídas" fill="#e11d48" radius={[3, 3, 0, 0]} />
         <Line type="monotone" dataKey="resultado" name="Resultado" stroke="#0f172a" />
       </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// Investimento vs faturamento (barras, eixo R$) e ROAS (linha, eixo da direita)
+// por mês. ROAS é blended (faturamento total ÷ investimento).
+export function CacRoasChart({
+  data,
+}: {
+  data: { month: string; investimento: number; faturamento: number; roas: number | null }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <XAxis dataKey="month" tick={{ fontSize: 11 }} minTickGap={16} />
+        <YAxis
+          yAxisId="money"
+          tick={{ fontSize: 11 }}
+          tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`}
+        />
+        <YAxis
+          yAxisId="roas"
+          orientation="right"
+          tick={{ fontSize: 11 }}
+          tickFormatter={(v) => `${Number(v).toFixed(0)}x`}
+        />
+        <Tooltip
+          formatter={(v, n) =>
+            n === "ROAS" ? `${Number(v).toFixed(2)}x` : brlTooltip(v)
+          }
+        />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Bar yAxisId="money" dataKey="investimento" name="Investimento" fill="#e11d48" radius={[3, 3, 0, 0]} />
+        <Bar yAxisId="money" dataKey="faturamento" name="Faturamento" fill="#10b981" radius={[3, 3, 0, 0]} />
+        <Line yAxisId="roas" type="monotone" dataKey="roas" name="ROAS" stroke="#0f172a" strokeWidth={2} dot={false} />
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }
