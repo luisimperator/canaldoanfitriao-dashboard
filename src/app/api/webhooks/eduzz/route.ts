@@ -59,7 +59,9 @@ export async function POST(req: NextRequest) {
 
   // O vendedor é atribuído cruzando com o lead do Unnichat (por e-mail),
   // ou pelo nome no utm_source (links individuais dos vendedores).
-  const buyerEmail: string | null = data.buyer?.email ?? null;
+  const buyerEmail: string | null = data.buyer?.email ?? data.student?.email ?? null;
+  const buyerDocument: string | null = data.buyer?.document ?? data.student?.document ?? null;
+  const buyerName: string | null = data.buyer?.name ?? data.student?.name ?? null;
   let sellerId: string | null = null;
   let leadId: string | null = null;
   if (buyerEmail) {
@@ -100,6 +102,9 @@ export async function POST(req: NextRequest) {
       seller_id: sellerId,
       lead_id: leadId,
       utm,
+      buyer_email: buyerEmail,
+      buyer_document: buyerDocument,
+      buyer_name: buyerName,
     },
     { onConflict: "eduzz_invoice_id" }
   );
