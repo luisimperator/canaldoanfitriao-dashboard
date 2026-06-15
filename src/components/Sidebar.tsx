@@ -12,6 +12,7 @@ const links = [
   { href: "/vendas", label: "Vendas & time", icon: "▲" },
   { href: "/origem", label: "Origem das vendas", icon: "◆" },
   { href: "/cac", label: "CAC / ROAS", icon: "↗" },
+  { href: "/ltv", label: "LTV & recompra", icon: "∞" },
   { href: "/financeiro", label: "Financeiro", icon: "$" },
   { href: "/integracoes", label: "Integrações", icon: "⚙" },
 ];
