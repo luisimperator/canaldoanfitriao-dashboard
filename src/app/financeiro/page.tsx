@@ -67,9 +67,9 @@ export default async function FinanceiroPage() {
           <table className="w-full text-sm">
             <tbody>
               {recent.map((t) => (
-                <tr key={t.id} className="border-b border-white/5 last:border-0">
+                <tr key={t.id} className="border-b border-slate-50 last:border-0">
                   <td className="py-2 text-slate-400 w-14">{shortDate(t.transactionDate)}</td>
-                  <td className="py-2 text-slate-200">
+                  <td className="py-2 text-slate-700">
                     {t.description}
                     <span className="block text-xs text-slate-400">
                       {(t.categoryId && catName.get(t.categoryId)) || "Sem categoria"}
