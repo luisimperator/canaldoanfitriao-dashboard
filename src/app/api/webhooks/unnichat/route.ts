@@ -77,13 +77,14 @@ export async function POST(req: NextRequest) {
       { status: 501 }
     );
   }
+
   if (!keyOk) {
     return NextResponse.json({ error: "chave inválida" }, { status: 401 });
   }
   if (!supabase) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }
-  if (!contactId) {
+  if (!body || !contactId) {
     return NextResponse.json({ ok: true, action: "ping" });
   }
   const status = VALID_STATUS.includes(body.status) ? body.status : "frio";
