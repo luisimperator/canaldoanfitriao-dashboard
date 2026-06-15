@@ -51,7 +51,7 @@ export function listIntegrations(): IntegrationInfo[] {
       configured: has("META_ADS_ACCESS_TOKEN", "META_ADS_ACCOUNT_ID"),
       syncPath: "/api/sync/meta-ads",
       howItWorks:
-        "Gere um token de sistema no Business Manager com permissão ads_read. O endpoint POST /api/sync/meta-ads busca o gasto diário dos últimos 30 dias na Graph API (insights).",
+        "Conectada via token de System User (não expira) com ads_read. O gasto diário dos últimos 30 dias é importado automaticamente direto no Supabase a cada 3h (sem precisar de variável no Vercel nem do botão).",
     },
     {
       id: "mailchimp",
