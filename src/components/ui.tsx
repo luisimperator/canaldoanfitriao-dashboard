@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <header className="mb-6">
-      <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+      <h1 className="text-2xl font-bold text-slate-50">{title}</h1>
       {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
     </header>
   );
@@ -20,10 +20,10 @@ export function Card({
 }) {
   return (
     <section
-      className={`bg-white rounded-xl border border-slate-200 shadow-sm p-5 ${className}`}
+      className={`bg-[#0f1720] rounded-xl border border-white/10 shadow-sm p-5 ${className}`}
     >
       {title && (
-        <h2 className="text-sm font-semibold text-slate-700 mb-4">{title}</h2>
+        <h2 className="text-sm font-semibold text-slate-200 mb-4">{title}</h2>
       )}
       {children}
     </section>
@@ -48,9 +48,9 @@ export function KpiCard({
         ? "text-rose-600"
         : tone === "warn"
           ? "text-amber-600"
-          : "text-slate-900";
+          : "text-slate-50";
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+    <div className="bg-[#0f1720] rounded-xl border border-white/10 shadow-sm p-4">
       <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
         {label}
       </div>
@@ -65,7 +65,7 @@ export function KpiCard({
 export function DemoBanner({ show }: { show: boolean }) {
   if (!show) return null;
   return (
-    <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+    <div className="mb-6 rounded-lg border border-amber-300 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
       <strong>Modo demonstração:</strong> exibindo dados de exemplo. Configure o
       Supabase e as integrações na aba{" "}
       <a href="/integracoes" className="underline font-medium">
