@@ -130,13 +130,13 @@ export default async function FunilPage() {
               return (
                 <div key={stage.label}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-700">{stage.label}</span>
-                    <span className="font-semibold text-slate-900">
+                    <span className="text-slate-200">{stage.label}</span>
+                    <span className="font-semibold text-slate-50">
                       {num(stage.count)}{" "}
                       <span className="text-slate-400 font-normal">({num(pct, 1)}%)</span>
                     </span>
                   </div>
-                  <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="h-3 rounded-full bg-white/10 overflow-hidden">
                     <div
                       className="h-full rounded-full bg-rose-600"
                       style={{ width: `${Math.max(2, pct)}%` }}
@@ -146,16 +146,16 @@ export default async function FunilPage() {
               );
             })}
           </div>
-          <div className="mt-5 border-t border-slate-100 pt-4">
+          <div className="mt-5 border-t border-white/10 pt-4">
             <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
               Situação atual dos leads (30 dias)
             </h3>
             <table className="w-full text-sm">
               <tbody>
                 {byStatus.map(([status, count]) => (
-                  <tr key={status} className="border-b border-slate-50 last:border-0">
-                    <td className="py-1.5 text-slate-600">{STATUS_LABELS[status] ?? status}</td>
-                    <td className="py-1.5 text-right font-medium text-slate-900">{num(count)}</td>
+                  <tr key={status} className="border-b border-white/5 last:border-0">
+                    <td className="py-1.5 text-slate-300">{STATUS_LABELS[status] ?? status}</td>
+                    <td className="py-1.5 text-right font-medium text-slate-50">{num(count)}</td>
                     <td className="py-1.5 text-right text-slate-400 w-16">
                       {num((count / leads30.length) * 100, 1)}%
                     </td>
@@ -183,10 +183,10 @@ export default async function FunilPage() {
               {byWaitingBucket.map(([label, count]) => (
                 <div
                   key={label}
-                  className="rounded-lg bg-amber-50 border border-amber-200 p-4"
+                  className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-4"
                 >
-                  <div className="text-xs text-amber-700">{label}</div>
-                  <div className="text-xl font-bold tabular-nums text-slate-900 mt-1">
+                  <div className="text-xs text-amber-300">{label}</div>
+                  <div className="text-xl font-bold tabular-nums text-slate-50 mt-1">
                     {num(count)}
                   </div>
                   <div className="text-xs text-slate-400 mt-0.5">
@@ -204,10 +204,10 @@ export default async function FunilPage() {
               {byPipelineStage.map(([stage, count]) => (
                 <div
                   key={stage}
-                  className="rounded-lg bg-slate-50 border border-slate-200 p-4"
+                  className="rounded-lg bg-white/5 border border-white/10 p-4"
                 >
                   <div className="text-xs text-slate-500">{stage}</div>
-                  <div className="text-xl font-bold tabular-nums text-slate-900 mt-1">
+                  <div className="text-xl font-bold tabular-nums text-slate-50 mt-1">
                     {num(count)}
                   </div>
                   <div className="text-xs text-slate-400 mt-0.5">

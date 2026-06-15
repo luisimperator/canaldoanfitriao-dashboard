@@ -54,7 +54,7 @@ export default async function OrigemPage({
           className={`rounded-full px-3 py-1.5 text-sm ${
             anoSel === "todos"
               ? "bg-rose-600 text-white font-semibold"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              : "bg-white/10 text-slate-300 hover:bg-white/10"
           }`}
         >
           Todo o período
@@ -66,7 +66,7 @@ export default async function OrigemPage({
             className={`rounded-full px-3 py-1.5 text-sm ${
               anoSel === a
                 ? "bg-rose-600 text-white font-semibold"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                : "bg-white/10 text-slate-300 hover:bg-white/10"
             }`}
           >
             {a}
@@ -91,21 +91,21 @@ export default async function OrigemPage({
             return (
               <div key={r.channel}>
                 <div className="flex justify-between items-baseline text-sm mb-1">
-                  <span className="flex items-center gap-2 text-slate-700">
+                  <span className="flex items-center gap-2 text-slate-200">
                     <span
                       className="h-2.5 w-2.5 rounded-full shrink-0"
                       style={{ background: CHANNEL_COLOR[r.channel] }}
                     />
                     {r.channel}
                   </span>
-                  <span className="font-semibold text-slate-900 tabular-nums">
+                  <span className="font-semibold text-slate-50 tabular-nums">
                     {brl(r.revenue)}{" "}
                     <span className="text-slate-400 font-normal">
                       ({num(pct, 1)}% · {num(r.count)} vendas)
                     </span>
                   </span>
                 </div>
-                <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
                   <div
                     className="h-full rounded-full"
                     style={{

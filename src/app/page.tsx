@@ -124,9 +124,9 @@ export default async function VisaoGeralPage() {
         <Card title="Funil (últimos 30 dias)" className="lg:col-span-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
             {stages.map((stage, i) => (
-              <div key={stage.label} className="rounded-lg bg-slate-50 border border-slate-200 p-4">
+              <div key={stage.label} className="rounded-lg bg-white/5 border border-white/10 p-4">
                 <div className="text-xs text-slate-500">{stage.label}</div>
-                <div className="text-xl font-bold text-slate-900 mt-1">{num(stage.count)}</div>
+                <div className="text-xl font-bold text-slate-50 mt-1">{num(stage.count)}</div>
                 {i > 0 && stages[0].count > 0 && (
                   <div className="text-xs text-slate-400 mt-0.5">
                     {num((stage.count / stages[0].count) * 100, 1)}% dos captados
