@@ -67,13 +67,21 @@ export async function POST(req: NextRequest) {
   if (buyerEmail) {
     const { data: lead } = await supabase
       .from("leads")
-      .select("id, seller_id")
+      .select("id, seller_id, extra")
       .eq("email", buyerEmail)
       .maybeSingle();
     if (lead) {
       leadId = lead.id;
       sellerId = lead.seller_id;
-      await supabase.from("leads").update({ status: "convertido" }).eq("id", lead.id);
+      // Adiciona tags do que a Eduzz mandou (compra) no lead, sem apagar as
+      // que já existem: marca como cliente e guarda o produto comprado.
+      const extra = (lead.extra ?? {}) as Record<string, unknown>;
+      const curTags = Array.isArray(extra.tags) ? (extra.tags as unknown[]).map(String) : [];
+      const tags = Array.from(new Set([...curTags, "cliente", `comprou:${product}`]));
+      await supabase
+        .from("leads")
+        .update({ status: "convertido", extra: { ...extra, tags } })
+        .eq("id", lead.id);
     }
   }
   if (!sellerId && utm) {
