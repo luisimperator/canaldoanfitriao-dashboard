@@ -29,14 +29,16 @@ export default async function IntegracoesPage() {
       <div className="grid md:grid-cols-2 gap-4">
         {integrations.map((item) => {
           const h = health?.byId[item.id];
-          // Selo honesto: credencial configurada não é o mesmo que receber dados.
+          // Selo honesto: dado real manda. Se está chegando dado, é "Recebendo"
+          // mesmo que a credencial não esteja no Vercel (ex.: sync nativo no
+          // Supabase). Senão, cai pra Pendente/Configurada/Sem dados.
           let badge: { label: string; cls: string };
-          if (!item.configured) {
+          if (h?.hasData) {
+            badge = { label: "Recebendo dados", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+          } else if (!item.configured) {
             badge = { label: "Pendente", cls: "bg-slate-100 text-slate-500 border-slate-200" };
           } else if (!health) {
             badge = { label: "Configurada", cls: "bg-blue-50 text-blue-700 border-blue-200" };
-          } else if (h?.hasData) {
-            badge = { label: "Recebendo dados", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
           } else {
             badge = { label: "Sem dados", cls: "bg-amber-50 text-amber-700 border-amber-200" };
           }
@@ -54,7 +56,7 @@ export default async function IntegracoesPage() {
                 </span>
               </div>
 
-              {item.configured && h && (
+              {h && (
                 <p
                   className={`mt-2 text-xs font-medium ${
                     h.hasData ? "text-emerald-600" : "text-amber-600"
