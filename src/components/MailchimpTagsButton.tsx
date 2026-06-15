@@ -47,7 +47,7 @@ export function MailchimpTagsButton() {
       <button
         onClick={run}
         disabled={state === "running"}
-        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+        className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/5 disabled:opacity-60"
       >
         {state === "running" ? "Lendo tags..." : "Ver tags reais"}
       </button>
@@ -59,13 +59,13 @@ export function MailchimpTagsButton() {
         </span>
       )}
       {tags && tags.length > 0 && (
-        <ul className="mt-2 max-h-72 overflow-y-auto divide-y divide-slate-100 rounded-lg border border-slate-200">
+        <ul className="mt-2 max-h-72 overflow-y-auto divide-y divide-white/10 rounded-lg border border-white/10">
           {tags.map((t) => (
             <li key={t.name} className="flex items-center justify-between gap-2 px-2.5 py-1.5">
               <span className="flex items-center gap-1.5 min-w-0">
-                <code className="text-[11px] text-slate-700 truncate">{t.name}</code>
+                <code className="text-[11px] text-slate-200 truncate">{t.name}</code>
                 {t.timeDeVendas && (
-                  <span className="shrink-0 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold px-1.5 py-0.5">
+                  <span className="shrink-0 rounded-full bg-amber-100 text-amber-300 text-[10px] font-semibold px-1.5 py-0.5">
                     lista de espera
                   </span>
                 )}

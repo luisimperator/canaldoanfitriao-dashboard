@@ -9,18 +9,18 @@ const statusStyle: Record<
   { badge: string; border: string; label: string }
 > = {
   critico: {
-    badge: "bg-rose-100 text-rose-700",
+    badge: "bg-rose-100 text-rose-300",
     border: "border-rose-300",
     label: "Gargalo",
   },
   atencao: {
-    badge: "bg-amber-100 text-amber-700",
+    badge: "bg-amber-100 text-amber-300",
     border: "border-amber-300",
     label: "Atenção",
   },
   ok: {
-    badge: "bg-emerald-100 text-emerald-700",
-    border: "border-slate-200",
+    badge: "bg-emerald-100 text-emerald-300",
+    border: "border-white/10",
     label: "Saudável",
   },
 };
@@ -39,7 +39,7 @@ export default async function GargaloPage() {
 
       {!hasData ? (
         <Card>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-300">
             Ainda não há leads e vendas suficientes para diagnosticar o gargalo.
             Conecte as integrações para começar a coletar dados.
           </p>
@@ -48,27 +48,27 @@ export default async function GargaloPage() {
         <section
           className={`mb-6 rounded-xl border-2 p-5 sm:p-6 ${
             primary.status === "critico"
-              ? "border-rose-300 bg-rose-50"
-              : "border-amber-300 bg-amber-50"
+              ? "border-rose-300 bg-rose-500/10"
+              : "border-amber-300 bg-amber-500/10"
           }`}
         >
           <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             O gargalo agora é
           </div>
-          <h2 className="mt-1 text-xl sm:text-2xl font-bold text-slate-900">
+          <h2 className="mt-1 text-xl sm:text-2xl font-bold text-slate-50">
             {primary.headline}
           </h2>
-          <p className="mt-2 text-sm text-slate-700">{primary.detail}</p>
-          <p className="mt-3 text-sm font-semibold text-slate-900">
+          <p className="mt-2 text-sm text-slate-200">{primary.detail}</p>
+          <p className="mt-3 text-sm font-semibold text-slate-50">
             → {primary.action}
           </p>
         </section>
       ) : (
-        <section className="mb-6 rounded-xl border-2 border-emerald-300 bg-emerald-50 p-5 sm:p-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+        <section className="mb-6 rounded-xl border-2 border-emerald-300 bg-emerald-500/10 p-5 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-50">
             Nenhum gargalo crítico agora
           </h2>
-          <p className="mt-2 text-sm text-slate-700">
+          <p className="mt-2 text-sm text-slate-200">
             Leads, conversão, time e mídia estão equilibrados. Bom momento para
             acelerar a captação e forçar o próximo nível.
           </p>
@@ -91,8 +91,8 @@ export default async function GargaloPage() {
                     {style.label}
                   </span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">{s.headline}</h3>
-                <p className="mt-1.5 text-sm text-slate-600">{s.detail}</p>
+                <h3 className="text-sm font-bold text-slate-50">{s.headline}</h3>
+                <p className="mt-1.5 text-sm text-slate-300">{s.detail}</p>
                 <p className="mt-2 text-xs text-slate-500">{s.action}</p>
               </Card>
             );

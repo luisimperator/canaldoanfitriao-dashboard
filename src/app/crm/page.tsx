@@ -27,8 +27,8 @@ const STATUS_DOT: Record<string, string> = {
   frio: "bg-slate-400",
   lista_espera: "bg-amber-400",
   quente: "bg-orange-500",
-  convertido: "bg-emerald-500",
-  perdido: "bg-rose-500",
+  convertido: "bg-emerald-500/100",
+  perdido: "bg-rose-500/100",
 };
 
 const MAX_CARDS = 25;
@@ -61,7 +61,7 @@ export default async function CrmPage() {
 
       {stages.length === 0 ? (
         <Card>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-300">
             Nenhum contato com etapa do CRM ainda. Assim que as automações de
             etapa do Unnichat dispararem, o quadro aparece aqui sozinho.
           </p>
@@ -73,11 +73,11 @@ export default async function CrmPage() {
             return (
               <section
                 key={stage}
-                className="w-64 shrink-0 rounded-xl bg-slate-100 border border-slate-200"
+                className="w-64 shrink-0 rounded-xl bg-white/10 border border-white/10"
               >
-                <header className="flex items-center justify-between px-3 py-2.5 border-b border-slate-200">
-                  <h2 className="text-xs font-semibold text-slate-700 truncate">{stage}</h2>
-                  <span className="ml-2 shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600 tabular-nums">
+                <header className="flex items-center justify-between px-3 py-2.5 border-b border-white/10">
+                  <h2 className="text-xs font-semibold text-slate-200 truncate">{stage}</h2>
+                  <span className="ml-2 shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-slate-300 tabular-nums">
                     {num(leads.length)}
                   </span>
                 </header>
@@ -91,13 +91,13 @@ export default async function CrmPage() {
                     return (
                       <div
                         key={lead.id}
-                        className="rounded-lg bg-white border border-slate-200 p-2.5"
+                        className="rounded-lg bg-[#0f1720] border border-white/10 p-2.5"
                       >
                         <div className="flex items-center gap-1.5">
                           <span
                             className={`h-2 w-2 shrink-0 rounded-full ${STATUS_DOT[lead.status] ?? "bg-slate-300"}`}
                           />
-                          <span className="text-xs font-medium text-slate-900 truncate">
+                          <span className="text-xs font-medium text-slate-50 truncate">
                             {lead.name || lead.phone || "Contato"}
                           </span>
                         </div>
