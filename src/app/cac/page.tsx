@@ -82,7 +82,7 @@ export default async function CacPage({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-slate-500 border-b border-white/10">
+              <tr className="text-left text-xs text-slate-500 border-b border-slate-100">
                 <th className="py-2 font-medium">Mês</th>
                 <th className="py-2 font-medium text-right">Investimento</th>
                 <th className="py-2 font-medium text-right">Faturamento</th>
@@ -93,16 +93,16 @@ export default async function CacPage({
             </thead>
             <tbody>
               {[...rows].reverse().map((r) => (
-                <tr key={r.month} className="border-b border-white/5 last:border-0">
-                  <td className="py-1.5 text-slate-200">{monthLabel(r.month)}</td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-300">
+                <tr key={r.month} className="border-b border-slate-50 last:border-0">
+                  <td className="py-1.5 text-slate-700">{monthLabel(r.month)}</td>
+                  <td className="py-1.5 text-right tabular-nums text-slate-600">
                     {r.spend > 0 ? brl(r.spend) : "—"}
                   </td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-50 font-medium">
+                  <td className="py-1.5 text-right tabular-nums text-slate-900 font-medium">
                     {r.revenue > 0 ? brl(r.revenue) : "—"}
                   </td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-300">{num(r.sales)}</td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-300">
+                  <td className="py-1.5 text-right tabular-nums text-slate-600">{num(r.sales)}</td>
+                  <td className="py-1.5 text-right tabular-nums text-slate-600">
                     {r.cac !== null ? brl(r.cac) : "—"}
                   </td>
                   <td

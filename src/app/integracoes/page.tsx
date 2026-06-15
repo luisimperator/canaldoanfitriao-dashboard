@@ -34,19 +34,19 @@ export default async function IntegracoesPage() {
           // Supabase). Senão, cai pra Pendente/Configurada/Sem dados.
           let badge: { label: string; cls: string };
           if (h?.hasData) {
-            badge = { label: "Recebendo dados", cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" };
+            badge = { label: "Recebendo dados", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" };
           } else if (!item.configured) {
-            badge = { label: "Pendente", cls: "bg-white/10 text-slate-500 border-white/10" };
+            badge = { label: "Pendente", cls: "bg-slate-100 text-slate-500 border-slate-200" };
           } else if (!health) {
-            badge = { label: "Configurada", cls: "bg-blue-500/10 text-blue-300 border-blue-500/30" };
+            badge = { label: "Configurada", cls: "bg-blue-50 text-blue-700 border-blue-200" };
           } else {
-            badge = { label: "Sem dados", cls: "bg-amber-500/10 text-amber-300 border-amber-500/30" };
+            badge = { label: "Sem dados", cls: "bg-amber-50 text-amber-700 border-amber-200" };
           }
           return (
             <Card key={item.id}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-sm font-semibold text-slate-50">{item.name}</h2>
+                  <h2 className="text-sm font-semibold text-slate-900">{item.name}</h2>
                   <p className="text-xs text-slate-500 mt-0.5">{item.role}</p>
                 </div>
                 <span
@@ -66,12 +66,12 @@ export default async function IntegracoesPage() {
                 </p>
               )}
 
-              <p className="text-sm text-slate-300 mt-3">{item.howItWorks}</p>
+              <p className="text-sm text-slate-600 mt-3">{item.howItWorks}</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {item.envVars.map((v) => (
                   <code
                     key={v}
-                    className="text-[11px] bg-white/5 border border-white/10 rounded px-1.5 py-0.5 text-slate-500"
+                    className="text-[11px] bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-slate-500"
                   >
                     {v}
                   </code>
@@ -88,7 +88,7 @@ export default async function IntegracoesPage() {
       {health && (
         <Card title="Últimos eventos recebidos (webhooks)" className="mt-4">
           {health.recentEvents.length === 0 ? (
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-slate-600">
               Nenhum evento de webhook recebido ainda. Quando Eduzz, Unnichat ou
               TMB chamarem a URL, aparece aqui — inclusive tentativas com chave
               errada, para ajudar a achar o problema.
@@ -97,13 +97,13 @@ export default async function IntegracoesPage() {
             <table className="w-full text-sm">
               <tbody>
                 {health.recentEvents.map((e, i) => (
-                  <tr key={i} className="border-b border-white/5 last:border-0">
+                  <tr key={i} className="border-b border-slate-50 last:border-0">
                     <td className="py-1.5 pr-2">
-                      <span className="inline-block rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold text-slate-300 uppercase">
+                      <span className="inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600 uppercase">
                         {e.source}
                       </span>
                     </td>
-                    <td className="py-1.5 pr-2 text-slate-300">{e.note ?? "—"}</td>
+                    <td className="py-1.5 pr-2 text-slate-600">{e.note ?? "—"}</td>
                     <td className="py-1.5 text-right text-slate-400 whitespace-nowrap w-24">
                       {fmtWhen(e.created_at)}
                     </td>

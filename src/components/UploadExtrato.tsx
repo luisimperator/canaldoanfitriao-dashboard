@@ -54,7 +54,7 @@ export function UploadExtrato() {
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={result.state === "sending"}
-        className="rounded-lg bg-rose-600 text-white text-sm font-medium px-4 py-2 hover:bg-rose-500 disabled:opacity-50"
+        className="rounded-lg bg-slate-900 text-white text-sm font-medium px-4 py-2 hover:bg-slate-700 disabled:opacity-50"
       >
         {result.state === "sending" ? "Enviando…" : "Enviar extrato (OFX ou CSV)"}
       </button>
