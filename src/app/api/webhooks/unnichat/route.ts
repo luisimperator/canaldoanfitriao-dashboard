@@ -3,24 +3,24 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { isSalesTeamTag } from "@/lib/leads";
 
 // Webhook do Unnichat (CRM/atendimento).
-// Configure uma automação no Unnichat (Requisição HTTP) para chamar
-// https://SEU_DOMINIO/api/webhooks/unnichat?key=UNNICHAT_WEBHOOK_KEY
-// quando o contato interagir, mudar de etapa ou for atribuído a um atendente.
+// As automações do Unnichat (Requisição HTTP) chamam:
+//   https://SEU_DOMINIO/api/webhooks/unnichat?key=UNNICHAT_WEBHOOK_KEY
+// nos eventos: contato criado, mudança de etapa do pipeline, ganho/perdido.
 //
 // Formato REAL enviado pelo Unnichat (os dados vêm aninhados em "contact"):
 // {
 //   "contact": {
 //     "id": "uuid", "name": "Fulano", "phoneNumber": "5511...",
 //     "email": "...", "tags": "lista-de-espera, lead-frio",
-//     "fields": { "estagio": "lista_espera", "faturamento": "...", ... }
+//     "fields": { "estagio": "lista_espera", ... }
 //   },
-//   "event_date": 1781557851,
-//   "triggerData": { ... }   // dados do gatilho (ex.: etapa, atendente)
+//   "event_date": 1781557851,        // unix (segundos)
+//   "triggerData": { ... }           // dados do gatilho (ex.: etapa, atendente)
 // }
 
 const VALID_STATUS = ["frio", "lista_espera", "quente", "convertido", "perdido"];
 
-// Deduz o status do funil a partir do nome da etapa do CRM.
+// Deduz o status do funil a partir do nome da etapa/tag.
 function stageToStatus(stage: string): string {
   const s = stage.toLowerCase();
   if (s.includes("ganhou") || s.includes("ganho")) return "convertido";
@@ -40,7 +40,6 @@ export async function POST(req: NextRequest) {
   const expectedKey = process.env.UNNICHAT_WEBHOOK_KEY;
   const gotKey = req.nextUrl.searchParams.get("key");
 
-  // Lê o corpo cru (pings de validação podem vir vazios).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let body: any = null;
   let rawText = "";
@@ -50,6 +49,7 @@ export async function POST(req: NextRequest) {
   } catch {
     body = null;
   }
+
   // O contato vem aninhado em "contact"; toleramos formato plano (legado).
   const contact = body?.contact && typeof body.contact === "object" ? body.contact : body;
   const contactId = contact ? String(contact.id ?? contact.contact_id ?? "") : "";
@@ -77,7 +77,6 @@ export async function POST(req: NextRequest) {
       { status: 501 }
     );
   }
-
   if (!keyOk) {
     return NextResponse.json({ error: "chave inválida" }, { status: 401 });
   }
@@ -108,9 +107,14 @@ export async function POST(req: NextRequest) {
   const seller =
     body.seller ?? contact.seller ?? body.triggerData?.attendant ?? body.triggerData?.seller ?? null;
 
-  // Etapa do CRM: do gatilho de pipeline (quando houver).
+  // Etapa do CRM: do gatilho de pipeline (quando houver), senão o estágio do campo.
   const pipelineStage =
     body.pipeline_stage ?? body.triggerData?.pipeline_stage ?? body.triggerData?.stage ?? null;
+  const stage = pipelineStage
+    ? String(pipelineStage)
+    : typeof fields.estagio === "string" && fields.estagio
+      ? fields.estagio
+      : null;
 
   // Extra: campos customizados do contato + tags.
   const extra: Record<string, unknown> = {};
@@ -123,10 +127,7 @@ export async function POST(req: NextRequest) {
   let newStatus: string | null = null;
   if (VALID_STATUS.includes(String(body.status))) newStatus = String(body.status);
   else if (tags.some(isSalesTeamTag)) newStatus = "lista_espera";
-  else if (pipelineStage) newStatus = stageToStatus(String(pipelineStage));
-  else if (typeof fields.estagio === "string" && fields.estagio) {
-    newStatus = stageToStatus(fields.estagio);
-  }
+  else if (stage) newStatus = stageToStatus(stage);
 
   let sellerId: string | null = null;
   if (seller) {
@@ -139,8 +140,8 @@ export async function POST(req: NextRequest) {
     if (!sellerId) extra.atendente = String(seller);
   }
 
-  // Atualização parcial: cada automação manda um pedaço; só sobrescreve o que
-  // veio preenchido, para uma automação não apagar dados da outra.
+  // 1) ESTADO ATUAL do lead (upsert parcial): cada automação manda um pedaço;
+  // só sobrescreve o que veio preenchido, para uma automação não apagar a outra.
   const row: Record<string, unknown> = {
     unnichat_id: contactId,
     updated_at: new Date().toISOString(),
@@ -153,9 +154,27 @@ export async function POST(req: NextRequest) {
   if (pipelineStage) row.pipeline_stage = String(pipelineStage);
   if (Object.keys(extra).length > 0) row.extra = extra;
 
-  const { error } = await supabase.from("leads").upsert(row, { onConflict: "unnichat_id" });
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const { error: upErr } = await supabase
+    .from("leads")
+    .upsert(row, { onConflict: "unnichat_id" });
+  if (upErr) {
+    return NextResponse.json({ error: upErr.message }, { status: 500 });
   }
+
+  // 2) HISTÓRICO IMUTÁVEL: uma linha por evento, com o payload bruto completo.
+  // É isso que permite medir conversão entre etapas e tempo-de-etapa.
+  const eventAt = body.event_date
+    ? new Date(Number(body.event_date) * 1000).toISOString()
+    : new Date().toISOString();
+  await supabase.from("lead_events").insert({
+    unnichat_id: contactId,
+    name,
+    stage,
+    status: newStatus,
+    tags: tags.length > 0 ? tags.join(", ") : null,
+    event_at: eventAt,
+    raw: body,
+  });
+
   return NextResponse.json({ ok: true });
 }
