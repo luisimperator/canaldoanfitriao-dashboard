@@ -103,9 +103,17 @@ export async function POST(req: NextRequest) {
         .map((t) => t.trim())
         .filter(Boolean);
 
-  // Atendente/vendedor: do gatilho (atribuição) ou de um campo direto.
-  const seller =
+  // Atendente/vendedor: o webhook NÃO manda. Buscamos na API do Unnichat
+  // (atendente atual do contato) e carimbamos no evento — é a base da taxa
+  // de fechamento por vendedor. Tolerante a falha (mantém null).
+  let seller: string | null =
     body.seller ?? contact.seller ?? body.triggerData?.attendant ?? body.triggerData?.seller ?? null;
+  try {
+    const { data: assignee } = await supabase.rpc("unnichat_assignee", { p_contact: contactId });
+    if (typeof assignee === "string" && assignee) seller = assignee;
+  } catch {
+    /* mantém o que veio (ou null) */
+  }
 
   // Etapa do CRM. O Unnichat NÃO manda a etapa específica em lugar nenhum
   // (nem no body, nem na API). A forma de capturá-la é a automação de cada
@@ -176,6 +184,7 @@ export async function POST(req: NextRequest) {
     name,
     stage,
     status: newStatus,
+    seller,
     tags: tags.length > 0 ? tags.join(", ") : null,
     event_at: eventAt,
     raw: body,
