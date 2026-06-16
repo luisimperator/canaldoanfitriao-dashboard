@@ -107,14 +107,19 @@ export async function POST(req: NextRequest) {
   const seller =
     body.seller ?? contact.seller ?? body.triggerData?.attendant ?? body.triggerData?.seller ?? null;
 
-  // Etapa do CRM: do gatilho de pipeline (quando houver), senão o estágio do campo.
+  // Etapa do CRM. O Unnichat NÃO manda a etapa específica em lugar nenhum
+  // (nem no body, nem na API). A forma de capturá-la é a automação de cada
+  // etapa chamar a URL com ?etapa=<nome> — lido aqui com prioridade máxima.
+  const etapaFromUrl = req.nextUrl.searchParams.get("etapa");
   const pipelineStage =
     body.pipeline_stage ?? body.triggerData?.pipeline_stage ?? body.triggerData?.stage ?? null;
-  const stage = pipelineStage
-    ? String(pipelineStage)
-    : typeof fields.estagio === "string" && fields.estagio
-      ? fields.estagio
-      : null;
+  const stage = etapaFromUrl
+    ? etapaFromUrl
+    : pipelineStage
+      ? String(pipelineStage)
+      : typeof fields.estagio === "string" && fields.estagio
+        ? fields.estagio
+        : null;
 
   // Extra: campos customizados do contato + tags.
   const extra: Record<string, unknown> = {};
