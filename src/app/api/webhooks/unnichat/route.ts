@@ -2,25 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 // Webhook do Unnichat (CRM/atendimento).
-// Configure uma automação no Unnichat para chamar
-// https://SEU_DOMINIO/api/webhooks/unnichat?key=UNNICHAT_WEBHOOK_KEY
-// quando o contato entrar no funil ou mudar de etapa.
+// As automações do Unnichat chamam:
+//   https://SEU_DOMINIO/api/webhooks/unnichat?key=UNNICHAT_WEBHOOK_KEY
+// nos eventos: contato criado, mudança de etapa do pipeline, ganho/perdido.
 //
-// Payload esperado (ajuste a automação para enviar neste formato):
+// Formato REAL enviado pelo Unnichat (aninhado em "contact"):
 // {
-//   "contact_id": "abc123",          // id do contato no Unnichat
-//   "name": "Fulano",
-//   "email": "fulano@email.com",     // opcional
-//   "phone": "+5511999999999",       // opcional
-//   "status": "quente",              // frio | lista_espera | quente | convertido | perdido
-//   "seller": "Vendedor A",          // opcional: nome do vendedor responsável
-//   "source": "meta_ads"             // opcional: meta_ads | google_ads | organico | outro
+//   "contact": {
+//     "id": "019ec...", "name": "Fulano", "email": "f@x.com",
+//     "phoneNumber": "5511999999999", "tags": "Lista-de-Espera",
+//     "fields": { "estagio": "lista_espera", "tipo": "...", "produto": "..." }
+//   },
+//   "event_date": 1781571606,        // unix (segundos)
+//   "triggerData": { ... }
 // }
 
 const VALID_STATUS = ["frio", "lista_espera", "quente", "convertido", "perdido"];
 
-// Deduz o status do funil a partir do nome da etapa do CRM, para a
-// automação de etapa não precisar enviar status explícito.
+// Deduz o status do funil a partir do nome da etapa/tag.
 function stageToStatus(stage: string): string {
   const s = stage.toLowerCase();
   if (s.includes("ganhou") || s.includes("ganho")) return "convertido";
@@ -40,7 +39,6 @@ export async function POST(req: NextRequest) {
   const expectedKey = process.env.UNNICHAT_WEBHOOK_KEY;
   const gotKey = req.nextUrl.searchParams.get("key");
 
-  // Lê o corpo cru (pings de validação podem vir vazios).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let body: any = null;
   let rawText = "";
@@ -50,13 +48,34 @@ export async function POST(req: NextRequest) {
   } catch {
     body = null;
   }
-  const contactId = body ? String(body.contact_id ?? "") : "";
+
+  // Aceita o formato aninhado do Unnichat (body.contact.*) e também um
+  // formato plano (body.contact_id) como fallback.
+  const c = (body?.contact ?? {}) as Record<string, unknown>;
+  const fields = (c.fields ?? {}) as Record<string, unknown>;
+  const contactId = String(c.id ?? body?.contact_id ?? "");
+  const name = (c.name ?? body?.name ?? null) as string | null;
+  const email = (c.email ?? body?.email ?? null) as string | null;
+  const phone = (c.phoneNumber ?? body?.phone ?? null) as string | null;
+  const tags = (typeof c.tags === "string" ? c.tags : null) as string | null;
+  // Etapa mais específica disponível: explícita > fields > tag > pipeline_stage.
+  const stage =
+    String(
+      body?.etapa ??
+        body?.triggerData?.etapa ??
+        fields?.etapa ??
+        fields?.estagio ??
+        body?.pipeline_stage ??
+        ""
+    ) || null;
+  const eventAt = body?.event_date
+    ? new Date(Number(body.event_date) * 1000).toISOString()
+    : new Date().toISOString();
+
   const keyOk = Boolean(expectedKey) && gotKey === expectedKey;
 
-  // CAIXA-PRETA: registra TODA requisição recebida — inclusive com chave
-  // inválida/ausente — para conseguir diagnosticar a conexão com o Unnichat.
-  // Antes, chamadas com chave errada eram rejeitadas sem deixar rastro, então
-  // não dava para saber se o Unnichat estava chamando a URL (e como).
+  // CAIXA-PRETA: registra TODA requisição (mesmo com chave inválida) para
+  // diagnosticar a conexão com o Unnichat.
   if (supabase) {
     await supabase.from("webhook_log").insert({
       source: "unnichat",
@@ -86,50 +105,58 @@ export async function POST(req: NextRequest) {
   if (!contactId) {
     return NextResponse.json({ ok: true, action: "ping" });
   }
-  const status = VALID_STATUS.includes(body.status) ? body.status : "frio";
 
-  // Campos além dos conhecidos (produto, tipo, numero-imoveis...)
-  // são preservados em leads.extra.
-  const known = new Set([
-    "contact_id", "name", "email", "phone", "status", "seller", "source", "pipeline_stage",
-  ]);
-  const extra: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(body)) {
-    if (!known.has(k) && v !== null && v !== "") extra[k] = v;
-  }
+  const status =
+    typeof body?.status === "string" && VALID_STATUS.includes(body.status)
+      ? body.status
+      : stage
+        ? stageToStatus(stage)
+        : "frio";
 
+  // Vendedor (se a automação mandar). Pode vir em seller/atendente.
+  const sellerName = (body?.seller ?? fields?.atendente ?? null) as string | null;
   let sellerId: string | null = null;
-  if (body.seller) {
+  if (sellerName) {
     const { data: seller } = await supabase
       .from("sellers")
       .select("id")
-      .ilike("name", String(body.seller))
+      .ilike("name", String(sellerName))
       .maybeSingle();
     sellerId = seller?.id ?? null;
-    // Atendente que não é vendedor cadastrado fica registrado mesmo assim
-    if (!sellerId) extra.atendente = String(body.seller);
   }
 
-  // Atualização parcial: automações diferentes mandam pedaços diferentes
-  // (criação, mudança de etapa, atribuição a vendedor). Só sobrescreve o
-  // que veio preenchido, para uma automação não apagar dados da outra.
+  // 1) ESTADO ATUAL do lead (upsert). NÃO toca em extra (preserva tags/member
+  // do Mailchimp); o payload completo fica no log de eventos abaixo.
   const row: Record<string, unknown> = {
     unnichat_id: contactId,
     updated_at: new Date().toISOString(),
   };
-  if (body.name) row.name = body.name;
-  if (body.email) row.email = body.email;
-  if (body.phone) row.phone = body.phone;
-  if (VALID_STATUS.includes(body.status)) row.status = status;
-  else if (body.pipeline_stage) row.status = stageToStatus(String(body.pipeline_stage));
+  if (name) row.name = name;
+  if (email) row.email = email;
+  if (phone) row.phone = phone;
+  row.status = status;
   if (sellerId) row.seller_id = sellerId;
-  if (body.source) row.source = body.source;
-  if (body.pipeline_stage) row.pipeline_stage = String(body.pipeline_stage);
-  if (Object.keys(extra).length > 0) row.extra = extra;
+  if (body?.source) row.source = body.source;
+  if (stage) row.pipeline_stage = stage;
 
-  const { error } = await supabase.from("leads").upsert(row, { onConflict: "unnichat_id" });
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const { error: upErr } = await supabase
+    .from("leads")
+    .upsert(row, { onConflict: "unnichat_id" });
+  if (upErr) {
+    return NextResponse.json({ error: upErr.message }, { status: 500 });
   }
+
+  // 2) HISTÓRICO IMUTÁVEL: uma linha por evento, com o payload bruto completo.
+  // É isso que permite medir conversão entre etapas e tempo-de-etapa.
+  await supabase.from("lead_events").insert({
+    unnichat_id: contactId,
+    name,
+    stage,
+    status,
+    tags,
+    event_at: eventAt,
+    raw: body,
+  });
+
   return NextResponse.json({ ok: true });
 }
