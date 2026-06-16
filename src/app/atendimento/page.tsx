@@ -1,44 +1,57 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { num } from "@/lib/format";
+import { brl, num } from "@/lib/format";
 import { Card, KpiCard, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
+interface CrmFunnel {
+  as_of: string;
+  totals: {
+    deals: number;
+    abertos: number;
+    valor_aberto: number;
+    ganhos: number;
+    valor_ganho: number;
+    perdas: number;
+    valor_perdido: number;
+    win_rate: number;
+  };
+  stages: { etapa: string; count: number; valor: number; dias_mediana: number | null }[];
+  by_atendente: { nome: string; count: number; valor: number }[];
+  motivos_perda: { razao: string; count: number }[];
+}
 interface Ev {
   unnichat_id: string;
   name: string | null;
   stage: string | null;
   status: string | null;
-  tags: string | null;
   event_at: string;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  frio: "Frio",
-  lista_espera: "Lista de espera",
-  quente: "Quente (em atendimento)",
-  convertido: "Ganho",
-  perdido: "Perdido",
-};
-// Ordem do funil de atendimento.
-const FUNNEL = ["frio", "lista_espera", "quente", "convertido", "perdido"];
-const BAR: Record<string, string> = {
-  frio: "bg-slate-400",
-  lista_espera: "bg-amber-500",
-  quente: "bg-rose-500",
-  convertido: "bg-emerald-500",
-  perdido: "bg-slate-300",
-};
-
-async function getEvents(): Promise<Ev[] | null> {
+async function getData(): Promise<{ crm: CrmFunnel | null; events: Ev[] }> {
   const admin = getSupabaseAdmin();
-  if (!admin) return null;
-  const { data } = await admin
-    .from("lead_events")
-    .select("unnichat_id,name,stage,status,tags,event_at")
-    .order("event_at", { ascending: false })
-    .limit(500);
-  return (data ?? []) as Ev[];
+  if (!admin) return { crm: null, events: [] };
+  const [snap, ev] = await Promise.all([
+    admin.from("analytics_snapshot").select("data").eq("key", "crm_funnel").maybeSingle(),
+    admin
+      .from("lead_events")
+      .select("unnichat_id,name,stage,status,event_at")
+      .order("event_at", { ascending: false })
+      .limit(15),
+  ]);
+  return {
+    crm: (snap.data?.data ?? null) as CrmFunnel | null,
+    events: (ev.data ?? []) as Ev[],
+  };
+}
+
+// Etapas "paradas" (gargalo) vs "quentes" (perto do fechamento).
+function stageColor(etapa: string): string {
+  const e = etapa.toLowerCase();
+  if (e.includes("não respondeu") || e.includes("nao respondeu")) return "bg-rose-500";
+  if (e.includes("negocia") || e.includes("pagamento")) return "bg-emerald-500";
+  if (e.includes("frio")) return "bg-sky-400";
+  return "bg-amber-500";
 }
 
 function fmt(dt: string): string {
@@ -50,74 +63,80 @@ function fmt(dt: string): string {
   });
 }
 
-export default async function AtendimentoPage() {
-  const events = await getEvents();
+export default async function FunilCrmPage() {
+  const { crm, events } = await getData();
 
-  if (!events || events.length === 0) {
+  if (!crm) {
     return (
       <div>
-        <PageHeader
-          title="Atendimento (CRM ao vivo)"
-          subtitle="Eventos do Unnichat: contato criado, mudança de etapa, ganho/perdido"
-        />
+        <PageHeader title="Funil CRM (Unnichat)" subtitle="Pipeline de vendas, etapa a etapa" />
         <Card>
           <p className="text-sm text-slate-600">
-            Ainda não chegou nenhum evento do Unnichat. As automações postam aqui
-            quando um contato é criado ou muda de etapa — assim que rodarem, aparece.
+            Sem snapshot do pipeline ainda. Ele vem do export do CRM do Unnichat.
           </p>
         </Card>
       </div>
     );
   }
 
-  const contatos = new Set(events.map((e) => e.unnichat_id)).size;
-  const ultimo = events[0]?.event_at;
-
-  // Status ATUAL de cada contato = status do evento mais recente dele
-  // (events já vem ordenado do mais novo pro mais antigo).
-  const latest = new Map<string, Ev>();
-  for (const e of events) if (!latest.has(e.unnichat_id)) latest.set(e.unnichat_id, e);
-  const byStatus: Record<string, number> = {};
-  for (const e of latest.values()) {
-    const s = e.status ?? "frio";
-    byStatus[s] = (byStatus[s] ?? 0) + 1;
-  }
-  const maxStatus = Math.max(1, ...Object.values(byStatus));
-  const recent = events.slice(0, 25);
+  const t = crm.totals;
+  const maxCount = Math.max(1, ...crm.stages.map((s) => s.count));
 
   return (
     <div>
       <PageHeader
-        title="Atendimento (CRM ao vivo)"
-        subtitle="Eventos do Unnichat: contato criado, mudança de etapa, ganho/perdido"
+        title="Funil CRM (Unnichat)"
+        subtitle="Pipeline de vendas etapa a etapa — onde os negócios estão parados e quanto vale cada fase"
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
-        <KpiCard label="Contatos no CRM" value={num(contatos)} hint="com evento registrado" />
-        <KpiCard label="Eventos recebidos" value={num(events.length)} hint="histórico imutável" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard
-          label="Último evento"
-          value={ultimo ? fmt(ultimo) : "—"}
-          hint="prova de que está vivo"
+          label="Pipeline aberto"
+          value={brl(t.valor_aberto)}
+          hint={`${num(t.abertos)} negócios`}
+        />
+        <KpiCard
+          label="Ganhos"
+          value={brl(t.valor_ganho)}
+          hint={`${num(t.ganhos)} negócios`}
           tone="good"
+        />
+        <KpiCard
+          label="Taxa de ganho"
+          value={`${num(t.win_rate, 1)}%`}
+          hint={`${num(t.ganhos)} ganhos / ${num(t.perdas)} perdas`}
+          tone={t.win_rate >= 50 ? "good" : "warn"}
+        />
+        <KpiCard
+          label="Perdas"
+          value={brl(t.valor_perdido)}
+          hint={`${num(t.perdas)} negócios`}
+          tone="bad"
         />
       </div>
 
-      <Card title="Funil de atendimento (status atual dos contatos)" className="mb-4">
+      <Card title="Negócios por etapa" className="mb-4">
         <div className="space-y-3">
-          {FUNNEL.filter((s) => byStatus[s]).map((s) => {
-            const n = byStatus[s];
-            const pct = (n / maxStatus) * 100;
+          {crm.stages.map((s) => {
+            const pct = (s.count / maxCount) * 100;
             return (
-              <div key={s}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-700">{STATUS_LABEL[s] ?? s}</span>
-                  <span className="font-semibold text-slate-900">{num(n)}</span>
+              <div key={s.etapa}>
+                <div className="flex justify-between items-baseline text-sm mb-1">
+                  <span className="text-slate-700">{s.etapa}</span>
+                  <span className="text-slate-900 font-semibold">
+                    {num(s.count)}
+                    {s.valor > 0 && (
+                      <span className="text-emerald-600 font-normal"> · {brl(s.valor)}</span>
+                    )}
+                    {s.dias_mediana !== null && s.dias_mediana >= 7 && (
+                      <span className="text-rose-500 font-normal"> · {s.dias_mediana}d parado</span>
+                    )}
+                  </span>
                 </div>
                 <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${BAR[s] ?? "bg-slate-400"}`}
-                    style={{ width: `${Math.max(3, pct)}%` }}
+                    className={`h-full rounded-full ${stageColor(s.etapa)}`}
+                    style={{ width: `${Math.max(2, pct)}%` }}
                   />
                 </div>
               </div>
@@ -125,39 +144,86 @@ export default async function AtendimentoPage() {
           })}
         </div>
         <p className="mt-3 text-xs text-slate-400">
-          A conversão entre etapas específicas (1º Contato → Qualificação → Negociação) entra
-          quando o Unnichat enviar a etapa no corpo do webhook. Por enquanto, o funil é por status.
+          Foto do pipeline em {new Date(crm.as_of).toLocaleDateString("pt-BR")} ({num(t.deals)}{" "}
+          negócios). Vermelho = parado (gargalo); verde = perto do fechamento. Os webhooks por
+          etapa mantêm o histórico de transições vivo daqui pra frente.
         </p>
       </Card>
 
-      <Card title="Eventos recentes (ao vivo)">
-        <div className="overflow-x-auto">
+      <div className="grid lg:grid-cols-2 gap-4 mb-4">
+        <Card title="Por atendente">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
-                <th className="py-2 font-medium">Quando</th>
-                <th className="py-2 font-medium">Contato</th>
-                <th className="py-2 font-medium">Etapa / estágio</th>
-                <th className="py-2 font-medium">Status</th>
+                <th className="py-2 font-medium">Atendente</th>
+                <th className="py-2 font-medium text-right">Negócios</th>
+                <th className="py-2 font-medium text-right">Valor</th>
               </tr>
             </thead>
             <tbody>
-              {recent.map((e, i) => (
-                <tr key={i} className="border-b border-slate-100 last:border-0">
-                  <td className="py-1.5 text-slate-500 tabular-nums whitespace-nowrap">{fmt(e.event_at)}</td>
-                  <td className="py-1.5 text-slate-700">{e.name ?? "—"}</td>
-                  <td className="py-1.5 text-slate-600">{e.stage ?? e.tags ?? "—"}</td>
-                  <td className="py-1.5">
-                    <span className="text-xs font-medium text-slate-600">
-                      {STATUS_LABEL[e.status ?? ""] ?? e.status ?? "—"}
-                    </span>
+              {crm.by_atendente.map((a) => (
+                <tr key={a.nome} className="border-b border-slate-100 last:border-0">
+                  <td className="py-1.5 text-slate-700">{a.nome}</td>
+                  <td className="py-1.5 text-right tabular-nums text-slate-600">{num(a.count)}</td>
+                  <td className="py-1.5 text-right tabular-nums text-slate-900 font-medium">
+                    {brl(a.valor)}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      </Card>
+        </Card>
+
+        <Card title="Motivos de perda">
+          {crm.motivos_perda.length === 0 ? (
+            <p className="text-sm text-slate-400">Sem perdas registradas.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <tbody>
+                {crm.motivos_perda.map((m) => (
+                  <tr key={m.razao} className="border-b border-slate-100 last:border-0">
+                    <td className="py-1.5 text-slate-700">{m.razao}</td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-900 font-medium">
+                      {num(m.count)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <p className="mt-3 text-xs text-slate-400">
+            Dica: hoje 100% das perdas estão como &quot;motivo não informado&quot;. Pedir o motivo
+            ao fechar perdido vira inteligência de objeção.
+          </p>
+        </Card>
+      </div>
+
+      {events.length > 0 && (
+        <Card title="Movimentos recentes (ao vivo)">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                  <th className="py-2 font-medium">Quando</th>
+                  <th className="py-2 font-medium">Contato</th>
+                  <th className="py-2 font-medium">Etapa</th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((e, i) => (
+                  <tr key={i} className="border-b border-slate-100 last:border-0">
+                    <td className="py-1.5 text-slate-500 tabular-nums whitespace-nowrap">
+                      {fmt(e.event_at)}
+                    </td>
+                    <td className="py-1.5 text-slate-700">{e.name ?? "—"}</td>
+                    <td className="py-1.5 text-slate-600">{e.stage ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
