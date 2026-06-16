@@ -1,31 +1,33 @@
 import { getDashboardData } from "@/lib/data";
-import { monthlyAdEfficiency, lastMonths } from "@/lib/cac";
+import { monthlyAdEfficiency } from "@/lib/cac";
 import { sum } from "@/lib/metrics";
 import { brl, num, monthLabel } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { CacRoasChart } from "@/components/charts";
-import { PeriodSelect } from "@/components/PeriodSelect";
+import { DateRangePicker } from "@/components/DateRangePicker";
 
 export const dynamic = "force-dynamic";
 
-const OPTIONS = [
-  { value: "6", label: "6 m" },
-  { value: "12", label: "12 m" },
-  { value: "24", label: "24 m" },
-  { value: "all", label: "Tudo" },
-];
+function shiftYM(month: string, delta: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
 
 export default async function CacPage({
   searchParams,
 }: {
-  searchParams: Promise<{ meses?: string }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const sp = await searchParams;
-  const sel = sp.meses && OPTIONS.some((o) => o.value === sp.meses) ? sp.meses : "12";
-  const n = sel === "all" ? null : Number(sel);
-
   const data = await getDashboardData();
-  const rows = lastMonths(monthlyAdEfficiency(data), n);
+  const allRows = monthlyAdEfficiency(data);
+  const re = /^\d{4}-\d{2}$/;
+  const months = allRows.map((r) => r.month);
+  const lastM = months.length ? months[months.length - 1] : new Date().toISOString().slice(0, 7);
+  const to = sp.to && re.test(sp.to) ? sp.to : lastM;
+  const from = sp.from && re.test(sp.from) ? sp.from : shiftYM(to, -11);
+  const rows = allRows.filter((r) => r.month >= from && r.month <= to);
 
   const totSpend = sum(rows.map((r) => r.spend));
   const totRev = sum(rows.map((r) => r.revenue));
@@ -49,8 +51,8 @@ export default async function CacPage({
       <DemoBanner show={data.isDemo} />
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="text-xs text-slate-500">Janela</span>
-        <PeriodSelect options={OPTIONS} current={sel} />
+        <span className="text-xs text-slate-500">Período</span>
+        <DateRangePicker />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
