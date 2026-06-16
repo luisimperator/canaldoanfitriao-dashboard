@@ -129,8 +129,12 @@ export interface CapacityAnalysis {
   leads30d: number;
   /** vendas pagas nos últimos 30 dias */
   sales30d: number;
-  /** leads necessários para fechar 1 venda (média 30d) */
+  /** leads necessários para fechar 1 venda — MEDIANA dos meses fechados (robusto a lançamento) */
   leadsPerSale: number | null;
+  /** leads de um mês típico (mediana dos meses fechados) — base robusta da capacidade */
+  robustMonthlyLeads: number | null;
+  /** quantos meses fechados entraram nas medianas */
+  monthsConsidered: number;
   /** vendas/mês do vendedor mais produtivo nos últimos 3 meses fechados */
   sellerMonthlyCapacity: number;
   /** leads/mês necessários para manter 1 vendedor na capacidade máxima */
@@ -143,56 +147,117 @@ export interface CapacityAnalysis {
   verdict: "pode_contratar" | "quase" | "falta_lead" | "sem_dados";
 }
 
+// ---------- Helpers robustos (mediana, meses fechados) ----------
+
+export function median(xs: number[]): number | null {
+  if (xs.length === 0) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+// Os N meses FECHADOS antes do mês corrente (mais recente primeiro).
+function lastClosedMonths(today: string, n: number): string[] {
+  const d = new Date(today + "T00:00:00");
+  d.setDate(1);
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) {
+    d.setMonth(d.getMonth() - 1);
+    out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }
+  return out;
+}
+
+function countByMonth<T>(items: T[], dateFn: (t: T) => string): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const it of items) {
+    const k = monthKey(dateFn(it));
+    m.set(k, (m.get(k) ?? 0) + 1);
+  }
+  return m;
+}
+
+// Contagem por DIA dentro de [start,end], incluindo dias zerados — para tirar
+// a mediana diária (robusta a picos de lançamento).
+function dailyCounts<T>(items: T[], dateFn: (t: T) => string, start: string, end: string): number[] {
+  const counts = new Map<string, number>();
+  for (const it of items) {
+    const d = dateFn(it).slice(0, 10);
+    if (d < start || d > end) continue;
+    counts.set(d, (counts.get(d) ?? 0) + 1);
+  }
+  const out: number[] = [];
+  const cur = new Date(start + "T00:00:00");
+  const last = new Date(end + "T00:00:00");
+  while (cur <= last) {
+    const k = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}-${String(cur.getDate()).padStart(2, "0")}`;
+    out.push(counts.get(k) ?? 0);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}
+
 export function capacityAnalysis(data: DashboardData, today = isoToday()): CapacityAnalysis {
   const start30 = daysAgo(29, new Date(today));
   const leads30d = inRange(data.leads, (l) => l.createdAt, start30, today).length;
-  const sales30dArr = inRange(paidSales(data.sales), (s) => s.saleDate, start30, today);
-  const sales30d = sales30dArr.length;
-  const leadsPerSale = sales30d > 0 ? leads30d / sales30d : null;
+  const sales30d = inRange(paidSales(data.sales), (s) => s.saleDate, start30, today).length;
+
+  // ROBUSTO: trabalha com MESES FECHADOS e usa MEDIANA, para um lançamento
+  // (pico de leads numa janela) não distorcer "leads/venda" nem quantos
+  // vendedores o volume sustenta.
+  const currentMonth = monthKey(today);
+  const closed = lastClosedMonths(today, 6);
+  const leadsBy = countByMonth(data.leads, (l) => l.createdAt);
+  const salesBy = countByMonth(paidSales(data.sales), (s) => s.saleDate);
+  const leadsForMedian: number[] = [];
+  const ratios: number[] = [];
+  for (const m of closed) {
+    const lm = leadsBy.get(m) ?? 0;
+    const sm = salesBy.get(m) ?? 0;
+    if (lm > 0) leadsForMedian.push(lm);
+    if (lm > 0 && sm > 0) ratios.push(lm / sm);
+  }
+  const leadsPerSale = median(ratios);
+  const robustMonthlyLeads = median(leadsForMedian);
+  const monthsConsidered = leadsForMedian.length;
 
   // Capacidade: melhor mês de um vendedor ATIVO nos últimos 3 meses completos.
-  // Vendas sem vendedor (anúncio/lançamento) não contam — senão esse balde
-  // gigante vira um "super-vendedor" e distorce toda a análise.
-  const currentMonth = monthKey(today);
-  const activeSellerIds = new Set(
-    data.sellers.filter((s) => s.isActive).map((s) => s.id)
-  );
+  // Vendas sem vendedor (anúncio/lançamento) não contam.
+  const activeSellerIds = new Set(data.sellers.filter((s) => s.isActive).map((s) => s.id));
   const perSellerMonth = new Map<string, number>();
   for (const s of paidSales(data.sales)) {
     const mk = monthKey(s.saleDate);
-    if (mk === currentMonth) continue; // mês corrente está incompleto
+    if (mk === currentMonth) continue;
     if (!s.sellerId || !activeSellerIds.has(s.sellerId)) continue;
     const key = `${s.sellerId}|${mk}`;
     perSellerMonth.set(key, (perSellerMonth.get(key) ?? 0) + 1);
   }
-  const months = [...new Set([...perSellerMonth.keys()].map((k) => k.split("|")[1]))]
+  const capMonths = [...new Set([...perSellerMonth.keys()].map((k) => k.split("|")[1]))]
     .sort()
     .slice(-3);
   const sellerMonthlyCapacity = Math.max(
     0,
     ...[...perSellerMonth.entries()]
-      .filter(([k]) => months.includes(k.split("|")[1]))
+      .filter(([k]) => capMonths.includes(k.split("|")[1]))
       .map(([, v]) => v)
   );
 
   const activeSellers = data.sellers.filter((s) => s.isActive).length;
   const leadsNeededPerSeller =
-    leadsPerSale !== null && sellerMonthlyCapacity > 0
-      ? leadsPerSale * sellerMonthlyCapacity
-      : null;
+    leadsPerSale !== null && sellerMonthlyCapacity > 0 ? leadsPerSale * sellerMonthlyCapacity : null;
   const supportedSellers =
-    leadsNeededPerSeller && leadsNeededPerSeller > 0
-      ? Math.floor(leads30d / leadsNeededPerSeller)
+    leadsNeededPerSeller && leadsNeededPerSeller > 0 && robustMonthlyLeads !== null
+      ? Math.floor(robustMonthlyLeads / leadsNeededPerSeller)
       : null;
   const leadsGapForNextSeller =
-    leadsNeededPerSeller !== null
-      ? Math.ceil(leadsNeededPerSeller * (activeSellers + 1) - leads30d)
+    leadsNeededPerSeller !== null && robustMonthlyLeads !== null
+      ? Math.ceil(leadsNeededPerSeller * (activeSellers + 1) - robustMonthlyLeads)
       : null;
 
   let verdict: CapacityAnalysis["verdict"] = "sem_dados";
-  if (supportedSellers !== null && leadsGapForNextSeller !== null) {
+  if (supportedSellers !== null && leadsGapForNextSeller !== null && robustMonthlyLeads !== null) {
     if (supportedSellers >= activeSellers + 1) verdict = "pode_contratar";
-    else if (leadsGapForNextSeller <= leads30d * 0.15) verdict = "quase";
+    else if (leadsGapForNextSeller <= robustMonthlyLeads * 0.15) verdict = "quase";
     else verdict = "falta_lead";
   }
 
@@ -200,6 +265,8 @@ export function capacityAnalysis(data: DashboardData, today = isoToday()): Capac
     leads30d,
     sales30d,
     leadsPerSale,
+    robustMonthlyLeads,
+    monthsConsidered,
     sellerMonthlyCapacity,
     leadsNeededPerSeller,
     activeSellers,
@@ -308,9 +375,22 @@ export function bottleneckAnalysis(
   const salesCur = inRange(paidSales(data.sales), (s) => s.saleDate, curStart, today).length;
   const salesPrev = inRange(paidSales(data.sales), (s) => s.saleDate, prevStart, prevEnd).length;
 
-  const leadsTrend = leadsPrev > 0 ? (leadsCur - leadsPrev) / leadsPrev : null;
-  const convCur = leadsCur > 0 ? salesCur / leadsCur : null;
-  const convPrev = leadsPrev > 0 ? salesPrev / leadsPrev : null;
+  // ROBUSTO a lançamento: tendência de leads pela MEDIANA diária (ignora os
+  // poucos dias de pico) e conversão pela mediana de meses fechados.
+  const medLeadsCur = median(dailyCounts(data.leads, (l) => l.createdAt, curStart, today)) ?? 0;
+  const medLeadsPrev = median(dailyCounts(data.leads, (l) => l.createdAt, prevStart, prevEnd)) ?? 0;
+  const leadsTrend = medLeadsPrev > 0 ? (medLeadsCur - medLeadsPrev) / medLeadsPrev : null;
+
+  const closedB = lastClosedMonths(today, 6);
+  const leadsByB = countByMonth(data.leads, (l) => l.createdAt);
+  const salesByB = countByMonth(paidSales(data.sales), (s) => s.saleDate);
+  const convPerMonth = closedB.map((m) => {
+    const lm = leadsByB.get(m) ?? 0;
+    const sm = salesByB.get(m) ?? 0;
+    return lm > 0 ? sm / lm : null;
+  });
+  const convCur = median(convPerMonth.slice(0, 3).filter((x): x is number => x !== null));
+  const convPrev = median(convPerMonth.slice(3, 6).filter((x): x is number => x !== null));
   const convTrend =
     convCur !== null && convPrev !== null && convPrev > 0
       ? (convCur - convPrev) / convPrev
@@ -335,12 +415,11 @@ export function bottleneckAnalysis(
     let score = 15;
     if (drop >= 0.25) score = 85;
     else if (drop >= 0.1) score = 55;
+    const r1 = (x: number) => x.toFixed(1).replace(".", ",");
     const trendTxt =
       leadsTrend === null
-        ? `${leadsCur} leads nos últimos 30 dias (sem base de comparação anterior)`
-        : leadsTrend < 0
-          ? `${leadsCur} leads nos últimos 30 dias contra ${leadsPrev} nos 30 anteriores (queda de ${fmtPct(leadsTrend)})`
-          : `${leadsCur} leads nos últimos 30 dias contra ${leadsPrev} nos 30 anteriores (alta de ${fmtPct(leadsTrend)})`;
+        ? `Ritmo de ${r1(medLeadsCur)} leads/dia (mediana), sem base anterior para comparar`
+        : `Ritmo típico de ${r1(medLeadsCur)} leads/dia agora contra ${r1(medLeadsPrev)}/dia nos 30 dias anteriores (${leadsTrend < 0 ? "queda" : "alta"} de ${fmtPct(leadsTrend)}) — mediana diária, sem distorção de pico de lançamento`;
     signals.push({
       kind: "leads",
       label: "Geração de leads",
@@ -397,7 +476,7 @@ export function bottleneckAnalysis(
     else if (capacity.verdict === "quase") score = 45;
     const detail =
       capacity.supportedSellers !== null
-        ? `O volume atual de leads sustenta ${capacity.supportedSellers} vendedor(es) e o time tem ${capacity.activeSellers}. O vendedor mais produtivo fecha até ${capacity.sellerMonthlyCapacity} vendas/mês.`
+        ? `Num mês típico (mediana de ${capacity.monthsConsidered} meses fechados, sem distorção de lançamento) entram ~${capacity.robustMonthlyLeads} leads, e cada venda exige ~${capacity.leadsPerSale !== null ? Math.round(capacity.leadsPerSale) : "?"} leads. Isso sustenta ${capacity.supportedSellers} vendedor(es); o time tem ${capacity.activeSellers}. Pico de ${capacity.sellerMonthlyCapacity} vendas/mês por vendedor.`
         : "Ainda não há histórico suficiente para estimar a capacidade do time.";
     signals.push({
       kind: "time",
@@ -429,7 +508,9 @@ export function bottleneckAnalysis(
     const detail =
       cacCur !== null && cacPrev !== null
         ? `Cada venda custou ${fmtBrl(cacCur)} em anúncios nos últimos 30 dias, contra ${fmtBrl(cacPrev)} no período anterior${cacTrend !== null && cacTrend > 0 ? ` (alta de ${fmtPct(cacTrend)})` : ""}.`
-        : "Sem dados suficientes de investimento em anúncios para calcular o custo por venda.";
+        : cacCur !== null
+          ? `Cada venda custou ${fmtBrl(cacCur)} em anúncios nos últimos 30 dias (sem investimento no período anterior para comparar).`
+          : "Sem dados suficientes de investimento em anúncios para calcular o custo por venda.";
     signals.push({
       kind: "midia",
       label: "Eficiência de mídia",
