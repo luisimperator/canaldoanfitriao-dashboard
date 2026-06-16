@@ -44,16 +44,17 @@ export default async function FunilPage({
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const sp = await searchParams;
-  const reYM = /^\d{4}-\d{2}$/;
-  const cFrom = sp.from && reYM.test(sp.from) ? sp.from : null;
-  const cTo = sp.to && reYM.test(sp.to) ? sp.to : null;
+  const reYMD = /^\d{4}-\d{2}(-\d{2})?$/;
+  const cFrom = sp.from && reYMD.test(sp.from) ? sp.from : null;
+  const cTo = sp.to && reYMD.test(sp.to) ? sp.to : null;
   const admin = getSupabaseAdmin();
   const cohortAll: CohortRow[] = admin
     ? (((await admin.rpc("weekly_funnel_cohort")).data ?? []) as CohortRow[])
     : [];
   const cohort = cohortAll.filter(
     (r) =>
-      (!cFrom || r.semana.slice(0, 7) >= cFrom) && (!cTo || r.semana.slice(0, 7) <= cTo)
+      (!cFrom || r.semana.slice(0, cFrom.length) >= cFrom) &&
+      (!cTo || r.semana.slice(0, cTo.length) <= cTo)
   );
 
   const data = await getDashboardData();

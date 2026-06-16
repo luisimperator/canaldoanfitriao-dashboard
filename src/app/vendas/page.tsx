@@ -45,9 +45,9 @@ export default async function VendasPage({
 
   const sp = await searchParams;
   const { mes } = sp;
-  const reYM = /^\d{4}-\d{2}$/;
-  const rangeTo = sp.to && reYM.test(sp.to) ? sp.to : currentMonth;
-  const rangeFrom = sp.from && reYM.test(sp.from) ? sp.from : shiftMonth(rangeTo, -5);
+  const reYM = /^\d{4}-\d{2}(-\d{2})?$/;
+  const rangeTo = (sp.to && reYM.test(sp.to) ? sp.to : currentMonth).slice(0, 7);
+  const rangeFrom = (sp.from && reYM.test(sp.from) ? sp.from : shiftMonth(rangeTo, -5)).slice(0, 7);
   const selectedMonth =
     mes && /^\d{4}-\d{2}$/.test(mes) && mes <= currentMonth ? mes : currentMonth;
   const isCurrentMonth = selectedMonth === currentMonth;

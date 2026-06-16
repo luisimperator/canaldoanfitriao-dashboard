@@ -43,7 +43,7 @@ export default async function ConversasPage({
   const sp = await searchParams;
   const outcome = sp.outcome ?? "all";
   const seller = sp.seller ?? "all";
-  const re = /^\d{4}-\d{2}$/;
+  const re = /^\d{4}-\d{2}(-\d{2})?$/;
   const from = sp.from && re.test(sp.from) ? sp.from : null;
   const to = sp.to && re.test(sp.to) ? sp.to : null;
   const carry = `${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}`;
@@ -62,8 +62,8 @@ export default async function ConversasPage({
     (c) =>
       (outcome === "all" || c.outcome === outcome) &&
       (seller === "all" || c.seller === seller) &&
-      (!from || (c.last_at != null && c.last_at.slice(0, 7) >= from)) &&
-      (!to || (c.last_at != null && c.last_at.slice(0, 7) <= to))
+      (!from || (c.last_at != null && c.last_at.slice(0, from.length) >= from)) &&
+      (!to || (c.last_at != null && c.last_at.slice(0, to.length) <= to))
   );
 
   const exportHref = `/api/export/conversas?outcome=${encodeURIComponent(outcome)}&seller=${encodeURIComponent(seller)}${carry}`;

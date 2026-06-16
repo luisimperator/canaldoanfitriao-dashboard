@@ -22,11 +22,11 @@ export default async function CacPage({
   const sp = await searchParams;
   const data = await getDashboardData();
   const allRows = monthlyAdEfficiency(data);
-  const re = /^\d{4}-\d{2}$/;
+  const re = /^\d{4}-\d{2}(-\d{2})?$/;
   const months = allRows.map((r) => r.month);
   const lastM = months.length ? months[months.length - 1] : new Date().toISOString().slice(0, 7);
-  const to = sp.to && re.test(sp.to) ? sp.to : lastM;
-  const from = sp.from && re.test(sp.from) ? sp.from : shiftYM(to, -11);
+  const to = (sp.to && re.test(sp.to) ? sp.to : lastM).slice(0, 7);
+  const from = (sp.from && re.test(sp.from) ? sp.from : shiftYM(to, -11)).slice(0, 7);
   const rows = allRows.filter((r) => r.month >= from && r.month <= to);
 
   const totSpend = sum(rows.map((r) => r.spend));
