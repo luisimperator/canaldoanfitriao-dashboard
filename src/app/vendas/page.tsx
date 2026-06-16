@@ -10,6 +10,7 @@ import {
 import { brl, monthLabel, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { SalesBySellerChart, TeamHistoryChart } from "@/components/charts";
+import { DateRangePicker } from "@/components/DateRangePicker";
 
 export const dynamic = "force-dynamic";
 
@@ -36,13 +37,17 @@ function monthTitle(mk: string): string {
 export default async function VendasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mes?: string }>;
+  searchParams: Promise<{ mes?: string; from?: string; to?: string }>;
 }) {
   const data = await getDashboardData();
   const today = isoToday();
   const currentMonth = monthKey(today);
 
-  const { mes } = await searchParams;
+  const sp = await searchParams;
+  const { mes } = sp;
+  const reYM = /^\d{4}-\d{2}$/;
+  const rangeTo = sp.to && reYM.test(sp.to) ? sp.to : currentMonth;
+  const rangeFrom = sp.from && reYM.test(sp.from) ? sp.from : shiftMonth(rangeTo, -5);
   const selectedMonth =
     mes && /^\d{4}-\d{2}$/.test(mes) && mes <= currentMonth ? mes : currentMonth;
   const isCurrentMonth = selectedMonth === currentMonth;
@@ -68,7 +73,7 @@ export default async function VendasPage({
     const key = `${mk}|${name}`;
     revenue.set(key, (revenue.get(key) ?? 0) + sale.amount);
   }
-  const months = [...monthsSet].sort().slice(-6);
+  const months = [...monthsSet].sort().filter((m) => m >= rangeFrom && m <= rangeTo);
   const activeNames = data.sellers.filter((s) => s.isActive).map((s) => s.name);
   const dayOfMonthNow = Number(today.slice(8, 10));
   const daysInCurrentMonth = Number(lastDayOf(currentMonth).slice(8, 10));
@@ -205,6 +210,9 @@ export default async function VendasPage({
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card title="Faturamento por vendedor por mês">
+          <div className="flex justify-end mb-2">
+            <DateRangePicker />
+          </div>
           <SalesBySellerChart data={monthly} sellers={activeNames} projected />
         </Card>
 
