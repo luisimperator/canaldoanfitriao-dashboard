@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
     tags: c.tags ?? null,
     fields: c.fields ?? {},
     criado: c.criado ?? null,
+    crm_outcome: c.crm_outcome ?? null,
   }));
 
   let inserted = 0;
