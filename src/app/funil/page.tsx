@@ -11,8 +11,17 @@ import { num } from "@/lib/format";
 import { leadSalesTeamBucket } from "@/lib/leads";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { LeadsTrendChart, SourcePie } from "@/components/charts";
+import { DateRangePicker } from "@/components/DateRangePicker";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
+
+interface CohortRow {
+  semana: string;
+  entraram: number;
+  quentes: number;
+  converteram: number;
+}
 
 const SOURCE_LABELS: Record<string, string> = {
   meta_ads: "Meta Ads",
@@ -29,7 +38,24 @@ const STATUS_LABELS: Record<string, string> = {
   perdido: "Perdido",
 };
 
-export default async function FunilPage() {
+export default async function FunilPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const sp = await searchParams;
+  const reYM = /^\d{4}-\d{2}$/;
+  const cFrom = sp.from && reYM.test(sp.from) ? sp.from : null;
+  const cTo = sp.to && reYM.test(sp.to) ? sp.to : null;
+  const admin = getSupabaseAdmin();
+  const cohortAll: CohortRow[] = admin
+    ? (((await admin.rpc("weekly_funnel_cohort")).data ?? []) as CohortRow[])
+    : [];
+  const cohort = cohortAll.filter(
+    (r) =>
+      (!cFrom || r.semana.slice(0, 7) >= cFrom) && (!cTo || r.semana.slice(0, 7) <= cTo)
+  );
+
   const data = await getDashboardData();
   const today = isoToday();
   const month = monthKey(today);
@@ -117,6 +143,53 @@ export default async function FunilPage() {
           value={media7 !== null ? `${num(media7, 1)}/dia` : "—"}
         />
       </div>
+
+      <Card title="Funil semanal: entraram → quentes → A5E/Gigantes" className="mb-4">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <span className="text-xs text-slate-500">Período</span>
+          <DateRangePicker minYear={2026} />
+        </div>
+        {cohort.length === 0 ? (
+          <p className="text-sm text-slate-400">
+            Coletando. Conforme os leads entram pelo Unnichat, viram quentes e compram A5E/Gigantes,
+            esta coorte semanal preenche — aí dá pra ver a conversão real de cada semana.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                  <th className="py-2 font-medium">Semana</th>
+                  <th className="py-2 font-medium text-right">Entraram</th>
+                  <th className="py-2 font-medium text-right">Viraram quentes</th>
+                  <th className="py-2 font-medium text-right">Compraram A5E/Gigantes</th>
+                  <th className="py-2 font-medium text-right">Conversão</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cohort.map((r) => (
+                  <tr key={r.semana} className="border-b border-slate-100 last:border-0">
+                    <td className="py-1.5 text-slate-600 tabular-nums">
+                      {new Date(r.semana + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                    </td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-700 font-medium">{num(r.entraram)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-rose-600">{num(r.quentes)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-emerald-600 font-semibold">{num(r.converteram)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-500">
+                      {r.entraram > 0 ? `${num((r.converteram / r.entraram) * 100, 1)}%` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="mt-3 text-xs text-slate-400">
+          Coorte por semana de ENTRADA do lead no Unnichat: quantos entraram, quantos viraram
+          quentes, e quantos compraram Anfitrião 5 Estrelas ou Gigantes (cruzado por e-mail com a
+          Eduzz). Preenche conforme os dados entram.
+        </p>
+      </Card>
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Card title="Leads por dia (últimos 90 dias)" className="lg:col-span-3">
