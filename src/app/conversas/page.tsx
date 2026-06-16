@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { num } from "@/lib/format";
 import { Card, PageHeader } from "@/components/ui";
+import { DateRangePicker } from "@/components/DateRangePicker";
 
 export const dynamic = "force-dynamic";
 
@@ -37,11 +38,15 @@ function chip(active: boolean): string {
 export default async function ConversasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ outcome?: string; seller?: string }>;
+  searchParams: Promise<{ outcome?: string; seller?: string; from?: string; to?: string }>;
 }) {
   const sp = await searchParams;
   const outcome = sp.outcome ?? "all";
   const seller = sp.seller ?? "all";
+  const re = /^\d{4}-\d{2}$/;
+  const from = sp.from && re.test(sp.from) ? sp.from : null;
+  const to = sp.to && re.test(sp.to) ? sp.to : null;
+  const carry = `${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}`;
 
   const admin = getSupabaseAdmin();
   const { data } = admin
@@ -54,10 +59,14 @@ export default async function ConversasPage({
 
   const sellers = [...new Set(all.map((c) => c.seller).filter(Boolean) as string[])].sort();
   const rows = all.filter(
-    (c) => (outcome === "all" || c.outcome === outcome) && (seller === "all" || c.seller === seller)
+    (c) =>
+      (outcome === "all" || c.outcome === outcome) &&
+      (seller === "all" || c.seller === seller) &&
+      (!from || (c.last_at != null && c.last_at.slice(0, 7) >= from)) &&
+      (!to || (c.last_at != null && c.last_at.slice(0, 7) <= to))
   );
 
-  const exportHref = `/api/export/conversas?outcome=${encodeURIComponent(outcome)}&seller=${encodeURIComponent(seller)}`;
+  const exportHref = `/api/export/conversas?outcome=${encodeURIComponent(outcome)}&seller=${encodeURIComponent(seller)}${carry}`;
 
   return (
     <div>
@@ -72,7 +81,7 @@ export default async function ConversasPage({
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Resultado</div>
             <div className="flex flex-wrap gap-2">
               {OUTCOMES.map((o) => (
-                <Link key={o.v} href={`/conversas?outcome=${o.v}&seller=${seller}`} className={chip(outcome === o.v)}>
+                <Link key={o.v} href={`/conversas?outcome=${o.v}&seller=${seller}${carry}`} className={chip(outcome === o.v)}>
                   {o.label}
                 </Link>
               ))}
@@ -81,15 +90,19 @@ export default async function ConversasPage({
           <div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Vendedor</div>
             <div className="flex flex-wrap gap-2">
-              <Link href={`/conversas?outcome=${outcome}&seller=all`} className={chip(seller === "all")}>
+              <Link href={`/conversas?outcome=${outcome}&seller=all${carry}`} className={chip(seller === "all")}>
                 Todos
               </Link>
               {sellers.map((s) => (
-                <Link key={s} href={`/conversas?outcome=${outcome}&seller=${encodeURIComponent(s)}`} className={chip(seller === s)}>
+                <Link key={s} href={`/conversas?outcome=${outcome}&seller=${encodeURIComponent(s)}${carry}`} className={chip(seller === s)}>
                   {s}
                 </Link>
               ))}
             </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Período (última atividade)</div>
+            <DateRangePicker minYear={2024} />
           </div>
           <div className="flex items-center justify-between border-t border-slate-100 pt-3">
             <span className="text-sm text-slate-500">
