@@ -10,9 +10,9 @@ export async function proxy(request: NextRequest) {
   if (!url || !key) return NextResponse.next();
 
   const { pathname } = request.nextUrl;
-  // Webhooks validam as próprias chaves; syncs exigem sessão (disparados
-  // pelo botão da página Integrações, já logado).
-  if (pathname.startsWith("/api/webhooks")) {
+  // Webhooks e a rota de import validam as próprias chaves; demais syncs
+  // exigem sessão (disparados pelo botão da página Integrações, já logado).
+  if (pathname.startsWith("/api/webhooks") || pathname.startsWith("/api/import")) {
     return NextResponse.next();
   }
 
