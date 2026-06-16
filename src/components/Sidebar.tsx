@@ -10,6 +10,7 @@ const links = [
   { href: "/funil", label: "Funil de vendas", icon: "▼" },
   { href: "/crm", label: "CRM", icon: "▦" },
   { href: "/atendimento", label: "Funil CRM", icon: "◷" },
+  { href: "/conversas", label: "Conversas", icon: "💬" },
   { href: "/vendas", label: "Vendas & time", icon: "▲" },
   { href: "/origem", label: "Origem das vendas", icon: "◆" },
   { href: "/cac", label: "CAC / ROAS", icon: "↗" },
