@@ -45,6 +45,11 @@ export async function GET(req: NextRequest) {
     .order("last_at", { ascending: false, nullsFirst: false });
   if (outcome && outcome !== "all") q = q.eq("outcome", outcome);
   if (seller && seller !== "all") q = q.eq("seller", seller);
+  const from = req.nextUrl.searchParams.get("from");
+  const to = req.nextUrl.searchParams.get("to");
+  const reYM = /^\d{4}-\d{2}$/;
+  if (from && reYM.test(from)) q = q.gte("last_at", `${from}-01`);
+  if (to && reYM.test(to)) q = q.lte("last_at", `${to}-31T23:59:59`);
   const { data: convs } = await q;
   const rows = convs ?? [];
 
