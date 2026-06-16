@@ -33,7 +33,7 @@ export default async function GargaloPage() {
     <div>
       <PageHeader
         title="Qual é o gargalo?"
-        subtitle="Diagnóstico automático do que mais trava o crescimento agora — últimos 30 dias contra os 30 anteriores"
+        subtitle="Diagnóstico automático do que mais trava o crescimento — robusto a lançamento (mediana de meses fechados e ritmo diário, não somas cruas)"
       />
       <DemoBanner show={data.isDemo} />
 
@@ -102,9 +102,11 @@ export default async function GargaloPage() {
 
       <p className="mt-6 text-xs text-slate-400">
         Como funciona: cada fator recebe uma pontuação de 0 a 100 conforme o
-        quanto está freando o crescimento; o maior vira o gargalo. Critérios:
-        queda na entrada de leads, queda na taxa de conversão, leads excedendo a
-        capacidade do time e alta no custo de anúncio por venda.
+        quanto está freando o crescimento; o maior vira o gargalo. Para não ser
+        enganado por lançamento, usa MEDIANA (ritmo diário de leads e meses
+        fechados) em vez de somas cruas de 30 dias. Critérios: queda na entrada
+        de leads, queda na conversão, leads excedendo a capacidade do time e alta
+        no custo de anúncio por venda.
       </p>
     </div>
   );
