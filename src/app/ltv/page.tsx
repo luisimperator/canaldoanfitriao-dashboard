@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { brl, num, monthLabel } from "@/lib/format";
 import { Card, KpiCard, PageHeader } from "@/components/ui";
 import { BarsChart } from "@/components/charts";
+import { DateRangePicker } from "@/components/DateRangePicker";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,12 @@ async function getLtv(): Promise<{ ltv: LtvData; updatedAt: string } | null> {
   return { ltv: data.data as LtvData, updatedAt: data.updated_at as string };
 }
 
-export default async function LtvPage() {
+export default async function LtvPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const sp = await searchParams;
   const snap = await getLtv();
 
   if (!snap) {
@@ -55,7 +61,15 @@ export default async function LtvPage() {
   const { ltv, updatedAt } = snap;
   const o = ltv.overall;
   const distData = ltv.dist.map((d) => ({ n: `${d.n}x`, clientes: d.c }));
-  const cohortData = ltv.cohorts.map((c) => ({ mes: monthLabel(c.month), ltv: c.ltv }));
+  const cohMonths = ltv.cohorts.map((c) => c.month);
+  const re = /^\d{4}-\d{2}$/;
+  const cohMin = cohMonths[0] ?? "2024-01";
+  const cohMax = cohMonths[cohMonths.length - 1] ?? cohMin;
+  const cohTo = sp.to && re.test(sp.to) ? sp.to : cohMax;
+  const cohFrom = sp.from && re.test(sp.from) ? sp.from : cohMin;
+  const cohortData = ltv.cohorts
+    .filter((c) => c.month >= cohFrom && c.month <= cohTo)
+    .map((c) => ({ mes: monthLabel(c.month), ltv: c.ltv }));
 
   return (
     <div>
@@ -97,6 +111,9 @@ export default async function LtvPage() {
           <BarsChart data={distData} xKey="n" barKey="clientes" name="Clientes" color="#38bdf8" />
         </Card>
         <Card title="LTV por mês de aquisição (coorte)">
+          <div className="flex justify-end mb-2">
+            <DateRangePicker minYear={2024} />
+          </div>
           <BarsChart data={cohortData} xKey="mes" barKey="ltv" name="LTV" color="#2dd4bf" money />
         </Card>
       </div>

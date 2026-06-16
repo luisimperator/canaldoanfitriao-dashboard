@@ -1,32 +1,53 @@
 import { getDashboardData } from "@/lib/data";
-import { daysAgo, isoToday, monthKey, monthlyCashflow, spendByCategory, sum } from "@/lib/metrics";
-import { brl, shortDate } from "@/lib/format";
+import { isoToday, monthKey, monthlyCashflow, spendByCategory, sum } from "@/lib/metrics";
+import { brl, shortDate, monthLabel } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { CashflowChart, SpendByCategoryChart } from "@/components/charts";
 import { UploadExtrato } from "@/components/UploadExtrato";
+import { DateRangePicker } from "@/components/DateRangePicker";
 
 export const dynamic = "force-dynamic";
 
-export default async function FinanceiroPage() {
+function shiftYM(month: string, delta: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+function lastDay(month: string): string {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(y, m, 0);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export default async function FinanceiroPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const sp = await searchParams;
   const data = await getDashboardData();
   const today = isoToday();
   const month = monthKey(today);
-  const start90 = daysAgo(89);
+  const re = /^\d{4}-\d{2}$/;
+  const to = sp.to && re.test(sp.to) ? sp.to : month;
+  const from = sp.from && re.test(sp.from) ? sp.from : shiftYM(to, -5);
 
-  const monthTx = data.finTransactions.filter(
-    (t) => monthKey(t.transactionDate) === month
-  );
+  const monthTx = data.finTransactions.filter((t) => monthKey(t.transactionDate) === month);
   const inMonth = sum(monthTx.filter((t) => t.direction === "in").map((t) => t.amount));
   const outMonth = sum(monthTx.filter((t) => t.direction === "out").map((t) => t.amount));
 
-  const cashflow = monthlyCashflow(data, 6);
+  const cashflow = monthlyCashflow(data, 36).filter((c) => c.month >= from && c.month <= to);
   const lastClosed = cashflow.length >= 2 ? cashflow[cashflow.length - 2] : null;
 
-  const categories = spendByCategory(data, start90, today);
+  const periodStart = `${from}-01`;
+  const periodEnd = to >= month ? today : lastDay(to);
+  const categories = spendByCategory(data, periodStart, periodEnd);
   const catName = new Map(data.finCategories.map((c) => [c.id, c.name]));
   const recent = [...data.finTransactions]
     .sort((a, b) => b.transactionDate.localeCompare(a.transactionDate))
     .slice(0, 12);
+
+  const periodLabel = `${monthLabel(from)} – ${monthLabel(to)}`;
 
   return (
     <div>
@@ -35,6 +56,11 @@ export default async function FinanceiroPage() {
         subtitle="Entradas e saídas da conta do Canal do Anfitrião (Banco Inter)"
       />
       <DemoBanner show={data.isDemo} />
+
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <span className="text-xs text-slate-500">Período (fluxo e despesas)</span>
+        <DateRangePicker />
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Entradas no mês" value={brl(inMonth)} tone="good" />
@@ -52,10 +78,10 @@ export default async function FinanceiroPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <Card title="Fluxo de caixa mensal">
+        <Card title={`Fluxo de caixa (${periodLabel})`}>
           <CashflowChart data={cashflow} />
         </Card>
-        <Card title="Despesas por categoria (90 dias)">
+        <Card title={`Despesas por categoria (${periodLabel})`}>
           <SpendByCategoryChart data={categories} />
         </Card>
 
