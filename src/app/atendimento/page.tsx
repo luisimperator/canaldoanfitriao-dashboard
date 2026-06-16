@@ -27,21 +27,34 @@ interface Ev {
   status: string | null;
   event_at: string;
 }
+interface ClosingRow {
+  seller: string;
+  period: string;
+  passaram: number;
+  fecharam: number;
+  taxa: number | null;
+}
 
-async function getData(): Promise<{ crm: CrmFunnel | null; events: Ev[] }> {
+async function getData(): Promise<{
+  crm: CrmFunnel | null;
+  events: Ev[];
+  closing: ClosingRow[];
+}> {
   const admin = getSupabaseAdmin();
-  if (!admin) return { crm: null, events: [] };
-  const [snap, ev] = await Promise.all([
+  if (!admin) return { crm: null, events: [], closing: [] };
+  const [snap, ev, cr] = await Promise.all([
     admin.from("analytics_snapshot").select("data").eq("key", "crm_funnel").maybeSingle(),
     admin
       .from("lead_events")
       .select("unnichat_id,name,stage,status,event_at")
       .order("event_at", { ascending: false })
       .limit(15),
+    admin.rpc("seller_closing_rate", { p_unit: "week" }),
   ]);
   return {
     crm: (snap.data?.data ?? null) as CrmFunnel | null,
     events: (ev.data ?? []) as Ev[],
+    closing: (cr.data ?? []) as ClosingRow[],
   };
 }
 
@@ -64,7 +77,7 @@ function fmt(dt: string): string {
 }
 
 export default async function FunilCrmPage() {
-  const { crm, events } = await getData();
+  const { crm, events, closing } = await getData();
 
   if (!crm) {
     return (
@@ -197,6 +210,56 @@ export default async function FunilCrmPage() {
           </p>
         </Card>
       </div>
+
+      <Card title="Taxa de fechamento por vendedor (semanal)" className="mb-4">
+        {closing.length === 0 ? (
+          <p className="text-sm text-slate-400">
+            Começando a coletar agora. Cada movimento no Unnichat carimba o vendedor
+            (via API) — os números de quem passou × quem fechou aparecem aqui conforme
+            o time atende e fecha.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                  <th className="py-2 font-medium">Vendedor</th>
+                  <th className="py-2 font-medium">Semana</th>
+                  <th className="py-2 font-medium text-right">Passaram</th>
+                  <th className="py-2 font-medium text-right">Fecharam</th>
+                  <th className="py-2 font-medium text-right">Taxa</th>
+                </tr>
+              </thead>
+              <tbody>
+                {closing.slice(0, 20).map((r, i) => (
+                  <tr key={i} className="border-b border-slate-100 last:border-0">
+                    <td className="py-1.5 text-slate-700">{r.seller}</td>
+                    <td className="py-1.5 text-slate-500 tabular-nums">
+                      {new Date(r.period + "T00:00:00").toLocaleDateString("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                      })}
+                    </td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-600">{num(r.passaram)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-600">{num(r.fecharam)}</td>
+                    <td
+                      className={`py-1.5 text-right tabular-nums font-semibold ${
+                        r.taxa !== null && r.taxa >= 20 ? "text-emerald-600" : "text-slate-700"
+                      }`}
+                    >
+                      {r.taxa !== null ? `${num(r.taxa, 1)}%` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="mt-3 text-xs text-slate-400">
+          &quot;Passaram&quot; = contatos distintos que o vendedor tocou na semana;
+          &quot;Fecharam&quot; = os que viraram ganho. Coleta daqui pra frente.
+        </p>
+      </Card>
 
       {events.length > 0 && (
         <Card title="Movimentos recentes (ao vivo)">
