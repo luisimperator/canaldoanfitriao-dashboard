@@ -62,11 +62,11 @@ export default async function LtvPage({
   const o = ltv.overall;
   const distData = ltv.dist.map((d) => ({ n: `${d.n}x`, clientes: d.c }));
   const cohMonths = ltv.cohorts.map((c) => c.month);
-  const re = /^\d{4}-\d{2}$/;
+  const re = /^\d{4}-\d{2}(-\d{2})?$/;
   const cohMin = cohMonths[0] ?? "2024-01";
   const cohMax = cohMonths[cohMonths.length - 1] ?? cohMin;
-  const cohTo = sp.to && re.test(sp.to) ? sp.to : cohMax;
-  const cohFrom = sp.from && re.test(sp.from) ? sp.from : cohMin;
+  const cohTo = (sp.to && re.test(sp.to) ? sp.to : cohMax).slice(0, 7);
+  const cohFrom = (sp.from && re.test(sp.from) ? sp.from : cohMin).slice(0, 7);
   const cohortData = ltv.cohorts
     .filter((c) => c.month >= cohFrom && c.month <= cohTo)
     .map((c) => ({ mes: monthLabel(c.month), ltv: c.ltv }));

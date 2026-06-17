@@ -23,6 +23,18 @@ interface CohortRow {
   converteram: number;
 }
 
+interface SurveyWeek {
+  semana: string;
+  entraram: number;
+  responderam: number;
+}
+
+interface SurveyDist {
+  campo: string;
+  valor: string;
+  n: number;
+}
+
 const SOURCE_LABELS: Record<string, string> = {
   meta_ads: "Meta Ads",
   google_ads: "Google Ads",
@@ -44,17 +56,38 @@ export default async function FunilPage({
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const sp = await searchParams;
-  const reYM = /^\d{4}-\d{2}$/;
-  const cFrom = sp.from && reYM.test(sp.from) ? sp.from : null;
-  const cTo = sp.to && reYM.test(sp.to) ? sp.to : null;
+  const reYMD = /^\d{4}-\d{2}(-\d{2})?$/;
+  const cFrom = sp.from && reYMD.test(sp.from) ? sp.from : null;
+  const cTo = sp.to && reYMD.test(sp.to) ? sp.to : null;
   const admin = getSupabaseAdmin();
   const cohortAll: CohortRow[] = admin
     ? (((await admin.rpc("weekly_funnel_cohort")).data ?? []) as CohortRow[])
     : [];
   const cohort = cohortAll.filter(
     (r) =>
-      (!cFrom || r.semana.slice(0, 7) >= cFrom) && (!cTo || r.semana.slice(0, 7) <= cTo)
+      (!cFrom || r.semana.slice(0, cFrom.length) >= cFrom) &&
+      (!cTo || r.semana.slice(0, cTo.length) <= cTo)
   );
+
+  const surveyWeeklyAll: SurveyWeek[] = admin
+    ? (((await admin.rpc("survey_weekly")).data ?? []) as SurveyWeek[])
+    : [];
+  const surveyWeekly = surveyWeeklyAll.filter(
+    (r) =>
+      (!cFrom || r.semana.slice(0, cFrom.length) >= cFrom) &&
+      (!cTo || r.semana.slice(0, cTo.length) <= cTo)
+  );
+  const surveyDist: SurveyDist[] = admin
+    ? (((await admin.rpc("survey_profile_dist")).data ?? []) as SurveyDist[])
+    : [];
+  const distGroup = (campo: string) => {
+    const rows = surveyDist.filter((d) => d.campo === campo);
+    const total = rows.reduce((a, b) => a + b.n, 0);
+    return { rows: rows.sort((a, b) => b.n - a.n), total };
+  };
+  const distFat = distGroup("faturamento");
+  const distImoveis = distGroup("imoveis");
+  const surveyTotal = distFat.total;
 
   const data = await getDashboardData();
   const today = isoToday();
@@ -188,6 +221,97 @@ export default async function FunilPage({
           Coorte por semana de ENTRADA do lead no Unnichat: quantos entraram, quantos viraram
           quentes, e quantos compraram Anfitrião 5 Estrelas ou Gigantes (cruzado por e-mail com a
           Eduzz). Preenche conforme os dados entram.
+        </p>
+      </Card>
+
+      <Card title="Pesquisa de qualificação (Unnichat) — quem respondeu e perfil" className="mb-4">
+        <p className="text-xs text-slate-500 mb-3">
+          Pesquisa disparada para os leads novos no WhatsApp (faturamento, nº de imóveis, tipo de
+          operação). <strong>{num(surveyTotal)}</strong> contatos responderam até agora.
+        </p>
+
+        {surveyWeekly.length > 0 && (
+          <div className="overflow-x-auto mb-5">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                  <th className="py-2 font-medium">Semana</th>
+                  <th className="py-2 font-medium text-right">Entraram</th>
+                  <th className="py-2 font-medium text-right">Responderam</th>
+                  <th className="py-2 font-medium text-right">Taxa de resposta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {surveyWeekly.map((r) => (
+                  <tr key={r.semana} className="border-b border-slate-100 last:border-0">
+                    <td className="py-1.5 text-slate-600 tabular-nums">
+                      {new Date(r.semana + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                    </td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-700 font-medium">{num(r.entraram)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-teal-600">{num(r.responderam)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-500">
+                      {r.entraram > 0 ? `${num((r.responderam / r.entraram) * 100, 1)}%` : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="grid md:grid-cols-2 gap-5">
+          <div>
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+              Faturamento dos respondentes
+            </h3>
+            <div className="space-y-2">
+              {distFat.rows.map((d) => {
+                const pct = distFat.total > 0 ? (d.n / distFat.total) * 100 : 0;
+                return (
+                  <div key={d.valor}>
+                    <div className="flex justify-between text-xs mb-0.5">
+                      <span className="text-slate-600">{d.valor}</span>
+                      <span className="font-semibold text-slate-900 tabular-nums">
+                        {num(d.n)} <span className="text-slate-400 font-normal">({num(pct, 0)}%)</span>
+                      </span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="h-full rounded-full bg-teal-500" style={{ width: `${Math.max(2, pct)}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+              Nº de imóveis dos respondentes
+            </h3>
+            <div className="space-y-2">
+              {distImoveis.rows.map((d) => {
+                const pct = distImoveis.total > 0 ? (d.n / distImoveis.total) * 100 : 0;
+                return (
+                  <div key={d.valor}>
+                    <div className="flex justify-between text-xs mb-0.5">
+                      <span className="text-slate-600">{d.valor}</span>
+                      <span className="font-semibold text-slate-900 tabular-nums">
+                        {num(d.n)} <span className="text-slate-400 font-normal">({num(pct, 0)}%)</span>
+                      </span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="h-full rounded-full bg-rose-500" style={{ width: `${Math.max(2, pct)}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-4 text-xs text-slate-400">
+          A tabela semanal respeita o período selecionado acima. As barras de perfil são sobre todos
+          os {num(surveyTotal)} respondentes (a pesquisa só captura leads novos, então cobre quem
+          entrou após ela ir ao ar, ~abril/2026).
         </p>
       </Card>
 

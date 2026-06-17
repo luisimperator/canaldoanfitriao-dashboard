@@ -28,26 +28,29 @@ export default async function FinanceiroPage({
   const data = await getDashboardData();
   const today = isoToday();
   const month = monthKey(today);
-  const re = /^\d{4}-\d{2}$/;
-  const to = sp.to && re.test(sp.to) ? sp.to : month;
-  const from = sp.from && re.test(sp.from) ? sp.from : shiftYM(to, -5);
+  const re = /^\d{4}-\d{2}(-\d{2})?$/;
+  const rawTo = sp.to && re.test(sp.to) ? sp.to : month;
+  const rawFrom = sp.from && re.test(sp.from) ? sp.from : shiftYM(rawTo.slice(0, 7), -5);
+  const fromM = rawFrom.slice(0, 7);
+  const toM = rawTo.slice(0, 7);
 
   const monthTx = data.finTransactions.filter((t) => monthKey(t.transactionDate) === month);
   const inMonth = sum(monthTx.filter((t) => t.direction === "in").map((t) => t.amount));
   const outMonth = sum(monthTx.filter((t) => t.direction === "out").map((t) => t.amount));
 
-  const cashflow = monthlyCashflow(data, 36).filter((c) => c.month >= from && c.month <= to);
+  const cashflow = monthlyCashflow(data, 36).filter((c) => c.month >= fromM && c.month <= toM);
   const lastClosed = cashflow.length >= 2 ? cashflow[cashflow.length - 2] : null;
 
-  const periodStart = `${from}-01`;
-  const periodEnd = to >= month ? today : lastDay(to);
+  const periodStart = rawFrom.length > 7 ? rawFrom : `${fromM}-01`;
+  const periodEndRaw = rawTo.length > 7 ? rawTo : lastDay(toM);
+  const periodEnd = periodEndRaw > today ? today : periodEndRaw;
   const categories = spendByCategory(data, periodStart, periodEnd);
   const catName = new Map(data.finCategories.map((c) => [c.id, c.name]));
   const recent = [...data.finTransactions]
     .sort((a, b) => b.transactionDate.localeCompare(a.transactionDate))
     .slice(0, 12);
 
-  const periodLabel = `${monthLabel(from)} – ${monthLabel(to)}`;
+  const periodLabel = `${monthLabel(fromM)} – ${monthLabel(toM)}`;
 
   return (
     <div>

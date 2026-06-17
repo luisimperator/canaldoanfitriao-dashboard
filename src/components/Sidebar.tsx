@@ -3,21 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-
-const links = [
-  { href: "/", label: "Visão geral", icon: "◉" },
-  { href: "/gargalo", label: "Gargalo", icon: "⚑" },
-  { href: "/funil", label: "Funil de vendas", icon: "▼" },
-  { href: "/crm", label: "CRM", icon: "▦" },
-  { href: "/atendimento", label: "Funil CRM", icon: "◷" },
-  { href: "/conversas", label: "Conversas", icon: "💬" },
-  { href: "/vendas", label: "Vendas & time", icon: "▲" },
-  { href: "/origem", label: "Origem das vendas", icon: "◆" },
-  { href: "/cac", label: "CAC / ROAS", icon: "↗" },
-  { href: "/ltv", label: "LTV & recompra", icon: "∞" },
-  { href: "/financeiro", label: "Financeiro", icon: "$" },
-  { href: "/integracoes", label: "Integrações", icon: "⚙" },
-];
+import { createBrowserClient } from "@supabase/ssr";
+import type { TabDef } from "@/lib/access";
 
 // Navegação com estado "pendente": ao clicar, o item já fica destacado e mostra
 // um spinner na hora (feedback imediato), antes mesmo de a página carregar.
@@ -29,8 +16,6 @@ function useNav() {
   const [, startTransition] = useTransition();
   const [pending, setPending] = useState<string | null>(null);
 
-  // Derivado: quando a rota chega no destino, o pendente "se apaga" sozinho
-  // (sem useEffect/setState, que o lint desaconselha).
   const pendingHref = pending && pending !== pathname ? pending : null;
 
   function navigate(href: string) {
@@ -48,8 +33,23 @@ function Spinner() {
   );
 }
 
-export function Sidebar() {
+function useLogout() {
+  const [loading, setLoading] = useState(false);
+  async function logout() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) return;
+    setLoading(true);
+    const supabase = createBrowserClient(url, key);
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  }
+  return { logout, loading };
+}
+
+export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null }) {
   const { pathname, pending, navigate } = useNav();
+  const { logout, loading } = useLogout();
 
   return (
     <>
@@ -60,9 +60,14 @@ export function Sidebar() {
             Canal do Anfitrião
           </span>
           <span className="text-[11px] text-rose-400 font-medium">dashboard</span>
+          {email && (
+            <button onClick={logout} disabled={loading} className="ml-auto text-[11px] text-slate-400 hover:text-white">
+              Sair
+            </button>
+          )}
         </div>
         <nav className="flex gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {links.map((link) => {
+          {tabs.map((link) => {
             const active = pathname === link.href || pending === link.href;
             return (
               <Link
@@ -97,7 +102,7 @@ export function Sidebar() {
           <div className="text-xs text-rose-400 font-medium mt-0.5">dashboard</div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {links.map((link) => {
+          {tabs.map((link) => {
             const active = pathname === link.href || pending === link.href;
             return (
               <Link
@@ -121,9 +126,20 @@ export function Sidebar() {
           })}
         </nav>
         <div className="px-5 py-4 text-[11px] text-slate-500 border-t border-slate-800">
-          Eduzz · Unnichat · Mailchimp
-          <br />
-          Meta Ads · Banco Inter
+          {email ? (
+            <div className="flex items-center justify-between gap-2">
+              <span className="truncate text-slate-400">{email}</span>
+              <button onClick={logout} disabled={loading} className="shrink-0 text-slate-400 hover:text-white">
+                {loading ? "…" : "Sair"}
+              </button>
+            </div>
+          ) : (
+            <>
+              Eduzz · Unnichat · Mailchimp
+              <br />
+              Meta Ads · Banco Inter
+            </>
+          )}
         </div>
       </aside>
     </>
