@@ -50,6 +50,9 @@ const STATUS_LABELS: Record<string, string> = {
   perdido: "Perdido",
 };
 
+// Gradiente roxo → rosa para o funil (do topo, largo, ao fundo, estreito).
+const FUNNEL_COLORS = ["#6d28d9", "#7c3aed", "#a21caf", "#c026d3", "#db2777", "#e11d48"];
+
 export default async function FunilPage({
   searchParams,
 }: {
@@ -321,24 +324,27 @@ export default async function FunilPage({
         </Card>
 
         <Card title="Etapas do funil (30 dias)" className="lg:col-span-2">
-          <div className="space-y-3">
-            {stages.map((stage) => {
+          <div className="py-2">
+            {stages.map((stage, i) => {
               const pct = stages[0].count > 0 ? (stage.count / stages[0].count) * 100 : 0;
               return (
-                <div key={stage.label}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-700">{stage.label}</span>
-                    <span className="font-semibold text-slate-900">
-                      {num(stage.count)}{" "}
-                      <span className="text-slate-400 font-normal">({num(pct, 1)}%)</span>
+                <div key={stage.label} className="flex flex-col items-center">
+                  <div
+                    className="flex items-center justify-between gap-3 rounded-md px-4 py-2.5 text-white shadow-sm"
+                    style={{
+                      width: `${Math.max(18, pct)}%`,
+                      minWidth: "150px",
+                      backgroundColor: FUNNEL_COLORS[Math.min(i, FUNNEL_COLORS.length - 1)],
+                    }}
+                  >
+                    <span className="text-sm font-medium truncate">{stage.label}</span>
+                    <span className="text-sm font-bold tabular-nums whitespace-nowrap">
+                      {num(stage.count)} · {num(pct, 0)}%
                     </span>
                   </div>
-                  <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-rose-600"
-                      style={{ width: `${Math.max(2, pct)}%` }}
-                    />
-                  </div>
+                  {i < stages.length - 1 && (
+                    <div className="text-slate-300 leading-none my-1 text-xs">▼</div>
+                  )}
                 </div>
               );
             })}
