@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-// Webhook de vendas da Eduzz.
-// Cadastre https://SEU_DOMINIO/api/webhooks/eduzz?key=EDUZZ_WEBHOOK_KEY no
-// painel da Eduzz para os eventos de fatura (myeduzz.invoice_paid /
-// myeduzz.invoice_refunded). Cada fatura paga vira uma linha em `sales`;
-// reembolso atualiza o status.
+// Webhook da Eduzz.
+// Cadastre https://SEU_DOMINIO/api/webhooks/eduzz?key=EDUZZ_WEBHOOK_KEY no painel.
+//
+// Comportamento:
+//  - CAIXA-PRETA: registra TODO evento recebido em webhook_log (source='eduzz'),
+//    inclusive os novos (cart_abandonment, contract_*, ciclo de vida de fatura,
+//    etc.), para mapearmos o formato real antes de construir o tratamento de cada um.
+//  - SÓ `myeduzz.invoice_paid` vira/atualiza uma venda em `sales`.
+//  - `myeduzz.invoice_refunded` e `myeduzz.invoice_chargeback` atualizam o status.
+//  - Os demais eventos por ora ficam apenas no log (action: "logged").
+//
+// (Correção: antes, QUALQUER evento de fatura com id — invoice_opened,
+//  invoice_recovering, etc. — era gravado como "paga", inflando o faturamento.)
+
+// Remove acentos (marcas diacríticas combinantes U+0300–U+036F) sem usar regex
+// com escape \u, evitando ambiguidades de escaping na ferramenta de edição.
+function semAcento(s: string): string {
+  return s
+    .normalize("NFD")
+    .split("")
+    .filter((c) => {
+      const code = c.charCodeAt(0);
+      return code < 0x300 || code > 0x36f;
+    })
+    .join("");
+}
 
 export async function POST(req: NextRequest) {
   const expectedKey = process.env.EDUZZ_WEBHOOK_KEY;
@@ -24,8 +45,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }
 
-  // Pings de verificação da Eduzz chegam sem corpo ou sem fatura:
-  // responde 200 para a URL poder ser ativada no painel.
+  // Pings de verificação chegam sem corpo: responde 200 para ativar a URL.
   let body;
   try {
     body = await req.json();
@@ -34,16 +54,37 @@ export async function POST(req: NextRequest) {
   }
   const event: string = body.event ?? "";
   const data = body.data ?? {};
+
+  // CAIXA-PRETA: registra todo evento (até os sem id) para mapear o formato real.
+  await supabase
+    .from("webhook_log")
+    .insert({ source: "eduzz", note: event || "(sem event)", body });
+
   const invoiceId = String(data.id ?? data.invoice_id ?? "");
+
+  // Reembolso / chargeback: atualizam o status de uma venda já existente.
+  if (event === "myeduzz.invoice_refunded") {
+    if (invoiceId) {
+      await supabase.from("sales").update({ status: "reembolsada" }).eq("eduzz_invoice_id", invoiceId);
+    }
+    return NextResponse.json({ ok: true, action: "refunded" });
+  }
+  if (event === "myeduzz.invoice_chargeback") {
+    if (invoiceId) {
+      await supabase.from("sales").update({ status: "chargeback" }).eq("eduzz_invoice_id", invoiceId);
+    }
+    return NextResponse.json({ ok: true, action: "chargeback" });
+  }
+
+  // Só FATURA PAGA vira venda. Demais eventos ficam apenas no log por enquanto.
+  if (event !== "myeduzz.invoice_paid") {
+    return NextResponse.json({ ok: true, action: "logged", event });
+  }
   if (!invoiceId) {
     return NextResponse.json({ ok: true, action: "ping" });
   }
 
-  if (event.includes("refund")) {
-    await supabase.from("sales").update({ status: "reembolsada" }).eq("eduzz_invoice_id", invoiceId);
-    return NextResponse.json({ ok: true, action: "refunded" });
-  }
-
+  // --- Fatura paga: registra/atualiza a venda ---
   // Valor pago COM juros de parcelamento (mesma base do histórico importado
   // dos CSVs — coluna "Valor Total da Venda"). Cai para o preço do produto
   // só se o valor pago não vier no payload.
@@ -55,7 +96,6 @@ export async function POST(req: NextRequest) {
 
   // UTMs vêm em campos diferentes conforme a versão do payload; guarda o que houver.
   const utm = data.utm ?? data.tracker ?? data.utmParameters ?? null;
-  await supabase.from("webhook_log").insert({ source: "eduzz", note: event, body });
 
   // O vendedor é atribuído cruzando com o lead do Unnichat (por e-mail),
   // ou pelo nome no utm_source (links individuais dos vendedores).
@@ -92,9 +132,7 @@ export async function POST(req: NextRequest) {
         .select("id, name")
         .eq("is_active", true);
       const match = (sellers ?? []).find((s) =>
-        utmSource.includes(
-          s.name.split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        )
+        utmSource.includes(semAcento(s.name.split(" ")[0].toLowerCase()))
       );
       sellerId = match?.id ?? null;
     }
