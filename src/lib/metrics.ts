@@ -3,8 +3,18 @@
 
 import type { DashboardData, Lead, Sale, Seller } from "./types";
 
+// Todas as datas "de hoje"/intervalos do dashboard são calculadas no fuso de
+// São Paulo (America/Sao_Paulo), e não em UTC — senão a virada do dia fica 3h
+// adiantada (uma venda das 21h cairia no "amanhã").
+const SP_TZ = "America/Sao_Paulo";
+
+// Data no formato YYYY-MM-DD no fuso de São Paulo. ("en-CA" já formata YYYY-MM-DD.)
+function spDate(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: SP_TZ }).format(d);
+}
+
 export function isoToday(): string {
-  return new Date().toISOString().slice(0, 10);
+  return spDate(new Date());
 }
 
 export function monthKey(isoDate: string): string {
@@ -12,9 +22,12 @@ export function monthKey(isoDate: string): string {
 }
 
 export function daysAgo(n: number, from = new Date()): string {
-  const d = new Date(from);
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
+  // Dia-calendário de São Paulo menos n dias (aritmética em UTC a partir da
+  // meia-noite do dia SP — estável e sem efeito de horário de verão).
+  const [y, m, d] = spDate(from).split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() - n);
+  return dt.toISOString().slice(0, 10);
 }
 
 export function paidSales(sales: Sale[]): Sale[] {
