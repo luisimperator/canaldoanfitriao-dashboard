@@ -5,6 +5,8 @@ import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { CashflowChart, SpendByCategoryChart } from "@/components/charts";
 import { UploadExtrato } from "@/components/UploadExtrato";
 import { DateRangePicker } from "@/components/DateRangePicker";
+import { DistribuicaoSocios } from "@/components/DistribuicaoSocios";
+import { getDistribuicao } from "@/lib/distribuicao";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +28,7 @@ export default async function FinanceiroPage({
 }) {
   const sp = await searchParams;
   const data = await getDashboardData();
+  const distrib = await getDistribuicao();
   const today = isoToday();
   const month = monthKey(today);
   const re = /^\d{4}-\d{2}(-\d{2})?$/;
@@ -81,6 +84,7 @@ export default async function FinanceiroPage({
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
+        {distrib && <DistribuicaoSocios data={distrib} />}
         <Card title={`Fluxo de caixa (${periodLabel})`}>
           <CashflowChart data={cashflow} />
         </Card>
