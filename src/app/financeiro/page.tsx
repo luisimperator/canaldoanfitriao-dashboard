@@ -3,7 +3,6 @@ import { isoToday, monthKey, monthlyCashflow, spendByCategory, sum } from "@/lib
 import { brl, shortDate, monthLabel } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { CashflowChart, SpendByCategoryChart } from "@/components/charts";
-import { UploadExtrato } from "@/components/UploadExtrato";
 import { DateRangePicker } from "@/components/DateRangePicker";
 
 export const dynamic = "force-dynamic";
@@ -86,10 +85,6 @@ export default async function FinanceiroPage({
         </Card>
         <Card title={`Despesas por categoria (${periodLabel})`}>
           <SpendByCategoryChart data={categories} />
-        </Card>
-
-        <Card title="Importar extrato do Inter">
-          <UploadExtrato />
         </Card>
 
         <Card title="Últimos lançamentos">
