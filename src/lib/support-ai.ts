@@ -198,15 +198,30 @@ export async function runSupportAgent(
   const usedTools: string[] = [];
   let handoffId: string | null = null;
 
+  // adaptive thinking + effort só existem em parte da família (Opus 4.6+/Sonnet
+  // 4.6/Fable 5). No Haiku 4.5 esses parâmetros dão 400, então omitimos.
+  const ADAPTIVE_MODELS = new Set([
+    "claude-opus-4-8",
+    "claude-opus-4-7",
+    "claude-opus-4-6",
+    "claude-sonnet-4-6",
+    "claude-fable-5",
+  ]);
+  const useAdaptive = ADAPTIVE_MODELS.has(MODEL);
+
   for (let turn = 0; turn < MAX_TURNS; turn++) {
     const response = await client.messages.create({
       model: MODEL,
       max_tokens: 4096,
-      thinking: { type: "adaptive" },
-      output_config: { effort: EFFORT as "low" | "medium" | "high" },
       system,
       tools: TOOLS,
       messages,
+      ...(useAdaptive
+        ? {
+            thinking: { type: "adaptive" as const },
+            output_config: { effort: EFFORT as "low" | "medium" | "high" },
+          }
+        : {}),
     });
 
     if (response.stop_reason === "tool_use") {
