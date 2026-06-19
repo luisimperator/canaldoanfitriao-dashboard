@@ -59,10 +59,10 @@ export default async function SuportePage({
       />
 
       <div className="mb-6 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-        <strong>Fase 1 no ar:</strong> consulta do cliente (dado real), fila de
-        handoff e base de treinamento. O atendimento automático por WhatsApp
-        (Meta) e o cérebro de IA entram nas próximas fases — falta só as
-        credenciais da Meta e a chave da IA.
+        <strong>Fases 1 e 2 no ar:</strong> consulta do cliente, fila de handoff,
+        treinamento e o <Link href="/suporte/simulador" className="underline font-medium">cérebro
+        de IA</Link> (responde × escala). Falta a Fase 3: ligar no WhatsApp pela
+        Meta. A IA precisa da chave <code>ANTHROPIC_API_KEY</code> no servidor.
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 mb-6">
@@ -212,7 +212,10 @@ export default async function SuportePage({
         <HandoffsList initial={handoffs} />
       </Card>
 
-      <div className="text-sm">
+      <div className="flex flex-wrap gap-4 text-sm">
+        <Link href="/suporte/simulador" className="font-semibold text-rose-600 hover:text-rose-500">
+          → Simular atendimento da IA
+        </Link>
         <Link href="/suporte/treinamento" className="font-semibold text-rose-600 hover:text-rose-500">
           → Treinar a IA (base de conhecimento)
         </Link>
