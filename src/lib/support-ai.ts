@@ -19,7 +19,7 @@ import { getCustomer360, blocoLabel, type KbItem } from "@/lib/support";
 const MODEL = process.env.SUPPORT_AI_MODEL || "claude-opus-4-8";
 const EFFORT = process.env.SUPPORT_AI_EFFORT || "medium";
 const SALES_CONTACT =
-  process.env.SUPPORT_SALES_CONTACT || "[número do comercial a configurar]";
+  process.env.SUPPORT_SALES_CONTACT || "+55 11 98763-7146";
 const MAX_TURNS = 6;
 
 export interface AgentMessage {
