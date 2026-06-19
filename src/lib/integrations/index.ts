@@ -77,10 +77,10 @@ export function listIntegrations(): IntegrationInfo[] {
       name: "Banco Inter (financeiro)",
       role: "Importa o extrato da conta PJ automaticamente",
       envVars: ["INTER_CLIENT_ID", "INTER_CLIENT_SECRET", "INTER_CERT_PEM", "INTER_KEY_PEM"],
-      configured: has("INTER_CLIENT_ID", "INTER_CLIENT_SECRET"),
+      configured: has("INTER_CLIENT_ID", "INTER_CLIENT_SECRET", "INTER_CERT_PEM", "INTER_KEY_PEM"),
       syncPath: "/api/sync/inter",
       howItWorks:
-        "Crie uma aplicação no Internet Banking PJ (menu Aplicações) com o escopo extrato.read e baixe o certificado mTLS. O endpoint POST /api/sync/inter consulta /banking/v2/extrato e grava em fin_transactions. Enquanto isso, dá para subir o extrato OFX/CSV manualmente na tela Financeiro.",
+        "Crie uma aplicação no Internet Banking PJ (menu Aplicações) com o escopo extrato.read e baixe o certificado mTLS. Preencha INTER_CLIENT_ID, INTER_CLIENT_SECRET e o conteúdo dos arquivos .crt e .key em INTER_CERT_PEM / INTER_KEY_PEM. O endpoint POST /api/sync/inter consulta o extrato (últimos 30 dias) via mTLS e grava em fin_transactions, deduplicando por lançamento. Também dá para subir o extrato OFX/CSV manualmente na tela Financeiro.",
     },
   ];
 }

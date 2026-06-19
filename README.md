@@ -48,8 +48,12 @@ Banco Inter ──► extrato ──► financeiro            │              v
 4. **Mailchimp** — a rotina de sincronização (`/api/sync/mailchimp`)
    importa inscritos novos como leads frios.
 5. **Meta Ads** — `/api/sync/meta-ads` importa o gasto diário dos últimos 30 dias.
-6. **Banco Inter** — enquanto a integração por API (`/api/sync/inter`) não é
-   aprovada no banco, dá para subir o extrato OFX manualmente na tela Financeiro.
+6. **Banco Inter** — crie uma aplicação no Internet Banking PJ (menu Aplicações)
+   com o escopo `extrato.read`, baixe o certificado mTLS e preencha
+   `INTER_CLIENT_ID`, `INTER_CLIENT_SECRET`, `INTER_CERT_PEM` e `INTER_KEY_PEM`.
+   A rotina `/api/sync/inter` importa o extrato dos últimos 30 dias (autenticação
+   mTLS, lançamentos deduplicados). Também dá para subir o extrato OFX manualmente
+   na tela Financeiro.
 
 ## A métrica de contratação
 
