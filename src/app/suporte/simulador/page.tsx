@@ -1,22 +1,32 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
-import { aiConfigured } from "@/lib/support-ai";
+import { aiConfigured, supportModelName } from "@/lib/support-ai";
 import { SimuladorChat } from "./SimuladorChat";
 
 export const dynamic = "force-dynamic";
 
 export default function SimuladorPage() {
   const enabled = aiConfigured();
+  const model = supportModelName();
   return (
     <div>
       <PageHeader
         title="Simulador do atendimento (IA)"
         subtitle="Converse como se fosse um cliente e veja a IA responder usando o treinamento + a consulta do cliente. Nada aqui vai pro WhatsApp ainda — é um banco de testes."
       />
-      <div className="mb-4 text-sm">
-        <Link href="/suporte" className="text-slate-500 hover:text-slate-800">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <Link href="/suporte" className="text-sm text-slate-500 hover:text-slate-800">
           ← Voltar pro Suporte
         </Link>
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+            enabled ? "bg-slate-100 text-slate-600" : "bg-slate-100 text-slate-400"
+          }`}
+          title="Modelo da IA em uso (variável SUPPORT_AI_MODEL)"
+        >
+          <span className={`h-2 w-2 rounded-full ${enabled ? "bg-emerald-500" : "bg-slate-300"}`} />
+          Modelo: <span className="font-semibold text-slate-700">{model}</span>
+        </span>
       </div>
 
       {!enabled && (
