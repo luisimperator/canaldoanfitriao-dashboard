@@ -38,6 +38,11 @@ export function aiConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
 }
 
+// Nome do modelo da IA em uso (para exibir na tela).
+export function supportModelName(): string {
+  return MODEL;
+}
+
 const HANDOFF_MOTIVOS = [
   "cancelamento_renovacao",
   "reembolso",
