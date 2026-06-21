@@ -29,9 +29,20 @@ export interface AgentMessage {
 
 export interface AgentResult {
   reply: string;
+  messages: string[];
   escalated: boolean;
   handoffId: string | null;
   usedTools: string[];
+}
+
+// A IA pode separar a resposta em várias mensagens curtas (como no WhatsApp)
+// usando uma linha só com [BREAK]. Aqui quebramos nesse marcador.
+function splitMessages(reply: string): string[] {
+  const parts = reply
+    .split(/\n*\[BREAK\]\n*/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts.length > 0 ? parts : [reply.trim() || "(sem resposta)"];
 }
 
 export function aiConfigured(): boolean {
@@ -93,6 +104,7 @@ Seu papel é resolver dúvidas de quem JÁ é cliente (comprou). Você NÃO faz 
 2. Alteração de dados cadastrais é SEMPRE pelo formulário que o próprio cliente preenche — você nunca altera dados aqui.
 3. Você é pós-venda. Quem quer COMPRAR é encaminhado ao comercial: ${SALES_CONTACT}.
 4. Responda em português, de forma curta, cordial e objetiva, como no WhatsApp.
+5. Como no WhatsApp, NÃO mande um textão. Quando a resposta tiver mais de uma ideia (ex.: cumprimento + pergunta, ou explicação + próximo passo), divida em mensagens curtas: ponha uma linha contendo apenas [BREAK] entre cada mensagem (no máximo 3 a 4). Se uma frase só já resolve, não use [BREAK].
 
 # Quem é quem
 - É CLIENTE (lookup mostra compra confirmada): dê suporte completo.
@@ -189,13 +201,8 @@ export async function runSupportAgent(
   supervisorNotes: string[] = []
 ): Promise<AgentResult> {
   if (!aiConfigured()) {
-    return {
-      reply:
-        "A IA de suporte ainda não está ligada (falta a ANTHROPIC_API_KEY no servidor).",
-      escalated: false,
-      handoffId: null,
-      usedTools: [],
-    };
+    const off = "A IA de suporte ainda não está ligada (falta a ANTHROPIC_API_KEY no servidor).";
+    return { reply: off, messages: [off], escalated: false, handoffId: null, usedTools: [] };
   }
 
   const client = new Anthropic();
@@ -267,17 +274,20 @@ export async function runSupportAgent(
       .join("\n")
       .trim();
 
+    const parts = splitMessages(reply);
     return {
-      reply: reply || "(sem resposta)",
+      reply: parts.join("\n\n"),
+      messages: parts,
       escalated: handoffId !== null,
       handoffId,
       usedTools,
     };
   }
 
+  const fail = "Não consegui concluir o atendimento automático. Vou encaminhar para um humano.";
   return {
-    reply:
-      "Não consegui concluir o atendimento automático. Vou encaminhar para um humano.",
+    reply: fail,
+    messages: [fail],
     escalated: handoffId !== null,
     handoffId,
     usedTools,
