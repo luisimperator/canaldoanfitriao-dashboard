@@ -218,6 +218,155 @@ export async function getCustomer360(
   };
 }
 
+// ----------------------------------------------------------------------------
+// Busca por CPF ou nome (além do e-mail). O CPF/nome é resolvido para o e-mail
+// cadastrado e aí reaproveitamos o getCustomer360 (perfil completo, inclui TMB).
+// ----------------------------------------------------------------------------
+
+function onlyDigits(s: string): string {
+  return (s || "").replace(/\D+/g, "");
+}
+
+// CPF pode estar gravado em dígitos puros ou formatado — tentamos as duas.
+function cpfVariants(raw: string): string[] {
+  const d = onlyDigits(raw);
+  if (d.length !== 11) return d ? [d] : [];
+  return [d, `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`];
+}
+
+function emptyLookup(label: string, resumo: string): CustomerLookup {
+  return {
+    found: false,
+    email: label,
+    nome: null,
+    telefone: null,
+    documento: null,
+    isCliente: false,
+    inadimplente: false,
+    assinatura: null,
+    compras: [],
+    parcelados: [],
+    resumo,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resolveByCpf(admin: any, cpf: string): Promise<{ emails: string[]; nome: string | null }> {
+  const variants = cpfVariants(cpf);
+  if (variants.length === 0) return { emails: [], nome: null };
+  const emails = new Set<string>();
+  let nome: string | null = null;
+
+  // 1) tabela normalizada `sales` (colunas limpas; preenchida nas vendas recentes)
+  try {
+    const orSales = variants.map((v) => `buyer_document.eq.${v}`).join(",");
+    const r = await admin
+      .from("sales")
+      .select("buyer_email,buyer_name,buyer_document")
+      .or(orSales)
+      .limit(50);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const row of (r.data ?? []) as any[]) {
+      if (row.buyer_email) emails.add(normEmail(String(row.buyer_email)));
+      if (!nome && row.buyer_name) nome = String(row.buyer_name);
+    }
+  } catch {
+    /* tabela/coluna pode não existir — ignora e tenta o raw */
+  }
+
+  // 2) eduzz_sales_raw — CPF mora dentro do JSON `data`; tentamos os caminhos
+  // mais prováveis do payload da Eduzz. Se nenhum casar, degrada sem quebrar.
+  try {
+    const paths = ["data->buyer->>document", "data->student->>document", "data->>document"];
+    const conds: string[] = [];
+    for (const p of paths) for (const v of variants) conds.push(`${p}.eq.${v}`);
+    const r = await admin.from("eduzz_sales_raw").select("email,data").or(conds.join(",")).limit(50);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const row of (r.data ?? []) as any[]) {
+      const buyer = asObj(asObj(row.data).buyer);
+      const student = asObj(asObj(row.data).student);
+      const e = row.email ?? buyer.email ?? student.email;
+      if (e) emails.add(normEmail(String(e)));
+      if (!nome && (buyer.name ?? student.name)) nome = String(buyer.name ?? student.name);
+    }
+  } catch {
+    /* caminho do JSON pode diferir — ignora */
+  }
+
+  return { emails: [...emails], nome };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resolveByName(admin: any, nomeRaw: string): Promise<string[]> {
+  const nome = nomeRaw.trim();
+  if (nome.length < 3) return [];
+  const like = `%${nome}%`;
+  const emails = new Set<string>();
+  try {
+    const r = await admin.from("sales").select("buyer_email").ilike("buyer_name", like).limit(50);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const row of (r.data ?? []) as any[]) if (row.buyer_email) emails.add(normEmail(String(row.buyer_email)));
+  } catch {
+    /* ignora */
+  }
+  try {
+    const r = await admin.from("eduzz_sales_raw").select("email,data").ilike("data->buyer->>name", like).limit(50);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const row of (r.data ?? []) as any[]) {
+      const e = row.email ?? asObj(asObj(row.data).buyer).email;
+      if (e) emails.add(normEmail(String(e)));
+    }
+  } catch {
+    /* ignora */
+  }
+  try {
+    const r = await admin.from("tmb_pedidos_raw").select("email,cliente").ilike("cliente", like).limit(50);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const row of (r.data ?? []) as any[]) if (row.email) emails.add(normEmail(String(row.email)));
+  } catch {
+    /* ignora */
+  }
+  return [...emails];
+}
+
+// Busca flexível: por e-mail, CPF ou nome. Resolve a identidade para um e-mail
+// e devolve o perfil 360. Para nome com vários cadastros, pede o CPF/e-mail.
+export async function findCustomer(query: {
+  email?: string;
+  cpf?: string;
+  nome?: string;
+}): Promise<CustomerLookup | { error: string }> {
+  const email = (query.email ?? "").trim();
+  if (email && email.includes("@")) return getCustomer360(email);
+
+  const admin = getSupabaseAdmin();
+  if (!admin) return { error: "Supabase não configurado no servidor." };
+
+  const cpf = (query.cpf ?? "").trim();
+  if (onlyDigits(cpf).length >= 11) {
+    const { emails, nome } = await resolveByCpf(admin, cpf);
+    if (emails.length >= 1) return getCustomer360(emails[0]);
+    return emptyLookup(
+      cpf,
+      `Não localizei cadastro com o CPF informado${nome ? ` (${nome})` : ""}. Confirme o CPF ou peça o e-mail da compra.`
+    );
+  }
+
+  const nome = (query.nome ?? "").trim();
+  if (nome.length >= 3) {
+    const emails = await resolveByName(admin, nome);
+    if (emails.length === 1) return getCustomer360(emails[0]);
+    if (emails.length > 1)
+      return emptyLookup(
+        nome,
+        "Há mais de um cadastro com esse nome. Para confirmar a identidade, peça o CPF ou o e-mail da compra."
+      );
+    return emptyLookup(nome, "Não localizei cadastro com esse nome. Peça o CPF ou o e-mail da compra.");
+  }
+
+  return { error: "Informe e-mail, CPF ou nome para a busca." };
+}
+
 function buildResumo(c: {
   found: boolean;
   isCliente: boolean;
