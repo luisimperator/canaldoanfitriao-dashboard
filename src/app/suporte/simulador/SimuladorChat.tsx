@@ -30,12 +30,16 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
   const [input, setInput] = useState("");
   const [notes, setNotes] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [typing, setTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rule, setRule] = useState<RuleCard | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   const scrollDown = () =>
     setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  // tempo de "digitando" proporcional ao tamanho da mensagem (~35ms/caractere)
+  const typingDelay = (text: string) => Math.min(2200, Math.max(500, text.length * 35));
 
   // histórico p/ a IA: cliente→user, ia→assistant (chefe NÃO entra). Junta
   // mensagens seguidas do mesmo lado (a IA manda vários balões por turno).
@@ -62,10 +66,17 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
     return json as { messages: string[]; escalated: boolean; usedTools: string[] };
   }
 
-  // Renderiza os balões da IA em sequência (como no WhatsApp), com leve atraso.
+  // Renderiza os balões da IA em sequência (como no WhatsApp). O 1º aparece
+  // assim que fica pronto (a espera da IA já "valeu" por ele); cada balão
+  // seguinte tem um "digitando" proporcional ao tamanho do texto.
   async function pushIaMessages(parts: string[], escalated: boolean, tools: string[], corrigida?: boolean) {
     for (let i = 0; i < parts.length; i++) {
       const isLast = i === parts.length - 1;
+      if (i > 0) {
+        setTyping(true);
+        await sleep(typingDelay(parts[i]));
+      }
+      setTyping(false);
       setMsgs((m) => [
         ...m,
         {
@@ -77,7 +88,6 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
         },
       ]);
       scrollDown();
-      if (!isLast) await new Promise((r) => setTimeout(r, 700));
     }
   }
 
@@ -85,12 +95,14 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
     const history = historyFrom(msgs);
     setMsgs((m) => [...m, { kind: "cliente", content: text }]);
     setLoading(true);
+    setTyping(true);
     try {
       const r = await callAgent(text, history, notes);
       await pushIaMessages(r.messages, r.escalated, r.usedTools);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha.");
     } finally {
+      setTyping(false);
       setLoading(false);
     }
   }
@@ -111,6 +123,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
       // 1) corrige na hora: refaz a última resposta ao cliente com a nova bronca
       if (lastCliente) {
         const history = historyFrom(msgs.slice(0, lastClienteIdx));
+        setTyping(true);
         const r = await callAgent(lastCliente, history, nextNotes);
         await pushIaMessages(r.messages, r.escalated, r.usedTools, true);
       }
@@ -143,6 +156,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha.");
     } finally {
+      setTyping(false);
       setLoading(false);
     }
   }
@@ -243,9 +257,9 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
           );
         })}
 
-        {loading && (
+        {typing && (
           <div className="flex justify-start">
-            <div className="rounded-2xl bg-slate-100 px-3.5 py-2 text-sm text-slate-400">pensando…</div>
+            <div className="rounded-2xl bg-slate-100 px-3.5 py-2 text-sm text-slate-400">digitando…</div>
           </div>
         )}
 
