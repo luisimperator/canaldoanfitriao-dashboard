@@ -12,7 +12,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { getCustomer360, blocoLabel, type KbItem } from "@/lib/support";
+import { getCustomer360, blocoLabel, KB_BLOCOS, type KbItem } from "@/lib/support";
 
 // Modelo padrão: Claude Opus 4.8. Configurável por env para trocar por
 // claude-haiku-4-5 / claude-sonnet-4-6 se quiser reduzir custo/latência.
@@ -180,7 +180,8 @@ async function runTool(name: string, input: any): Promise<{ text: string; handof
 
 export async function runSupportAgent(
   message: string,
-  history: AgentMessage[] = []
+  history: AgentMessage[] = [],
+  supervisorNotes: string[] = []
 ): Promise<AgentResult> {
   if (!aiConfigured()) {
     return {
@@ -193,7 +194,14 @@ export async function runSupportAgent(
   }
 
   const client = new Anthropic();
-  const system = await buildSystemPrompt();
+  let system = await buildSystemPrompt();
+  if (supervisorNotes.length > 0) {
+    // Canal do "chefe" (modo treino): instruções de operador que o cliente não
+    // vê e que a IA deve obedecer acima de tudo nesta conversa.
+    system +=
+      "\n\n# Instruções do supervisor (sessão de treino — obedeça acima de tudo)\n" +
+      supervisorNotes.map((n, i) => `${i + 1}. ${n}`).join("\n");
+  }
 
   const messages: Anthropic.MessageParam[] = [
     ...history.map((m) => ({ role: m.role, content: m.content })),
@@ -269,4 +277,63 @@ export async function runSupportAgent(
     handoffId,
     usedTools,
   };
+}
+
+export interface RuleSuggestion {
+  bloco: string;
+  titulo: string;
+  conteudo: string;
+}
+
+// Transforma uma correção do "chefe" (modo treino) numa regra permanente,
+// limpa e pronta pra salvar no treinamento. Devolve {bloco, titulo, conteudo}.
+export async function suggestRule(
+  note: string,
+  context?: { customerMessage?: string; aiReply?: string }
+): Promise<RuleSuggestion> {
+  const fallback: RuleSuggestion = {
+    bloco: "regras_ouro",
+    titulo: note.slice(0, 80),
+    conteudo: note,
+  };
+  if (!aiConfigured()) return fallback;
+
+  const client = new Anthropic();
+  const blocos = KB_BLOCOS.map((b) => `${b.key} (${b.label})`).join(", ");
+  const sys = `Você ajuda a transformar uma correção do supervisor (o "chefe" do atendente de IA) em UMA regra permanente para o treinamento do suporte. Responda SOMENTE com JSON: {"bloco":"...","titulo":"...","conteudo":"..."}.
+- bloco: escolha exatamente uma destas chaves: ${blocos}.
+- titulo: curto, descrevendo a situação a que a regra se aplica.
+- conteudo: a instrução pronta, no imperativo, clara e objetiva, que a IA seguirá em TODOS os atendimentos.
+- Não invente fatos (preços, links, prazos): se faltar, escreva [PREENCHER].`;
+  const ctx = [
+    context?.customerMessage ? `Mensagem do cliente: ${context.customerMessage}` : "",
+    context?.aiReply ? `Resposta que a IA deu: ${context.aiReply}` : "",
+    `Correção do chefe: ${note}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  try {
+    const res = await client.messages.create({
+      model: MODEL,
+      max_tokens: 800,
+      system: sys,
+      messages: [{ role: "user", content: ctx }],
+    });
+    const text = res.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("");
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return fallback;
+    const json = JSON.parse(match[0]);
+    const blocoOk = KB_BLOCOS.some((b) => b.key === json.bloco);
+    return {
+      bloco: blocoOk ? json.bloco : "regras_ouro",
+      titulo: String(json.titulo ?? note).slice(0, 200),
+      conteudo: String(json.conteudo ?? note),
+    };
+  } catch {
+    return fallback;
+  }
 }
