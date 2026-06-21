@@ -11,8 +11,8 @@ export default function SimuladorPage() {
   return (
     <div>
       <PageHeader
-        title="Simulador do atendimento (IA)"
-        subtitle="Converse como se fosse um cliente e veja a IA responder usando o treinamento + a consulta do cliente. Nada aqui vai pro WhatsApp ainda — é um banco de testes."
+        title="Modo Treino (IA)"
+        subtitle="Fale como cliente e veja a IA responder; troque para Chefe pra corrigir (o cliente não vê) — a IA ajusta na hora e sugere uma regra pra você salvar no treinamento. Nada aqui vai pro WhatsApp."
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <Link href="/suporte" className="text-sm text-slate-500 hover:text-slate-800">

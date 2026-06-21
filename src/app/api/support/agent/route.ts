@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  let body: { message?: unknown; history?: unknown };
+  let body: { message?: unknown; history?: unknown; supervisorNotes?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -49,8 +49,12 @@ export async function POST(req: NextRequest) {
         }))
     : [];
 
+  const supervisorNotes: string[] = Array.isArray(body.supervisorNotes)
+    ? body.supervisorNotes.filter((n): n is string => typeof n === "string")
+    : [];
+
   try {
-    const result = await runSupportAgent(message, history);
+    const result = await runSupportAgent(message, history, supervisorNotes);
     return NextResponse.json(result);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "erro desconhecido";
