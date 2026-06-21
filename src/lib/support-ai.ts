@@ -12,7 +12,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { getCustomer360, blocoLabel, KB_BLOCOS, type KbItem } from "@/lib/support";
+import { findCustomer, blocoLabel, KB_BLOCOS, type KbItem } from "@/lib/support";
 
 // Modelo padrão: Claude Opus 4.8. Configurável por env para trocar por
 // claude-haiku-4-5 / claude-sonnet-4-6 se quiser reduzir custo/latência.
@@ -89,7 +89,7 @@ async function buildSystemPrompt(): Promise<string> {
 Seu papel é resolver dúvidas de quem JÁ é cliente (comprou). Você NÃO faz vendas.
 
 # Regras de ouro (inegociáveis)
-1. SEMPRE peça o e-mail cadastrado na compra antes de consultar ou agir, e use a ferramenta lookup_customer para confirmar a situação real da pessoa no banco. Nunca invente dados.
+1. Identifique a pessoa antes de consultar ou agir, usando lookup_customer. Peça primeiro o e-mail da compra; se a pessoa não souber o e-mail, busque pelo CPF (com o CPF NÃO precisa do e-mail exato). Se a busca por nome trouxer vários cadastros, peça o CPF para confirmar. Quando localizar o cliente, confirme a identidade com uma pergunta simples (ex.: confirmar o nome ou o produto comprado) antes de tratar de reembolso/cancelamento. Nunca invente dados.
 2. Alteração de dados cadastrais é SEMPRE pelo formulário que o próprio cliente preenche — você nunca altera dados aqui.
 3. Você é pós-venda. Quem quer COMPRAR é encaminhado ao comercial: ${SALES_CONTACT}.
 4. Responda em português, de forma curta, cordial e objetiva, como no WhatsApp.
@@ -110,13 +110,14 @@ const TOOLS: Anthropic.Tool[] = [
   {
     name: "lookup_customer",
     description:
-      "Busca o cliente pelo e-mail cadastrado na compra. Use SEMPRE antes de responder dúvidas que dependem da situação da pessoa (acesso, pagamento, inadimplência, validade do acesso, renovação/assinatura). Retorna se é cliente, o que comprou, status da assinatura e se está inadimplente.",
+      "Busca o cliente por e-mail, CPF OU nome. Prefira e-mail; se o cliente não souber o e-mail, busque por CPF (basta o CPF, não precisa do e-mail exato). Use SEMPRE antes de responder dúvidas que dependem da situação da pessoa (acesso, pagamento, inadimplência, validade, renovação). Se a busca por nome retornar vários cadastros, peça o CPF. Retorna se é cliente, o que comprou, status da assinatura e se está inadimplente.",
     input_schema: {
       type: "object",
       properties: {
         email: { type: "string", description: "e-mail cadastrado na compra" },
+        cpf: { type: "string", description: "CPF do cliente (com ou sem pontuação)" },
+        nome: { type: "string", description: "nome completo (use só quando não há e-mail nem CPF)" },
       },
-      required: ["email"],
     },
   },
   {
@@ -148,7 +149,11 @@ const TOOLS: Anthropic.Tool[] = [
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function runTool(name: string, input: any): Promise<{ text: string; handoffId?: string }> {
   if (name === "lookup_customer") {
-    const result = await getCustomer360(String(input?.email ?? ""));
+    const result = await findCustomer({
+      email: input?.email ? String(input.email) : undefined,
+      cpf: input?.cpf ? String(input.cpf) : undefined,
+      nome: input?.nome ? String(input.nome) : undefined,
+    });
     return { text: JSON.stringify(result) };
   }
   if (name === "create_handoff") {

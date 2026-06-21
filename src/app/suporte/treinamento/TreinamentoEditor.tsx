@@ -10,6 +10,18 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   const [form, setForm] = useState<typeof EMPTY>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  async function copy(it: KbItem) {
+    const text = it.titulo ? `${it.titulo}\n\n${it.conteudo}` : it.conteudo;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(it.id);
+      setTimeout(() => setCopiedId((c) => (c === it.id ? null : c)), 1500);
+    } catch {
+      setError("Não consegui copiar (o navegador bloqueou).");
+    }
+  }
 
   function edit(it: KbItem) {
     setForm({
@@ -186,6 +198,12 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
                           )}
                         </span>
                         <div className="flex shrink-0 gap-2 text-xs">
+                          <button
+                            onClick={() => copy(it)}
+                            className={copiedId === it.id ? "text-emerald-600 font-medium" : "text-slate-500 hover:text-slate-800"}
+                          >
+                            {copiedId === it.id ? "Copiado!" : "Copiar"}
+                          </button>
                           <button onClick={() => edit(it)} className="text-slate-500 hover:text-slate-800">
                             Editar
                           </button>
