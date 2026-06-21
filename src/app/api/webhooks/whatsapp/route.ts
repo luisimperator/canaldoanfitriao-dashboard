@@ -118,19 +118,27 @@ export async function POST(req: NextRequest) {
 
         try {
           const result = await runSupportAgent(text, history);
-          const sent = await sendWhatsappText(from, result.reply);
-          await supabase.from("support_messages").insert({
-            wa_phone: from,
-            direction: "out",
-            text: result.reply,
-            escalated: result.escalated,
-          });
-          if (!sent.ok) {
-            await supabase.from("webhook_log").insert({
-              source: "whatsapp",
-              note: "falha ao enviar resposta",
-              body: { to: from, error: sent.error },
+          // Envia em mensagens separadas, como um atendente no WhatsApp.
+          for (let i = 0; i < result.messages.length; i++) {
+            const part = result.messages[i];
+            const sent = await sendWhatsappText(from, part);
+            await supabase.from("support_messages").insert({
+              wa_phone: from,
+              direction: "out",
+              text: part,
+              // marca o caso só na última mensagem do turno
+              escalated: i === result.messages.length - 1 ? result.escalated : false,
             });
+            if (!sent.ok) {
+              await supabase.from("webhook_log").insert({
+                source: "whatsapp",
+                note: "falha ao enviar resposta",
+                body: { to: from, error: sent.error },
+              });
+              break;
+            }
+            // pequeno intervalo entre mensagens (efeito humano)
+            if (i < result.messages.length - 1) await new Promise((r) => setTimeout(r, 600));
           }
         } catch (e) {
           await supabase.from("webhook_log").insert({

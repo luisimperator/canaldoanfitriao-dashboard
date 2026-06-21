@@ -37,11 +37,18 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
   const scrollDown = () =>
     setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
 
-  // histórico p/ a IA: cliente→user, ia→assistant (chefe NÃO entra).
+  // histórico p/ a IA: cliente→user, ia→assistant (chefe NÃO entra). Junta
+  // mensagens seguidas do mesmo lado (a IA manda vários balões por turno).
   function historyFrom(list: Msg[]) {
-    return list
-      .filter((m) => m.kind === "cliente" || m.kind === "ia")
-      .map((m) => ({ role: m.kind === "cliente" ? "user" : "assistant", content: m.content }));
+    const out: { role: string; content: string }[] = [];
+    for (const m of list) {
+      if (m.kind === "chefe") continue;
+      const role = m.kind === "cliente" ? "user" : "assistant";
+      const last = out[out.length - 1];
+      if (last && last.role === role) last.content += "\n" + m.content;
+      else out.push({ role, content: m.content });
+    }
+    return out;
   }
 
   async function callAgent(message: string, history: { role: string; content: string }[], supervisorNotes: string[]) {
@@ -52,7 +59,26 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error ?? "Erro na IA.");
-    return json as { reply: string; escalated: boolean; usedTools: string[] };
+    return json as { messages: string[]; escalated: boolean; usedTools: string[] };
+  }
+
+  // Renderiza os balões da IA em sequência (como no WhatsApp), com leve atraso.
+  async function pushIaMessages(parts: string[], escalated: boolean, tools: string[], corrigida?: boolean) {
+    for (let i = 0; i < parts.length; i++) {
+      const isLast = i === parts.length - 1;
+      setMsgs((m) => [
+        ...m,
+        {
+          kind: "ia",
+          content: parts[i],
+          corrigida,
+          escalated: isLast ? escalated : false,
+          tools: isLast ? tools : [],
+        },
+      ]);
+      scrollDown();
+      if (!isLast) await new Promise((r) => setTimeout(r, 700));
+    }
   }
 
   async function sendCliente(text: string) {
@@ -61,8 +87,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
     setLoading(true);
     try {
       const r = await callAgent(text, history, notes);
-      setMsgs((m) => [...m, { kind: "ia", content: r.reply, escalated: r.escalated, tools: r.usedTools }]);
-      scrollDown();
+      await pushIaMessages(r.messages, r.escalated, r.usedTools);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha.");
     } finally {
@@ -87,10 +112,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
       if (lastCliente) {
         const history = historyFrom(msgs.slice(0, lastClienteIdx));
         const r = await callAgent(lastCliente, history, nextNotes);
-        setMsgs((m) => [
-          ...m,
-          { kind: "ia", content: r.reply, escalated: r.escalated, tools: r.usedTools, corrigida: true },
-        ]);
+        await pushIaMessages(r.messages, r.escalated, r.usedTools, true);
       }
       // 2) sugere a regra permanente
       setRule({
