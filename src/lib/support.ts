@@ -22,6 +22,7 @@ export interface CustomerPurchase {
   status: string | null; // paid/refunded... (Eduzz) | Efetivado/Cancelado (TMB)
   metodo: string | null;
   assinatura: boolean; // produto recorrente (renovação anual)?
+  dataReembolso: string | null; // data do estorno, quando reembolsada
 }
 
 export interface CustomerInstallment {
@@ -136,6 +137,22 @@ export async function getCustomer360(
       if (status === "paid" || status === "recovering") assinaturaAtiva = true;
     }
 
+    // Data do estorno (quando reembolsada). O nome do campo varia conforme a
+    // versão do payload da Eduzz — tentamos os mais prováveis.
+    const refund = asObj(data.refund);
+    const isRefund = status === "refunded" || status === "reembolsada" || status === "chargeback";
+    const dataReembolso = isRefund
+      ? (data.refundedAt ??
+          data.refunded_at ??
+          data.refundDate ??
+          refund.date ??
+          refund.createdAt ??
+          refund.processedAt ??
+          data.canceledAt ??
+          data.updatedAt ??
+          null)
+      : null;
+
     compras.push({
       fonte: "eduzz",
       produto: product.name ? String(product.name) : null,
@@ -145,6 +162,7 @@ export async function getCustomer360(
       status: status || null,
       metodo: data.paymentMethod ? String(data.paymentMethod) : null,
       assinatura: recorrente,
+      dataReembolso: dataReembolso ? String(dataReembolso) : null,
     });
   }
 
@@ -177,6 +195,7 @@ export async function getCustomer360(
       status: row.status_pedido ? String(row.status_pedido) : null,
       metodo: "Parcelado (TMB)",
       assinatura: false,
+      dataReembolso: null,
     });
   }
 
