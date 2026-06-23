@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { KB_BLOCOS, blocoLabel, type KbItem } from "@/lib/support";
 
-const EMPTY = { id: "", bloco: "ingressos", titulo: "", conteudo: "", ativo: true, ordem: 0 };
+const EMPTY = { id: "", bloco: "ingressos", titulo: "", conteudo: "", ativo: true, ordem: 0, valido_ate: "" };
+
+const HOJE = new Date().toISOString().slice(0, 10);
+function expirado(it: KbItem) {
+  return Boolean(it.valido_ate && it.valido_ate < HOJE);
+}
 
 export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   const [items, setItems] = useState<KbItem[]>(initial);
@@ -31,6 +36,7 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
       conteudo: it.conteudo,
       ativo: it.ativo,
       ordem: it.ordem,
+      valido_ate: it.valido_ate ?? "",
     });
     setError(null);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -137,6 +143,28 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
+          <label className="block">
+            <span className="text-xs font-medium text-slate-500">
+              Válido até (opcional) — após essa data a IA para de usar este item
+            </span>
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="date"
+                value={form.valido_ate}
+                onChange={(e) => setForm({ ...form, valido_ate: e.target.value })}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              {form.valido_ate && (
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, valido_ate: "" })}
+                  className="text-xs text-slate-400 hover:text-slate-600"
+                >
+                  limpar
+                </button>
+              )}
+            </div>
+          </label>
           <label className="flex items-center gap-2 text-sm text-slate-600">
             <input
               type="checkbox"
@@ -195,6 +223,17 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
                             <span className="ml-2 rounded bg-slate-100 px-1.5 text-[10px] font-medium text-slate-500">
                               inativo
                             </span>
+                          )}
+                          {expirado(it) ? (
+                            <span className="ml-2 rounded bg-rose-100 px-1.5 text-[10px] font-medium text-rose-600">
+                              expirado · {it.valido_ate!.split("-").reverse().join("/")}
+                            </span>
+                          ) : (
+                            it.valido_ate && (
+                              <span className="ml-2 rounded bg-amber-100 px-1.5 text-[10px] font-medium text-amber-700">
+                                vale até {it.valido_ate.split("-").reverse().join("/")}
+                              </span>
+                            )
                           )}
                         </span>
                         <div className="flex shrink-0 gap-2 text-xs">

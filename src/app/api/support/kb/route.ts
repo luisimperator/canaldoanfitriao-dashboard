@@ -18,7 +18,7 @@ export async function GET() {
   if (!admin) return NextResponse.json({ items: [] });
   const { data, error } = await admin
     .from("support_kb")
-    .select("id,bloco,titulo,conteudo,ativo,ordem,updated_at")
+    .select("id,bloco,titulo,conteudo,ativo,ordem,updated_at,valido_ate")
     .order("bloco", { ascending: true })
     .order("ordem", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -48,6 +48,8 @@ export async function POST(req: NextRequest) {
     conteudo: String(body.conteudo ?? ""),
     ativo: body.ativo === undefined ? true : Boolean(body.ativo),
     ordem: Number(body.ordem ?? 0) || 0,
+    // valido_ate: "YYYY-MM-DD" ou null (sem validade)
+    valido_ate: body.valido_ate ? String(body.valido_ate).slice(0, 10) : null,
     updated_at: new Date().toISOString(),
   };
   if (body.id) row.id = String(body.id);
@@ -55,7 +57,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await admin
     .from("support_kb")
     .upsert(row)
-    .select("id,bloco,titulo,conteudo,ativo,ordem,updated_at")
+    .select("id,bloco,titulo,conteudo,ativo,ordem,updated_at,valido_ate")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ item: data });
