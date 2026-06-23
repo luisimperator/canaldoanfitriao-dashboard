@@ -71,11 +71,14 @@ async function buildSystemPrompt(): Promise<string> {
   if (admin) {
     const { data } = await admin
       .from("support_kb")
-      .select("id,bloco,titulo,conteudo,ativo,ordem,updated_at")
+      .select("id,bloco,titulo,conteudo,ativo,ordem,updated_at,valido_ate")
       .eq("ativo", true)
       .order("bloco", { ascending: true })
       .order("ordem", { ascending: true });
-    kb = (data ?? []) as KbItem[];
+    // Ignora itens vencidos (valido_ate < hoje) — ex.: dados de um evento já
+    // passado deixam de ser usados pela IA automaticamente.
+    const hoje = new Date().toISOString().slice(0, 10);
+    kb = ((data ?? []) as KbItem[]).filter((it) => !it.valido_ate || it.valido_ate >= hoje);
   }
 
   const blocos = new Map<string, KbItem[]>();

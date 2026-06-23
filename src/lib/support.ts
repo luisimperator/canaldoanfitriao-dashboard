@@ -446,4 +446,5 @@ export interface KbItem {
   ativo: boolean;
   ordem: number;
   updated_at: string;
+  valido_ate: string | null; // data (YYYY-MM-DD) ou null = sem validade
 }

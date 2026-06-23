@@ -12,7 +12,7 @@ export default async function TreinamentoPage() {
   if (admin) {
     const { data } = await admin
       .from("support_kb")
-      .select("id,bloco,titulo,conteudo,ativo,ordem,updated_at")
+      .select("id,bloco,titulo,conteudo,ativo,ordem,updated_at,valido_ate")
       .order("bloco", { ascending: true })
       .order("ordem", { ascending: true });
     items = (data ?? []) as KbItem[];
