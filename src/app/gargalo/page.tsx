@@ -33,7 +33,7 @@ export default async function GargaloPage() {
     <div>
       <PageHeader
         title="Qual é o gargalo?"
-        subtitle="Diagnóstico automático do que mais trava o crescimento — robusto a lançamento (mediana de meses fechados e ritmo diário, não somas cruas)"
+        subtitle="Diagnóstico automático do que mais trava o crescimento — robusto a lançamento. A capacidade do time conta só leads qualificados (quentes + muito quentes), que é com quem o vendedor fala."
       />
       <DemoBanner show={data.isDemo} />
 
