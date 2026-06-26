@@ -289,6 +289,96 @@ export function capacityAnalysis(data: DashboardData, today = isoToday()): Capac
   };
 }
 
+// ---------- Capacidade do time: base QUALIFICADA (últimos 30 dias) ----------
+//
+// O vendedor só trabalha leads "quentes" e "muito quentes" — não fala com todo
+// mundo. Então, para o diagnóstico de gargalo, a capacidade é medida sobre os
+// leads QUALIFICADOS, não sobre o total. Como o banco só guarda o estágio ATUAL
+// de cada lead (não dá pra reconstruir o histórico de qualificação), usamos a
+// janela dos últimos 30 dias, com o ritmo robusto a pico (mediana diária × 30).
+
+const HOT_STAGES = new Set(["Leads Quentes", "Leads Muito Quentes"]);
+export function isQualifiedLead(l: Lead): boolean {
+  return l.pipelineStage != null && HOT_STAGES.has(l.pipelineStage);
+}
+
+export interface QualifiedCapacity {
+  qualified30: number; // soma de qualificados nos últimos 30 dias
+  robustMonthlyLeads: number | null; // ritmo mensal robusto (mediana diária × 30)
+  sales30: number;
+  leadsPerSale: number | null; // qualificados por venda
+  sellerMonthlyCapacity: number;
+  activeSellers: number;
+  supportedSellers: number | null;
+  leadsGapForNextSeller: number | null;
+  verdict: CapacityAnalysis["verdict"];
+}
+
+export function qualifiedCapacity30d(data: DashboardData, today = isoToday()): QualifiedCapacity {
+  const start30 = daysAgo(29, new Date(today));
+  const qLeads = data.leads.filter(isQualifiedLead);
+  const qualified30 = inRange(qLeads, (l) => l.createdAt, start30, today).length;
+  // ritmo robusto a pico de lançamento: mediana do nº diário × 30
+  const medDaily = median(dailyCounts(qLeads, (l) => l.createdAt, start30, today)) ?? 0;
+  const robustMonthlyLeads = qualified30 > 0 ? Math.round(medDaily * 30) : null;
+
+  const sales30 = inRange(paidSales(data.sales), (s) => s.saleDate, start30, today).length;
+  const leadsPerSale = sales30 > 0 && qualified30 > 0 ? qualified30 / sales30 : null;
+
+  // Capacidade de venda do melhor vendedor ATIVO (3 meses fechados) — igual à
+  // conta geral; mede o quanto um vendedor entrega, não o volume de leads.
+  const currentMonth = monthKey(today);
+  const activeSellerIds = new Set(data.sellers.filter((s) => s.isActive).map((s) => s.id));
+  const perSellerMonth = new Map<string, number>();
+  for (const s of paidSales(data.sales)) {
+    const mk = monthKey(s.saleDate);
+    if (mk === currentMonth) continue;
+    if (!s.sellerId || !activeSellerIds.has(s.sellerId)) continue;
+    const key = `${s.sellerId}|${mk}`;
+    perSellerMonth.set(key, (perSellerMonth.get(key) ?? 0) + 1);
+  }
+  const capMonths = [...new Set([...perSellerMonth.keys()].map((k) => k.split("|")[1]))]
+    .sort()
+    .slice(-3);
+  const sellerMonthlyCapacity = Math.max(
+    0,
+    ...[...perSellerMonth.entries()]
+      .filter(([k]) => capMonths.includes(k.split("|")[1]))
+      .map(([, v]) => v)
+  );
+
+  const activeSellers = data.sellers.filter((s) => s.isActive).length;
+  const leadsNeededPerSeller =
+    leadsPerSale !== null && sellerMonthlyCapacity > 0 ? leadsPerSale * sellerMonthlyCapacity : null;
+  const supportedSellers =
+    leadsNeededPerSeller && leadsNeededPerSeller > 0 && robustMonthlyLeads !== null
+      ? Math.floor(robustMonthlyLeads / leadsNeededPerSeller)
+      : null;
+  const leadsGapForNextSeller =
+    leadsNeededPerSeller !== null && robustMonthlyLeads !== null
+      ? Math.ceil(leadsNeededPerSeller * (activeSellers + 1) - robustMonthlyLeads)
+      : null;
+
+  let verdict: CapacityAnalysis["verdict"] = "sem_dados";
+  if (supportedSellers !== null && leadsGapForNextSeller !== null && robustMonthlyLeads !== null) {
+    if (supportedSellers >= activeSellers + 1) verdict = "pode_contratar";
+    else if (leadsGapForNextSeller <= robustMonthlyLeads * 0.15) verdict = "quase";
+    else verdict = "falta_lead";
+  }
+
+  return {
+    qualified30,
+    robustMonthlyLeads,
+    sales30,
+    leadsPerSale,
+    sellerMonthlyCapacity,
+    activeSellers,
+    supportedSellers,
+    leadsGapForNextSeller,
+    verdict,
+  };
+}
+
 // ---------- Financeiro ----------
 
 export interface MonthlyCashflow {
@@ -417,7 +507,9 @@ export function bottleneckAnalysis(
   const cacPrev = salesPrev > 0 && adPrev > 0 ? adPrev / salesPrev : null;
   const cacTrend = cacCur !== null && cacPrev !== null ? (cacCur - cacPrev) / cacPrev : null;
 
-  const capacity = capacityAnalysis(data, today);
+  // Capacidade medida sobre leads QUALIFICADOS (quentes + muito quentes), que é
+  // com quem o vendedor realmente fala — não sobre o total de leads.
+  const capacity = qualifiedCapacity30d(data, today);
   const signals: BottleneckSignal[] = [];
 
   // 1. Geração de leads (topo do funil) — só olha a TENDÊNCIA de entrada de
@@ -482,15 +574,20 @@ export function bottleneckAnalysis(
     });
   }
 
-  // 3. Capacidade do time
+  // 3. Capacidade do time (sobre leads QUALIFICADOS — quentes + muito quentes)
   {
+    // time ocioso: o volume de qualificados sustenta MENOS vendedores do que o
+    // time tem (sobra vendedor, falta lead quente).
+    const ocioso =
+      capacity.supportedSellers !== null && capacity.supportedSellers < capacity.activeSellers;
     let score = 10;
     if (capacity.verdict === "pode_contratar") score = 80;
     else if (capacity.verdict === "quase") score = 45;
+    else if (ocioso) score = 50;
     const detail =
       capacity.supportedSellers !== null
-        ? `Num mês típico (mediana de ${capacity.monthsConsidered} meses fechados, sem distorção de lançamento) entram ~${capacity.robustMonthlyLeads} leads, e cada venda exige ~${capacity.leadsPerSale !== null ? Math.round(capacity.leadsPerSale) : "?"} leads. Isso sustenta ${capacity.supportedSellers} vendedor(es); o time tem ${capacity.activeSellers}. Pico de ${capacity.sellerMonthlyCapacity} vendas/mês por vendedor.`
-        : "Ainda não há histórico suficiente para estimar a capacidade do time.";
+        ? `Nos últimos 30 dias entram ~${capacity.robustMonthlyLeads} leads qualificados/mês (quentes + muito quentes, que é com quem o vendedor fala), e cada venda exige ~${capacity.leadsPerSale !== null ? Math.round(capacity.leadsPerSale) : "?"}. Isso sustenta ${capacity.supportedSellers} vendedor(es); o time tem ${capacity.activeSellers}. Pico de ${capacity.sellerMonthlyCapacity} vendas/mês por vendedor.`
+        : "Ainda não há leads qualificados (quentes/muito quentes) suficientes nos últimos 30 dias para estimar a capacidade do time.";
     signals.push({
       kind: "time",
       label: "Capacidade do time",
@@ -498,17 +595,21 @@ export function bottleneckAnalysis(
       status: statusFor(score),
       headline:
         score >= 70
-          ? "Tem lead sobrando: falta gente pra atender"
-          : score >= 40
+          ? "Tem lead qualificado sobrando: falta gente pra atender"
+          : capacity.verdict === "quase"
             ? "Time perto do limite"
-            : "Time dá conta do volume atual",
-      detail,
+            : ocioso
+              ? "Sobra capacidade: falta lead qualificado"
+              : "Time dá conta do volume atual",
       action:
         score >= 70
-          ? "Contrate (ou ative) mais um vendedor antes de investir mais em mídia — hoje há lead sendo desperdiçado."
-          : score >= 40
+          ? "Contrate (ou ative) mais um vendedor antes de investir mais em mídia — hoje há lead qualificado sendo desperdiçado."
+          : capacity.verdict === "quase"
             ? "Prepare a próxima contratação: no ritmo atual o time satura em breve."
-            : "Sem necessidade de contratar agora.",
+            : ocioso
+              ? "Não contrate agora — o time comporta mais venda do que o volume de leads qualificados permite. Foque em gerar e qualificar mais leads quentes."
+              : "Sem necessidade de contratar agora.",
+      detail,
     });
   }
 
