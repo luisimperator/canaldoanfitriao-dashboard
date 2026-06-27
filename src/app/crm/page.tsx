@@ -12,6 +12,8 @@ const STAGE_ORDER = [
   "Qualificação",
   "Leads Muito Frios",
   "Leads Frios",
+  "Quente A5E",
+  "Quente Gigantes",
   "Leads Quentes",
   "Leads Muito Quentes",
   "Negociação",
