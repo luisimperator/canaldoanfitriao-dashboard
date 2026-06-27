@@ -702,10 +702,11 @@ export function bottleneckAnalysis(
     });
   }
 
-  // 5. Atendimento no dia 0 = PROXY DE CAPACIDADE do time E janela de conversão.
-  // Estudo (30 dias, sem lançamento): lead atendido em até ~2 dias converte
-  // ~10-13%; quem só é atendido em D+3 ou nunca despenca para ~3%. Perder o dia
-  // 0 é sinal de fila acumulando, que empurra o lead para essa faixa morta.
+  // 5. Atendimento no mesmo dia útil = PROXY DE CAPACIDADE do time. Estudo (30
+  // dias, sem lançamento, em DIAS ÚTEIS): lead atendido converte ~10%; quem
+  // nunca é conversado, ~3%. Perder o dia 0 é sinal de fila acumulando — e fila
+  // acumulada vira lead nunca conversado (a faixa morta). Atraso em dias úteis
+  // (sexta→segunda = 1 dia), pra não punir fim de semana.
   if (speed && speed.atribuidos > 0) {
     const d0Rate = speed.d0 / speed.atribuidos;
     const naoConvRate = speed.nunca / speed.atribuidos;
@@ -721,15 +722,15 @@ export function bottleneckAnalysis(
       status: statusFor(score),
       headline:
         score >= 70
-          ? "Time saturado: a maioria dos leads quentes não é atendida no mesmo dia"
+          ? "Time saturado: a maioria dos leads quentes não é atendida no mesmo dia útil"
           : score >= 40
-            ? "Time começando a acumular: atendimento no dia 0 caindo"
-            : "Time dá conta: maioria atendida no mesmo dia",
-      detail: `Só ${r0}% dos leads quentes são atendidos no mesmo dia (dia 0) — esse é o medidor de capacidade do time: quando cai, a fila acumula e os leads escorregam para a faixa morta. Lead atendido em até ~2 dias converte ~10-13%; em D+3 ou nunca, despenca para ~3%. Hoje ${speed.nunca} leads quentes (${rNunca}%) nunca foram conversados.`,
+            ? "Time começando a acumular: atendimento no mesmo dia caindo"
+            : "Time dá conta: maioria atendida no mesmo dia útil",
+      detail: `Só ${r0}% dos leads quentes são atendidos no mesmo dia útil — esse é o medidor de capacidade do time: quando cai, a fila acumula. Lead conversado converte ~10%; quem nunca é conversado, só ~3%. Hoje ${speed.nunca} leads quentes (${rNunca}%) nunca foram conversados. (Atraso em dias úteis: sexta→segunda = 1 dia.)`,
       action:
         score >= 40
-          ? "Garanta o atendimento dentro de ~2 dias (idealmente no dia 0) — é a janela em que o lead ainda converte. Se o dia 0 está baixo, redistribua os leads ou reforce o time antes que a fila empurre os leads para D+3+, onde convertem como quem nunca foi atendido."
-          : "Capacidade saudável — o time atende no mesmo dia e os leads não escorregam para a faixa morta (D+3+).",
+          ? "Trate o dia 0 como medidor de capacidade: se está baixo, a fila está acumulando — redistribua os leads ou reforce o time antes que virem lead nunca conversado (que converte 3x menos)."
+          : "Capacidade saudável — o time atende no mesmo dia útil, sem acúmulo de fila.",
     });
   }
 

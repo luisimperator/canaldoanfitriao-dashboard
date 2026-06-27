@@ -312,10 +312,10 @@ export default async function VendasPage({
               </table>
             </div>
             <p className="text-xs text-slate-400 mt-3">
-              “Dia 0” = o vendedor mandou a 1ª mensagem humana no mesmo dia em que o lead chegou
-              (exclui automações). D+1/D+2/D+3+ = dias de atraso até a 1ª resposta. “Não
-              conversado” = nunca teve resposta humana. Base: conversas atribuídas a um vendedor
-              nos últimos 90 dias.
+              “Dia 0” = o vendedor mandou a 1ª mensagem humana no mesmo dia útil em que o lead
+              chegou (exclui automações). D+1/D+2/D+3+ = dias ÚTEIS de atraso até a 1ª resposta
+              (sexta→segunda = 1 dia, não conta fim de semana). “Não conversado” = nunca teve
+              resposta humana. Base: conversas atribuídas a um vendedor nos últimos 90 dias.
             </p>
           </>
         )}
