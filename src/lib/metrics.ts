@@ -302,6 +302,16 @@ export function isQualifiedLead(l: Lead): boolean {
   return l.pipelineStage != null && HOT_STAGES.has(l.pipelineStage);
 }
 
+// Venda de CURSO (Anfitrião 5 Estrelas ou Gigantes da Temporada) — é o que o
+// vendedor de fato vende. Exclui ingressos do evento, grupo/cadeira adicional,
+// checklists e outros produtos avulsos, que não contam como "venda" aqui.
+const COURSE_EXCLUDE = ["encontro", "ingresso", "grupo", "cadeira", "pessoa adicional", "checklist"];
+export function isCourseSale(s: Sale): boolean {
+  const p = (s.product ?? "").toLowerCase();
+  if (COURSE_EXCLUDE.some((w) => p.includes(w))) return false;
+  return p.includes("5 estrelas") || p.includes("gigantes da temporada");
+}
+
 export interface QualifiedCapacity {
   qualified30: number; // soma de qualificados nos últimos 30 dias
   robustMonthlyLeads: number | null; // ritmo mensal robusto (mediana diária × 30)
@@ -312,6 +322,8 @@ export interface QualifiedCapacity {
   supportedSellers: number | null;
   leadsGapForNextSeller: number | null;
   verdict: CapacityAnalysis["verdict"];
+  /** true quando há mais vendas que leads qualificados (funil do CRM não captura) — conta não confiável */
+  unreliable: boolean;
 }
 
 export function qualifiedCapacity30d(data: DashboardData, today = isoToday()): QualifiedCapacity {
@@ -322,15 +334,18 @@ export function qualifiedCapacity30d(data: DashboardData, today = isoToday()): Q
   const medDaily = median(dailyCounts(qLeads, (l) => l.createdAt, start30, today)) ?? 0;
   const robustMonthlyLeads = qualified30 > 0 ? Math.round(medDaily * 30) : null;
 
-  const sales30 = inRange(paidSales(data.sales), (s) => s.saleDate, start30, today).length;
+  // "Venda" aqui = só CURSO (A5E + Gigantes). Ingressos do evento e produtos
+  // avulsos não contam — senão um lançamento de ingressos distorce a conta.
+  const courseSales = paidSales(data.sales).filter(isCourseSale);
+  const sales30 = inRange(courseSales, (s) => s.saleDate, start30, today).length;
   const leadsPerSale = sales30 > 0 && qualified30 > 0 ? qualified30 / sales30 : null;
 
-  // Capacidade de venda do melhor vendedor ATIVO (3 meses fechados) — igual à
-  // conta geral; mede o quanto um vendedor entrega, não o volume de leads.
+  // Capacidade de venda do melhor vendedor ATIVO (3 meses fechados) — só vendas
+  // de curso; mede o quanto um vendedor entrega, não o volume de leads.
   const currentMonth = monthKey(today);
   const activeSellerIds = new Set(data.sellers.filter((s) => s.isActive).map((s) => s.id));
   const perSellerMonth = new Map<string, number>();
-  for (const s of paidSales(data.sales)) {
+  for (const s of courseSales) {
     const mk = monthKey(s.saleDate);
     if (mk === currentMonth) continue;
     if (!s.sellerId || !activeSellerIds.has(s.sellerId)) continue;
@@ -348,19 +363,28 @@ export function qualifiedCapacity30d(data: DashboardData, today = isoToday()): Q
   );
 
   const activeSellers = data.sellers.filter((s) => s.isActive).length;
+  // Se há MAIS vendas de curso do que leads qualificados na janela, o funil do
+  // CRM não está capturando os leads quentes (leadsPerSale < 1, sem sentido).
+  // Marca como não confiável em vez de cuspir "cada venda exige ~0".
+  const unreliable = leadsPerSale !== null && leadsPerSale < 1;
   const leadsNeededPerSeller =
     leadsPerSale !== null && sellerMonthlyCapacity > 0 ? leadsPerSale * sellerMonthlyCapacity : null;
   const supportedSellers =
-    leadsNeededPerSeller && leadsNeededPerSeller > 0 && robustMonthlyLeads !== null
+    !unreliable && leadsNeededPerSeller && leadsNeededPerSeller > 0 && robustMonthlyLeads !== null
       ? Math.floor(robustMonthlyLeads / leadsNeededPerSeller)
       : null;
   const leadsGapForNextSeller =
-    leadsNeededPerSeller !== null && robustMonthlyLeads !== null
+    !unreliable && leadsNeededPerSeller !== null && robustMonthlyLeads !== null
       ? Math.ceil(leadsNeededPerSeller * (activeSellers + 1) - robustMonthlyLeads)
       : null;
 
   let verdict: CapacityAnalysis["verdict"] = "sem_dados";
-  if (supportedSellers !== null && leadsGapForNextSeller !== null && robustMonthlyLeads !== null) {
+  if (
+    !unreliable &&
+    supportedSellers !== null &&
+    leadsGapForNextSeller !== null &&
+    robustMonthlyLeads !== null
+  ) {
     if (supportedSellers >= activeSellers + 1) verdict = "pode_contratar";
     else if (leadsGapForNextSeller <= robustMonthlyLeads * 0.15) verdict = "quase";
     else verdict = "falta_lead";
@@ -376,6 +400,7 @@ export function qualifiedCapacity30d(data: DashboardData, today = isoToday()): Q
     supportedSellers,
     leadsGapForNextSeller,
     verdict,
+    unreliable,
   };
 }
 
@@ -574,41 +599,57 @@ export function bottleneckAnalysis(
     });
   }
 
-  // 3. Capacidade do time (sobre leads QUALIFICADOS — quentes + muito quentes)
+  // 3. Capacidade do time — leads QUALIFICADOS (quentes + muito quentes) vs
+  // vendas de CURSO (A5E + Gigantes); ingressos do evento não contam.
   {
-    // time ocioso: o volume de qualificados sustenta MENOS vendedores do que o
-    // time tem (sobra vendedor, falta lead quente).
-    const ocioso =
-      capacity.supportedSellers !== null && capacity.supportedSellers < capacity.activeSellers;
+    const cap = capacity;
+    // time ocioso: o volume de qualificados sustenta MENOS vendedores que o time tem.
+    const ocioso = cap.supportedSellers !== null && cap.supportedSellers < cap.activeSellers;
     let score = 10;
-    if (capacity.verdict === "pode_contratar") score = 80;
-    else if (capacity.verdict === "quase") score = 45;
+    if (cap.unreliable) score = 10;
+    else if (cap.verdict === "pode_contratar") score = 80;
+    else if (cap.verdict === "quase") score = 45;
     else if (ocioso) score = 50;
-    const detail =
-      capacity.supportedSellers !== null
-        ? `Nos últimos 30 dias entram ~${capacity.robustMonthlyLeads} leads qualificados/mês (quentes + muito quentes, que é com quem o vendedor fala), e cada venda exige ~${capacity.leadsPerSale !== null ? Math.round(capacity.leadsPerSale) : "?"}. Isso sustenta ${capacity.supportedSellers} vendedor(es); o time tem ${capacity.activeSellers}. Pico de ${capacity.sellerMonthlyCapacity} vendas/mês por vendedor.`
-        : "Ainda não há leads qualificados (quentes/muito quentes) suficientes nos últimos 30 dias para estimar a capacidade do time.";
+
+    let headline: string;
+    let action: string;
+    let detail: string;
+    if (cap.unreliable) {
+      headline = "Capacidade não estimável (qualificação incompleta no CRM)";
+      detail = `Não dá pra estimar a capacidade pelos leads qualificados: nos últimos 30 dias entraram ~${cap.qualified30} leads quentes/muito quentes, mas houve ${cap.sales30} vendas de curso — mais vendas do que leads quentes. Ou seja, boa parte das vendas não está passando pelo funil de leads quentes do CRM.`;
+      action =
+        "Garanta que os leads quentes sejam registrados no CRM (Unnichat) — só assim dá pra medir a capacidade real do time.";
+    } else if (cap.supportedSellers === null) {
+      headline = "Time dá conta do volume atual";
+      detail =
+        "Ainda não há leads qualificados (quentes/muito quentes) suficientes nos últimos 30 dias para estimar a capacidade do time.";
+      action = "Sem necessidade de contratar agora.";
+    } else {
+      detail = `Nos últimos 30 dias entram ~${cap.robustMonthlyLeads} leads qualificados/mês (quentes + muito quentes, que é com quem o vendedor fala), e cada venda de curso exige ~${cap.leadsPerSale !== null ? cap.leadsPerSale.toFixed(1).replace(".", ",") : "?"}. Isso sustenta ${cap.supportedSellers} vendedor(es); o time tem ${cap.activeSellers}. Pico de ${cap.sellerMonthlyCapacity} vendas de curso/mês por vendedor.`;
+      headline =
+        score >= 70
+          ? "Tem lead qualificado sobrando: falta gente pra atender"
+          : cap.verdict === "quase"
+            ? "Time perto do limite"
+            : ocioso
+              ? "Sobra capacidade: falta lead qualificado"
+              : "Time dá conta do volume atual";
+      action =
+        score >= 70
+          ? "Contrate (ou ative) mais um vendedor antes de investir mais em mídia — hoje há lead qualificado sendo desperdiçado."
+          : cap.verdict === "quase"
+            ? "Prepare a próxima contratação: no ritmo atual o time satura em breve."
+            : ocioso
+              ? "Não contrate agora — o time comporta mais venda do que o volume de leads qualificados permite. Foque em gerar e qualificar mais leads quentes."
+              : "Sem necessidade de contratar agora.";
+    }
     signals.push({
       kind: "time",
       label: "Capacidade do time",
       score,
       status: statusFor(score),
-      headline:
-        score >= 70
-          ? "Tem lead qualificado sobrando: falta gente pra atender"
-          : capacity.verdict === "quase"
-            ? "Time perto do limite"
-            : ocioso
-              ? "Sobra capacidade: falta lead qualificado"
-              : "Time dá conta do volume atual",
-      action:
-        score >= 70
-          ? "Contrate (ou ative) mais um vendedor antes de investir mais em mídia — hoje há lead qualificado sendo desperdiçado."
-          : capacity.verdict === "quase"
-            ? "Prepare a próxima contratação: no ritmo atual o time satura em breve."
-            : ocioso
-              ? "Não contrate agora — o time comporta mais venda do que o volume de leads qualificados permite. Foque em gerar e qualificar mais leads quentes."
-              : "Sem necessidade de contratar agora.",
+      headline,
+      action,
       detail,
     });
   }
