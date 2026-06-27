@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
 import {
   capacityAnalysis,
+  daysAgo,
+  isCourseSale,
   isoToday,
   monthKey,
   paidSales,
@@ -66,6 +68,17 @@ export default async function VendasPage({
   const cap = capacityAnalysis(data);
 
   const { rows: speed, total: speedTotal } = await getSpeedToLead();
+
+  // Relação MQL → vendas (curso) nos últimos 7 dias.
+  const start7 = daysAgo(6, new Date(today));
+  const mql7 = data.leads.filter(
+    (l) => l.sellerId && l.createdAt >= start7 && l.createdAt <= today
+  ).length;
+  const vendas7 = paidSales(data.sales).filter(
+    (s) => isCourseSale(s) && s.saleDate >= start7 && s.saleDate <= today
+  ).length;
+  const mqlPorVenda7 = vendas7 > 0 ? mql7 / vendas7 : null;
+  const convMql7 = mql7 > 0 ? (vendas7 / mql7) * 100 : null;
 
   // Série mensal de faturamento por vendedor (últimos 6 meses)
   const sellerName = new Map(data.sellers.map((s) => [s.id, s.name]));
@@ -141,6 +154,21 @@ export default async function VendasPage({
         subtitle="Desempenho por vendedor e análise de capacidade do time"
       />
       <DemoBanner show={data.isDemo} />
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
+        <KpiCard
+          label="MQL por venda (7d)"
+          value={mqlPorVenda7 !== null ? num(mqlPorVenda7, 1) : "—"}
+          hint="quantos MQL para 1 venda de curso"
+          tone={mqlPorVenda7 !== null && mqlPorVenda7 <= 6 ? "good" : "neutral"}
+        />
+        <KpiCard
+          label="Conversão MQL→venda (7d)"
+          value={convMql7 !== null ? `${num(convMql7, 1)}%` : "—"}
+        />
+        <KpiCard label="MQL (7 dias)" value={num(mql7)} hint="lead quente com vendedor" />
+        <KpiCard label="Vendas de curso (7 dias)" value={num(vendas7)} hint="A5E + Gigantes" />
+      </div>
 
       <Card title="Vendas por vendedor" className="mb-4">
         <div className="flex items-center justify-center gap-3 mb-4">
