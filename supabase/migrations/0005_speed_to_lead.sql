@@ -46,7 +46,15 @@ as $$
     select
       seller,
       arrival,
-      case when first_human is not null then (first_human::date - arrival::date) end as lag
+      -- atraso em DIAS ÚTEIS (exclui sáb/dom): lead que chega sexta e é atendido
+      -- segunda conta como 1 dia útil, não 3. Mesmo dia útil = 0.
+      case when first_human is null then null
+        else greatest(0, (
+          select count(*)
+          from generate_series(arrival::date, first_human::date, interval '1 day') g
+          where extract(isodow from g) between 1 and 5
+        ) - 1)
+      end as lag
     from conv
     where arrival >= (current_date - p_days)
   )
