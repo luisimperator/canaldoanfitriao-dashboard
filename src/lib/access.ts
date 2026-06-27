@@ -6,25 +6,32 @@ export interface TabDef {
   href: string;
   label: string;
   icon: string;
+  /** Seção do menu (cabeçalho do grupo na barra lateral). */
+  section?: string;
 }
 
 export const TABS: TabDef[] = [
-  { href: "/", label: "Visão geral", icon: "◉" },
-  { href: "/gargalo", label: "Gargalo", icon: "⚑" },
-  { href: "/funil", label: "Funil de vendas", icon: "▼" },
-  { href: "/crm", label: "CRM", icon: "▦" },
-  { href: "/atendimento", label: "Funil CRM", icon: "◷" },
-  { href: "/conversas", label: "Conversas", icon: "💬" },
-  { href: "/suporte", label: "Suporte", icon: "🛟" },
-  { href: "/vendas", label: "Vendas & time", icon: "▲" },
-  { href: "/origem", label: "Origem das vendas", icon: "◆" },
-  { href: "/cac", label: "CAC / ROAS", icon: "↗" },
-  { href: "/ltv", label: "LTV & recompra", icon: "∞" },
-  { href: "/financeiro", label: "Financeiro", icon: "$" },
-  { href: "/integracoes", label: "Integrações", icon: "⚙" },
+  { href: "/", label: "Visão geral", icon: "◉", section: "Painel" },
+  { href: "/gargalo", label: "Gargalo", icon: "⚑", section: "Painel" },
+  { href: "/funil", label: "Funil de vendas", icon: "▼", section: "Comercial" },
+  { href: "/crm", label: "CRM", icon: "▦", section: "Comercial" },
+  { href: "/atendimento", label: "Funil CRM", icon: "◷", section: "Comercial" },
+  { href: "/conversas", label: "Conversas", icon: "💬", section: "Comercial" },
+  { href: "/vendas", label: "Vendas & time", icon: "▲", section: "Comercial" },
+  { href: "/origem", label: "Origem das vendas", icon: "◆", section: "Comercial" },
+  { href: "/cac", label: "CAC / ROAS", icon: "↗", section: "Comercial" },
+  { href: "/ltv", label: "LTV & recompra", icon: "∞", section: "Comercial" },
+  { href: "/suporte", label: "Suporte", icon: "🛟", section: "Suporte" },
+  { href: "/financeiro", label: "Financeiro", icon: "$", section: "Financeiro" },
+  { href: "/integracoes", label: "Integrações", icon: "⚙", section: "Configurações" },
 ];
 
-export const ADMIN_TAB: TabDef = { href: "/usuarios", label: "Usuários", icon: "◐" };
+export const ADMIN_TAB: TabDef = {
+  href: "/usuarios",
+  label: "Usuários",
+  icon: "◐",
+  section: "Configurações",
+};
 
 export const ALL_TAB_HREFS = TABS.map((t) => t.href);
 
