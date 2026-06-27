@@ -702,31 +702,34 @@ export function bottleneckAnalysis(
     });
   }
 
-  // 5. Velocidade de atendimento (speed-to-lead): de nada adianta ter lead e
-  // gente se o lead quente não é atendido no mesmo dia — ele esfria rápido.
+  // 5. Atendimento no dia 0 = PROXY DE CAPACIDADE do time. Não é que atender
+  // rápido converta mais (os dados não mostram isso); é que, quando o time NÃO
+  // consegue atender no mesmo dia, é porque está saturado e acumulando fila —
+  // e lead que acumula vira lead nunca conversado (que converte só ~3%).
   if (speed && speed.atribuidos > 0) {
     const d0Rate = speed.d0 / speed.atribuidos;
-    const naoD0 = speed.atribuidos - speed.d0;
+    const naoConvRate = speed.nunca / speed.atribuidos;
     let score = 15;
     if (d0Rate < 0.4) score = 85;
     else if (d0Rate < 0.6) score = 55;
     const r0 = Math.round(d0Rate * 100);
+    const rNunca = Math.round(naoConvRate * 100);
     signals.push({
       kind: "velocidade",
-      label: "Velocidade de atendimento",
+      label: "Atendimento no dia 0 (capacidade)",
       score,
       status: statusFor(score),
       headline:
         score >= 70
-          ? "Lead quente esfriando: a maioria não é atendida no mesmo dia"
+          ? "Time saturado: a maioria dos leads quentes não é atendida no mesmo dia"
           : score >= 40
-            ? "Boa parte dos leads quentes demora a ser atendida"
-            : "Atendimento rápido: maioria no mesmo dia",
-      detail: `Só ${r0}% dos leads quentes atribuídos são atendidos no mesmo dia (dia 0). ${naoD0} ficaram para D+1 ou depois${speed.nunca > 0 ? `, e ${speed.nunca} nunca foram conversados` : ""}. Lead quente perde força a cada dia que passa.`,
+            ? "Time começando a acumular: atendimento no dia 0 caindo"
+            : "Time dá conta: maioria atendida no mesmo dia",
+      detail: `Só ${r0}% dos leads quentes são atendidos no mesmo dia (dia 0) — isso mede a capacidade do time, não a pressa: quando cai, é porque a fila está acumulando. Hoje ${speed.nunca} leads quentes (${rNunca}%) nunca foram conversados, e lead não conversado converte só ~3% (contra ~13% dos conversados). Lead que acumula vira lead perdido.`,
       action:
         score >= 40
-          ? "Atenda os leads quentes no mesmo dia (idealmente em minutos): crie um SLA de 1ª resposta e distribua os leads mais rápido. É o lead que você já tem escapando."
-          : "Mantenha o ritmo — a maioria dos leads quentes é atendida no mesmo dia.",
+          ? "Trate o dia 0 como medidor de capacidade: se está baixo, redistribua os leads entre os vendedores ou reforce o time antes que a fila vire lead morto. O lever não é responder em minutos — é não deixar lead quente sem atendimento."
+          : "Capacidade saudável — o time está atendendo no mesmo dia, sem acúmulo.",
     });
   }
 
