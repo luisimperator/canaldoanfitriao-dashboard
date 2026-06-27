@@ -111,9 +111,14 @@ export default async function VisaoGeralPage() {
           }
         />
         <KpiCard
+          label="MQL/dia (méd. 30d)"
+          value={num(mqlPerDay, 1)}
+          hint={`${num(mql30)} MQL em 30 dias`}
+        />
+        <KpiCard
           label="MQL por vendedor"
           value={`~${num(mqlCap.avgPerMonth)}/mês`}
-          hint={`média histórica · ${num(mqlPerDay, 1)} MQL/dia no total`}
+          hint="média histórica (90d)"
         />
         <KpiCard
           label="Leads por venda (30d)"
