@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import type { TabDef } from "@/lib/access";
+import { InstallButton } from "@/components/InstallButton";
 
 // Navegação com estado "pendente": ao clicar, o item já fica destacado e mostra
 // um spinner na hora (feedback imediato), antes mesmo de a página carregar.
@@ -135,6 +136,7 @@ function Footer({
 }) {
   return (
     <div className="border-t border-slate-800 px-4 py-3 text-[11px] text-slate-500">
+      <InstallButton />
       {email ? (
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-slate-400">{email}</span>
