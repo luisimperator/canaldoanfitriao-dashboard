@@ -25,6 +25,40 @@ const COLORS = ["#e11d48", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#64748b"
 const brlTooltip = (v: unknown) =>
   Number(v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
+export function LeadsMqlChart({
+  data,
+}: {
+  data: { date: string; leads: number; mql: number }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <XAxis dataKey="date" tick={{ fontSize: 11 }} minTickGap={32} />
+        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+        <Tooltip />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Line
+          type="monotone"
+          dataKey="leads"
+          name="Leads/dia"
+          stroke="#94a3b8"
+          strokeWidth={1.5}
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="mql"
+          name="MQL/dia (com vendedor)"
+          stroke="#e11d48"
+          strokeWidth={2.5}
+          dot={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
 export function LeadsTrendChart({
   data,
 }: {

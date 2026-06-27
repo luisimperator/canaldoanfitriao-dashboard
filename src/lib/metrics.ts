@@ -135,6 +135,76 @@ export function dailyLeadSeries(leads: Lead[], days: number, today = isoToday())
   return points;
 }
 
+// ---------- MQL (lead quente atribuído a vendedor) ----------
+//
+// MQL = lead que virou "quente" e foi atribuído a um vendedor. Usamos o
+// seller_id da própria tabela de leads (mesma fonte dos leads), então MQL ⊆
+// leads e a taxa de qualificação (MQL ÷ leads) fecha sempre <= 100%.
+
+export interface MqlDayPoint {
+  date: string;
+  leads: number;
+  mql: number;
+}
+
+export function mqlDailySeries(leads: Lead[], days: number, today = isoToday()): MqlDayPoint[] {
+  const start = daysAgo(days - 1, new Date(today));
+  const byDay = new Map<string, { leads: number; mql: number }>();
+  for (const l of leads) {
+    const d = l.createdAt.slice(0, 10);
+    if (d < start || d > today) continue;
+    const e = byDay.get(d) ?? { leads: 0, mql: 0 };
+    e.leads++;
+    if (l.sellerId) e.mql++;
+    byDay.set(d, e);
+  }
+  const out: MqlDayPoint[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = daysAgo(i, new Date(today));
+    const e = byDay.get(d) ?? { leads: 0, mql: 0 };
+    out.push({ date: d, leads: e.leads, mql: e.mql });
+  }
+  return out;
+}
+
+export interface MqlSellerRow {
+  sellerId: string;
+  name: string;
+  mql: number;
+  perMonth: number;
+}
+
+// Quantos MQL cada vendedor ATIVO processou (lead com seller_id) na janela, e a
+// média por vendedor/mês — referência de "quanto 1 vendedor consegue processar".
+export function mqlPerSeller(
+  data: DashboardData,
+  days = 90,
+  today = isoToday()
+): { rows: MqlSellerRow[]; avgPerMonth: number; totalMql: number; months: number } {
+  const start = daysAgo(days - 1, new Date(today));
+  const nameById = new Map(data.sellers.map((s) => [s.id, s.name]));
+  const activeIds = new Set(data.sellers.filter((s) => s.isActive).map((s) => s.id));
+  const counts = new Map<string, number>();
+  for (const l of data.leads) {
+    if (!l.sellerId || !activeIds.has(l.sellerId)) continue;
+    const d = l.createdAt.slice(0, 10);
+    if (d < start || d > today) continue;
+    counts.set(l.sellerId, (counts.get(l.sellerId) ?? 0) + 1);
+  }
+  const months = days / 30;
+  const rows = [...counts.entries()]
+    .map(([id, n]) => ({
+      sellerId: id,
+      name: nameById.get(id) ?? "(sem nome)",
+      mql: n,
+      perMonth: Math.round(n / months),
+    }))
+    .sort((a, b) => b.mql - a.mql);
+  const totalMql = rows.reduce((s, r) => s + r.mql, 0);
+  const avgPerMonth = rows.length > 0 ? Math.round(totalMql / rows.length / months) : 0;
+  return { rows, avgPerMonth, totalMql, months };
+}
+
 // ---------- Capacidade do time ----------
 
 export interface CapacityAnalysis {
