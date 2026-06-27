@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
 import {
-  capacityAnalysis,
   daysAgo,
   isCourseSale,
   isoToday,
@@ -65,7 +64,6 @@ export default async function VendasPage({
   );
 
   const stats = sellerStats(data, refDate);
-  const cap = capacityAnalysis(data);
 
   const { rows: speed, total: speedTotal } = await getSpeedToLead();
 
@@ -79,6 +77,15 @@ export default async function VendasPage({
   ).length;
   const mqlPorVenda7 = vendas7 > 0 ? mql7 / vendas7 : null;
   const convMql7 = mql7 > 0 ? (vendas7 / mql7) * 100 : null;
+
+  // Capacidade pelo critério do DIA 0: quantos vendedores para atender 100% dos
+  // MQLs no mesmo dia útil. O atendimento no dia 0 mede a capacidade — se com N
+  // vendedores só X% chega no dia 0, para 100% seriam ~N/X vendedores.
+  const activeSellers = data.sellers.filter((s) => s.isActive).length;
+  const d0Rate = speedTotal.atribuidos > 0 ? speedTotal.d0 / speedTotal.atribuidos : null;
+  const sellersFor100 =
+    d0Rate && d0Rate > 0 ? Math.max(activeSellers, Math.ceil(activeSellers / d0Rate)) : null;
+  const faltamSellers = sellersFor100 !== null ? sellersFor100 - activeSellers : null;
 
   // Série mensal de faturamento por vendedor (últimos 6 meses)
   const sellerName = new Map(data.sellers.map((s) => [s.id, s.name]));
@@ -136,16 +143,13 @@ export default async function VendasPage({
   });
   const teamTotal = teamMonths.reduce((acc, mk) => acc + teamByMonth(mk), 0);
 
-  const capTone =
-    cap.verdict === "pode_contratar" ? "good" : cap.verdict === "quase" ? "warn" : "bad";
+  const capTone = faltamSellers === null ? "bad" : faltamSellers > 0 ? "warn" : "good";
   const capHeadline =
-    cap.verdict === "pode_contratar"
-      ? "✅ O volume de leads já sustenta mais um vendedor"
-      : cap.verdict === "quase"
-        ? "🟡 Quase: falta pouco lead para sustentar mais um vendedor"
-        : cap.verdict === "falta_lead"
-          ? "🔴 Ainda não: é preciso gerar mais leads antes de contratar"
-          : "Sem dados suficientes para a análise";
+    faltamSellers === null
+      ? "Sem dados de atendimento suficientes para a análise"
+      : faltamSellers > 0
+        ? `🟡 Faltam ~${faltamSellers} vendedor(es) para atender 100% dos MQLs no mesmo dia`
+        : "✅ O time atende ~todos os MQLs no mesmo dia útil";
 
   return (
     <div>
@@ -366,7 +370,7 @@ export default async function VendasPage({
           <SalesBySellerChart data={monthly} sellers={activeNames} projected />
         </Card>
 
-        <Card title="Dá para contratar mais um vendedor?">
+        <Card title="Quantos vendedores para atender 100% dos MQLs no dia 0?">
           <div
             className={`rounded-lg px-4 py-3 mb-4 text-sm font-semibold ${
               capTone === "good"
@@ -380,59 +384,41 @@ export default async function VendasPage({
           </div>
           <dl className="space-y-2.5 text-sm">
             <div className="flex justify-between">
-              <dt className="text-slate-600">Leads captados (últimos 30 dias)</dt>
-              <dd className="font-semibold text-slate-900">{num(cap.leads30d)}</dd>
+              <dt className="text-slate-600">MQLs atribuídos (últimos 90 dias)</dt>
+              <dd className="font-semibold text-slate-900">{num(speedTotal.atribuidos)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-600">Vendas fechadas (últimos 30 dias)</dt>
-              <dd className="font-semibold text-slate-900">{num(cap.sales30d)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-600">Leads necessários para 1 venda</dt>
+              <dt className="text-slate-600">Atendidos no mesmo dia útil (hoje)</dt>
               <dd className="font-semibold text-slate-900">
-                {cap.leadsPerSale !== null ? num(cap.leadsPerSale, 1) : "—"}
+                {d0Rate !== null ? `${num(d0Rate * 100, 0)}%` : "—"}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-600">Capacidade de 1 vendedor (vendas/mês)</dt>
-              <dd className="font-semibold text-slate-900">{num(cap.sellerMonthlyCapacity)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-600">Leads/mês para ocupar 1 vendedor</dt>
-              <dd className="font-semibold text-slate-900">
-                {cap.leadsNeededPerSeller !== null ? num(cap.leadsNeededPerSeller) : "—"}
-              </dd>
+              <dt className="text-slate-600">Time atual (vendedores ativos)</dt>
+              <dd className="font-semibold text-slate-900">{num(activeSellers)}</dd>
             </div>
             <div className="flex justify-between border-t border-slate-100 pt-2.5">
-              <dt className="text-slate-600">Vendedores que os leads atuais sustentam</dt>
+              <dt className="text-slate-600">Vendedores para 100% no dia 0</dt>
               <dd className="font-semibold text-slate-900">
-                {cap.supportedSellers !== null
-                  ? `${num(cap.supportedSellers)} (time atual: ${num(cap.activeSellers)})`
-                  : "—"}
+                {sellersFor100 !== null ? num(sellersFor100) : "—"}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-600">
-                Leads/mês que faltam para sustentar +1 vendedor
-              </dt>
+              <dt className="text-slate-600">Faltam contratar / ativar</dt>
               <dd
                 className={`font-semibold ${
-                  cap.leadsGapForNextSeller !== null && cap.leadsGapForNextSeller <= 0
-                    ? "text-emerald-600"
-                    : "text-slate-900"
+                  faltamSellers !== null && faltamSellers <= 0 ? "text-emerald-600" : "text-rose-600"
                 }`}
               >
-                {cap.leadsGapForNextSeller !== null
-                  ? cap.leadsGapForNextSeller <= 0
-                    ? `sobram ${num(-cap.leadsGapForNextSeller)}`
-                    : num(cap.leadsGapForNextSeller)
-                  : "—"}
+                {faltamSellers !== null ? (faltamSellers <= 0 ? "nenhum" : `+${num(faltamSellers)}`) : "—"}
               </dd>
             </div>
           </dl>
           <p className="text-xs text-slate-400 mt-4">
-            A capacidade usa o melhor mês de um vendedor nos últimos 3 meses fechados como
-            referência de quanto um vendedor consegue entregar quando tem lead suficiente.
+            Critério: o atendimento no mesmo dia útil mede a capacidade do time. Com {num(activeSellers)}{" "}
+            vendedor(es), {d0Rate !== null ? `${num(d0Rate * 100, 0)}%` : "—"} dos MQLs são atendidos no dia 0;
+            para chegar a 100% seriam ~{sellersFor100 !== null ? num(sellersFor100) : "—"} (proporcional).
+            MQL = lead quente atribuído a um vendedor; dias úteis (sexta→segunda = 1 dia).
           </p>
         </Card>
       </div>
