@@ -11,35 +11,9 @@ import { brl, monthLabel, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { SalesBySellerChart, TeamHistoryChart } from "@/components/charts";
 import { DateRangePicker } from "@/components/DateRangePicker";
-import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getSpeedToLead } from "@/lib/speed";
 
 export const dynamic = "force-dynamic";
-
-interface SpeedRow {
-  seller: string;
-  atribuidos: number;
-  conversados: number;
-  dia0: number;
-}
-
-const SPEED_DAYS = 90;
-
-async function getSpeedToLead(): Promise<SpeedRow[]> {
-  const admin = getSupabaseAdmin();
-  if (!admin) return [];
-  try {
-    const { data, error } = await admin.rpc("seller_speed_to_lead", { p_days: SPEED_DAYS });
-    if (error) return [];
-    return (data ?? []).map((r: SpeedRow) => ({
-      seller: r.seller,
-      atribuidos: Number(r.atribuidos),
-      conversados: Number(r.conversados),
-      dia0: Number(r.dia0),
-    }));
-  } catch {
-    return [];
-  }
-}
 
 const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 100) : 0);
 
@@ -91,15 +65,7 @@ export default async function VendasPage({
   const stats = sellerStats(data, refDate);
   const cap = capacityAnalysis(data);
 
-  const speed = await getSpeedToLead();
-  const speedTotal = speed.reduce(
-    (a, r) => ({
-      atribuidos: a.atribuidos + r.atribuidos,
-      conversados: a.conversados + r.conversados,
-      dia0: a.dia0 + r.dia0,
-    }),
-    { atribuidos: 0, conversados: 0, dia0: 0 }
-  );
+  const { rows: speed, total: speedTotal } = await getSpeedToLead();
 
   // Série mensal de faturamento por vendedor (últimos 6 meses)
   const sellerName = new Map(data.sellers.map((s) => [s.id, s.name]));
@@ -246,68 +212,110 @@ export default async function VendasPage({
           </p>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4">
               <KpiCard
                 label="Atendidos no dia 0"
-                value={`${pct(speedTotal.dia0, speedTotal.atribuidos)}%`}
-                hint={`${num(speedTotal.dia0)} de ${num(speedTotal.atribuidos)} leads atribuídos`}
-                tone={pct(speedTotal.dia0, speedTotal.atribuidos) >= 60 ? "good" : "bad"}
+                value={`${pct(speedTotal.d0, speedTotal.atribuidos)}%`}
+                hint={`${num(speedTotal.d0)} de ${num(speedTotal.atribuidos)} leads`}
+                tone={pct(speedTotal.d0, speedTotal.atribuidos) >= 60 ? "good" : "bad"}
               />
               <KpiCard
-                label="Conversados (em algum momento)"
-                value={`${pct(speedTotal.conversados, speedTotal.atribuidos)}%`}
-                hint={`${num(speedTotal.conversados)} de ${num(speedTotal.atribuidos)} atribuídos`}
+                label="No dia seguinte (D+1)"
+                value={`${pct(speedTotal.d1, speedTotal.atribuidos)}%`}
+                hint={`${num(speedTotal.d1)} leads`}
               />
               <KpiCard
-                label="Leads atribuídos"
-                value={num(speedTotal.atribuidos)}
-                hint="conversas com vendedor"
+                label="D+2 ou mais"
+                value={`${pct(speedTotal.d2 + speedTotal.d3plus, speedTotal.atribuidos)}%`}
+                hint={`${num(speedTotal.d2 + speedTotal.d3plus)} leads`}
+              />
+              <KpiCard
+                label="Nunca conversados"
+                value={`${pct(speedTotal.nunca, speedTotal.atribuidos)}%`}
+                hint={`${num(speedTotal.nunca)} leads`}
+                tone={speedTotal.nunca > 0 ? "bad" : "good"}
               />
             </div>
 
-            <div className="overflow-x-auto -mx-5 px-5">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 mb-3">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Dia 0</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-400" /> D+1</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-orange-500" /> D+2</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-rose-500" /> D+3 ou mais</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-slate-300" /> Não conversado</span>
+            </div>
+
+            <div className="space-y-3 mb-2">
+              {speed.map((r) => {
+                const segs = [
+                  { v: r.d0, c: "bg-emerald-500" },
+                  { v: r.d1, c: "bg-amber-400" },
+                  { v: r.d2, c: "bg-orange-500" },
+                  { v: r.d3plus, c: "bg-rose-500" },
+                  { v: r.nunca, c: "bg-slate-300" },
+                ];
+                return (
+                  <div key={r.seller}>
+                    <div className="flex items-baseline justify-between mb-1 text-sm">
+                      <span className="font-medium text-slate-900">{r.seller}</span>
+                      <span className="text-slate-500">
+                        <span className="font-semibold text-emerald-600">
+                          {pct(r.d0, r.atribuidos)}%
+                        </span>{" "}
+                        no dia 0 · {num(r.atribuidos)} leads
+                      </span>
+                    </div>
+                    <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100">
+                      {segs.map((s, i) =>
+                        s.v > 0 ? (
+                          <div
+                            key={i}
+                            className={s.c}
+                            style={{ width: `${pct(s.v, r.atribuidos)}%` }}
+                          />
+                        ) : null
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="overflow-x-auto -mx-5 px-5 mt-4">
               <table className="w-full text-sm min-w-[560px] tabular-nums">
                 <thead>
                   <tr className="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
                     <th className="py-2">Vendedor</th>
                     <th className="py-2 text-right">Atribuídos</th>
-                    <th className="py-2 text-right">Conversados</th>
-                    <th className="py-2 text-right">Atendidos no dia 0</th>
+                    <th className="py-2 text-right">Dia 0</th>
+                    <th className="py-2 text-right">D+1</th>
+                    <th className="py-2 text-right">D+2</th>
+                    <th className="py-2 text-right">D+3+</th>
+                    <th className="py-2 text-right">Não conv.</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {speed.map((r) => {
-                    const d0 = pct(r.dia0, r.atribuidos);
-                    return (
-                      <tr key={r.seller} className="border-b border-slate-50 last:border-0">
-                        <td className="py-2.5 font-medium text-slate-900">{r.seller}</td>
-                        <td className="py-2.5 text-right text-slate-500">{num(r.atribuidos)}</td>
-                        <td className="py-2.5 text-right">
-                          {num(r.conversados)}{" "}
-                          <span className="text-slate-400">({pct(r.conversados, r.atribuidos)}%)</span>
-                        </td>
-                        <td className="py-2.5 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <div className="hidden sm:block w-20 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                              <div
-                                className={`h-full ${d0 >= 60 ? "bg-emerald-500" : d0 >= 40 ? "bg-amber-500" : "bg-rose-500"}`}
-                                style={{ width: `${d0}%` }}
-                              />
-                            </div>
-                            <span className="font-semibold">{d0}%</span>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {speed.map((r) => (
+                    <tr key={r.seller} className="border-b border-slate-50 last:border-0">
+                      <td className="py-2 font-medium text-slate-900">{r.seller}</td>
+                      <td className="py-2 text-right text-slate-500">{num(r.atribuidos)}</td>
+                      <td className="py-2 text-right font-semibold text-emerald-700">
+                        {pct(r.d0, r.atribuidos)}%
+                      </td>
+                      <td className="py-2 text-right">{pct(r.d1, r.atribuidos)}%</td>
+                      <td className="py-2 text-right">{pct(r.d2, r.atribuidos)}%</td>
+                      <td className="py-2 text-right">{pct(r.d3plus, r.atribuidos)}%</td>
+                      <td className="py-2 text-right text-slate-500">{pct(r.nunca, r.atribuidos)}%</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
             <p className="text-xs text-slate-400 mt-3">
-              “Atendidos no dia 0” = leads em que o vendedor mandou a 1ª mensagem humana no mesmo
-              dia em que o lead chegou (exclui mensagens automáticas). “Conversados” = tiveram ao
-              menos uma resposta humana do vendedor. Base: conversas atribuídas a um vendedor nos
-              últimos 90 dias.
+              “Dia 0” = o vendedor mandou a 1ª mensagem humana no mesmo dia em que o lead chegou
+              (exclui automações). D+1/D+2/D+3+ = dias de atraso até a 1ª resposta. “Não
+              conversado” = nunca teve resposta humana. Base: conversas atribuídas a um vendedor
+              nos últimos 90 dias.
             </p>
           </>
         )}

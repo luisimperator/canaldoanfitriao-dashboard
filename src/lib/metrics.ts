@@ -461,8 +461,20 @@ export function spendByCategory(
 
 export type BottleneckStatus = "ok" | "atencao" | "critico";
 
+// Resumo de velocidade de atendimento (speed-to-lead), vindo da função SQL
+// seller_speed_to_lead — passado ao diagnóstico de gargalo.
+export interface SpeedSummary {
+  atribuidos: number;
+  conversados: number;
+  d0: number;
+  d1: number;
+  d2: number;
+  d3plus: number;
+  nunca: number;
+}
+
 export interface BottleneckSignal {
-  kind: "leads" | "conversao" | "time" | "midia";
+  kind: "leads" | "conversao" | "time" | "midia" | "velocidade";
   label: string;
   /** 0-100: quanto maior, mais esse fator trava o crescimento agora */
   score: number;
@@ -496,7 +508,8 @@ function fmtBrl(value: number): string {
 
 export function bottleneckAnalysis(
   data: DashboardData,
-  today = isoToday()
+  today = isoToday(),
+  speed?: SpeedSummary | null
 ): BottleneckAnalysis {
   const curStart = daysAgo(29, new Date(today));
   const prevStart = daysAgo(59, new Date(today));
@@ -686,6 +699,34 @@ export function bottleneckAnalysis(
         score >= 40
           ? "Revise campanhas e criativos: o mesmo dinheiro está trazendo menos venda que antes."
           : "Eficiência de mídia dentro do esperado.",
+    });
+  }
+
+  // 5. Velocidade de atendimento (speed-to-lead): de nada adianta ter lead e
+  // gente se o lead quente não é atendido no mesmo dia — ele esfria rápido.
+  if (speed && speed.atribuidos > 0) {
+    const d0Rate = speed.d0 / speed.atribuidos;
+    const naoD0 = speed.atribuidos - speed.d0;
+    let score = 15;
+    if (d0Rate < 0.4) score = 85;
+    else if (d0Rate < 0.6) score = 55;
+    const r0 = Math.round(d0Rate * 100);
+    signals.push({
+      kind: "velocidade",
+      label: "Velocidade de atendimento",
+      score,
+      status: statusFor(score),
+      headline:
+        score >= 70
+          ? "Lead quente esfriando: a maioria não é atendida no mesmo dia"
+          : score >= 40
+            ? "Boa parte dos leads quentes demora a ser atendida"
+            : "Atendimento rápido: maioria no mesmo dia",
+      detail: `Só ${r0}% dos leads quentes atribuídos são atendidos no mesmo dia (dia 0). ${naoD0} ficaram para D+1 ou depois${speed.nunca > 0 ? `, e ${speed.nunca} nunca foram conversados` : ""}. Lead quente perde força a cada dia que passa.`,
+      action:
+        score >= 40
+          ? "Atenda os leads quentes no mesmo dia (idealmente em minutos): crie um SLA de 1ª resposta e distribua os leads mais rápido. É o lead que você já tem escapando."
+          : "Mantenha o ritmo — a maioria dos leads quentes é atendida no mesmo dia.",
     });
   }
 
