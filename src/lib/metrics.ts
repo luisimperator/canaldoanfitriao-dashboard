@@ -297,9 +297,13 @@ export function capacityAnalysis(data: DashboardData, today = isoToday()): Capac
 // de cada lead (não dá pra reconstruir o histórico de qualificação), usamos a
 // janela dos últimos 30 dias, com o ritmo robusto a pico (mediana diária × 30).
 
-const HOT_STAGES = new Set(["Leads Quentes", "Leads Muito Quentes"]);
+// Lead "qualificado" = está numa etapa QUENTE do pipeline. Casa por padrão
+// (contém "quente"), então funciona tanto com os nomes antigos
+// ("Leads Quentes", "Leads Muito Quentes") quanto com os novos por produto
+// ("Quente A5E", "Quente Gigantes") — sem precisar mexer no código a cada
+// renomeação de etapa no Unnichat. Etapas "frias" não contêm "quente".
 export function isQualifiedLead(l: Lead): boolean {
-  return l.pipelineStage != null && HOT_STAGES.has(l.pipelineStage);
+  return (l.pipelineStage ?? "").toLowerCase().includes("quente");
 }
 
 // Venda de CURSO (Anfitrião 5 Estrelas ou Gigantes da Temporada) — é o que o
