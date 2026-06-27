@@ -1,5 +1,6 @@
 import { getDashboardData } from "@/lib/data";
 import { bottleneckAnalysis, type BottleneckStatus } from "@/lib/metrics";
+import { getSpeedToLead } from "@/lib/speed";
 import { Card, DemoBanner, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,8 @@ const statusStyle: Record<
 
 export default async function GargaloPage() {
   const data = await getDashboardData();
-  const { primary, signals, hasData } = bottleneckAnalysis(data);
+  const speed = await getSpeedToLead();
+  const { primary, signals, hasData } = bottleneckAnalysis(data, undefined, speed.total);
 
   return (
     <div>
