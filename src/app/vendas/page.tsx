@@ -11,8 +11,37 @@ import { brl, monthLabel, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { SalesBySellerChart, TeamHistoryChart } from "@/components/charts";
 import { DateRangePicker } from "@/components/DateRangePicker";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
+
+interface SpeedRow {
+  seller: string;
+  atribuidos: number;
+  conversados: number;
+  dia0: number;
+}
+
+const SPEED_DAYS = 90;
+
+async function getSpeedToLead(): Promise<SpeedRow[]> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return [];
+  try {
+    const { data, error } = await admin.rpc("seller_speed_to_lead", { p_days: SPEED_DAYS });
+    if (error) return [];
+    return (data ?? []).map((r: SpeedRow) => ({
+      seller: r.seller,
+      atribuidos: Number(r.atribuidos),
+      conversados: Number(r.conversados),
+      dia0: Number(r.dia0),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 100) : 0);
 
 function shiftMonth(mk: string, delta: number): string {
   const [y, m] = mk.split("-").map(Number);
@@ -61,6 +90,16 @@ export default async function VendasPage({
 
   const stats = sellerStats(data, refDate);
   const cap = capacityAnalysis(data);
+
+  const speed = await getSpeedToLead();
+  const speedTotal = speed.reduce(
+    (a, r) => ({
+      atribuidos: a.atribuidos + r.atribuidos,
+      conversados: a.conversados + r.conversados,
+      dia0: a.dia0 + r.dia0,
+    }),
+    { atribuidos: 0, conversados: 0, dia0: 0 }
+  );
 
   // Série mensal de faturamento por vendedor (últimos 6 meses)
   const sellerName = new Map(data.sellers.map((s) => [s.id, s.name]));
@@ -197,6 +236,81 @@ export default async function VendasPage({
           “Leads por venda” = leads quentes encaminhados ao vendedor no mês ÷ vendas fechadas no
           mês. Quanto menor, melhor o aproveitamento.
         </p>
+      </Card>
+
+      <Card title="Velocidade no atendimento (speed-to-lead) — últimos 90 dias" className="mb-4">
+        {speed.length === 0 ? (
+          <p className="text-sm text-slate-600">
+            Sem dados de conversa ainda (ou a função do banco não foi aplicada — migração
+            0005_speed_to_lead).
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
+              <KpiCard
+                label="Atendidos no dia 0"
+                value={`${pct(speedTotal.dia0, speedTotal.atribuidos)}%`}
+                hint={`${num(speedTotal.dia0)} de ${num(speedTotal.atribuidos)} leads atribuídos`}
+                tone={pct(speedTotal.dia0, speedTotal.atribuidos) >= 60 ? "good" : "bad"}
+              />
+              <KpiCard
+                label="Conversados (em algum momento)"
+                value={`${pct(speedTotal.conversados, speedTotal.atribuidos)}%`}
+                hint={`${num(speedTotal.conversados)} de ${num(speedTotal.atribuidos)} atribuídos`}
+              />
+              <KpiCard
+                label="Leads atribuídos"
+                value={num(speedTotal.atribuidos)}
+                hint="conversas com vendedor"
+              />
+            </div>
+
+            <div className="overflow-x-auto -mx-5 px-5">
+              <table className="w-full text-sm min-w-[560px] tabular-nums">
+                <thead>
+                  <tr className="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
+                    <th className="py-2">Vendedor</th>
+                    <th className="py-2 text-right">Atribuídos</th>
+                    <th className="py-2 text-right">Conversados</th>
+                    <th className="py-2 text-right">Atendidos no dia 0</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {speed.map((r) => {
+                    const d0 = pct(r.dia0, r.atribuidos);
+                    return (
+                      <tr key={r.seller} className="border-b border-slate-50 last:border-0">
+                        <td className="py-2.5 font-medium text-slate-900">{r.seller}</td>
+                        <td className="py-2.5 text-right text-slate-500">{num(r.atribuidos)}</td>
+                        <td className="py-2.5 text-right">
+                          {num(r.conversados)}{" "}
+                          <span className="text-slate-400">({pct(r.conversados, r.atribuidos)}%)</span>
+                        </td>
+                        <td className="py-2.5 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="hidden sm:block w-20 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                              <div
+                                className={`h-full ${d0 >= 60 ? "bg-emerald-500" : d0 >= 40 ? "bg-amber-500" : "bg-rose-500"}`}
+                                style={{ width: `${d0}%` }}
+                              />
+                            </div>
+                            <span className="font-semibold">{d0}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-slate-400 mt-3">
+              “Atendidos no dia 0” = leads em que o vendedor mandou a 1ª mensagem humana no mesmo
+              dia em que o lead chegou (exclui mensagens automáticas). “Conversados” = tiveram ao
+              menos uma resposta humana do vendedor. Base: conversas atribuídas a um vendedor nos
+              últimos 90 dias.
+            </p>
+          </>
+        )}
       </Card>
 
       {teamHistory.length > 0 && (
