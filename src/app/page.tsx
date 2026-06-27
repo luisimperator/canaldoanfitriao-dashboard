@@ -1,18 +1,19 @@
 import { getDashboardData } from "@/lib/data";
 import {
   capacityAnalysis,
-  dailyLeadSeries,
   daysAgo,
   funnelStages,
   inRange,
   isoToday,
   monthKey,
+  mqlDailySeries,
+  mqlPerSeller,
   paidSales,
   sum,
 } from "@/lib/metrics";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import { LeadsTrendChart, SourcePie } from "@/components/charts";
+import { LeadsMqlChart, SourcePie } from "@/components/charts";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,16 @@ export default async function VisaoGeralPage() {
 
   const leads30 = inRange(data.leads, (l) => l.createdAt, start30, today);
   const stages = funnelStages(leads30);
+
+  // MQL = lead quente atribuído a vendedor (seller_id). MQL ⊆ leads.
+  const mqlMonth = data.leads.filter(
+    (l) => monthKey(l.createdAt) === month && l.sellerId
+  ).length;
+  const mql30 = leads30.filter((l) => l.sellerId).length;
+  const taxaMql = leads30.length > 0 ? (mql30 / leads30.length) * 100 : null;
+  const mqlPerDay = mql30 / 30;
+  const mqlSeries = mqlDailySeries(data.leads, 60, today);
+  const mqlCap = mqlPerSeller(data, 90, today);
   const bySource = Object.entries(
     leads30.reduce<Record<string, number>>((acc, l) => {
       acc[l.source] = (acc[l.source] ?? 0) + 1;
@@ -93,6 +104,18 @@ export default async function VisaoGeralPage() {
         <KpiCard label="Leads hoje" value={num(leadsToday)} />
         <KpiCard label="Leads no mês" value={num(leadsMonth)} />
         <KpiCard
+          label="MQL no mês"
+          value={num(mqlMonth)}
+          hint={
+            taxaMql !== null ? `${num(taxaMql, 1)}% dos leads viram MQL` : "lead quente com vendedor"
+          }
+        />
+        <KpiCard
+          label="MQL por vendedor"
+          value={`~${num(mqlCap.avgPerMonth)}/mês`}
+          hint={`média histórica · ${num(mqlPerDay, 1)} MQL/dia no total`}
+        />
+        <KpiCard
           label="Leads por venda (30d)"
           value={cap.leadsPerSale ? num(cap.leadsPerSale, 1) : "—"}
           hint={`${num(cap.leads30d)} leads · ${num(cap.sales30d)} vendas`}
@@ -115,8 +138,14 @@ export default async function VisaoGeralPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card title="Leads por dia (últimos 60 dias)" className="lg:col-span-2">
-          <LeadsTrendChart data={dailyLeadSeries(data.leads, 60)} />
+        <Card title="Leads e MQL por dia (últimos 60 dias)" className="lg:col-span-2">
+          <LeadsMqlChart data={mqlSeries} />
+          <p className="text-xs text-slate-400 mt-2">
+            MQL = lead quente atribuído a um vendedor. Taxa de qualificação nos últimos 30 dias:{" "}
+            <strong>{taxaMql !== null ? `${num(taxaMql, 1)}%` : "—"}</strong> ({num(mql30)} MQL de{" "}
+            {num(leads30.length)} leads). Cada vendedor processa ~{num(mqlCap.avgPerMonth)} MQL/mês
+            (média dos últimos 90 dias).
+          </p>
         </Card>
         <Card title="Origem dos leads (30 dias)">
           <SourcePie data={bySource} />
