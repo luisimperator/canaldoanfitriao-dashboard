@@ -792,10 +792,10 @@ export function bottleneckAnalysis(
       status: statusFor(score),
       headline:
         score >= 70
-          ? "Time saturado: a maioria dos leads quentes não é atendida no mesmo dia útil"
+          ? `${100 - r0}% dos leads quentes não são atendidos no mesmo dia útil`
           : score >= 40
-            ? "Time começando a acumular: atendimento no mesmo dia caindo"
-            : "Time dá conta: maioria atendida no mesmo dia útil",
+            ? `${100 - r0}% dos leads quentes esperam mais de um dia útil`
+            : "Maioria dos leads quentes é atendida no mesmo dia útil",
       detail: `Só ${r0}% dos leads quentes são atendidos no mesmo dia útil — esse é o medidor de capacidade do time: quando cai, a fila acumula. Lead conversado converte ~10%; quem nunca é conversado, só ~3%. Hoje ${speed.nunca} leads quentes (${rNunca}%) nunca foram conversados. (Atraso em dias úteis: sexta→segunda = 1 dia.)`,
       action:
         score >= 40
