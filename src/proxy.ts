@@ -16,6 +16,11 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/webhooks") || pathname.startsWith("/api/import")) {
     return NextResponse.next();
   }
+  // Redirect curto dos QR codes/links: público (é escaneado por qualquer um,
+  // antes de virar lead). Valida o slug por conta própria.
+  if (pathname.startsWith("/r/")) {
+    return NextResponse.next();
+  }
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(url, key, {
