@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
 import { paidSales } from "@/lib/metrics";
-import { leadOrigin, tagOrigin, type OriginRow } from "@/lib/origin";
+import { leadOrigin, tagOrigin, isMql, type OriginRow } from "@/lib/origin";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { classifyChannel, CHANNEL_COLOR, type Channel } from "@/lib/channels";
@@ -31,7 +31,11 @@ export default async function OrigemPage({
   const tagOrig = tagOrigin(leads);
 
   const maxChannelLeads = Math.max(1, ...origin.byChannel.map((r) => r.leads));
-  const qualGeral = origin.tracked ? (origin.trackedMql / origin.tracked) * 100 : 0;
+  const totalMql = leads.filter(isMql).length;
+  // UTM detalhado só vira card quando há volume suficiente; abaixo disso vira
+  // ruído de "0%". Até lá, a leitura é por campanha (tag), que cobre a base.
+  const UTM_MIN = 30;
+  const utmReady = origin.tracked >= UTM_MIN;
 
   // Faturamento por canal (origem da VENDA, via UTM da Eduzz) — visão de receita
   // que complementa a de captação. Filtra pelo mesmo ano selecionado.
@@ -93,18 +97,17 @@ export default async function OrigemPage({
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Leads no período" value={num(origin.totalLeads)} />
+        <KpiCard label="MQLs no período" value={num(totalMql)} tone="good" />
         <KpiCard
-          label="Com rastreio de origem"
-          value={`${num(origin.trackedPct, 0)}%`}
-          hint={`${num(origin.tracked)} de ${num(origin.totalLeads)} leads`}
+          label="Cobertura por campanha"
+          value={`${num(tagOrig.coveredPct, 0)}%`}
+          hint="têm tag de entrada"
         />
         <KpiCard
-          label="Qualificação (rastreados)"
-          value={`${num(qualGeral, 1)}%`}
-          hint="viraram MQL"
-          tone="good"
+          label="Com origem detalhada (UTM)"
+          value={num(origin.tracked)}
+          hint="cresce com leads novos"
         />
-        <KpiCard label="MQLs rastreados" value={num(origin.trackedMql)} />
       </div>
 
       <Card title="Origem por campanha (tag de entrada)" className="mb-6">
@@ -151,14 +154,18 @@ export default async function OrigemPage({
         )}
       </Card>
 
-      {origin.tracked === 0 ? (
-        <Card title="Origem detalhada (UTM) ainda não sincronizada">
+      {!utmReady ? (
+        <Card title="Origem detalhada (UTM) — em construção" className="mt-6">
           <p className="text-sm text-slate-600">
-            As campanhas acima (tags) já cobrem a base, mas nenhum lead do período
-            tem UTM/vidorigem gravado ainda — é o que diz <em>o vídeo/anúncio exato</em>
-            que trouxe a pessoa. Rode o sync em{" "}
-            <strong>Integrações → Sincronizar agora</strong> para puxar utm_source,
-            utm_medium, utm_campaign, utm_content e vidorigem dos contatos.
+            As campanhas acima (tags) cobrem {num(tagOrig.coveredPct, 0)}% da base. A
+            camada fina — <em>qual vídeo/anúncio exato</em> trouxe a pessoa
+            (utm_content / vidorigem) — só existe pra{" "}
+            <strong>{num(origin.tracked)}</strong> leads do período, pouco pra ranquear.
+            Ela enche de duas formas: rodando o sync em{" "}
+            <strong>Integrações → Sincronizar agora</strong> (puxa o UTM que o
+            Mailchimp já tem) e, daqui pra frente, conforme os leads novos chegam
+            com UTM. Quando passar de {UTM_MIN}, os rankings por canal/conteúdo/vídeo
+            aparecem aqui.
           </p>
         </Card>
       ) : (
