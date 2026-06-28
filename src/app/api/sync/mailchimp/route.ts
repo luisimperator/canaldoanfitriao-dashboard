@@ -53,8 +53,8 @@ export async function GET() {
   let offset = 0;
   const pageSize = 1000;
   // Só os mais RECENTES (onde o UTM/origem dos vídeos aparece) — varrer os 44 mil
-  // dá timeout. Amostra suficiente pra descobrir os campos preenchidos.
-  const SAMPLE_MAX = 5000;
+  // dá timeout. Uma página (mil) já basta pra descobrir os campos preenchidos.
+  const SAMPLE_MAX = 1000;
 
   for (;;) {
     const url =
