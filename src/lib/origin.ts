@@ -19,6 +19,15 @@ export function hasUtm(l: Lead): boolean {
   return Boolean(u && (u.source || u.medium || u.campaign || u.content || u.term || u.vidorigem));
 }
 
+export function leadTags(l: Lead): string[] {
+  const t = l.extra && typeof l.extra === "object" ? (l.extra as Record<string, unknown>).tags : null;
+  return Array.isArray(t) ? t.filter((x): x is string => typeof x === "string") : [];
+}
+
+// Tags genéricas que não dizem origem (carimbos de produto/aluno) — fora do
+// ranking de campanha pra não poluir.
+const TAG_NOISE = new Set(["produto digital", "aluno-geral", "aluno geral"]);
+
 export interface OriginRow {
   key: string;
   leads: number;
@@ -60,6 +69,37 @@ function rank(leads: Lead[], keyOf: (l: Lead) => string | null, limit = 12): Ori
     .map(([key, v]) => ({ key, leads: v.leads, mql: v.mql, rate: v.leads ? v.mql / v.leads : 0 }))
     .sort((a, b) => b.leads - a.leads)
     .slice(0, limit);
+}
+
+// Origem por TAG de campanha — cobre quase toda a base (mesmo quem não tem
+// UTM, tem tag do Mailchimp dizendo o lançamento/LP de entrada). Uma lead pode
+// ter mais de uma tag, então a soma das linhas passa do nº de leads; por isso
+// devolvemos `covered` (quantas leads têm ao menos uma tag de campanha).
+export interface TagOrigin {
+  rows: OriginRow[];
+  covered: number;
+  coveredPct: number;
+}
+
+export function tagOrigin(leads: Lead[], limit = 20): TagOrigin {
+  const map = new Map<string, { leads: number; mql: number }>();
+  let covered = 0;
+  for (const l of leads) {
+    const tags = leadTags(l).filter((t) => !TAG_NOISE.has(t.toLowerCase()));
+    if (tags.length) covered += 1;
+    const mql = isMql(l);
+    for (const t of tags) {
+      const e = map.get(t) ?? { leads: 0, mql: 0 };
+      e.leads += 1;
+      if (mql) e.mql += 1;
+      map.set(t, e);
+    }
+  }
+  const rows = [...map.entries()]
+    .map(([key, v]) => ({ key, leads: v.leads, mql: v.mql, rate: v.leads ? v.mql / v.leads : 0 }))
+    .sort((a, b) => b.leads - a.leads)
+    .slice(0, limit);
+  return { rows, covered, coveredPct: leads.length ? (covered / leads.length) * 100 : 0 };
 }
 
 export function leadOrigin(leads: Lead[]): LeadOrigin {
