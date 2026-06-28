@@ -51,10 +51,18 @@ export default async function OrigemPage({
 
   return (
     <div>
-      <PageHeader
-        title="Origem dos leads"
-        subtitle="De onde vêm os leads e o que os trouxe — e qual origem gera lead que vira MQL"
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          title="Origem dos leads"
+          subtitle="De onde vêm os leads e o que os trouxe — e qual origem gera lead que vira MQL"
+        />
+        <Link
+          href="/origem/utm"
+          className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          Gerar link com UTM →
+        </Link>
+      </div>
       <DemoBanner show={data.isDemo} />
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
