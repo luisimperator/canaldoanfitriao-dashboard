@@ -24,9 +24,41 @@ export function leadTags(l: Lead): string[] {
   return Array.isArray(t) ? t.filter((x): x is string => typeof x === "string") : [];
 }
 
-// Tags genéricas que não dizem origem (carimbos de produto/aluno) — fora do
-// ranking de campanha pra não poluir.
-const TAG_NOISE = new Set(["produto digital", "aluno-geral", "aluno geral"]);
+// Uma tag só conta como ORIGEM (campanha/LP/evento de entrada) se não for
+// etapa de funil do CRM nem carimbo de integração. As tags de funil vêm do
+// Unnichat (1 tentativa contato, lead-quente, EM RECUPERACAO...) e não dizem
+// de onde a pessoa veio; as de integração (Produto Digital, QuickBooks
+// Customer, Conta Azul) são ruído. Sem esse filtro o card vira sopa.
+const TAG_FUNNEL = [
+  /tentativa/,
+  /n[ãa]o.?respondeu/,
+  /respondeu.?pesquisa/,
+  /recupera/,
+  /^lead[-\s]?(quente|frio|morno)$/,
+  /^em\s/,
+  /negocia/,
+  /agendad/,
+  /no.?show/,
+  /follow.?up/,
+  /ganho|ganhou/,
+  /^perdid/,
+  /atendid/,
+];
+const TAG_NOISE = new Set([
+  "produto digital",
+  "aluno-geral",
+  "aluno geral",
+  "quickbooks customer",
+  "conta azul",
+  "cliente",
+]);
+
+export function isOriginTag(tag: string): boolean {
+  const t = tag.trim().toLowerCase();
+  if (!t) return false;
+  if (TAG_NOISE.has(t)) return false;
+  return !TAG_FUNNEL.some((re) => re.test(t));
+}
 
 export interface OriginRow {
   key: string;
@@ -85,7 +117,9 @@ export function tagOrigin(leads: Lead[], limit = 20): TagOrigin {
   const map = new Map<string, { leads: number; mql: number }>();
   let covered = 0;
   for (const l of leads) {
-    const tags = leadTags(l).filter((t) => !TAG_NOISE.has(t.toLowerCase()));
+    // normaliza caixa pra "Lista-de-Espera" e "lista-de-espera" não virarem
+    // duas linhas; só tags de origem (sem funil/ruído).
+    const tags = [...new Set(leadTags(l).map((t) => t.trim().toLowerCase()).filter(isOriginTag))];
     if (tags.length) covered += 1;
     const mql = isMql(l);
     for (const t of tags) {
