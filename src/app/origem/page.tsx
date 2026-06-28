@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
 import { paidSales } from "@/lib/metrics";
-import { leadOrigin, type OriginRow } from "@/lib/origin";
+import { leadOrigin, tagOrigin, type OriginRow } from "@/lib/origin";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { classifyChannel, CHANNEL_COLOR, type Channel } from "@/lib/channels";
@@ -28,6 +28,7 @@ export default async function OrigemPage({
       ? data.leads
       : data.leads.filter((l) => l.createdAt.slice(0, 4) === anoSel);
   const origin = leadOrigin(leads);
+  const tagOrig = tagOrigin(leads);
 
   const maxChannelLeads = Math.max(1, ...origin.byChannel.map((r) => r.leads));
   const qualGeral = origin.tracked ? (origin.trackedMql / origin.tracked) * 100 : 0;
@@ -98,13 +99,58 @@ export default async function OrigemPage({
         <KpiCard label="MQLs rastreados" value={num(origin.trackedMql)} />
       </div>
 
+      <Card title="Origem por campanha (tag de entrada)" className="mb-6">
+        <p className="mb-3 text-xs text-slate-400">
+          Cobre {num(tagOrig.coveredPct, 0)}% da base — quase todo lead tem uma tag
+          do Mailchimp dizendo o lançamento/LP de entrada, mesmo sem UTM. É a porta
+          de entrada (não o vídeo exato). Uma lead pode ter mais de uma tag.
+        </p>
+        {tagOrig.rows.length === 0 ? (
+          <p className="text-sm text-slate-400">Sem tags no período.</p>
+        ) : (
+          <ul className="space-y-2.5">
+            {tagOrig.rows.map((r) => {
+              const max = Math.max(1, ...tagOrig.rows.map((x) => x.leads));
+              return (
+                <li key={r.key}>
+                  <div className="flex justify-between items-baseline gap-2 text-sm mb-1">
+                    <span className="min-w-0 truncate text-slate-700" title={r.key}>
+                      {r.key}
+                    </span>
+                    <span className="shrink-0 tabular-nums text-slate-900">
+                      <span className="font-semibold">{num(r.leads)}</span>
+                      <span className="text-slate-400 font-normal"> leads</span>
+                      {r.mql > 0 && (
+                        <>
+                          <span className="text-slate-400 font-normal"> · </span>
+                          <span className="font-semibold text-emerald-600">
+                            {num(r.mql)} MQL
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-sky-400"
+                      style={{ width: `${Math.max(2, (r.leads / max) * 100)}%` }}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Card>
+
       {origin.tracked === 0 ? (
-        <Card title="Ainda sem origem rastreada">
+        <Card title="Origem detalhada (UTM) ainda não sincronizada">
           <p className="text-sm text-slate-600">
-            Nenhum lead do período tem UTM/vidorigem gravado ainda. Rode o sync do
-            Mailchimp em <strong>Integrações → Sincronizar agora</strong> para
-            puxar a origem (utm_source, utm_medium, utm_campaign, utm_content e
-            vidorigem) dos contatos.
+            As campanhas acima (tags) já cobrem a base, mas nenhum lead do período
+            tem UTM/vidorigem gravado ainda — é o que diz <em>o vídeo/anúncio exato</em>
+            que trouxe a pessoa. Rode o sync em{" "}
+            <strong>Integrações → Sincronizar agora</strong> para puxar utm_source,
+            utm_medium, utm_campaign, utm_content e vidorigem dos contatos.
           </p>
         </Card>
       ) : (
