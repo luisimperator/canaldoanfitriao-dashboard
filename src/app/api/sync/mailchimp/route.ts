@@ -26,7 +26,27 @@ export async function GET() {
   }
 
   const dc = apiKey.split("-").pop();
+  const auth = { Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString("base64")}` };
+
+  // Schema dos merge fields da audiência (nome + tag), p/ saber o que existe
+  // (VIDORIGEM, UTM, etc.) sem adivinhar.
+  const mergeSchema = new Map<string, string>(); // tag -> nome
+  try {
+    const r = await fetch(
+      `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/merge-fields?count=100&fields=merge_fields.tag,merge_fields.name`,
+      { headers: auth, cache: "no-store" }
+    );
+    if (r.ok) {
+      const j = await r.json();
+      for (const m of j.merge_fields ?? []) mergeSchema.set(String(m.tag), String(m.name ?? m.tag));
+    }
+  } catch {
+    /* segue sem schema */
+  }
+
   const counts = new Map<string, number>();
+  const mfFilled = new Map<string, number>(); // merge tag -> quantos preenchidos
+  const mfExamples = new Map<string, Set<string>>(); // merge tag -> exemplos
   let members = 0;
   let offset = 0;
   const pageSize = 1000;
@@ -34,22 +54,30 @@ export async function GET() {
   for (;;) {
     const url =
       `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members` +
-      `?count=${pageSize}&offset=${offset}&fields=members.tags,total_items`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString("base64")}` },
-      cache: "no-store",
-    });
+      `?count=${pageSize}&offset=${offset}&fields=members.tags,members.merge_fields,total_items`;
+    const res = await fetch(url, { headers: auth, cache: "no-store" });
     if (!res.ok) {
       const text = await res.text();
       return NextResponse.json({ error: `Mailchimp: ${text}` }, { status: 502 });
     }
     const json = await res.json();
-    const page: { tags?: { id: number; name: string }[] }[] = json.members ?? [];
+    const page: {
+      tags?: { id: number; name: string }[];
+      merge_fields?: Record<string, unknown>;
+    }[] = json.members ?? [];
     if (page.length === 0) break;
     for (const m of page) {
       members += 1;
       for (const t of m.tags ?? []) {
         counts.set(t.name, (counts.get(t.name) ?? 0) + 1);
+      }
+      for (const [k, v] of Object.entries(m.merge_fields ?? {})) {
+        const val = v == null ? "" : typeof v === "string" ? v.trim() : String(v);
+        if (val === "" || val === "0") continue;
+        mfFilled.set(k, (mfFilled.get(k) ?? 0) + 1);
+        const ex = mfExamples.get(k) ?? new Set<string>();
+        if (ex.size < 6) ex.add(val.slice(0, 60));
+        mfExamples.set(k, ex);
       }
     }
     offset += pageSize;
@@ -60,7 +88,18 @@ export async function GET() {
     .map(([name, count]) => ({ name, count, timeDeVendas: isSalesTeamTag(name) }))
     .sort((a, b) => b.count - a.count);
 
-  return NextResponse.json({ ok: true, members, tags });
+  // une o schema com o que veio preenchido nos membros
+  const allTags = new Set<string>([...mergeSchema.keys(), ...mfFilled.keys()]);
+  const mergeFields = [...allTags]
+    .map((tag) => ({
+      tag,
+      name: mergeSchema.get(tag) ?? tag,
+      filled: mfFilled.get(tag) ?? 0,
+      examples: [...(mfExamples.get(tag) ?? [])],
+    }))
+    .sort((a, b) => b.filled - a.filled);
+
+  return NextResponse.json({ ok: true, members, tags, mergeFields });
 }
 
 export async function POST() {
