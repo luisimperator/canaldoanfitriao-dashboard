@@ -136,6 +136,41 @@ export function tagOrigin(leads: Lead[], limit = 20): TagOrigin {
   return { rows, covered, coveredPct: leads.length ? (covered / leads.length) * 100 : 0 };
 }
 
+// YouTube fica subestimado porque o sinal mora em 3 lugares e nenhum sozinho
+// mostra o peso real: o vidorigem (id do vídeo), o utm_source = youtube e a tag
+// "-yt" das campanhas. Aqui a gente junta tudo e conta cada lead UMA vez.
+export interface YoutubeFootprint {
+  total: number;
+  mql: number;
+  viaVidorigem: number;
+  viaSource: number;
+  viaTag: number;
+}
+
+const YT_SRC = /youtube|(^|[-_ ])yt([-_ ]|$)/;
+const YT_TAG = /(^|[-_])yt($|[-_])|youtube/;
+
+export function youtubeFootprint(leads: Lead[]): YoutubeFootprint {
+  let total = 0,
+    mql = 0,
+    viaVidorigem = 0,
+    viaSource = 0,
+    viaTag = 0;
+  for (const l of leads) {
+    const hasVid = Boolean(l.utm?.vidorigem);
+    const srcYt = YT_SRC.test((l.utm?.source ?? "").toLowerCase());
+    const tagYt = leadTags(l).some((t) => YT_TAG.test(t.toLowerCase()));
+    if (hasVid) viaVidorigem += 1;
+    if (srcYt) viaSource += 1;
+    if (tagYt) viaTag += 1;
+    if (hasVid || srcYt || tagYt) {
+      total += 1;
+      if (isMql(l)) mql += 1;
+    }
+  }
+  return { total, mql, viaVidorigem, viaSource, viaTag };
+}
+
 export function leadOrigin(leads: Lead[]): LeadOrigin {
   const totalLeads = leads.length;
   const trackedLeads = leads.filter(hasUtm);

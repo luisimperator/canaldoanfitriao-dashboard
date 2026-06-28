@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
 import { paidSales } from "@/lib/metrics";
-import { leadOrigin, tagOrigin, isMql, type OriginRow } from "@/lib/origin";
+import { leadOrigin, tagOrigin, youtubeFootprint, isMql, type OriginRow } from "@/lib/origin";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { classifyChannel, CHANNEL_COLOR, type Channel } from "@/lib/channels";
@@ -32,6 +32,7 @@ export default async function OrigemPage({
 
   const maxChannelLeads = Math.max(1, ...origin.byChannel.map((r) => r.leads));
   const totalMql = leads.filter(isMql).length;
+  const yt = youtubeFootprint(leads);
   // UTM detalhado só vira card quando há volume suficiente; abaixo disso vira
   // ruído de "0%". Até lá, a leitura é por campanha (tag), que cobre a base.
   const UTM_MIN = 30;
@@ -153,6 +154,33 @@ export default async function OrigemPage({
           </ul>
         )}
       </Card>
+
+      {yt.total > 0 && (
+        <Card title="YouTube (todos os sinais)" className="mt-6">
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-2">
+            <div>
+              <p className="text-3xl font-bold text-slate-900 tabular-nums">{num(yt.total)}</p>
+              <p className="text-xs text-slate-500">
+                leads atribuídos ao YouTube ({num((yt.total / Math.max(1, origin.totalLeads)) * 100, 1)}% do total)
+              </p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-emerald-600 tabular-nums">{num(yt.mql)}</p>
+              <p className="text-xs text-slate-500">viraram MQL</p>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-slate-400">
+            Junta os 3 sinais (sem repetir lead): <strong>{num(yt.viaTag)}</strong> por tag{" "}
+            <code>-yt</code> · <strong>{num(yt.viaVidorigem)}</strong> por vídeo (vidorigem) ·{" "}
+            <strong>{num(yt.viaSource)}</strong> por utm_source. Provavelmente ainda é
+            subestimado: só parte dos links/QRs do YouTube carimba a origem. Usar o{" "}
+            <Link href="/origem/utm" className="text-rose-600 hover:underline">
+              gerador de link
+            </Link>{" "}
+            (source = youtube + vidorigem) em todo vídeo fecha esse buraco.
+          </p>
+        </Card>
+      )}
 
       {!utmReady ? (
         <Card title="Origem detalhada (UTM) — em construção" className="mt-6">
