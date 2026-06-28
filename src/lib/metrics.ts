@@ -785,6 +785,15 @@ export function bottleneckAnalysis(
     else if (d0Rate < 0.6) score = 55;
     const r0 = Math.round(d0Rate * 100);
     const rNunca = Math.round(naoConvRate * 100);
+    // Ação concreta: quantos vendedores p/ atender 100% dos MQLs no dia 0.
+    const activeSellers = data.sellers.filter((s) => s.isActive).length;
+    const sellersFor100 =
+      d0Rate > 0 ? Math.max(activeSellers, Math.ceil(activeSellers / d0Rate)) : null;
+    const faltam = sellersFor100 !== null ? sellersFor100 - activeSellers : null;
+    const planoText =
+      sellersFor100 !== null && faltam !== null && faltam > 0
+        ? ` Pelo ritmo atual, atender 100% dos MQLs no mesmo dia exigiria ~${sellersFor100} vendedores (hoje ${activeSellers}) — faltam +${faltam}.`
+        : "";
     signals.push({
       kind: "velocidade",
       label: "Atendimento no dia 0 (capacidade)",
@@ -799,7 +808,7 @@ export function bottleneckAnalysis(
       detail: `Só ${r0}% dos leads quentes são atendidos no mesmo dia útil — esse é o medidor de capacidade do time: quando cai, a fila acumula. Lead conversado converte ~10%; quem nunca é conversado, só ~3%. Hoje ${speed.nunca} leads quentes (${rNunca}%) nunca foram conversados. (Atraso em dias úteis: sexta→segunda = 1 dia.)`,
       action:
         score >= 40
-          ? "Trate o dia 0 como medidor de capacidade: se está baixo, a fila está acumulando — redistribua os leads ou reforce o time antes que virem lead nunca conversado (que converte 3x menos)."
+          ? `Trate o dia 0 como medidor de capacidade: se está baixo, a fila está acumulando — redistribua os leads ou reforce o time antes que virem lead nunca conversado (que converte 3x menos).${planoText}`
           : "Capacidade saudável — o time atende no mesmo dia útil, sem acúmulo de fila.",
     });
   }
