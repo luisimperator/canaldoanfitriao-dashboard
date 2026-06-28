@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { isSalesTeamTag } from "@/lib/leads";
 
+export const maxDuration = 60;
+
 // Importa inscritos da lista do Mailchimp como leads, lendo as TAGS de cada
 // contato. Contatos com tag de time de vendas (lista-de-espera /
 // gigantes-super-interessados / precisa de ajuda) entram como "lista_espera";
@@ -50,11 +52,15 @@ export async function GET() {
   let members = 0;
   let offset = 0;
   const pageSize = 1000;
+  // Só os mais RECENTES (onde o UTM/origem dos vídeos aparece) — varrer os 44 mil
+  // dá timeout. Amostra suficiente pra descobrir os campos preenchidos.
+  const SAMPLE_MAX = 5000;
 
   for (;;) {
     const url =
       `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members` +
-      `?count=${pageSize}&offset=${offset}&fields=members.tags,members.merge_fields,total_items`;
+      `?count=${pageSize}&offset=${offset}&sort_field=timestamp_opt&sort_dir=DESC` +
+      `&fields=members.tags,members.merge_fields,total_items`;
     const res = await fetch(url, { headers: auth, cache: "no-store" });
     if (!res.ok) {
       const text = await res.text();
@@ -81,7 +87,7 @@ export async function GET() {
       }
     }
     offset += pageSize;
-    if (offset >= (json.total_items ?? 0)) break;
+    if (offset >= (json.total_items ?? 0) || offset >= SAMPLE_MAX) break;
   }
 
   const tags = [...counts.entries()]
@@ -98,6 +104,21 @@ export async function GET() {
       examples: [...(mfExamples.get(tag) ?? [])],
     }))
     .sort((a, b) => b.filled - a.filled);
+
+  // Persiste o resultado da leitura (pra inspeção/diagnóstico de atribuição),
+  // já que o GET não escreve em lugar nenhum — assim dá pra revisar depois.
+  try {
+    const supa = getSupabaseAdmin();
+    if (supa) {
+      await supa.from("webhook_log").insert({
+        source: "mailchimp_discovery",
+        note: `${members} membros · ${mergeFields.length} merge fields`,
+        body: { members, mergeFields, tagsTop: tags.slice(0, 30) },
+      });
+    }
+  } catch {
+    /* diagnóstico é best-effort */
+  }
 
   return NextResponse.json({ ok: true, members, tags, mergeFields });
 }
