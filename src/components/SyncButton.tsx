@@ -19,11 +19,15 @@ export function SyncButton({ path, label = "Sincronizar agora" }: { path: string
         return;
       }
       setState("ok");
-      setMessage(
+      const base =
         typeof json.imported === "number"
           ? `${json.imported.toLocaleString("pt-BR")} registros importados`
-          : "Sincronizado"
-      );
+          : "Sincronizado";
+      const utm =
+        typeof json.comUtm === "number"
+          ? ` · ${json.comUtm.toLocaleString("pt-BR")} com origem (UTM)`
+          : "";
+      setMessage(base + utm);
     } catch {
       setState("error");
       setMessage("Falha de rede");

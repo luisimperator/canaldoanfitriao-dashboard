@@ -29,6 +29,18 @@ export interface Lead {
   phone?: string | null;
   /** campos adicionais vindos do Unnichat (produto, atendente etc.) */
   extra?: Record<string, unknown> | null;
+  /** origem do lead (utm_* + vidorigem) gravada no Mailchimp pela landing page */
+  utm?: LeadUtm | null;
+}
+
+export interface LeadUtm {
+  source?: string | null;
+  medium?: string | null;
+  campaign?: string | null;
+  content?: string | null;
+  term?: string | null;
+  /** id ou nome do vídeo/podcast que trouxe o lead */
+  vidorigem?: string | null;
 }
 
 export interface SaleUtm {
