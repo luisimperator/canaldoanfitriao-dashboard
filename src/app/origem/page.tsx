@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
-import { paidSales, monthKey } from "@/lib/metrics";
+import { paidSales } from "@/lib/metrics";
+import { leadOrigin, type OriginRow } from "@/lib/origin";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { classifyChannel, CHANNEL_COLOR, type Channel } from "@/lib/channels";
@@ -13,38 +14,45 @@ export default async function OrigemPage({
   searchParams: Promise<{ ano?: string }>;
 }) {
   const data = await getDashboardData();
-  const sales = paidSales(data.sales);
 
-  const anos = [...new Set(sales.map((s) => s.saleDate.slice(0, 4)))].sort().reverse();
+  // Anos disponíveis a partir dos leads (a origem vive no lead).
+  const anos = [...new Set(data.leads.map((l) => l.createdAt.slice(0, 4)))]
+    .filter(Boolean)
+    .sort()
+    .reverse();
   const { ano } = await searchParams;
   const anoSel = ano && anos.includes(ano) ? ano : "todos";
-  const filtered =
-    anoSel === "todos" ? sales : sales.filter((s) => s.saleDate.slice(0, 4) === anoSel);
 
-  // Agrupa por canal
-  const byChannel = new Map<Channel, { revenue: number; count: number }>();
-  for (const s of filtered) {
+  const leads =
+    anoSel === "todos"
+      ? data.leads
+      : data.leads.filter((l) => l.createdAt.slice(0, 4) === anoSel);
+  const origin = leadOrigin(leads);
+
+  const maxChannelLeads = Math.max(1, ...origin.byChannel.map((r) => r.leads));
+  const qualGeral = origin.tracked ? (origin.trackedMql / origin.tracked) * 100 : 0;
+
+  // Faturamento por canal (origem da VENDA, via UTM da Eduzz) — visão de receita
+  // que complementa a de captação. Filtra pelo mesmo ano selecionado.
+  const sales = paidSales(data.sales).filter(
+    (s) => anoSel === "todos" || s.saleDate.slice(0, 4) === anoSel
+  );
+  const revByChannel = new Map<Channel, number>();
+  for (const s of sales) {
     const ch = classifyChannel(s.utm);
-    const e = byChannel.get(ch) ?? { revenue: 0, count: 0 };
-    e.revenue += s.amount;
-    e.count += 1;
-    byChannel.set(ch, e);
+    revByChannel.set(ch, (revByChannel.get(ch) ?? 0) + s.amount);
   }
-  const rows = [...byChannel.entries()]
-    .map(([channel, v]) => ({ channel, ...v }))
+  const revRows = [...revByChannel.entries()]
+    .map(([channel, revenue]) => ({ channel, revenue }))
     .sort((a, b) => b.revenue - a.revenue);
-
-  const totalRevenue = rows.reduce((a, r) => a + r.revenue, 0);
-  const maxRevenue = Math.max(1, ...rows.map((r) => r.revenue));
-  const semRastreio = byChannel.get("Sem rastreio")?.revenue ?? 0;
-  const pctRastreado =
-    totalRevenue > 0 ? ((totalRevenue - semRastreio) / totalRevenue) * 100 : 0;
+  const totalRev = revRows.reduce((a, r) => a + r.revenue, 0);
+  const maxRev = Math.max(1, ...revRows.map((r) => r.revenue));
 
   return (
     <div>
       <PageHeader
-        title="Origem das vendas"
-        subtitle="De onde vem o faturamento, segundo as UTMs registradas em cada venda"
+        title="Origem dos leads"
+        subtitle="De onde vêm os leads e o que os trouxe — e qual origem gera lead que vira MQL"
       />
       <DemoBanner show={data.isDemo} />
 
@@ -74,60 +82,198 @@ export default async function OrigemPage({
         ))}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
-        <KpiCard label="Faturamento no período" value={brl(totalRevenue)} tone="good" />
-        <KpiCard label="Vendas no período" value={num(filtered.length)} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <KpiCard label="Leads no período" value={num(origin.totalLeads)} />
         <KpiCard
-          label="Faturamento rastreado"
-          value={`${num(pctRastreado, 0)}%`}
-          hint="com UTM de origem"
+          label="Com rastreio de origem"
+          value={`${num(origin.trackedPct, 0)}%`}
+          hint={`${num(origin.tracked)} de ${num(origin.totalLeads)} leads`}
         />
+        <KpiCard
+          label="Qualificação (rastreados)"
+          value={`${num(qualGeral, 1)}%`}
+          hint="viraram MQL"
+          tone="good"
+        />
+        <KpiCard label="MQLs rastreados" value={num(origin.trackedMql)} />
       </div>
 
-      <Card title="Faturamento por canal">
-        <div className="space-y-3">
-          {rows.map((r) => {
-            const pct = totalRevenue > 0 ? (r.revenue / totalRevenue) * 100 : 0;
-            return (
-              <div key={r.channel}>
-                <div className="flex justify-between items-baseline text-sm mb-1">
-                  <span className="flex items-center gap-2 text-slate-700">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full shrink-0"
-                      style={{ background: CHANNEL_COLOR[r.channel] }}
-                    />
-                    {r.channel}
-                  </span>
-                  <span className="font-semibold text-slate-900 tabular-nums">
-                    {brl(r.revenue)}{" "}
-                    <span className="text-slate-400 font-normal">
-                      ({num(pct, 1)}% · {num(r.count)} vendas)
+      {origin.tracked === 0 ? (
+        <Card title="Ainda sem origem rastreada">
+          <p className="text-sm text-slate-600">
+            Nenhum lead do período tem UTM/vidorigem gravado ainda. Rode o sync do
+            Mailchimp em <strong>Integrações → Sincronizar agora</strong> para
+            puxar a origem (utm_source, utm_medium, utm_campaign, utm_content e
+            vidorigem) dos contatos.
+          </p>
+        </Card>
+      ) : (
+        <>
+          <Card title="De onde vêm os leads (canal)">
+            <p className="mb-3 text-xs text-slate-400">
+              Entre os {num(origin.trackedPct, 0)}% de leads com rastreio. A barra
+              é o volume; a porcentagem em destaque é quantos viraram MQL.
+            </p>
+            <div className="space-y-3">
+              {origin.byChannel.map((r) => (
+                <div key={r.channel}>
+                  <div className="flex justify-between items-baseline text-sm mb-1">
+                    <span className="flex items-center gap-2 text-slate-700">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full shrink-0"
+                        style={{ background: CHANNEL_COLOR[r.channel] }}
+                      />
+                      {r.channel}
                     </span>
-                  </span>
+                    <span className="tabular-nums text-slate-900">
+                      <span className="font-semibold">{num(r.leads)}</span>
+                      <span className="text-slate-400 font-normal"> leads · </span>
+                      <span
+                        className={`font-semibold ${
+                          r.rate >= 0.15
+                            ? "text-emerald-600"
+                            : r.rate > 0
+                            ? "text-slate-700"
+                            : "text-slate-400"
+                        }`}
+                      >
+                        {num(r.rate * 100, 1)}% MQL
+                      </span>
+                    </span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.max(2, (r.leads / maxChannelLeads) * 100)}%`,
+                        background: CHANNEL_COLOR[r.channel],
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${Math.max(1, (r.revenue / maxRevenue) * 100)}%`,
-                      background: CHANNEL_COLOR[r.channel],
-                    }}
-                  />
+              ))}
+            </div>
+          </Card>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <OriginListCard
+              title="O que trouxe o lead (conteúdo / anúncio)"
+              hint="utm_content — o criativo/vídeo que levou a pessoa à página"
+              rows={origin.byContent}
+            />
+            <OriginListCard
+              title="Vídeo / origem (vidorigem)"
+              hint="o vídeo ou podcast de onde o lead veio"
+              rows={origin.byVideo}
+            />
+          </div>
+
+          <div className="mt-6">
+            <OriginListCard
+              title="Fonte bruta (utm_source)"
+              hint="o que a landing page gravou como source — útil pra normalizar canais"
+              rows={origin.bySource}
+            />
+          </div>
+        </>
+      )}
+
+      {totalRev > 0 && (
+        <Card title="Faturamento por canal (origem da venda)" className="mt-6">
+          <p className="mb-3 text-xs text-slate-400">
+            Receita classificada pela UTM gravada no checkout da Eduzz — visão de
+            vendas, complementa a captação acima.
+          </p>
+          <div className="space-y-3">
+            {revRows.map((r) => {
+              const pct = totalRev > 0 ? (r.revenue / totalRev) * 100 : 0;
+              return (
+                <div key={r.channel}>
+                  <div className="flex justify-between items-baseline text-sm mb-1">
+                    <span className="flex items-center gap-2 text-slate-700">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full shrink-0"
+                        style={{ background: CHANNEL_COLOR[r.channel] }}
+                      />
+                      {r.channel}
+                    </span>
+                    <span className="font-semibold text-slate-900 tabular-nums">
+                      {brl(r.revenue)}{" "}
+                      <span className="text-slate-400 font-normal">({num(pct, 1)}%)</span>
+                    </span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.max(1, (r.revenue / maxRev) * 100)}%`,
+                        background: CHANNEL_COLOR[r.channel],
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </Card>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <p className="mt-6 text-xs text-slate-400">
-        Como é calculado: cada venda é classificada pela UTM gravada no checkout
-        da Eduzz. “Tráfego pago (Meta)” reúne campanhas com sinal de anúncio no
-        medium (fb_, advantage, lookalike, launch…); “Vendedores” são os links
-        individuais (Diego, Flávio, Antonio); “Instagram orgânico” inclui o perfil
-        do Rômulo. “Sem rastreio” são vendas sem nenhuma UTM — base quente, link
-        direto, indicação. É uma aproximação a partir do que foi marcado na origem.
+        Como ler: a origem do lead vem dos campos utm_* e vidorigem gravados pela
+        landing page e importados do Mailchimp. “MQL” é o lead que virou quente e
+        foi atribuído a um vendedor — então a taxa de MQL mostra qual origem traz
+        gente que realmente avança, não só volume. Quanto maior o “% com rastreio”,
+        mais confiável fica a leitura; o que não tem UTM fica de fora dos rankings.
       </p>
     </div>
+  );
+}
+
+function OriginListCard({
+  title,
+  hint,
+  rows,
+}: {
+  title: string;
+  hint: string;
+  rows: OriginRow[];
+}) {
+  const max = Math.max(1, ...rows.map((r) => r.leads));
+  return (
+    <Card title={title}>
+      <p className="mb-3 text-xs text-slate-400">{hint}</p>
+      {rows.length === 0 ? (
+        <p className="text-sm text-slate-400">Sem dados rastreados no período.</p>
+      ) : (
+        <ul className="space-y-2.5">
+          {rows.map((r) => (
+            <li key={r.key}>
+              <div className="flex justify-between items-baseline gap-2 text-sm mb-1">
+                <span className="min-w-0 truncate text-slate-700" title={r.key}>
+                  {r.key}
+                </span>
+                <span className="shrink-0 tabular-nums text-slate-900">
+                  <span className="font-semibold">{num(r.leads)}</span>
+                  <span className="text-slate-400 font-normal"> · </span>
+                  <span
+                    className={`font-semibold ${
+                      r.rate >= 0.15 ? "text-emerald-600" : "text-slate-500"
+                    }`}
+                  >
+                    {num(r.rate * 100, 0)}% MQL
+                  </span>
+                </span>
+              </div>
+              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-rose-400"
+                  style={{ width: `${Math.max(2, (r.leads / max) * 100)}%` }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }

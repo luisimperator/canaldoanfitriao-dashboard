@@ -6,6 +6,7 @@
 
 export type Channel =
   | "Tráfego pago (Meta)"
+  | "YouTube / vídeo"
   | "Vendedores"
   | "Instagram orgânico"
   | "WhatsApp"
@@ -16,6 +17,7 @@ export type Channel =
 
 export const CHANNEL_ORDER: Channel[] = [
   "Tráfego pago (Meta)",
+  "YouTube / vídeo",
   "Vendedores",
   "Instagram orgânico",
   "WhatsApp",
@@ -27,6 +29,7 @@ export const CHANNEL_ORDER: Channel[] = [
 
 export const CHANNEL_COLOR: Record<Channel, string> = {
   "Tráfego pago (Meta)": "#e11d48",
+  "YouTube / vídeo": "#ef4444",
   Vendedores: "#0ea5e9",
   "Instagram orgânico": "#8b5cf6",
   WhatsApp: "#10b981",
@@ -44,6 +47,7 @@ interface Utm {
   campaign?: string | null;
   content?: string | null;
   term?: string | null;
+  vidorigem?: string | null;
 }
 
 export function classifyChannel(utm: Utm | null | undefined): Channel {
@@ -51,9 +55,16 @@ export function classifyChannel(utm: Utm | null | undefined): Channel {
   const s = (utm.source ?? "").toLowerCase().trim();
   const m = (utm.medium ?? "").toLowerCase().trim();
   const c = (utm.campaign ?? "").toLowerCase().trim();
-  if (!s && !m && !c) return "Sem rastreio";
+  const vid = (utm.vidorigem ?? "").toLowerCase().trim();
+  if (!s && !m && !c && !vid) return "Sem rastreio";
 
-  const blob = `${s} ${m} ${c}`;
+  const blob = `${s} ${m} ${c} ${vid}`;
+
+  // 0. YouTube / vídeo: o merge field vidorigem (id do vídeo / "yt_podcast_...")
+  // é o sinal mais forte de que a pessoa veio de um vídeo orgânico — é o canal
+  // que a equipe mais precisa medir contra o Instagram. Vem antes do pago: um
+  // lead com vidorigem nasceu de conteúdo, não de anúncio.
+  if (vid || /youtube|\byt_|^yt$|\byt\b/.test(blob)) return "YouTube / vídeo";
 
   // 1. Tráfego pago (Meta): sinais de campanha paga no medium ou na fonte.
   if (

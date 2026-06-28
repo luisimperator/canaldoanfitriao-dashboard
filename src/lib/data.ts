@@ -92,6 +92,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         name: r.name,
         phone: r.phone,
         extra: r.extra,
+        utm: (r.extra && typeof r.extra === "object" ? r.extra.utm : null) ?? null,
       })
     ),
     sales: sales.map(

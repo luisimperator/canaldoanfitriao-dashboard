@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { isSalesTeamTag } from "@/lib/leads";
+import { extractUtm } from "@/lib/mailchimp-utm";
 
 export const maxDuration = 60;
 
@@ -53,8 +54,8 @@ export async function GET() {
   let offset = 0;
   const pageSize = 1000;
   // Só os mais RECENTES (onde o UTM/origem dos vídeos aparece) — varrer os 44 mil
-  // dá timeout. Amostra suficiente pra descobrir os campos preenchidos.
-  const SAMPLE_MAX = 5000;
+  // dá timeout. Uma página (mil) já basta pra descobrir os campos preenchidos.
+  const SAMPLE_MAX = 1000;
 
   for (;;) {
     const url =
@@ -138,20 +139,38 @@ export async function POST() {
   }
 
   const dc = apiKey.split("-").pop(); // datacenter vem no fim da key
+  const auth = {
+    Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString("base64")}`,
+  };
+
+  // Schema dos merge fields (tag interna -> nome humano) p/ saber qual campo é
+  // utm_source/medium/campaign/content/term e vidorigem sem chumbar MMERGE12.
+  const mergeSchema = new Map<string, string>();
+  try {
+    const r = await fetch(
+      `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/merge-fields?count=100&fields=merge_fields.tag,merge_fields.name`,
+      { headers: auth, cache: "no-store" }
+    );
+    if (r.ok) {
+      const j = await r.json();
+      for (const m of j.merge_fields ?? []) mergeSchema.set(String(m.tag), String(m.name ?? m.tag));
+    }
+  } catch {
+    /* sem schema mapeamos pela tag, melhor do que nada */
+  }
+
   let imported = 0;
   let listaEspera = 0;
+  let comUtm = 0;
   let offset = 0;
-  const pageSize = 500;
+  const pageSize = 1000; // máximo do Mailchimp — menos requisições, cabe nos 60s
 
   for (;;) {
     const url =
       `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members` +
       `?count=${pageSize}&offset=${offset}` +
-      `&fields=members.id,members.email_address,members.full_name,members.timestamp_opt,members.tags,total_items`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString("base64")}` },
-      cache: "no-store",
-    });
+      `&fields=members.id,members.email_address,members.full_name,members.timestamp_opt,members.tags,members.merge_fields,total_items`;
+    const res = await fetch(url, { headers: auth, cache: "no-store" });
     if (!res.ok) {
       const text = await res.text();
       return NextResponse.json({ error: `Mailchimp: ${text}` }, { status: 502 });
@@ -163,6 +182,7 @@ export async function POST() {
       full_name: string;
       timestamp_opt: string;
       tags?: { id: number; name: string }[];
+      merge_fields?: Record<string, unknown>;
     }[] = json.members ?? [];
     if (members.length === 0) break;
 
@@ -170,6 +190,9 @@ export async function POST() {
       const tagNames = (m.tags ?? []).map((t) => t.name);
       const salesTeam = tagNames.some(isSalesTeamTag);
       if (salesTeam) listaEspera += 1;
+      // Origem do lead (o que o levou à landing page): utm_* + vidorigem.
+      const utm = extractUtm(m.merge_fields, mergeSchema);
+      if (utm) comUtm += 1;
       return {
         mailchimp_id: m.id,
         email: m.email_address,
@@ -179,7 +202,7 @@ export async function POST() {
         // já existe preserva a origem real (vinda do Unnichat). Antes o
         // Mailchimp carimbava 'meta_ads' em toda a base e poluía a origem.
         status: salesTeam ? "lista_espera" : "frio",
-        extra: { tags: tagNames },
+        extra: utm ? { tags: tagNames, utm } : { tags: tagNames },
         updated_at: new Date().toISOString(),
       };
     });
@@ -197,5 +220,5 @@ export async function POST() {
     if (offset >= (json.total_items ?? 0)) break;
   }
 
-  return NextResponse.json({ ok: true, imported, listaEspera });
+  return NextResponse.json({ ok: true, imported, listaEspera, comUtm });
 }
