@@ -222,11 +222,7 @@ export default async function OrigemPage({
               hint="utm_content — o criativo/vídeo que levou a pessoa à página"
               rows={origin.byContent}
             />
-            <OriginListCard
-              title="Vídeo / origem (vidorigem)"
-              hint="o vídeo ou podcast de onde o lead veio"
-              rows={origin.byVideo}
-            />
+            <VideoOriginCard rows={origin.byVideo} />
           </div>
 
           <div className="mt-6">
@@ -333,6 +329,75 @@ function OriginListCard({
               </div>
             </li>
           ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+// vidorigem geralmente é o id de 11 caracteres de um vídeo do YouTube. Quando
+// for, vira um card com thumbnail clicável (abre o vídeo) — bem mais útil que
+// um código solto. Quando não for (ex.: "yt_podcast_nataliatendeiro"), cai pra
+// um link de busca no YouTube.
+function isYtId(s: string): boolean {
+  return /^[A-Za-z0-9_-]{11}$/.test(s);
+}
+
+function VideoOriginCard({ rows }: { rows: OriginRow[] }) {
+  return (
+    <Card title="Vídeo de origem (vidorigem)">
+      <p className="mb-3 text-xs text-slate-400">
+        O vídeo do YouTube que trouxe o lead. Clique pra abrir e ver qual é.
+      </p>
+      {rows.length === 0 ? (
+        <p className="text-sm text-slate-400">Sem vídeo rastreado no período.</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((r) => {
+            const yt = isYtId(r.key);
+            const href = yt
+              ? `https://youtu.be/${r.key}`
+              : `https://www.youtube.com/results?search_query=${encodeURIComponent(r.key)}`;
+            return (
+              <li key={r.key}>
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center gap-3 rounded-lg p-1.5 hover:bg-slate-50"
+                >
+                  {yt ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`https://i.ytimg.com/vi/${r.key}/mqdefault.jpg`}
+                      alt=""
+                      loading="lazy"
+                      className="h-12 w-20 shrink-0 rounded-md object-cover bg-slate-100"
+                    />
+                  ) : (
+                    <span className="flex h-12 w-20 shrink-0 items-center justify-center rounded-md bg-slate-100 text-lg">
+                      ▶
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm text-slate-700 group-hover:text-rose-600">
+                      {r.key}
+                    </span>
+                    <span className="text-xs tabular-nums text-slate-500">
+                      <span className="font-semibold text-slate-700">{num(r.leads)}</span> leads
+                      <span className="text-slate-300"> · </span>
+                      <span
+                        className={r.rate >= 0.15 ? "font-semibold text-emerald-600" : "text-slate-500"}
+                      >
+                        {num(r.rate * 100, 0)}% MQL
+                      </span>
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-slate-300 group-hover:text-rose-500">↗</span>
+                </a>
+              </li>
+            );
+          })}
         </ul>
       )}
     </Card>
