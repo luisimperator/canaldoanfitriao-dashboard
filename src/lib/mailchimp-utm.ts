@@ -19,6 +19,17 @@ function clean(v: unknown): string | null {
   return s.slice(0, 200);
 }
 
+// Encaixa um par nome→valor no slot de UTM certo. `name` já normalizado.
+function assign(utm: LeadUtm, name: string, val: string): void {
+  if (name.includes("utm_source")) utm.source = val;
+  else if (name.includes("utm_medium")) utm.medium = val;
+  else if (name.includes("utm_campaign")) utm.campaign = val;
+  else if (name.includes("utm_content")) utm.content = val;
+  else if (name.includes("utm_term")) utm.term = val;
+  else if (name === "vidorigem" || name === "vid_origem" || name === "video_origem")
+    utm.vidorigem = val;
+}
+
 // schema: tag interna -> nome humano do merge field (ex.: MMERGE12 -> utm_source).
 // mergeFields: o objeto members.merge_fields de um contato (tag -> valor).
 export function extractUtm(
@@ -31,12 +42,28 @@ export function extractUtm(
     const name = (schema.get(tag) ?? tag).toLowerCase().trim();
     const val = clean(raw);
     if (val == null) continue;
-    if (name.includes("utm_source")) utm.source = val;
-    else if (name.includes("utm_medium")) utm.medium = val;
-    else if (name.includes("utm_campaign")) utm.campaign = val;
-    else if (name.includes("utm_content")) utm.content = val;
-    else if (name.includes("utm_term")) utm.term = val;
-    else if (name === "vidorigem" || tag === "VIDORIGEM") utm.vidorigem = val;
+    if (name === "vidorigem" || tag === "VIDORIGEM") utm.vidorigem = val;
+    else assign(utm, name, val);
+  }
+  return Object.keys(utm).length > 0 ? utm : null;
+}
+
+// Mesmo extrator, mas para campos onde a CHAVE já é o nome (ex.: campos
+// customizados do Unnichat: { utm_source: "youtube", vidorigem: "abc" }).
+// Assim, quando a LP/automação do Unnichat passar a mandar as UTMs, o painel
+// já as captura sem mudança — basta o campo se chamar utm_source/vidorigem etc.
+export function utmFromFields(
+  fields: Record<string, unknown> | null | undefined
+): LeadUtm | null {
+  if (!fields) return null;
+  const utm: LeadUtm = {};
+  for (const [key, raw] of Object.entries(fields)) {
+    const name = key.toLowerCase().trim();
+    if (!name.startsWith("utm_") && name !== "vidorigem" && name !== "vid_origem" && name !== "video_origem")
+      continue;
+    const val = clean(raw);
+    if (val == null) continue;
+    assign(utm, name, val);
   }
   return Object.keys(utm).length > 0 ? utm : null;
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { isSalesTeamTag } from "@/lib/leads";
+import { utmFromFields } from "@/lib/mailchimp-utm";
 
 // Webhook do Unnichat (CRM/atendimento).
 // As automações do Unnichat (Requisição HTTP) chamam:
@@ -135,6 +136,10 @@ export async function POST(req: NextRequest) {
     if (v !== null && v !== "" && v !== "-") extra[k] = v;
   }
   if (tags.length > 0) extra.tags = tags;
+  // Origem do lead: se a LP/automação mandar utm_* / vidorigem como campos
+  // customizados, monta o objeto utm que a página de Origem lê (extra.utm).
+  const utm = utmFromFields(fields);
+  if (utm) extra.utm = utm;
 
   // Status: explícito (legado) > tag de time de vendas > etapa/estágio.
   let newStatus: string | null = null;
