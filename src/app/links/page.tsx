@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getDashboardData } from "@/lib/data";
 import { isMql } from "@/lib/origin";
@@ -9,18 +8,11 @@ import { CopyButton } from "@/components/CopyButton";
 
 export const dynamic = "force-dynamic";
 
-// Base do link curto: se NEXT_PUBLIC_SHORT_LINK_BASE estiver setado (domínio
-// bonito), usa ele; senão usa o domínio onde o painel está servindo de fato
-// (o subdomínio do Vercel) — assim o QR nunca sai quebrado, mesmo sem o apex
-// canaldoanfitriao.com.br encaminhar /r/ ainda.
-async function shortBase(): Promise<string> {
-  const env = process.env.NEXT_PUBLIC_SHORT_LINK_BASE;
-  if (env) return env.replace(/\/+$/, "");
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  return host ? `${proto}://${host}` : "https://canaldoanfitriao.com.br";
-}
+// Base do link curto. O subdomínio link.* serve o slug na raiz (sem /r/),
+// então o link público é base/<slug>. Trocável via NEXT_PUBLIC_SHORT_LINK_BASE.
+const SHORT_BASE = (
+  process.env.NEXT_PUBLIC_SHORT_LINK_BASE || "https://link.canaldoanfitriao.com.br"
+).replace(/\/+$/, "");
 
 interface LinkRow {
   slug: string;
@@ -42,7 +34,6 @@ function ytId(url: string | null): string | null {
 export default async function LinksPage() {
   const supabase = getSupabaseAdmin();
   const data = await getDashboardData();
-  const SHORT_BASE = await shortBase();
 
   let links: LinkRow[] = [];
   const scansBySlug = new Map<string, number>();
@@ -84,14 +75,14 @@ export default async function LinksPage() {
           <p className="text-sm text-slate-600">
             Crie o primeiro em <strong>+ Novo link / QR</strong>. Você escolhe um apelido
             (ex.: <em>sublocação-vídeo-junho</em>), o produto e a lista de destino; sai um
-            link curto <code>{SHORT_BASE}/r/…</code> e um QR pra colocar no vídeo. O destino
+            link curto <code>{SHORT_BASE}/…</code> e um QR pra colocar no vídeo. O destino
             pode mudar depois sem reimprimir o QR.
           </p>
         </Card>
       ) : (
         <div className="space-y-3">
           {links.map((lk) => {
-            const short = `${SHORT_BASE}/r/${lk.slug}`;
+            const short = `${SHORT_BASE}/${lk.slug}`;
             const scans = scansBySlug.get(lk.slug) ?? 0;
             const lead = leadsBySlug.get(lk.slug) ?? { leads: 0, mql: 0 };
             const conv = scans > 0 ? (lead.leads / scans) * 100 : null;
