@@ -6,6 +6,21 @@ import { ALL_TAB_HREFS, canAccess, tabForPath } from "@/lib/access";
 // Webhooks e syncs ficam de fora (são chamados por serviços externos e
 // validam suas próprias chaves). Sem Supabase configurado (modo demo), não há login.
 export async function proxy(request: NextRequest) {
+  // Subdomínio dos links curtos (link.canaldoanfitriao.com.br): tudo nele é
+  // slug de QR. Serve o slug NA RAIZ (link.../<slug>, sem /r/) reescrevendo
+  // internamente pra rota /r/[slug]. O painel, no subdomínio dele, fica intacto.
+  const host = (request.headers.get("host") ?? "").split(":")[0];
+  if (host.split(".")[0] === "link") {
+    const p = request.nextUrl.pathname;
+    if (p === "/" || p === "") {
+      return NextResponse.redirect("https://canaldoanfitriao.com.br");
+    }
+    if (p.startsWith("/r/")) return NextResponse.next();
+    const u = request.nextUrl.clone();
+    u.pathname = `/r${p}`; // /<slug> -> /r/<slug>
+    return NextResponse.rewrite(u);
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return NextResponse.next();
