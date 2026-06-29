@@ -5,6 +5,7 @@ import { num } from "@/lib/format";
 import { Card, DemoBanner, PageHeader } from "@/components/ui";
 import { CreateLinkForm } from "@/components/CreateLinkForm";
 import { CopyButton } from "@/components/CopyButton";
+import { QrCode } from "@/components/QrCode";
 
 export const dynamic = "force-dynamic";
 
@@ -86,17 +87,15 @@ export default async function LinksPage() {
             const scans = scansBySlug.get(lk.slug) ?? 0;
             const lead = leadsBySlug.get(lk.slug) ?? { leads: 0, mql: 0 };
             const conv = scans > 0 ? (lead.leads / scans) * 100 : null;
-            const qr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(short)}`;
             const yid = ytId(lk.youtube_url);
             return (
               <div
                 key={lk.slug}
                 className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col sm:flex-row gap-4"
               >
-                <a href={qr} target="_blank" rel="noreferrer" className="shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={qr} alt={`QR ${lk.slug}`} className="h-24 w-24 rounded-md border border-slate-100" />
-                </a>
+                <div className="shrink-0">
+                  <QrCode value={short} size={96} filename={`qr-${lk.slug}.png`} />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-slate-900">{lk.label || lk.slug}</span>
@@ -114,13 +113,6 @@ export default async function LinksPage() {
                   <div className="mt-1 flex items-center gap-2 flex-wrap">
                     <code className="text-xs text-slate-500 break-all">{short}</code>
                     <CopyButton text={short} />
-                    <a
-                      href={qr}
-                      download={`qr-${lk.slug}.png`}
-                      className="rounded-md border border-slate-300 px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      Baixar QR
-                    </a>
                   </div>
                   <p className="mt-1 text-[11px] text-slate-400 truncate">→ {lk.destination}</p>
                   <div className="mt-2 flex gap-5 text-sm tabular-nums">
