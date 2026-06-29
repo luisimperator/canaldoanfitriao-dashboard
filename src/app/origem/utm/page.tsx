@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { QrCode } from "@/components/QrCode";
 
 // Gerador/padronizador de links com UTM. O objetivo é que TODO link e QR code
 // (vídeo, bio, e-mail, anúncio) use o mesmo vocabulário, pra leitura de origem
@@ -176,16 +177,9 @@ export default function UtmBuilderPage() {
               {copied ? "Copiado ✓" : "Copiar link"}
             </button>
             {url && (
-              <a
-                href={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-                  url
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-                className="ml-2 inline-block rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Gerar QR code
-              </a>
+              <div className="mt-4 flex justify-center">
+                <QrCode value={url} size={180} filename="qr-utm.png" />
+              </div>
             )}
           </div>
 
