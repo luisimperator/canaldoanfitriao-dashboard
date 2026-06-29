@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getDashboardData } from "@/lib/data";
 import { isMql } from "@/lib/origin";
@@ -8,9 +9,18 @@ import { CopyButton } from "@/components/CopyButton";
 
 export const dynamic = "force-dynamic";
 
-const SHORT_BASE = (
-  process.env.NEXT_PUBLIC_SHORT_LINK_BASE || "https://canaldoanfitriao.com.br"
-).replace(/\/+$/, "");
+// Base do link curto: se NEXT_PUBLIC_SHORT_LINK_BASE estiver setado (domínio
+// bonito), usa ele; senão usa o domínio onde o painel está servindo de fato
+// (o subdomínio do Vercel) — assim o QR nunca sai quebrado, mesmo sem o apex
+// canaldoanfitriao.com.br encaminhar /r/ ainda.
+async function shortBase(): Promise<string> {
+  const env = process.env.NEXT_PUBLIC_SHORT_LINK_BASE;
+  if (env) return env.replace(/\/+$/, "");
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  return host ? `${proto}://${host}` : "https://canaldoanfitriao.com.br";
+}
 
 interface LinkRow {
   slug: string;
@@ -32,6 +42,7 @@ function ytId(url: string | null): string | null {
 export default async function LinksPage() {
   const supabase = getSupabaseAdmin();
   const data = await getDashboardData();
+  const SHORT_BASE = await shortBase();
 
   let links: LinkRow[] = [];
   const scansBySlug = new Map<string, number>();
