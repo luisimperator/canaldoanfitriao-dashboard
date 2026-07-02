@@ -12,7 +12,7 @@ import { brl, monthLabel, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { SalesBySellerChart, TeamHistoryChart } from "@/components/charts";
 import { DateRangePicker } from "@/components/DateRangePicker";
-import { getSpeedToLead } from "@/lib/speed";
+import { getD0ByLoad, getSpeedToLead } from "@/lib/speed";
 import { getMqlFlow } from "@/lib/mql-flow";
 
 export const dynamic = "force-dynamic";
@@ -66,16 +66,18 @@ export default async function VendasPage({
 
   const stats = sellerStats(data, refDate);
 
-  const [{ rows: speed, total: speedTotal }, mqlFlow] = await Promise.all([
+  const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load] = await Promise.all([
     getSpeedToLead(),
     getMqlFlow(),
+    getD0ByLoad(),
   ]);
 
-  // Fluxo de MQL pela data REAL de atribuição (lead_events). Fallback: contagem
-  // por data de criação do lead (modo demo / sem eventos).
+  // Fluxo de MQL pela data em que o lead RECEBEU a tag de MQL (lead-a5e /
+  // lead-gigantes / lead-quente / lead-muito-quente). Fallback local usa o
+  // mql_at que veio junto dos leads (modo demo / RPC indisponível).
   const start7 = daysAgo(6, new Date(today));
   const mql7Fallback = data.leads.filter(
-    (l) => l.sellerId && l.createdAt >= start7 && l.createdAt <= today
+    (l) => l.mqlAt && l.mqlAt >= start7 && l.mqlAt <= today
   ).length;
   const w7 = mqlFlow?.windows.find((w) => w.days === 7);
   const w30 = mqlFlow?.windows.find((w) => w.days === 30);
@@ -97,14 +99,8 @@ export default async function VendasPage({
   ).length;
   const conv30 = w30 && w30.total > 0 ? vendas30 / w30.total : null;
 
-  // Capacidade pelo critério do DIA 0: quantos vendedores para atender 100% dos
-  // MQLs no mesmo dia útil. O atendimento no dia 0 mede a capacidade — se com N
-  // vendedores só X% chega no dia 0, para 100% seriam ~N/X vendedores.
   const activeSellers = data.sellers.filter((s) => s.isActive).length;
   const d0Rate = speedTotal.atribuidos > 0 ? speedTotal.d0 / speedTotal.atribuidos : null;
-  const sellersFor100 =
-    d0Rate && d0Rate > 0 ? Math.max(activeSellers, Math.ceil(activeSellers / d0Rate)) : null;
-  const faltamSellers = sellersFor100 !== null ? sellersFor100 - activeSellers : null;
 
   // Série mensal de faturamento por vendedor (últimos 6 meses)
   const sellerName = new Map(data.sellers.map((s) => [s.id, s.name]));
@@ -162,13 +158,25 @@ export default async function VendasPage({
   });
   const teamTotal = teamMonths.reduce((acc, mk) => acc + teamByMonth(mk), 0);
 
-  const capTone = faltamSellers === null ? "bad" : faltamSellers > 0 ? "warn" : "good";
-  const capHeadline =
-    faltamSellers === null
-      ? "Sem dados de atendimento suficientes para a análise"
-      : faltamSellers > 0
-        ? `🟡 Faltam ~${faltamSellers} vendedor(es) para atender 100% dos MQLs no mesmo dia`
-        : "✅ O time atende ~todos os MQLs no mesmo dia útil";
+  // Diagnóstico: capacidade ou processo? Compara o d0 em dias calmos vs pico.
+  // Se no pico (todo mundo mobilizado) o d0 é ALTO e no dia calmo é baixo, o
+  // gargalo é rotina/processo — contratar não resolve. Só se o d0 despencar no
+  // pico é que falta gente.
+  const rate = (r?: { d0: number; leads: number }) =>
+    r && r.leads > 0 ? r.d0 / r.leads : null;
+  const d0Calmo = rate(d0Load.find((r) => r.bucket === "calmo"));
+  const d0Pico = rate(d0Load.find((r) => r.bucket === "pico"));
+  const processo = d0Calmo !== null && d0Pico !== null && d0Pico - d0Calmo >= 0.1;
+  const faltaGente = d0Calmo !== null && d0Pico !== null && d0Calmo - d0Pico >= 0.1;
+
+  const capTone = processo ? "warn" : faltaGente ? "bad" : d0Rate !== null ? "good" : "bad";
+  const capHeadline = processo
+    ? `🟠 O gargalo é processo, não gente: no pico o time atende ${num((d0Pico ?? 0) * 100, 0)}% no dia 0; no dia calmo, só ${num((d0Calmo ?? 0) * 100, 0)}%`
+    : faltaGente
+      ? `🔴 No pico o atendimento cai (${num((d0Pico ?? 0) * 100, 0)}% vs ${num((d0Calmo ?? 0) * 100, 0)}% no calmo) — aí sim falta gente`
+      : d0Rate !== null
+        ? `Atendimento no dia 0: ${num(d0Rate * 100, 0)}% dos leads`
+        : "Sem dados de atendimento suficientes para a análise";
 
   return (
     <div>
@@ -192,7 +200,7 @@ export default async function VendasPage({
         <KpiCard
           label="MQL novos (7 dias)"
           value={num(mql7)}
-          hint={w7 ? "pela data de atribuição ao vendedor" : "lead quente com vendedor"}
+          hint={w7 ? "pela data em que recebeu a tag de MQL" : "recebeu tag de qualificação"}
         />
         <KpiCard label="Vendas de curso (7 dias)" value={num(vendas7)} hint="A5E + Gigantes" />
       </div>
@@ -278,11 +286,12 @@ export default async function VendasPage({
           )}
 
           <p className="text-xs text-slate-400 mt-3">
-            MQL novo = lead na data em que foi atribuído a um vendedor (histórico do CRM
+            MQL novo = contato na data em que RECEBEU a tag de qualificação (lead-a5e,
+            lead-gigantes, lead-quente ou lead-muito-quente; histórico do CRM
             {mqlFlow.historySince
               ? `, registrado desde ${mqlFlow.historySince.slice(8, 10)}/${mqlFlow.historySince.slice(5, 7)}`
               : ""}
-            ) — diferente da data de criação do lead, que subconta o fluxo recente. Vendas/vendedor
+            ) — não a data de criação do lead nem a atribuição a vendedor. Vendas/vendedor
             usa a conversão média dos últimos 30 dias; comissão anda junto com essa coluna.
           </p>
         </Card>
@@ -484,7 +493,7 @@ export default async function VendasPage({
           <SalesBySellerChart data={monthly} sellers={activeNames} projected />
         </Card>
 
-        <Card title="Quantos vendedores para atender 100% dos MQLs no dia 0?">
+        <Card title="Atendimento no dia 0 — falta gente ou falta processo?">
           <div
             className={`rounded-lg px-4 py-3 mb-4 text-sm font-semibold ${
               capTone === "good"
@@ -496,13 +505,53 @@ export default async function VendasPage({
           >
             {capHeadline}
           </div>
+          {d0Load.length > 0 && (
+            <div className="overflow-x-auto mb-3">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-slate-400">
+                    <th className="py-1.5 font-medium">Tipo de dia</th>
+                    <th className="py-1.5 font-medium text-right">dias</th>
+                    <th className="py-1.5 font-medium text-right">leads</th>
+                    <th className="py-1.5 font-medium text-right">no dia 0</th>
+                    <th className="py-1.5 font-medium text-right">nunca</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {d0Load.map((r) => (
+                    <tr key={r.bucket} className="border-t border-slate-100">
+                      <td className="py-1.5 text-slate-700">
+                        {r.bucket === "calmo"
+                          ? "Calmo (≤10 leads)"
+                          : r.bucket === "medio"
+                            ? "Médio (11-25)"
+                            : "Pico (>25)"}
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums text-slate-500">{num(r.dias)}</td>
+                      <td className="py-1.5 text-right tabular-nums text-slate-700">{num(r.leads)}</td>
+                      <td
+                        className={`py-1.5 text-right font-semibold tabular-nums ${
+                          r.leads > 0 && r.d0 / r.leads >= 0.6 ? "text-emerald-600" : "text-slate-900"
+                        }`}
+                      >
+                        {r.leads > 0 ? `${num((r.d0 / r.leads) * 100, 0)}%` : "—"}
+                      </td>
+                      <td className="py-1.5 text-right tabular-nums text-slate-500">
+                        {r.leads > 0 ? `${num((r.nunca / r.leads) * 100, 0)}%` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           <dl className="space-y-2.5 text-sm">
             <div className="flex justify-between">
-              <dt className="text-slate-600">MQLs atribuídos (últimos 90 dias)</dt>
+              <dt className="text-slate-600">Leads atribuídos (90 dias)</dt>
               <dd className="font-semibold text-slate-900">{num(speedTotal.atribuidos)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-600">Atendidos no mesmo dia útil (hoje)</dt>
+              <dt className="text-slate-600">Atendidos no mesmo dia útil (geral)</dt>
               <dd className="font-semibold text-slate-900">
                 {d0Rate !== null ? `${num(d0Rate * 100, 0)}%` : "—"}
               </dd>
@@ -511,28 +560,13 @@ export default async function VendasPage({
               <dt className="text-slate-600">Time atual (vendedores ativos)</dt>
               <dd className="font-semibold text-slate-900">{num(activeSellers)}</dd>
             </div>
-            <div className="flex justify-between border-t border-slate-100 pt-2.5">
-              <dt className="text-slate-600">Vendedores para 100% no dia 0</dt>
-              <dd className="font-semibold text-slate-900">
-                {sellersFor100 !== null ? num(sellersFor100) : "—"}
-              </dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-600">Faltam contratar / ativar</dt>
-              <dd
-                className={`font-semibold ${
-                  faltamSellers !== null && faltamSellers <= 0 ? "text-emerald-600" : "text-rose-600"
-                }`}
-              >
-                {faltamSellers !== null ? (faltamSellers <= 0 ? "nenhum" : `+${num(faltamSellers)}`) : "—"}
-              </dd>
-            </div>
           </dl>
           <p className="text-xs text-slate-400 mt-4">
-            Critério: o atendimento no mesmo dia útil mede a capacidade do time. Com {num(activeSellers)}{" "}
-            vendedor(es), {d0Rate !== null ? `${num(d0Rate * 100, 0)}%` : "—"} dos MQLs são atendidos no dia 0;
-            para chegar a 100% seriam ~{sellersFor100 !== null ? num(sellersFor100) : "—"} (proporcional).
-            MQL = lead quente atribuído a um vendedor; dias úteis (sexta→segunda = 1 dia).
+            Como ler: se o dia 0 é alto no pico (todo mundo mobilizado) e baixo no dia calmo, o
+            gargalo é rotina/processo — contratar não muda isso; um alerta de lead novo + meta de
+            resposta no dia muda. Só se o pico for pior que o calmo é que falta gente. Dia 0 = 1ª
+            resposta humana (exclui bot/template) no mesmo dia útil da chegada do lead; sexta→segunda
+            conta 1 dia útil.
           </p>
         </Card>
       </div>

@@ -2,16 +2,17 @@
 // origem. A origem (utm_* + vidorigem) vem do Mailchimp, gravada pela landing
 // page; o sync (api/sync/mailchimp) grava em lead.utm.
 //
-// "Qualidade" aqui = virou MQL. MQL = lead que virou quente e foi atribuído a
-// um vendedor (mesma definição do resto do painel: seller_id preenchido). A
-// taxa de qualificação (MQL ÷ leads) diz quanto cada origem gera de lead que
-// REALMENTE interessa, não só volume.
+// "Qualidade" aqui = virou MQL. MQL = contato que recebeu uma das tags
+// lead-a5e / lead-gigantes / lead-quente / lead-muito-quente (mesma definição
+// do resto do painel: leads.mql_at carimbado pelo histórico do CRM). A taxa de
+// qualificação (MQL ÷ leads) diz quanto cada origem gera de lead que REALMENTE
+// interessa, não só volume.
 
 import type { Lead } from "./types";
 import { classifyChannel, type Channel } from "./channels";
 
 export function isMql(l: Lead): boolean {
-  return l.sellerId != null;
+  return l.mqlAt != null;
 }
 
 export function hasUtm(l: Lead): boolean {
