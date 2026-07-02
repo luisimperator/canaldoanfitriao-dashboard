@@ -5,28 +5,32 @@ import { leadOrigin, tagOrigin, youtubeFootprint, isMql, type OriginRow } from "
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { classifyChannel, CHANNEL_COLOR, type Channel } from "@/lib/channels";
+import { DateRangePicker } from "@/components/DateRangePicker";
 
 export const dynamic = "force-dynamic";
 
 export default async function OrigemPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ano?: string }>;
+  searchParams: Promise<{ ano?: string; from?: string; to?: string }>;
 }) {
   const data = await getDashboardData();
 
-  // Anos disponíveis a partir dos leads (a origem vive no lead).
-  const anos = [...new Set(data.leads.map((l) => l.createdAt.slice(0, 4)))]
-    .filter(Boolean)
-    .sort()
-    .reverse();
-  const { ano } = await searchParams;
-  const anoSel = ano && anos.includes(ano) ? ano : "todos";
+  // Período: ?from/?to (YYYY-MM-DD) vindos do seletor; ?ano segue aceito por
+  // compatibilidade com links antigos. Sem nada = todo o histórico.
+  const sp = await searchParams;
+  const reDate = /^\d{4}-\d{2}-\d{2}$/;
+  let from = sp.from && reDate.test(sp.from) ? sp.from : null;
+  let to = sp.to && reDate.test(sp.to) ? sp.to : null;
+  if (!from && !to && sp.ano && /^\d{4}$/.test(sp.ano)) {
+    from = `${sp.ano}-01-01`;
+    to = `${sp.ano}-12-31`;
+  }
+  if (from && to && from > to) [from, to] = [to, from];
 
-  const leads =
-    anoSel === "todos"
-      ? data.leads
-      : data.leads.filter((l) => l.createdAt.slice(0, 4) === anoSel);
+  const leads = data.leads.filter(
+    (l) => (!from || l.createdAt >= from) && (!to || l.createdAt <= to)
+  );
   const origin = leadOrigin(leads);
   const tagOrig = tagOrigin(leads);
 
@@ -39,9 +43,9 @@ export default async function OrigemPage({
   const utmReady = origin.tracked >= UTM_MIN;
 
   // Faturamento por canal (origem da VENDA, via UTM da Eduzz) — visão de receita
-  // que complementa a de captação. Filtra pelo mesmo ano selecionado.
+  // que complementa a de captação. Mesmo período selecionado.
   const sales = paidSales(data.sales).filter(
-    (s) => anoSel === "todos" || s.saleDate.slice(0, 4) === anoSel
+    (s) => (!from || s.saleDate >= from) && (!to || s.saleDate <= to)
   );
   const revByChannel = new Map<Channel, number>();
   for (const s of sales) {
@@ -61,40 +65,17 @@ export default async function OrigemPage({
           title="Origem dos leads"
           subtitle="De onde vêm os leads e o que os trouxe — e qual origem gera lead que vira MQL"
         />
-        <Link
-          href="/origem/utm"
-          className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-        >
-          Gerar link com UTM →
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <DateRangePicker placeholder="Todo o período" />
+          <Link
+            href="/origem/utm"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Gerar link com UTM →
+          </Link>
+        </div>
       </div>
       <DemoBanner show={data.isDemo} />
-
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <Link
-          href="/origem"
-          className={`rounded-full px-3 py-1.5 text-sm ${
-            anoSel === "todos"
-              ? "bg-rose-600 text-white font-semibold"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          Todo o período
-        </Link>
-        {anos.map((a) => (
-          <Link
-            key={a}
-            href={`/origem?ano=${a}`}
-            className={`rounded-full px-3 py-1.5 text-sm ${
-              anoSel === a
-                ? "bg-rose-600 text-white font-semibold"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            {a}
-          </Link>
-        ))}
-      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard label="Leads no período" value={num(origin.totalLeads)} />
