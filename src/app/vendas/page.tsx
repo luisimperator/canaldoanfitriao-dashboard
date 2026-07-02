@@ -13,6 +13,7 @@ import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { SalesBySellerChart, TeamHistoryChart } from "@/components/charts";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { getSpeedToLead } from "@/lib/speed";
+import { getMqlFlow } from "@/lib/mql-flow";
 
 export const dynamic = "force-dynamic";
 
@@ -65,18 +66,36 @@ export default async function VendasPage({
 
   const stats = sellerStats(data, refDate);
 
-  const { rows: speed, total: speedTotal } = await getSpeedToLead();
+  const [{ rows: speed, total: speedTotal }, mqlFlow] = await Promise.all([
+    getSpeedToLead(),
+    getMqlFlow(),
+  ]);
 
-  // Relação MQL → vendas (curso) nos últimos 7 dias.
+  // Fluxo de MQL pela data REAL de atribuição (lead_events). Fallback: contagem
+  // por data de criação do lead (modo demo / sem eventos).
   const start7 = daysAgo(6, new Date(today));
-  const mql7 = data.leads.filter(
+  const mql7Fallback = data.leads.filter(
     (l) => l.sellerId && l.createdAt >= start7 && l.createdAt <= today
   ).length;
+  const w7 = mqlFlow?.windows.find((w) => w.days === 7);
+  const w30 = mqlFlow?.windows.find((w) => w.days === 30);
+  const w90 = mqlFlow?.windows.find((w) => w.days === 90);
+  const mql7 = w7?.total ?? mql7Fallback;
+
   const vendas7 = paidSales(data.sales).filter(
     (s) => isCourseSale(s) && s.saleDate >= start7 && s.saleDate <= today
   ).length;
   const mqlPorVenda7 = vendas7 > 0 ? mql7 / vendas7 : null;
   const convMql7 = mql7 > 0 ? (vendas7 / mql7) * 100 : null;
+
+  // Tem MQL pra mais vendedor? Projeta o fluxo de 30d em MQL/mês e divide
+  // pelo tamanho do time simulado — é a conta da comissão.
+  const mqlPerMonth = w30 ? Math.round(w30.perDay * 30) : null;
+  const start30 = daysAgo(29, new Date(today));
+  const vendas30 = paidSales(data.sales).filter(
+    (s) => isCourseSale(s) && s.saleDate >= start30 && s.saleDate <= today
+  ).length;
+  const conv30 = w30 && w30.total > 0 ? vendas30 / w30.total : null;
 
   // Capacidade pelo critério do DIA 0: quantos vendedores para atender 100% dos
   // MQLs no mesmo dia útil. O atendimento no dia 0 mede a capacidade — se com N
@@ -170,9 +189,104 @@ export default async function VendasPage({
           label="Conversão MQL→venda (7d)"
           value={convMql7 !== null ? `${num(convMql7, 1)}%` : "—"}
         />
-        <KpiCard label="MQL (7 dias)" value={num(mql7)} hint="lead quente com vendedor" />
+        <KpiCard
+          label="MQL novos (7 dias)"
+          value={num(mql7)}
+          hint={w7 ? "pela data de atribuição ao vendedor" : "lead quente com vendedor"}
+        />
         <KpiCard label="Vendas de curso (7 dias)" value={num(vendas7)} hint="A5E + Gigantes" />
       </div>
+
+      {mqlFlow && mqlFlow.windows.length > 0 && (
+        <Card title="Fluxo de MQL — tem lead pra mais vendedor?" className="mb-4">
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {[w7, w30, w90].map(
+              (w) =>
+                w && (
+                  <div key={w.days} className="rounded-lg bg-slate-50 px-3 py-2.5 text-center">
+                    <p className="text-2xl font-bold text-slate-900 tabular-nums">
+                      {num(w.perBusinessDay, 1)}
+                    </p>
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      MQL/dia útil
+                      <br />
+                      {w.effectiveDays < w.days
+                        ? `${w.days}d (só ${w.effectiveDays}d de histórico)`
+                        : `últimos ${w.days} dias`}
+                    </p>
+                  </div>
+                )
+            )}
+          </div>
+
+          {mqlPerMonth !== null && (
+            <>
+              <p className="text-sm text-slate-700 mb-2">
+                No ritmo dos últimos 30 dias, o funil gera{" "}
+                <strong>~{num(mqlPerMonth)} MQL/mês</strong>
+                {conv30 !== null && (
+                  <>
+                    {" "}
+                    e converte <strong>{num(conv30 * 100, 0)}%</strong> em venda de curso (
+                    {num(vendas30)} vendas)
+                  </>
+                )}
+                . Dividindo por tamanho de time:
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-slate-400">
+                      <th className="py-1.5 font-medium">Time</th>
+                      <th className="py-1.5 font-medium text-right">MQL/vendedor/mês</th>
+                      <th className="py-1.5 font-medium text-right">MQL/vendedor/dia útil</th>
+                      {conv30 !== null && (
+                        <th className="py-1.5 font-medium text-right">Vendas/vendedor/mês</th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[2, 3, 4].map((team) => {
+                      const perSeller = mqlPerMonth / team;
+                      const isNow = team === activeSellers;
+                      return (
+                        <tr
+                          key={team}
+                          className={`border-t border-slate-100 ${isNow ? "bg-rose-50/50" : ""}`}
+                        >
+                          <td className="py-1.5 text-slate-700">
+                            {team} vendedores{isNow ? " (hoje)" : ""}
+                          </td>
+                          <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900">
+                            {num(perSeller, 0)}
+                          </td>
+                          <td className="py-1.5 text-right tabular-nums text-slate-700">
+                            {num(perSeller / 21, 1)}
+                          </td>
+                          {conv30 !== null && (
+                            <td className="py-1.5 text-right tabular-nums text-slate-700">
+                              ~{num(perSeller * conv30, 1)}
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
+          <p className="text-xs text-slate-400 mt-3">
+            MQL novo = lead na data em que foi atribuído a um vendedor (histórico do CRM
+            {mqlFlow.historySince
+              ? `, registrado desde ${mqlFlow.historySince.slice(8, 10)}/${mqlFlow.historySince.slice(5, 7)}`
+              : ""}
+            ) — diferente da data de criação do lead, que subconta o fluxo recente. Vendas/vendedor
+            usa a conversão média dos últimos 30 dias; comissão anda junto com essa coluna.
+          </p>
+        </Card>
+      )}
 
       <Card title="Vendas por vendedor" className="mb-4">
         <div className="flex items-center justify-center gap-3 mb-4">
