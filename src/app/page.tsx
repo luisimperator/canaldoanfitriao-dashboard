@@ -53,7 +53,7 @@ export default async function VisaoGeralPage() {
   const leads30 = inRange(data.leads, (l) => l.createdAt, start30, today);
   const stages = funnelStages(leads30);
 
-  // MQL = lead quente atribuído a vendedor (seller_id). MQL ⊆ leads.
+  // MQL = contato que recebeu tag de qualificação (mql_at). MQL ⊆ leads.
   const mqlMonth = data.leads.filter(
     (l) => monthKey(l.createdAt) === month && l.sellerId
   ).length;
@@ -107,7 +107,7 @@ export default async function VisaoGeralPage() {
           label="MQL no mês"
           value={num(mqlMonth)}
           hint={
-            taxaMql !== null ? `${num(taxaMql, 1)}% dos leads viram MQL` : "lead quente com vendedor"
+            taxaMql !== null ? `${num(taxaMql, 1)}% dos leads viram MQL` : "recebeu tag de qualificação"
           }
         />
         <KpiCard
@@ -146,7 +146,8 @@ export default async function VisaoGeralPage() {
         <Card title="Leads e MQL por dia (últimos 60 dias)" className="lg:col-span-2">
           <LeadsMqlChart data={mqlSeries} />
           <p className="text-xs text-slate-400 mt-2">
-            MQL = lead quente atribuído a um vendedor. Taxa de qualificação nos últimos 30 dias:{" "}
+            MQL = contato que recebeu tag de qualificação (lead-a5e, lead-gigantes, lead-quente ou
+            lead-muito-quente), contado no dia em que a tag chegou. Taxa de qualificação nos últimos 30 dias:{" "}
             <strong>{taxaMql !== null ? `${num(taxaMql, 1)}%` : "—"}</strong> ({num(mql30)} MQL de{" "}
             {num(leads30.length)} leads). Cada vendedor processa ~{num(mqlCap.avgPerMonth)} MQL/mês
             (média dos últimos 90 dias).

@@ -1,9 +1,10 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-// Fluxo de MQL: quantos leads NOVOS ganharam vendedor por dia, pela data REAL
-// da 1a atribuição (RPC mql_new_daily sobre lead_events) — não pela data de
-// criação do lead, que subconta o fluxo recente (lead antigo que esquenta hoje
-// é MQL de hoje). É o número que responde "tem MQL pra mais um vendedor?".
+// Fluxo de MQL: quantos contatos NOVOS viraram MQL por dia. MQL = recebeu uma
+// das tags lead-a5e / lead-gigantes / lead-quente / lead-muito-quente, contado
+// no dia em que a TAG chegou (RPC mql_new_daily sobre leads.mql_at) — não pela
+// criação do lead nem pela atribuição a vendedor. É o número que responde
+// "tem MQL pra mais um vendedor?".
 //
 // Honestidade embutida: o histórico de eventos começa quando o webhook do
 // Unnichat entrou no ar. `historySince`/`historyDays` dizem quanto lastro

@@ -135,11 +135,16 @@ export function dailyLeadSeries(leads: Lead[], days: number, today = isoToday())
   return points;
 }
 
-// ---------- MQL (lead quente atribuído a vendedor) ----------
+// ---------- MQL (tag de qualificação no CRM) ----------
 //
-// MQL = lead que virou "quente" e foi atribuído a um vendedor. Usamos o
-// seller_id da própria tabela de leads (mesma fonte dos leads), então MQL ⊆
-// leads e a taxa de qualificação (MQL ÷ leads) fecha sempre <= 100%.
+// MQL = contato que recebeu uma das tags lead-a5e / lead-gigantes /
+// lead-quente / lead-muito-quente. O momento em que vira MQL é o momento em
+// que a tag chega (leads.mql_at, carimbado pelo histórico de eventos) — não a
+// atribuição a vendedor. isMqlLead é a definição única no app.
+
+export function isMqlLead(l: Lead): boolean {
+  return l.mqlAt != null;
+}
 
 export interface MqlDayPoint {
   date: string;
@@ -147,16 +152,20 @@ export interface MqlDayPoint {
   mql: number;
 }
 
+// leads contados pela data de captação; MQLs pela data em que viraram MQL
+// (recebimento da tag) — por isso as duas linhas do gráfico têm datas próprias.
 export function mqlDailySeries(leads: Lead[], days: number, today = isoToday()): MqlDayPoint[] {
   const start = daysAgo(days - 1, new Date(today));
   const byDay = new Map<string, { leads: number; mql: number }>();
-  for (const l of leads) {
-    const d = l.createdAt.slice(0, 10);
-    if (d < start || d > today) continue;
+  const bump = (d: string, k: "leads" | "mql") => {
+    if (d < start || d > today) return;
     const e = byDay.get(d) ?? { leads: 0, mql: 0 };
-    e.leads++;
-    if (l.sellerId) e.mql++;
+    e[k]++;
     byDay.set(d, e);
+  };
+  for (const l of leads) {
+    bump(l.createdAt.slice(0, 10), "leads");
+    if (l.mqlAt) bump(l.mqlAt.slice(0, 10), "mql");
   }
   const out: MqlDayPoint[] = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -174,8 +183,9 @@ export interface MqlSellerRow {
   perMonth: number;
 }
 
-// Quantos MQL cada vendedor ATIVO processou (lead com seller_id) na janela, e a
-// média por vendedor/mês — referência de "quanto 1 vendedor consegue processar".
+// Quantos MQL (pela tag) cada vendedor ATIVO processou na janela, e a média
+// por vendedor/mês — referência de "quanto 1 vendedor consegue processar".
+// Janela pela data em que o lead virou MQL (mql_at), não pela captação.
 export function mqlPerSeller(
   data: DashboardData,
   days = 90,
@@ -186,8 +196,8 @@ export function mqlPerSeller(
   const activeIds = new Set(data.sellers.filter((s) => s.isActive).map((s) => s.id));
   const counts = new Map<string, number>();
   for (const l of data.leads) {
-    if (!l.sellerId || !activeIds.has(l.sellerId)) continue;
-    const d = l.createdAt.slice(0, 10);
+    if (!l.mqlAt || !l.sellerId || !activeIds.has(l.sellerId)) continue;
+    const d = l.mqlAt.slice(0, 10);
     if (d < start || d > today) continue;
     counts.set(l.sellerId, (counts.get(l.sellerId) ?? 0) + 1);
   }
@@ -785,18 +795,9 @@ export function bottleneckAnalysis(
     else if (d0Rate < 0.6) score = 55;
     const r0 = Math.round(d0Rate * 100);
     const rNunca = Math.round(naoConvRate * 100);
-    // Ação concreta: quantos vendedores p/ atender 100% dos MQLs no dia 0.
-    const activeSellers = data.sellers.filter((s) => s.isActive).length;
-    const sellersFor100 =
-      d0Rate > 0 ? Math.max(activeSellers, Math.ceil(activeSellers / d0Rate)) : null;
-    const faltam = sellersFor100 !== null ? sellersFor100 - activeSellers : null;
-    const planoText =
-      sellersFor100 !== null && faltam !== null && faltam > 0
-        ? ` Pelo ritmo atual, atender 100% dos MQLs no mesmo dia exigiria ~${sellersFor100} vendedores (hoje ${activeSellers}) — faltam +${faltam}.`
-        : "";
     signals.push({
       kind: "velocidade",
-      label: "Atendimento no dia 0 (capacidade)",
+      label: "Atendimento no dia 0",
       score,
       status: statusFor(score),
       headline:
@@ -805,10 +806,10 @@ export function bottleneckAnalysis(
           : score >= 40
             ? `${100 - r0}% dos leads quentes esperam mais de um dia útil`
             : "Maioria dos leads quentes é atendida no mesmo dia útil",
-      detail: `Só ${r0}% dos leads quentes são atendidos no mesmo dia útil — esse é o medidor de capacidade do time: quando cai, a fila acumula. Lead conversado converte ~10%; quem nunca é conversado, só ~3%. Hoje ${speed.nunca} leads quentes (${rNunca}%) nunca foram conversados. (Atraso em dias úteis: sexta→segunda = 1 dia.)`,
+      detail: `Só ${r0}% dos leads quentes são atendidos no mesmo dia útil. Lead conversado converte ~10%; quem nunca é conversado, só ~3%. Hoje ${speed.nunca} leads quentes (${rNunca}%) nunca foram conversados. (Atraso em dias úteis: sexta→segunda = 1 dia.) O estudo calmo×pico mostrou que o d0 é MAIOR nos dias de pico — o gargalo é rotina, não headcount.`,
       action:
         score >= 40
-          ? `Trate o dia 0 como medidor de capacidade: se está baixo, a fila está acumulando — redistribua os leads ou reforce o time antes que virem lead nunca conversado (que converte 3x menos).${planoText}`
+          ? "O d0 cai nos dias calmos e sobe no pico — então contratar não resolve; processo resolve. Alerta de lead novo no WhatsApp + meta de 1ª resposta no mesmo dia + varredura diária da fila de nunca-conversados (que convertem 3x menos). Veja o detalhe em Vendas & time."
           : "Capacidade saudável — o time atende no mesmo dia útil, sem acúmulo de fila.",
     });
   }

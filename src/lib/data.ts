@@ -65,7 +65,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
       selectAll(
         supabase,
         "leads",
-        "id, created_at, source, status, seller_id, pipeline_stage, name, phone, extra"
+        "id, created_at, source, status, seller_id, pipeline_stage, name, phone, extra, mql_at"
       ),
       selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status, utm"),
       selectAll(supabase, "ad_spend", "date, platform, amount", "date"),
@@ -93,6 +93,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         phone: r.phone,
         extra: r.extra,
         utm: (r.extra && typeof r.extra === "object" ? r.extra.utm : null) ?? null,
+        mqlAt: r.mql_at ? String(r.mql_at).slice(0, 10) : null,
       })
     ),
     sales: sales.map(

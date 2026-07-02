@@ -306,7 +306,7 @@ export default async function OrigemPage({
       <p className="mt-6 text-xs text-slate-400">
         Como ler: a origem do lead vem dos campos utm_* e vidorigem gravados pela
         landing page e importados do Mailchimp. “MQL” é o lead que virou quente e
-        foi atribuído a um vendedor — então a taxa de MQL mostra qual origem traz
+        recebeu a tag de qualificação no CRM — então a taxa de MQL mostra qual origem traz
         gente que realmente avança, não só volume. Quanto maior o “% com rastreio”,
         mais confiável fica a leitura; o que não tem UTM fica de fora dos rankings.
       </p>

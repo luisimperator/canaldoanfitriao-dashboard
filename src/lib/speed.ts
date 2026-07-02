@@ -30,6 +30,35 @@ const EMPTY: SpeedSummary = {
   nunca: 0,
 };
 
+// Atendimento no dia 0 por carga do dia (calmo/médio/pico). Se o d0 só cai no
+// pico, o gargalo é gente; se cai no dia calmo, é processo — a distinção que
+// decide se contratar resolve alguma coisa.
+export interface D0LoadRow {
+  bucket: "calmo" | "medio" | "pico";
+  dias: number;
+  leads: number;
+  d0: number;
+  nunca: number;
+}
+
+export async function getD0ByLoad(days = 90): Promise<D0LoadRow[]> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return [];
+  try {
+    const { data, error } = await admin.rpc("d0_by_day_load", { p_days: days });
+    if (error) return [];
+    return ((data ?? []) as D0LoadRow[]).map((r) => ({
+      bucket: r.bucket,
+      dias: Number(r.dias),
+      leads: Number(r.leads),
+      d0: Number(r.d0),
+      nunca: Number(r.nunca),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function getSpeedToLead(days = 90): Promise<SpeedData> {
   const admin = getSupabaseAdmin();
   if (!admin) return { rows: [], total: { ...EMPTY } };
