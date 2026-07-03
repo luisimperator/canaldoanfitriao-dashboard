@@ -90,10 +90,19 @@ export default async function VendasPage({
   ).length;
 
   // Conversão REAL de MQL, por coorte (comprou curso DEPOIS de virar MQL) — a
-  // razão vendas÷MQL de fluxos independentes inflava a conversão, porque a
-  // maioria das vendas de curso vem de fora do funil de MQL.
+  // razão vendas÷MQL de fluxos independentes inflava a conversão. Mede o
+  // processo de TAG, não o time: a automação taggeia só parte dos atendidos.
   const convCohort =
     cohort && cohort.mqlsTotal > 0 ? cohort.mqlsCompraram / cohort.mqlsTotal : null;
+
+  // Venda DO TIME = tem vendedor atribuído (a UTM diego/flavio do link vira
+  // seller_id na venda). É o critério de comissão — independe da tag de MQL.
+  const start30 = daysAgo(29, new Date(today));
+  const curso30 = paidSales(data.sales).filter(
+    (s) => isCourseSale(s) && s.saleDate >= start30 && s.saleDate <= today
+  );
+  const vendasCurso30 = curso30.length;
+  const vendasTime30 = curso30.filter((s) => s.sellerId != null).length;
 
   // Tem MQL pra mais vendedor? Projeta o fluxo de 30d em MQL/mês e divide
   // pelo tamanho do time simulado — é a conta da comissão.
@@ -197,17 +206,14 @@ export default async function VendasPage({
           }
         />
         <KpiCard
-          label="Vendas vindas de MQL (30d)"
-          value={
-            cohort ? `${num(cohort.vendas30dDeMql)} de ${num(cohort.vendasCurso30d)}` : "—"
+          label="Vendas do time (30d)"
+          value={vendasCurso30 > 0 ? `${num(vendasTime30)} de ${num(vendasCurso30)}` : "—"}
+          hint={
+            vendasCurso30 > 0
+              ? `${num((vendasTime30 / vendasCurso30) * 100, 0)}% das vendas de curso têm vendedor (UTM diego/flavio)`
+              : "venda com vendedor atribuído"
           }
-          hint="o resto compra direto (base, e-mail, link)"
-          tone={
-            cohort && cohort.vendasCurso30d > 0 &&
-            cohort.vendas30dDeMql / cohort.vendasCurso30d < 0.3
-              ? "warn"
-              : "neutral"
-          }
+          tone="good"
         />
         <KpiCard
           label="MQL novos (7 dias)"
@@ -244,21 +250,15 @@ export default async function VendasPage({
               <p className="text-sm text-slate-700 mb-2">
                 No ritmo dos últimos 30 dias, o funil gera{" "}
                 <strong>~{num(mqlPerMonth)} MQL/mês</strong>
-                {convCohort !== null && (
-                  <>
-                    ; a conversão real da coorte é{" "}
-                    <strong>{num(convCohort * 100, 1)}%</strong> (MQLs que compraram curso
-                    depois de virar MQL)
-                  </>
-                )}
-                {cohort && cohort.vendasCurso30d > 0 && (
+                {vendasCurso30 > 0 && (
                   <>
                     {" "}
-                    — das {num(cohort.vendasCurso30d)} vendas de curso em 30d, só{" "}
-                    {num(cohort.vendas30dDeMql)} vieram de MQLs; o resto compra direto.
+                    e o time fechou <strong>{num(vendasTime30)}</strong> das{" "}
+                    {num(vendasCurso30)} vendas de curso (
+                    {num((vendasTime30 / vendasCurso30) * 100, 0)}%, pela UTM do vendedor)
                   </>
-                )}{" "}
-                Dividindo por tamanho de time:
+                )}
+                . Dividindo por tamanho de time:
               </p>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -267,9 +267,9 @@ export default async function VendasPage({
                       <th className="py-1.5 font-medium">Time</th>
                       <th className="py-1.5 font-medium text-right">MQL/vendedor/mês</th>
                       <th className="py-1.5 font-medium text-right">MQL/vendedor/dia útil</th>
-                      {convCohort !== null && (
+                      {vendasTime30 > 0 && (
                         <th className="py-1.5 font-medium text-right">
-                          Vendas de MQL/vendedor/mês
+                          Vendas do time/vendedor/mês
                         </th>
                       )}
                     </tr>
@@ -292,9 +292,9 @@ export default async function VendasPage({
                           <td className="py-1.5 text-right tabular-nums text-slate-700">
                             {num(perSeller / 21, 1)}
                           </td>
-                          {convCohort !== null && (
+                          {vendasTime30 > 0 && (
                             <td className="py-1.5 text-right tabular-nums text-slate-700">
-                              ~{num(perSeller * convCohort, 1)}
+                              ~{num(vendasTime30 / team, 1)}
                             </td>
                           )}
                         </tr>
@@ -312,10 +312,11 @@ export default async function VendasPage({
             {mqlFlow.historySince
               ? `, registrado desde ${mqlFlow.historySince.slice(8, 10)}/${mqlFlow.historySince.slice(5, 7)}`
               : ""}
-            ) — não a data de criação do lead nem a atribuição a vendedor. &quot;Vendas de
-            MQL/vendedor&quot; usa a conversão de COORTE (comprou depois de virar MQL) — não a
-            razão vendas÷MQL, que mistura vendas que não passam pelo funil; comissão de
-            atendimento anda junto com essa coluna.
+            ) — não a data de criação do lead nem a atribuição a vendedor. &quot;Vendas do
+            time/vendedor&quot; divide as vendas de curso COM vendedor (a UTM diego/flavio do
+            link vira a atribuição) pelo tamanho do time simulado — é a conta da comissão:
+            mais vendedores no mesmo volume = fatia menor pra cada um, a menos que o fluxo
+            de MQL cresça junto.
           </p>
         </Card>
       )}
