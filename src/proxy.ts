@@ -31,6 +31,17 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/webhooks") || pathname.startsWith("/api/import")) {
     return NextResponse.next();
   }
+  // Cron da Vercel (vercel.json) chamando os syncs: chega por GET, SEM cookie
+  // de sessão — sem esta exceção o porteiro redirecionava o cron pra /login e
+  // o sync nunca rodava. Com CRON_SECRET definido na Vercel, exige o header
+  // Authorization que ela envia; sem o secret, aceita pelo user-agent do cron.
+  if (pathname.startsWith("/api/sync")) {
+    const secret = process.env.CRON_SECRET;
+    const auth = request.headers.get("authorization") ?? "";
+    const ua = (request.headers.get("user-agent") ?? "").toLowerCase();
+    const fromCron = secret ? auth === `Bearer ${secret}` : ua.includes("vercel-cron");
+    if (fromCron) return NextResponse.next();
+  }
   // Redirect curto dos QR codes/links: público (é escaneado por qualquer um,
   // antes de virar lead). Valida o slug por conta própria.
   if (pathname.startsWith("/r/")) {
