@@ -13,7 +13,7 @@ import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { SalesBySellerChart, TeamHistoryChart } from "@/components/charts";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { getD0ByLoad, getSpeedToLead } from "@/lib/speed";
-import { getMqlFlow } from "@/lib/mql-flow";
+import { getMqlCohort, getMqlFlow } from "@/lib/mql-flow";
 
 export const dynamic = "force-dynamic";
 
@@ -66,10 +66,11 @@ export default async function VendasPage({
 
   const stats = sellerStats(data, refDate);
 
-  const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load] = await Promise.all([
+  const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load, cohort] = await Promise.all([
     getSpeedToLead(),
     getMqlFlow(),
     getD0ByLoad(),
+    getMqlCohort(),
   ]);
 
   // Fluxo de MQL pela data em que o lead RECEBEU a tag de MQL (lead-a5e /
@@ -87,17 +88,16 @@ export default async function VendasPage({
   const vendas7 = paidSales(data.sales).filter(
     (s) => isCourseSale(s) && s.saleDate >= start7 && s.saleDate <= today
   ).length;
-  const mqlPorVenda7 = vendas7 > 0 ? mql7 / vendas7 : null;
-  const convMql7 = mql7 > 0 ? (vendas7 / mql7) * 100 : null;
+
+  // Conversão REAL de MQL, por coorte (comprou curso DEPOIS de virar MQL) — a
+  // razão vendas÷MQL de fluxos independentes inflava a conversão, porque a
+  // maioria das vendas de curso vem de fora do funil de MQL.
+  const convCohort =
+    cohort && cohort.mqlsTotal > 0 ? cohort.mqlsCompraram / cohort.mqlsTotal : null;
 
   // Tem MQL pra mais vendedor? Projeta o fluxo de 30d em MQL/mês e divide
   // pelo tamanho do time simulado — é a conta da comissão.
   const mqlPerMonth = w30 ? Math.round(w30.perDay * 30) : null;
-  const start30 = daysAgo(29, new Date(today));
-  const vendas30 = paidSales(data.sales).filter(
-    (s) => isCourseSale(s) && s.saleDate >= start30 && s.saleDate <= today
-  ).length;
-  const conv30 = w30 && w30.total > 0 ? vendas30 / w30.total : null;
 
   const activeSellers = data.sellers.filter((s) => s.isActive).length;
   const d0Rate = speedTotal.atribuidos > 0 ? speedTotal.d0 / speedTotal.atribuidos : null;
@@ -188,14 +188,26 @@ export default async function VendasPage({
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
         <KpiCard
-          label="MQL por venda (7d)"
-          value={mqlPorVenda7 !== null ? num(mqlPorVenda7, 1) : "—"}
-          hint="quantos MQL para 1 venda de curso"
-          tone={mqlPorVenda7 !== null && mqlPorVenda7 <= 6 ? "good" : "neutral"}
+          label="Conversão real de MQL"
+          value={convCohort !== null ? `${num(convCohort * 100, 1)}%` : "—"}
+          hint={
+            cohort
+              ? `${num(cohort.mqlsCompraram)} de ${num(cohort.mqlsTotal)} MQLs compraram curso`
+              : "coorte: comprou depois de virar MQL"
+          }
         />
         <KpiCard
-          label="Conversão MQL→venda (7d)"
-          value={convMql7 !== null ? `${num(convMql7, 1)}%` : "—"}
+          label="Vendas vindas de MQL (30d)"
+          value={
+            cohort ? `${num(cohort.vendas30dDeMql)} de ${num(cohort.vendasCurso30d)}` : "—"
+          }
+          hint="o resto compra direto (base, e-mail, link)"
+          tone={
+            cohort && cohort.vendasCurso30d > 0 &&
+            cohort.vendas30dDeMql / cohort.vendasCurso30d < 0.3
+              ? "warn"
+              : "neutral"
+          }
         />
         <KpiCard
           label="MQL novos (7 dias)"
@@ -232,14 +244,21 @@ export default async function VendasPage({
               <p className="text-sm text-slate-700 mb-2">
                 No ritmo dos últimos 30 dias, o funil gera{" "}
                 <strong>~{num(mqlPerMonth)} MQL/mês</strong>
-                {conv30 !== null && (
+                {convCohort !== null && (
                   <>
-                    {" "}
-                    e converte <strong>{num(conv30 * 100, 0)}%</strong> em venda de curso (
-                    {num(vendas30)} vendas)
+                    ; a conversão real da coorte é{" "}
+                    <strong>{num(convCohort * 100, 1)}%</strong> (MQLs que compraram curso
+                    depois de virar MQL)
                   </>
                 )}
-                . Dividindo por tamanho de time:
+                {cohort && cohort.vendasCurso30d > 0 && (
+                  <>
+                    {" "}
+                    — das {num(cohort.vendasCurso30d)} vendas de curso em 30d, só{" "}
+                    {num(cohort.vendas30dDeMql)} vieram de MQLs; o resto compra direto.
+                  </>
+                )}{" "}
+                Dividindo por tamanho de time:
               </p>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -248,8 +267,10 @@ export default async function VendasPage({
                       <th className="py-1.5 font-medium">Time</th>
                       <th className="py-1.5 font-medium text-right">MQL/vendedor/mês</th>
                       <th className="py-1.5 font-medium text-right">MQL/vendedor/dia útil</th>
-                      {conv30 !== null && (
-                        <th className="py-1.5 font-medium text-right">Vendas/vendedor/mês</th>
+                      {convCohort !== null && (
+                        <th className="py-1.5 font-medium text-right">
+                          Vendas de MQL/vendedor/mês
+                        </th>
                       )}
                     </tr>
                   </thead>
@@ -271,9 +292,9 @@ export default async function VendasPage({
                           <td className="py-1.5 text-right tabular-nums text-slate-700">
                             {num(perSeller / 21, 1)}
                           </td>
-                          {conv30 !== null && (
+                          {convCohort !== null && (
                             <td className="py-1.5 text-right tabular-nums text-slate-700">
-                              ~{num(perSeller * conv30, 1)}
+                              ~{num(perSeller * convCohort, 1)}
                             </td>
                           )}
                         </tr>
@@ -291,8 +312,10 @@ export default async function VendasPage({
             {mqlFlow.historySince
               ? `, registrado desde ${mqlFlow.historySince.slice(8, 10)}/${mqlFlow.historySince.slice(5, 7)}`
               : ""}
-            ) — não a data de criação do lead nem a atribuição a vendedor. Vendas/vendedor
-            usa a conversão média dos últimos 30 dias; comissão anda junto com essa coluna.
+            ) — não a data de criação do lead nem a atribuição a vendedor. &quot;Vendas de
+            MQL/vendedor&quot; usa a conversão de COORTE (comprou depois de virar MQL) — não a
+            razão vendas÷MQL, que mistura vendas que não passam pelo funil; comissão de
+            atendimento anda junto com essa coluna.
           </p>
         </Card>
       )}

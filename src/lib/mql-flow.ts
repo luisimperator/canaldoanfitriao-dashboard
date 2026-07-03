@@ -40,6 +40,35 @@ function businessDaysBetween(startIso: string, endIso: string): number {
   return n;
 }
 
+// Conversão REAL de MQL (coorte): dos que viraram MQL, quantos compraram curso
+// depois — e quanto das vendas de curso recentes veio de MQLs. A razão simples
+// vendas÷MQL engana: a maioria das vendas vem de fora do funil de MQL.
+export interface MqlCohort {
+  mqlsTotal: number;
+  mqlsCompraram: number;
+  vendasCurso30d: number;
+  vendas30dDeMql: number;
+}
+
+export async function getMqlCohort(): Promise<MqlCohort | null> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+  try {
+    const { data, error } = await admin.rpc("mql_cohort_stats");
+    if (error || !data) return null;
+    const r = Array.isArray(data) ? data[0] : data;
+    if (!r) return null;
+    return {
+      mqlsTotal: Number(r.mqls_total),
+      mqlsCompraram: Number(r.mqls_compraram),
+      vendasCurso30d: Number(r.vendas_curso_30d),
+      vendas30dDeMql: Number(r.vendas_30d_de_mql),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getMqlFlow(): Promise<MqlFlow | null> {
   const admin = getSupabaseAdmin();
   if (!admin) return null;
