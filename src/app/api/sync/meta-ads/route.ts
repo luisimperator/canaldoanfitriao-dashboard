@@ -30,6 +30,21 @@ export async function POST() {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }
 
+  // Falha também vira heartbeat — sem isso, um cron que erra é invisível
+  // (o tick das 09:10 de 03/07 falhou mudo e só apareceu na verificação).
+  const fail = async (msg: string, status: number) => {
+    try {
+      await supabase.from("webhook_log").insert({
+        source: "sync_meta_ads",
+        note: `ERRO: ${msg.slice(0, 300)}`,
+        body: { error: msg.slice(0, 2000) },
+      });
+    } catch {
+      /* heartbeat é best-effort */
+    }
+    return NextResponse.json({ error: msg }, { status });
+  };
+
   const until = new Date().toISOString().slice(0, 10);
   const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10);
 
@@ -52,7 +67,7 @@ export async function POST() {
       const res: Response = await fetch(next, { cache: "no-store" });
       if (!res.ok) {
         const text = await res.text();
-        return NextResponse.json({ error: `Graph API (${account}): ${text}` }, { status: 502 });
+        return fail(`Graph API (${account}): ${text}`, 502);
       }
       const json = await res.json();
       for (const d of json.data ?? []) {
@@ -74,7 +89,7 @@ export async function POST() {
     .from("ad_spend")
     .upsert(rows, { onConflict: "date,platform,campaign" });
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return fail(`upsert ad_spend: ${error.message}`, 500);
   }
 
   // Heartbeat auditável do sync (a auditoria só descobriu o sync morto meses
