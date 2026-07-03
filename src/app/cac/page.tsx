@@ -78,6 +78,13 @@ export default async function CacPage({
           orgânico e recompra), não só o que é atribuído ao anúncio. Servem pra
           decidir o nível de investimento, não pra atribuição por clique.
         </p>
+        {rows.some((r) => r.spendIncomplete) && (
+          <p className="mt-1 text-xs text-amber-600">
+            ⚠️ Meses marcados com ⚠️ têm dias de investimento sem registro (sync de
+            anúncios fora do ar no período) — o CAC real é maior e o ROAS menor do
+            que o mostrado.
+          </p>
+        )}
       </Card>
 
       <Card title="Mês a mês">
@@ -96,7 +103,17 @@ export default async function CacPage({
             <tbody>
               {[...rows].reverse().map((r) => (
                 <tr key={r.month} className="border-b border-slate-50 last:border-0">
-                  <td className="py-1.5 text-slate-700">{monthLabel(r.month)}</td>
+                  <td className="py-1.5 text-slate-700">
+                    {monthLabel(r.month)}
+                    {r.spendIncomplete && (
+                      <span
+                        title={`Só ${r.spendDays} dia(s) do mês têm gasto registrado — investimento subestimado`}
+                        className="ml-1"
+                      >
+                        ⚠️
+                      </span>
+                    )}
+                  </td>
                   <td className="py-1.5 text-right tabular-nums text-slate-600">
                     {r.spend > 0 ? brl(r.spend) : "—"}
                   </td>

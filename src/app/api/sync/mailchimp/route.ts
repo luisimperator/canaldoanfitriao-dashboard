@@ -5,6 +5,14 @@ import { extractUtm } from "@/lib/mailchimp-utm";
 
 export const maxDuration = 60;
 
+// Dia-calendário de São Paulo do opt-in (timestamp_opt vem em UTC; fatiar
+// direto desloca inscrições da noite para o dia seguinte).
+function spDay(iso: string): string | null {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d);
+}
+
 // Importa inscritos da lista do Mailchimp como leads, lendo as TAGS de cada
 // contato. Contatos com tag de time de vendas (lista-de-espera /
 // gigantes-super-interessados / precisa de ajuda) entram como "lista_espera";
@@ -197,20 +205,20 @@ export async function POST() {
         mailchimp_id: m.id,
         email: m.email_address,
         name: m.full_name || null,
-        created_at: (m.timestamp_opt || new Date().toISOString()).slice(0, 10),
+        // dia SP do opt-in; sem timestamp_opt vai null e a RPC usa current_date
+        // SÓ na inserção (lead existente nunca é re-datado).
+        created_at: m.timestamp_opt ? spDay(m.timestamp_opt) : null,
         // source fica de fora: novos contatos herdam o default 'outro' e quem
         // já existe preserva a origem real (vinda do Unnichat). Antes o
         // Mailchimp carimbava 'meta_ads' em toda a base e poluía a origem.
         status: salesTeam ? "lista_espera" : "frio",
         extra: utm ? { tags: tagNames, utm } : { tags: tagNames },
-        updated_at: new Date().toISOString(),
       };
     });
-    // ignoreDuplicates: false -> atualiza tags/status de quem já existe.
-    // pipeline_stage/seller_id/unnichat_id não entram aqui, então são preservados.
-    const { error } = await supabase
-      .from("leads")
-      .upsert(rows, { onConflict: "mailchimp_id" });
+    // upsert_mailchimp_leads (RPC) faz o merge sem clobbering: não rebaixa
+    // status vindo do Unnichat/Eduzz (quente/convertido/perdido), une as tags
+    // em vez de substituir o extra e preserva o created_at de quem já existe.
+    const { error } = await supabase.rpc("upsert_mailchimp_leads", { p_rows: rows });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

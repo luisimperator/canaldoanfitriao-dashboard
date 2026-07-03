@@ -57,9 +57,11 @@ export interface SellerStats {
 
 export function sellerStats(data: DashboardData, today = isoToday()): SellerStats[] {
   const month = monthKey(today);
-  const prevDate = new Date(today);
-  prevDate.setMonth(prevDate.getMonth() - 1);
-  const prevMonth = monthKey(prevDate.toISOString().slice(0, 10));
+  // Mês anterior por aritmética de string: setMonth(-1) numa Date de dia 31
+  // pula um mês (31/mar - 1 mês = 03/mar, não fevereiro).
+  const [py, pm] = month.split("-").map(Number);
+  const prevMonth =
+    pm === 1 ? `${py - 1}-12` : `${py}-${String(pm - 1).padStart(2, "0")}`;
   const sales = paidSales(data.sales);
 
   return data.sellers
