@@ -9,7 +9,9 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // META_ADS_ACCOUNT_ID (ex.: act_1234567890). Aceita VÁRIAS contas separadas
 // por vírgula (ex.: act_111,act_222) — o negócio roda com "Canal do Anfitrião"
 // e "CA2 - Canal do Anfitrião"; o gasto do dia é a SOMA das contas.
-// Chame periodicamente (cron do Vercel, por exemplo): POST /api/sync/meta-ads
+// O cron da Vercel (vercel.json) chama por GET todo dia às 9h10 UTC (6h10 em
+// São Paulo); o GET reusa o mesmo handler. POST continua valendo para disparo
+// manual.
 
 export async function POST() {
   const token = process.env.META_ADS_ACCESS_TOKEN;
@@ -75,4 +77,9 @@ export async function POST() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   return NextResponse.json({ ok: true, imported: rows.length, accounts: accounts.length });
+}
+
+// Cron da Vercel só faz GET.
+export async function GET() {
+  return POST();
 }

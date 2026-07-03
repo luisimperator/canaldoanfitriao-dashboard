@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { isSalesTeamTag } from "@/lib/leads";
 import { extractUtm } from "@/lib/mailchimp-utm";
@@ -26,7 +26,14 @@ function spDay(iso: string): string | null {
 // sem gravar nada no banco. Serve para descobrir como as tags estão escritas
 // no Mailchimp e ajustar a classificação em @/lib/leads sem ficar adivinhando.
 // Cada tag vem marcada se a regra atual já a trata como time de vendas.
-export async function GET() {
+//
+// EXCEÇÃO: o cron da Vercel (vercel.json, a cada 2h) só sabe fazer GET — a
+// requisição dele (user-agent vercel-cron) roda o SYNC de verdade, não a
+// descoberta.
+export async function GET(req: NextRequest) {
+  if ((req.headers.get("user-agent") ?? "").toLowerCase().includes("vercel-cron")) {
+    return runSync();
+  }
   const apiKey = process.env.MAILCHIMP_API_KEY;
   const listId = process.env.MAILCHIMP_LIST_ID;
   if (!apiKey || !listId) {
@@ -133,6 +140,10 @@ export async function GET() {
 }
 
 export async function POST() {
+  return runSync();
+}
+
+async function runSync() {
   const apiKey = process.env.MAILCHIMP_API_KEY;
   const listId = process.env.MAILCHIMP_LIST_ID;
   if (!apiKey || !listId) {
