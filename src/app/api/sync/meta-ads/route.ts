@@ -76,6 +76,19 @@ export async function POST() {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Heartbeat auditável do sync (a auditoria só descobriu o sync morto meses
+  // depois porque nada registrava as execuções). Best-effort.
+  try {
+    await supabase.from("webhook_log").insert({
+      source: "sync_meta_ads",
+      note: `${rows.length} dias importados · ${accounts.length} conta(s)`,
+      body: { imported: rows.length, accounts: accounts.length, since, until },
+    });
+  } catch {
+    /* heartbeat é best-effort */
+  }
+
   return NextResponse.json({ ok: true, imported: rows.length, accounts: accounts.length });
 }
 

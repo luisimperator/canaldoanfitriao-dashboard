@@ -3,7 +3,10 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { isSalesTeamTag } from "@/lib/leads";
 import { extractUtm } from "@/lib/mailchimp-utm";
 
-export const maxDuration = 60;
+// 300s: a varredura completa dos 44 mil membros leva vários minutos (com 60s
+// o cron era cortado na 7ª de 45 páginas). O cron nem precisa dela — roda o
+// recorte incremental — mas o POST manual do botão Integrações precisa.
+export const maxDuration = 300;
 
 // Dia-calendário de São Paulo do opt-in (timestamp_opt vem em UTC; fatiar
 // direto desloca inscrições da noite para o dia seguinte).
@@ -32,7 +35,10 @@ function spDay(iso: string): string | null {
 // descoberta.
 export async function GET(req: NextRequest) {
   if ((req.headers.get("user-agent") ?? "").toLowerCase().includes("vercel-cron")) {
-    return runSync();
+    // INCREMENTAL: só membros alterados nas últimas ~26h (folga pra tick
+    // perdido). Varrer a base inteira não cabe no tempo de função e é
+    // desnecessário a cada 2h; a varredura completa fica no POST manual.
+    return runSync(new Date(Date.now() - 26 * 3600_000).toISOString());
   }
   const apiKey = process.env.MAILCHIMP_API_KEY;
   const listId = process.env.MAILCHIMP_LIST_ID;
@@ -140,10 +146,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST() {
-  return runSync();
+  return runSync(null);
 }
 
-async function runSync() {
+// sinceChanged: recorte incremental via `since_last_changed` do Mailchimp
+// (cron usa ~26h); null = varredura completa (POST manual, Integrações).
+async function runSync(sinceChanged: string | null) {
   const apiKey = process.env.MAILCHIMP_API_KEY;
   const listId = process.env.MAILCHIMP_LIST_ID;
   if (!apiKey || !listId) {
@@ -188,7 +196,8 @@ async function runSync() {
     const url =
       `https://${dc}.api.mailchimp.com/3.0/lists/${listId}/members` +
       `?count=${pageSize}&offset=${offset}` +
-      `&fields=members.id,members.email_address,members.full_name,members.timestamp_opt,members.tags,members.merge_fields,total_items`;
+      `&fields=members.id,members.email_address,members.full_name,members.timestamp_opt,members.tags,members.merge_fields,total_items` +
+      (sinceChanged ? `&since_last_changed=${encodeURIComponent(sinceChanged)}` : "");
     const res = await fetch(url, { headers: auth, cache: "no-store" });
     if (!res.ok) {
       const text = await res.text();
@@ -237,6 +246,18 @@ async function runSync() {
 
     offset += pageSize;
     if (offset >= (json.total_items ?? 0)) break;
+  }
+
+  // Heartbeat auditável: sem isso não dá pra saber se o cron rodou (a
+  // auditoria só descobriu o sync morto meses depois). Best-effort.
+  try {
+    await supabase.from("webhook_log").insert({
+      source: "sync_mailchimp",
+      note: `${sinceChanged ? "cron incremental" : "varredura completa"}: ${imported} membros · ${listaEspera} lista de espera · ${comUtm} com UTM`,
+      body: { imported, listaEspera, comUtm, sinceChanged },
+    });
+  } catch {
+    /* heartbeat é best-effort */
   }
 
   return NextResponse.json({ ok: true, imported, listaEspera, comUtm });
