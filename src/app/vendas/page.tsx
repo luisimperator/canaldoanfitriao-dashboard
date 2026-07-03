@@ -53,6 +53,26 @@ export default async function VendasPage({
   const reYM = /^\d{4}-\d{2}(-\d{2})?$/;
   const rangeTo = (sp.to && reYM.test(sp.to) ? sp.to : currentMonth).slice(0, 7);
   const rangeFrom = (sp.from && reYM.test(sp.from) ? sp.from : shiftMonth(rangeTo, -5)).slice(0, 7);
+
+  // PERÍODO dos indicadores do topo (seletor global da página): from/to
+  // completos da URL; sem seleção, últimos 30 dias. Aceita YYYY-MM (mês
+  // inteiro) ou YYYY-MM-DD. O gráfico mensal usa o mesmo from/to, só que
+  // truncado a mês (rangeFrom/rangeTo acima, com padrão próprio de 6 meses).
+  const reFullDate = /^\d{4}-\d{2}-\d{2}$/;
+  const periodTo =
+    sp.to && reYM.test(sp.to)
+      ? reFullDate.test(sp.to)
+        ? sp.to
+        : lastDayOf(sp.to.slice(0, 7))
+      : today;
+  const periodFrom =
+    sp.from && reYM.test(sp.from)
+      ? reFullDate.test(sp.from)
+        ? sp.from
+        : `${sp.from.slice(0, 7)}-01`
+      : daysAgo(29, new Date(today));
+  const fmtDM = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
+  const periodLabel = `${fmtDM(periodFrom)}–${fmtDM(periodTo)}`;
   const selectedMonth =
     mes && /^\d{4}-\d{2}$/.test(mes) && mes <= currentMonth ? mes : currentMonth;
   const isCurrentMonth = selectedMonth === currentMonth;
@@ -67,27 +87,26 @@ export default async function VendasPage({
   const stats = sellerStats(data, refDate);
 
   const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load, cohort] = await Promise.all([
-    getSpeedToLead(),
+    getSpeedToLead(30),
     getMqlFlow(),
     getD0ByLoad(),
     getMqlCohort(),
   ]);
 
-  // Fluxo de MQL pela data em que o lead RECEBEU a tag de MQL (lead-a5e /
-  // lead-gigantes / lead-quente / lead-muito-quente). Fallback local usa o
-  // mql_at que veio junto dos leads (modo demo / RPC indisponível).
-  const start7 = daysAgo(6, new Date(today));
-  const mql7Fallback = data.leads.filter(
-    (l) => l.mqlAt && l.mqlAt >= start7 && l.mqlAt <= today
-  ).length;
   const w7 = mqlFlow?.windows.find((w) => w.days === 7);
   const w30 = mqlFlow?.windows.find((w) => w.days === 30);
   const w90 = mqlFlow?.windows.find((w) => w.days === 90);
-  const mql7 = w7?.total ?? mql7Fallback;
 
-  const vendas7 = paidSales(data.sales).filter(
-    (s) => isCourseSale(s) && s.saleDate >= start7 && s.saleDate <= today
+  // Indicadores do PERÍODO selecionado no topo: MQLs pela data em que o lead
+  // recebeu a tag (mql_at), vendas de curso pela data da venda.
+  const mqlPeriod = data.leads.filter(
+    (l) => l.mqlAt && l.mqlAt >= periodFrom && l.mqlAt <= periodTo
   ).length;
+  const cursoPeriod = paidSales(data.sales).filter(
+    (s) => isCourseSale(s) && s.saleDate >= periodFrom && s.saleDate <= periodTo
+  );
+  const vendasCursoPeriod = cursoPeriod.length;
+  const vendasTimePeriod = cursoPeriod.filter((s) => s.sellerId != null).length;
 
   // Conversão REAL de MQL, por coorte (comprou curso DEPOIS de virar MQL) — a
   // razão vendas÷MQL de fluxos independentes inflava a conversão. Mede o
@@ -195,32 +214,45 @@ export default async function VendasPage({
       />
       <DemoBanner show={data.isDemo} />
 
+      {/* Seletor GLOBAL da página: os cards abaixo e o gráfico mensal seguem
+          este período — é aqui que se compara os ratios ao longo do tempo. */}
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <span className="text-xs text-slate-500">Período dos indicadores</span>
+        <DateRangePicker placeholder="Últimos 30 dias" />
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
         <KpiCard
           label="Conversão real de MQL"
           value={convCohort !== null ? `${num(convCohort * 100, 1)}%` : "—"}
           hint={
             cohort
-              ? `${num(cohort.mqlsCompraram)} de ${num(cohort.mqlsTotal)} MQLs compraram curso`
+              ? `${num(cohort.mqlsCompraram)} de ${num(cohort.mqlsTotal)} MQLs compraram curso (todo o histórico)`
               : "coorte: comprou depois de virar MQL"
           }
         />
         <KpiCard
-          label="Vendas do time (30d)"
-          value={vendasCurso30 > 0 ? `${num(vendasTime30)} de ${num(vendasCurso30)}` : "—"}
+          label={`Vendas do time (${periodLabel})`}
+          value={
+            vendasCursoPeriod > 0 ? `${num(vendasTimePeriod)} de ${num(vendasCursoPeriod)}` : "—"
+          }
           hint={
-            vendasCurso30 > 0
-              ? `${num((vendasTime30 / vendasCurso30) * 100, 0)}% das vendas de curso têm vendedor (UTM diego/flavio)`
+            vendasCursoPeriod > 0
+              ? `${num((vendasTimePeriod / vendasCursoPeriod) * 100, 0)}% das vendas de curso têm vendedor (UTM diego/flavio)`
               : "venda com vendedor atribuído"
           }
           tone="good"
         />
         <KpiCard
-          label="MQL novos (7 dias)"
-          value={num(mql7)}
-          hint={w7 ? "pela data em que recebeu a tag de MQL" : "recebeu tag de qualificação"}
+          label={`MQL novos (${periodLabel})`}
+          value={num(mqlPeriod)}
+          hint="pela data em que recebeu a tag de MQL"
         />
-        <KpiCard label="Vendas de curso (7 dias)" value={num(vendas7)} hint="A5E + Gigantes" />
+        <KpiCard
+          label={`Vendas de curso (${periodLabel})`}
+          value={num(vendasCursoPeriod)}
+          hint="A5E + Gigantes"
+        />
       </div>
 
       {mqlFlow && mqlFlow.windows.length > 0 && (
@@ -383,7 +415,7 @@ export default async function VendasPage({
         </p>
       </Card>
 
-      <Card title="Velocidade no atendimento (speed-to-lead) — últimos 90 dias" className="mb-4">
+      <Card title="Velocidade no atendimento (speed-to-lead) — últimos 30 dias" className="mb-4">
         {speed.length === 0 ? (
           <p className="text-sm text-slate-600">
             Sem dados de conversa ainda (ou a função do banco não foi aplicada — migração
@@ -494,7 +526,8 @@ export default async function VendasPage({
               “Dia 0” = o vendedor mandou a 1ª mensagem humana no mesmo dia útil em que o lead
               chegou (exclui automações). D+1/D+2/D+3+ = dias ÚTEIS de atraso até a 1ª resposta
               (sexta→segunda = 1 dia, não conta fim de semana). “Não conversado” = nunca teve
-              resposta humana. Base: conversas atribuídas a um vendedor nos últimos 90 dias.
+              resposta humana. Base: conversas atribuídas a um vendedor nos últimos 30 dias — a
+              janela desliza com o dia; o dado entra sozinho pelo webhook do Unnichat.
             </p>
           </>
         )}
@@ -511,9 +544,6 @@ export default async function VendasPage({
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card title="Faturamento por vendedor por mês">
-          <div className="flex justify-end mb-2">
-            <DateRangePicker />
-          </div>
           <SalesBySellerChart data={monthly} sellers={activeNames} projected />
         </Card>
 
@@ -571,7 +601,7 @@ export default async function VendasPage({
           )}
           <dl className="space-y-2.5 text-sm">
             <div className="flex justify-between">
-              <dt className="text-slate-600">Leads atribuídos (90 dias)</dt>
+              <dt className="text-slate-600">Leads atribuídos (30 dias)</dt>
               <dd className="font-semibold text-slate-900">{num(speedTotal.atribuidos)}</dd>
             </div>
             <div className="flex justify-between">
