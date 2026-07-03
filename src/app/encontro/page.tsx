@@ -10,6 +10,8 @@ export const dynamic = "force-dynamic";
 // Meta e data são do evento atual; depois de 18/07/2026 a página vira histórico.
 const META = 500;
 const EVENTO = "2026-07-18";
+// Início do eixo do gráfico (abertura das vendas do 4º Encontro).
+const INICIO = "2026-04-19";
 
 const dayMs = 86_400_000;
 const addDays = (iso: string, n: number) =>
@@ -52,16 +54,16 @@ export default async function EncontroPage() {
     .map(([tipo, v]) => ({ tipo, ...v }))
     .sort((a, b) => b.n - a.n);
 
-  // Acumulado por dia, do primeiro ingresso até hoje.
+  // Acumulado por dia, do início das vendas até hoje. Venda anterior ao início
+  // do eixo (se houver) entra no saldo do primeiro ponto, não some.
   const byDay = new Map<string, number>();
-  let first = today;
+  let acc = 0;
   for (const t of tickets) {
-    byDay.set(t.saleDate, (byDay.get(t.saleDate) ?? 0) + 1);
-    if (t.saleDate < first) first = t.saleDate;
+    if (t.saleDate < INICIO) acc += 1;
+    else byDay.set(t.saleDate, (byDay.get(t.saleDate) ?? 0) + 1);
   }
   const serie: { date: string; realizado: number | null; projecao: number | null }[] = [];
-  let acc = 0;
-  for (let d = first; d <= today; d = addDays(d, 1)) {
+  for (let d = INICIO; d <= today; d = addDays(d, 1)) {
     acc += byDay.get(d) ?? 0;
     serie.push({ date: ddmm(d), realizado: acc, projecao: null });
   }
