@@ -14,6 +14,7 @@ import {
   LineChart,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -24,6 +25,68 @@ const COLORS = ["#e11d48", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#64748b"
 
 const brlTooltip = (v: unknown) =>
   Number(v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
+// Corrida até a meta: acumulado realizado (linha cheia), projeção no ritmo dos
+// últimos 7 dias (tracejada), meta (pontilhada) e o dia do evento (vertical).
+// Série única + extensões da mesma entidade — por isso tudo na cor da marca.
+export function GoalPaceChart({
+  data,
+  goal,
+  goalLabel,
+  eventDate,
+}: {
+  data: { date: string; realizado: number | null; projecao: number | null }[];
+  goal: number;
+  goalLabel: string;
+  eventDate?: string;
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={data} margin={{ top: 16, right: 16, bottom: 0, left: -16 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <XAxis dataKey="date" tick={{ fontSize: 11 }} minTickGap={40} />
+        <YAxis
+          tick={{ fontSize: 11 }}
+          allowDecimals={false}
+          domain={[0, Math.ceil((goal * 1.08) / 50) * 50]}
+        />
+        <Tooltip />
+        <ReferenceLine
+          y={goal}
+          stroke="#94a3b8"
+          strokeDasharray="2 5"
+          label={{ value: goalLabel, position: "insideTopRight", fontSize: 11, fill: "#64748b" }}
+        />
+        {eventDate && (
+          <ReferenceLine
+            x={eventDate}
+            stroke="#f59e0b"
+            strokeDasharray="4 4"
+            label={{ value: "evento", position: "insideTopLeft", fontSize: 11, fill: "#b45309" }}
+          />
+        )}
+        <Line
+          type="monotone"
+          dataKey="realizado"
+          name="Vendidos (acumulado)"
+          stroke="#e11d48"
+          strokeWidth={2.5}
+          dot={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="projecao"
+          name="Projeção (ritmo 7d)"
+          stroke="#fb7185"
+          strokeWidth={2}
+          strokeDasharray="6 5"
+          dot={false}
+        />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
 
 export function LeadsMqlChart({
   data,
