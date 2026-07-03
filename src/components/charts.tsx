@@ -34,11 +34,13 @@ export function GoalPaceChart({
   goal,
   goalLabel,
   eventDate,
+  eventLabel = "evento",
 }: {
   data: { date: string; realizado: number | null; projecao: number | null }[];
   goal: number;
   goalLabel: string;
   eventDate?: string;
+  eventLabel?: string;
 }) {
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -62,7 +64,7 @@ export function GoalPaceChart({
             x={eventDate}
             stroke="#f59e0b"
             strokeDasharray="4 4"
-            label={{ value: "evento", position: "insideTopLeft", fontSize: 11, fill: "#b45309" }}
+            label={{ value: eventLabel, position: "insideTopLeft", fontSize: 11, fill: "#b45309" }}
           />
         )}
         <Line

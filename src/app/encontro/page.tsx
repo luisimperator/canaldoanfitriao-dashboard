@@ -10,6 +10,8 @@ export const dynamic = "force-dynamic";
 // Meta e data são do evento atual; depois de 18/07/2026 a página vira histórico.
 const META = 500;
 const EVENTO = "2026-07-18";
+// Último dia de VENDA: não se vende no dia do evento — a corrida acaba em 17/07.
+const FIM_VENDAS = "2026-07-17";
 // Início do eixo do gráfico (abertura das vendas do 4º Encontro).
 const INICIO = "2026-04-19";
 
@@ -72,18 +74,18 @@ export default async function EncontroPage() {
   const vendas7 = tickets.filter((t) => t.saleDate > addDays(today, -7)).length;
   const ritmo = vendas7 / 7;
 
-  // Projeção no ritmo atual: até o evento e, se a meta ficar depois, até bater
-  // a meta (máx. 90 dias além do evento pra não desenhar infinito).
-  const diasAteEvento = Math.max(0, diffDays(today, EVENTO));
-  const projEvento = Math.round(vendidos + ritmo * diasAteEvento);
+  // Projeção no ritmo atual: até o último dia de venda (17/07) e, se a meta
+  // ficar depois, até bater a meta (máx. 90 dias além, pra não desenhar infinito).
+  const diasAteFim = Math.max(0, diffDays(today, FIM_VENDAS));
+  const projFim = Math.round(vendidos + ritmo * diasAteFim);
   const diasParaMeta = ritmo > 0 ? Math.ceil((META - vendidos) / ritmo) : null;
   const dataMeta = diasParaMeta !== null ? addDays(today, diasParaMeta) : null;
   const horizonte =
-    dataMeta && dataMeta > EVENTO
-      ? dataMeta <= addDays(EVENTO, 90)
+    dataMeta && dataMeta > FIM_VENDAS
+      ? dataMeta <= addDays(FIM_VENDAS, 90)
         ? dataMeta
-        : addDays(EVENTO, 90)
-      : EVENTO;
+        : addDays(FIM_VENDAS, 90)
+      : FIM_VENDAS;
   let proj = vendidos;
   serie[serie.length - 1].projecao = vendidos; // emenda as duas linhas
   for (let d = addDays(today, 1); d <= horizonte; d = addDays(d, 1)) {
@@ -92,14 +94,14 @@ export default async function EncontroPage() {
   }
 
   const faltam = Math.max(0, META - vendidos);
-  const ritmoNecessario = diasAteEvento > 0 ? faltam / diasAteEvento : null;
-  const bateAntes = dataMeta !== null && dataMeta <= EVENTO;
+  const ritmoNecessario = diasAteFim > 0 ? faltam / diasAteFim : null;
+  const bateAntes = dataMeta !== null && dataMeta <= FIM_VENDAS;
 
   return (
     <div>
       <PageHeader
         title="4º Encontro de Anfitriões — ingressos"
-        subtitle={`Corrida até a meta de ${num(META)} ingressos · evento em ${ddmm(EVENTO)}`}
+        subtitle={`Corrida até a meta de ${num(META)} ingressos · vendas até ${ddmm(FIM_VENDAS)} · evento em ${ddmm(EVENTO)}`}
       />
       <DemoBanner show={data.isDemo} />
 
@@ -113,8 +115,8 @@ export default async function EncontroPage() {
         {ritmo === 0
           ? "Sem vendas nos últimos 7 dias — sem ritmo, a projeção não anda."
           : bateAntes
-            ? `✅ No ritmo atual (${num(ritmo, 1)}/dia), a meta de ${num(META)} sai em ${ddmm(dataMeta!)} — antes do evento`
-            : `🟠 No ritmo atual (${num(ritmo, 1)}/dia), você chega ao evento com ~${num(projEvento)} ingressos — a meta de ${num(META)} só sairia em ${dataMeta ? ddmm(dataMeta) : "—"}. Pra bater até ${ddmm(EVENTO)}, precisa vender ~${num(ritmoNecessario ?? 0, 1)}/dia`}
+            ? `✅ No ritmo atual (${num(ritmo, 1)}/dia), a meta de ${num(META)} sai em ${ddmm(dataMeta!)} — dentro do prazo de vendas`
+            : `🟠 No ritmo atual (${num(ritmo, 1)}/dia), você fecha as vendas em ${ddmm(FIM_VENDAS)} com ~${num(projFim)} ingressos — a meta de ${num(META)} só sairia em ${dataMeta ? ddmm(dataMeta) : "—"}. Pra bater até ${ddmm(FIM_VENDAS)}, precisa vender ~${num(ritmoNecessario ?? 0, 1)}/dia`}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
@@ -126,23 +128,29 @@ export default async function EncontroPage() {
         />
         <KpiCard label="Média/dia (últimos 7)" value={num(ritmo, 1)} hint={`${num(vendas7)} na semana`} />
         <KpiCard
-          label={`Projeção pra ${ddmm(EVENTO)}`}
-          value={`~${num(projEvento)}`}
+          label={`Projeção pra ${ddmm(FIM_VENDAS)}`}
+          value={`~${num(projFim)}`}
           hint="no ritmo dos últimos 7 dias"
-          tone={projEvento >= META ? "good" : "warn"}
+          tone={projFim >= META ? "good" : "warn"}
         />
         <KpiCard
           label="Ritmo pra bater a meta"
           value={ritmoNecessario !== null ? `${num(ritmoNecessario, 1)}/dia` : "—"}
-          hint={`nos ${num(diasAteEvento)} dias que restam`}
+          hint={`nos ${num(diasAteFim)} dias de venda que restam`}
         />
       </div>
 
       <Card title={`Vendidos × meta de ${num(META)}`} className="mb-4">
-        <GoalPaceChart data={serie} goal={META} goalLabel={`meta ${num(META)}`} eventDate={ddmm(EVENTO)} />
+        <GoalPaceChart
+          data={serie}
+          goal={META}
+          goalLabel={`meta ${num(META)}`}
+          eventDate={ddmm(FIM_VENDAS)}
+          eventLabel="último dia de venda"
+        />
         <p className="mt-2 text-xs text-slate-400">
           Linha cheia = acumulado vendido · tracejada = projeção no ritmo médio dos últimos 7
-          dias · pontilhada = meta de {num(META)} · vertical = dia do evento ({ddmm(EVENTO)}).
+          dias · pontilhada = meta de {num(META)} · vertical = último dia de venda ({ddmm(FIM_VENDAS)}; o evento é {ddmm(EVENTO)}).
         </p>
       </Card>
 
