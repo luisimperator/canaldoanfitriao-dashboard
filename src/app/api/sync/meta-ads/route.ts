@@ -9,29 +9,18 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // META_ADS_ACCOUNT_ID (ex.: act_1234567890). Aceita VÁRIAS contas separadas
 // por vírgula (ex.: act_111,act_222) — o negócio roda com "Canal do Anfitrião"
 // e "CA2 - Canal do Anfitrião"; o gasto do dia é a SOMA das contas.
-// O cron da Vercel (vercel.json) chama por GET todo dia às 9h10 UTC (6h10 em
-// São Paulo); o GET reusa o mesmo handler. POST continua valendo para disparo
-// manual.
+// O cron da Vercel (vercel.json) chama por GET a cada 6h; o GET reusa o mesmo
+// handler. POST continua valendo para disparo manual.
 
 export async function POST() {
-  const token = process.env.META_ADS_ACCESS_TOKEN;
-  const accounts = (process.env.META_ADS_ACCOUNT_ID ?? "")
-    .split(",")
-    .map((a) => a.trim())
-    .filter(Boolean);
-  if (!token || accounts.length === 0) {
-    return NextResponse.json(
-      { error: "Configure META_ADS_ACCESS_TOKEN e META_ADS_ACCOUNT_ID." },
-      { status: 501 }
-    );
-  }
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }
 
-  // Falha também vira heartbeat — sem isso, um cron que erra é invisível
-  // (o tick das 09:10 de 03/07 falhou mudo e só apareceu na verificação).
+  // TODO caminho de saída sem sucesso vira heartbeat de ERRO em webhook_log —
+  // env ausente, Graph API, upsert e até exceção não tratada. Um cron que
+  // falha mudo custou meses de gasto sem registro (auditoria de jul/2026).
   const fail = async (msg: string, status: number) => {
     try {
       await supabase.from("webhook_log").insert({
@@ -45,66 +34,81 @@ export async function POST() {
     return NextResponse.json({ error: msg }, { status });
   };
 
-  const until = new Date().toISOString().slice(0, 10);
-  const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10);
-
-  // Soma o gasto por DIA entre as contas antes do upsert — upsert por conta
-  // sobrescreveria o valor da outra (a linha de ad_spend é por dia+plataforma).
-  const byDate = new Map<string, number>();
-  for (const account of accounts) {
-    const url = new URL(`https://graph.facebook.com/v21.0/${account}/insights`);
-    url.searchParams.set("fields", "spend");
-    url.searchParams.set("time_range", JSON.stringify({ since, until }));
-    url.searchParams.set("time_increment", "1");
-    url.searchParams.set("limit", "100");
-    url.searchParams.set("access_token", token);
-
-    // A Graph API pagina a resposta (default: 25 linhas). O código antigo lia
-    // só a primeira página — com time_increment=1 isso importava 25 dos 30
-    // dias, mesmo com o cron saudável. Segue paging.next até o fim.
-    let next: string | null = url.toString();
-    for (let page = 0; next && page < 20; page++) {
-      const res: Response = await fetch(next, { cache: "no-store" });
-      if (!res.ok) {
-        const text = await res.text();
-        return fail(`Graph API (${account}): ${text}`, 502);
-      }
-      const json = await res.json();
-      for (const d of json.data ?? []) {
-        const date = String(d.date_start);
-        byDate.set(date, (byDate.get(date) ?? 0) + Number(d.spend));
-      }
-      next = json.paging?.next ?? null;
-    }
-  }
-
-  const rows = [...byDate.entries()].map(([date, amount]) => ({
-    date,
-    platform: "meta_ads",
-    amount: Math.round(amount * 100) / 100,
-    campaign: null,
-  }));
-
-  const { error } = await supabase
-    .from("ad_spend")
-    .upsert(rows, { onConflict: "date,platform,campaign" });
-  if (error) {
-    return fail(`upsert ad_spend: ${error.message}`, 500);
-  }
-
-  // Heartbeat auditável do sync (a auditoria só descobriu o sync morto meses
-  // depois porque nada registrava as execuções). Best-effort.
   try {
-    await supabase.from("webhook_log").insert({
-      source: "sync_meta_ads",
-      note: `${rows.length} dias importados · ${accounts.length} conta(s)`,
-      body: { imported: rows.length, accounts: accounts.length, since, until },
-    });
-  } catch {
-    /* heartbeat é best-effort */
-  }
+    const token = process.env.META_ADS_ACCESS_TOKEN;
+    const accounts = (process.env.META_ADS_ACCOUNT_ID ?? "")
+      .split(",")
+      .map((a) => a.trim())
+      .filter(Boolean);
+    if (!token || accounts.length === 0) {
+      return fail(
+        `env ausente: META_ADS_ACCESS_TOKEN=${token ? "ok" : "FALTA"} · META_ADS_ACCOUNT_ID=${accounts.length} conta(s)`,
+        501
+      );
+    }
 
-  return NextResponse.json({ ok: true, imported: rows.length, accounts: accounts.length });
+    const until = new Date().toISOString().slice(0, 10);
+    const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10);
+
+    // Soma o gasto por DIA entre as contas antes do upsert — upsert por conta
+    // sobrescreveria o valor da outra (a linha de ad_spend é por dia+plataforma).
+    const byDate = new Map<string, number>();
+    for (const account of accounts) {
+      const url = new URL(`https://graph.facebook.com/v21.0/${account}/insights`);
+      url.searchParams.set("fields", "spend");
+      url.searchParams.set("time_range", JSON.stringify({ since, until }));
+      url.searchParams.set("time_increment", "1");
+      url.searchParams.set("limit", "100");
+      url.searchParams.set("access_token", token);
+
+      // A Graph API pagina a resposta (default: 25 linhas). O código antigo lia
+      // só a primeira página — com time_increment=1 isso importava 25 dos 30
+      // dias, mesmo com o cron saudável. Segue paging.next até o fim.
+      let next: string | null = url.toString();
+      for (let page = 0; next && page < 20; page++) {
+        const res: Response = await fetch(next, { cache: "no-store" });
+        if (!res.ok) {
+          const text = await res.text();
+          return fail(`Graph API (${account}): ${text}`, 502);
+        }
+        const json = await res.json();
+        for (const d of json.data ?? []) {
+          const date = String(d.date_start);
+          byDate.set(date, (byDate.get(date) ?? 0) + Number(d.spend));
+        }
+        next = json.paging?.next ?? null;
+      }
+    }
+
+    const rows = [...byDate.entries()].map(([date, amount]) => ({
+      date,
+      platform: "meta_ads",
+      amount: Math.round(amount * 100) / 100,
+      campaign: null,
+    }));
+
+    const { error } = await supabase
+      .from("ad_spend")
+      .upsert(rows, { onConflict: "date,platform,campaign" });
+    if (error) {
+      return fail(`upsert ad_spend: ${error.message}`, 500);
+    }
+
+    // Heartbeat de sucesso.
+    try {
+      await supabase.from("webhook_log").insert({
+        source: "sync_meta_ads",
+        note: `${rows.length} dias importados · ${accounts.length} conta(s)`,
+        body: { imported: rows.length, accounts: accounts.length, since, until },
+      });
+    } catch {
+      /* heartbeat é best-effort */
+    }
+
+    return NextResponse.json({ ok: true, imported: rows.length, accounts: accounts.length });
+  } catch (e) {
+    return fail(`exceção não tratada: ${e instanceof Error ? e.message : String(e)}`, 500);
+  }
 }
 
 // Cron da Vercel só faz GET.
