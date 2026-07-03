@@ -21,6 +21,24 @@ import { utmFromFields } from "@/lib/mailchimp-utm";
 
 const VALID_STATUS = ["frio", "lista_espera", "quente", "convertido", "perdido"];
 
+// Nome de pessoa normalizado para comparação: colapsa espaços repetidos
+// ("Diego  Henrique" ≠ "Diego Henrique" no match exato — 143 leads ficaram
+// sem vendedor por causa disso), tira acentos e baixa a caixa.
+function normName(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+// Valores do Flow de qualificação às vezes chegam com o ID da opção prefixado
+// ("3_Ainda não comecei a alugar"). Sem limpar, a segmentação por faixa quebra.
+function cleanFieldValue(v: unknown): unknown {
+  return typeof v === "string" ? v.replace(/^\d+_/, "") : v;
+}
+
 // Deduz o status do funil a partir do nome da etapa/tag.
 function stageToStatus(stage: string): string {
   const s = stage.toLowerCase();
@@ -133,7 +151,12 @@ export async function POST(req: NextRequest) {
   // Extra: campos customizados do contato + tags.
   const extra: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(fields)) {
-    if (v !== null && v !== "" && v !== "-") extra[k] = v;
+    if (v !== null && v !== "" && v !== "-") extra[k] = cleanFieldValue(v);
+  }
+  // O Flow grava o tipo de imóvel em "tipo-imovel" (hífen), mas parte das
+  // análises espera "tipo_imovel" (underscore). Espelha no nome canônico.
+  if (extra["tipo-imovel"] != null && extra["tipo_imovel"] == null) {
+    extra["tipo_imovel"] = extra["tipo-imovel"];
   }
   if (tags.length > 0) extra.tags = tags;
   // Origem do lead: se a LP/automação mandar utm_* / vidorigem como campos
@@ -149,12 +172,11 @@ export async function POST(req: NextRequest) {
 
   let sellerId: string | null = null;
   if (seller) {
-    const { data: s } = await supabase
-      .from("sellers")
-      .select("id")
-      .ilike("name", String(seller))
-      .maybeSingle();
-    sellerId = s?.id ?? null;
+    // Compara nomes NORMALIZADOS (espaços colapsados, sem acento) — o match
+    // exato via ilike falhava com "Diego  Henrique" (espaço duplo do Unnichat).
+    const { data: allSellers } = await supabase.from("sellers").select("id, name");
+    const wanted = normName(String(seller));
+    sellerId = (allSellers ?? []).find((s) => normName(s.name) === wanted)?.id ?? null;
     if (!sellerId) extra.atendente = String(seller);
   }
 

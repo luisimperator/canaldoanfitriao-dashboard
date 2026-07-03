@@ -29,6 +29,15 @@ export function getSupabase() {
   );
 }
 
+// Dia-calendário de São Paulo de um timestamptz. mql_at vem em UTC; fatiar a
+// string jogava os MQLs das 21h–24h (16% deles) no dia seguinte — todo o resto
+// do dashboard conta dias no fuso SP (ver metrics.ts).
+function spDay(ts: string): string {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return String(ts).slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d);
+}
+
 // O Supabase devolve no máximo 1000 linhas por consulta; com o histórico
 // completo de vendas é preciso paginar até varrer a tabela inteira.
 const PAGE = 1000;
@@ -93,7 +102,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         phone: r.phone,
         extra: r.extra,
         utm: (r.extra && typeof r.extra === "object" ? r.extra.utm : null) ?? null,
-        mqlAt: r.mql_at ? String(r.mql_at).slice(0, 10) : null,
+        mqlAt: r.mql_at ? spDay(String(r.mql_at)) : null,
       })
     ),
     sales: sales.map(

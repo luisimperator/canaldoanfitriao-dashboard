@@ -28,6 +28,15 @@ function semAcento(s: string): string {
     .join("");
 }
 
+// Dia-calendário de São Paulo de um timestamp. O paidAt vem em UTC; fatiar
+// direto jogava vendas feitas depois das 21h (horário local) no dia seguinte,
+// bagunçando "vendas hoje" e a série diária.
+function spDay(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d);
+}
+
 export async function POST(req: NextRequest) {
   const expectedKey = process.env.EDUZZ_WEBHOOK_KEY;
   if (!expectedKey) {
@@ -91,7 +100,7 @@ export async function POST(req: NextRequest) {
   const amount = Number(
     data.paid?.value ?? data.price?.paid?.value ?? data.price?.value ?? data.value ?? 0
   );
-  const saleDate = String(data.paidAt ?? data.createdAt ?? new Date().toISOString()).slice(0, 10);
+  const saleDate = spDay(String(data.paidAt ?? data.createdAt ?? new Date().toISOString()));
   const product = String(data.items?.[0]?.name ?? data.product?.name ?? "Canal do Anfitrião");
 
   // UTMs vêm em campos diferentes conforme a versão do payload; guarda o que houver.
@@ -105,11 +114,18 @@ export async function POST(req: NextRequest) {
   let sellerId: string | null = null;
   let leadId: string | null = null;
   if (buyerEmail) {
-    const { data: lead } = await supabase
+    // Match case-insensitive (ilike com o padrão escapado = igualdade ignorando
+    // caixa; "_" e "%" são curingas de LIKE e "_" é comum em e-mail) e
+    // tolerante a e-mail duplicado: antes o maybeSingle() falhava em silêncio
+    // quando havia 2+ leads com o mesmo e-mail e a venda ficava sem lead.
+    // Preferimos o lead que já tem vendedor; senão, o mais recente.
+    const { data: matches } = await supabase
       .from("leads")
       .select("id, seller_id, extra")
-      .eq("email", buyerEmail)
-      .maybeSingle();
+      .ilike("email", buyerEmail.replace(/[\\%_]/g, "\\$&"))
+      .order("updated_at", { ascending: false })
+      .limit(10);
+    const lead = (matches ?? []).find((l) => l.seller_id) ?? (matches ?? [])[0] ?? null;
     if (lead) {
       leadId = lead.id;
       sellerId = lead.seller_id;
