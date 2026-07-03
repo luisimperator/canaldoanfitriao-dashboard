@@ -165,6 +165,20 @@ async function runSync(sinceChanged: string | null) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }
 
+  // Falha também vira heartbeat — cron que erra não pode ser invisível.
+  const fail = async (msg: string, status: number) => {
+    try {
+      await supabase.from("webhook_log").insert({
+        source: "sync_mailchimp",
+        note: `ERRO: ${msg.slice(0, 300)}`,
+        body: { error: msg.slice(0, 2000), sinceChanged },
+      });
+    } catch {
+      /* heartbeat é best-effort */
+    }
+    return NextResponse.json({ error: msg }, { status });
+  };
+
   const dc = apiKey.split("-").pop(); // datacenter vem no fim da key
   const auth = {
     Authorization: `Basic ${Buffer.from(`anystring:${apiKey}`).toString("base64")}`,
@@ -201,7 +215,7 @@ async function runSync(sinceChanged: string | null) {
     const res = await fetch(url, { headers: auth, cache: "no-store" });
     if (!res.ok) {
       const text = await res.text();
-      return NextResponse.json({ error: `Mailchimp: ${text}` }, { status: 502 });
+      return fail(`Mailchimp: ${text}`, 502);
     }
     const json = await res.json();
     const members: {
@@ -240,7 +254,7 @@ async function runSync(sinceChanged: string | null) {
     // em vez de substituir o extra e preserva o created_at de quem já existe.
     const { error } = await supabase.rpc("upsert_mailchimp_leads", { p_rows: rows });
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return fail(`upsert_mailchimp_leads: ${error.message}`, 500);
     }
     imported += rows.length;
 
