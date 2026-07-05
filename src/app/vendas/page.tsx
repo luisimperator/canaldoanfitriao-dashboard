@@ -14,6 +14,7 @@ import { SalesBySellerChart, TeamHistoryChart } from "@/components/charts";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { getD0ByLoad, getSpeedToLead } from "@/lib/speed";
 import { getMqlCohort, getMqlFlow } from "@/lib/mql-flow";
+import { getBuyerTempMonth, PERFIL_ORDER, type BuyerTempRow } from "@/lib/buyer-temp";
 
 export const dynamic = "force-dynamic";
 
@@ -86,12 +87,29 @@ export default async function VendasPage({
 
   const stats = sellerStats(data, refDate);
 
-  const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load, cohort] = await Promise.all([
-    getSpeedToLead(30),
-    getMqlFlow(),
-    getD0ByLoad(),
-    getMqlCohort(),
-  ]);
+  const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load, cohort, buyerTemp] =
+    await Promise.all([
+      getSpeedToLead(30),
+      getMqlFlow(),
+      getD0ByLoad(),
+      getMqlCohort(),
+      getBuyerTempMonth(`${selectedMonth}-01`, lastDayOf(selectedMonth)),
+    ]);
+
+  // Compradores do mês × temperatura: visão geral + por vendedor.
+  const perfilTotals = new Map<string, number>();
+  const perfilBySeller = new Map<string, Map<string, number>>();
+  for (const r of buyerTemp) {
+    perfilTotals.set(r.perfil, (perfilTotals.get(r.perfil) ?? 0) + r.compradores);
+    if (r.vendedor) {
+      const m = perfilBySeller.get(r.vendedor) ?? new Map<string, number>();
+      m.set(r.perfil, (m.get(r.perfil) ?? 0) + r.compradores);
+      perfilBySeller.set(r.vendedor, m);
+    }
+  }
+  const orderPerfil = (m: Map<string, number>) =>
+    PERFIL_ORDER.filter((p) => m.has(p)).map((p) => ({ perfil: p, n: m.get(p)! }));
+  const compradoresMes = buyerTemp.reduce((a, r) => a + r.compradores, 0);
 
   const w7 = mqlFlow?.windows.find((w) => w.days === 7);
   const w30 = mqlFlow?.windows.find((w) => w.days === 30);
@@ -415,6 +433,31 @@ export default async function VendasPage({
         </p>
       </Card>
 
+      <Card title={`Compradores de curso × temperatura — ${monthTitle(selectedMonth)}`} className="mb-4">
+        {compradoresMes === 0 ? (
+          <p className="text-sm text-slate-500">Nenhuma venda de curso no mês selecionado.</p>
+        ) : (
+          <>
+            <div className="grid gap-5 md:grid-cols-3">
+              <PerfilTable titulo={`Todos (${num(compradoresMes)})`} rows={orderPerfil(perfilTotals)} />
+              {[...perfilBySeller.entries()]
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .map(([nome, m]) => {
+                  const tot = [...m.values()].reduce((x, y) => x + y, 0);
+                  return (
+                    <PerfilTable key={nome} titulo={`${nome} (${num(tot)})`} rows={orderPerfil(m)} />
+                  );
+                })}
+            </div>
+            <p className="mt-3 text-xs text-slate-400">
+              Um comprador por e-mail; temperatura = tag mais alta que o lead já recebeu no CRM.
+              &quot;Sem temperatura&quot; = está no CRM mas a automação não qualificou; &quot;fora do
+              CRM&quot; = comprou pela base/e-mail (ou com e-mail diferente do WhatsApp).
+            </p>
+          </>
+        )}
+      </Card>
+
       <Card title="Velocidade no atendimento (speed-to-lead) — últimos 30 dias" className="mb-4">
         {speed.length === 0 ? (
           <p className="text-sm text-slate-600">
@@ -624,6 +667,47 @@ export default async function VendasPage({
           </p>
         </Card>
       </div>
+    </div>
+  );
+}
+
+// Tabelinha estreita (cabe no mobile) de perfil × compradores. As faixas de
+// temperatura ganham um pontinho de cor; o resto fica neutro.
+const PERFIL_DOT: Record<string, string> = {
+  "muito quente": "#e11d48",
+  "quente A5E/Gig": "#f43f5e",
+  quente: "#fb7185",
+  morno: "#f59e0b",
+  frio: "#0ea5e9",
+  "muito frio": "#64748b",
+};
+
+function PerfilTable({ titulo, rows }: { titulo: string; rows: { perfil: string; n: number }[] }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">{titulo}</p>
+      <table className="w-full text-sm">
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.perfil} className="border-t border-slate-100">
+              <td className="py-1.5 text-slate-700">
+                <span className="inline-flex items-center gap-1.5">
+                  {PERFIL_DOT[r.perfil] && (
+                    <span
+                      className="h-2 w-2 rounded-full shrink-0"
+                      style={{ background: PERFIL_DOT[r.perfil] }}
+                    />
+                  )}
+                  {r.perfil}
+                </span>
+              </td>
+              <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900 w-10">
+                {r.n}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
