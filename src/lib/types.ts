@@ -33,7 +33,7 @@ export interface Lead {
   utm?: LeadUtm | null;
   /**
    * quando o lead virou MQL = momento em que recebeu uma das tags lead-a5e /
-   * lead-gigantes / lead-quente / lead-muito-quente (histórico do CRM)
+   * lead-gigantes / lead-quente / lead-muito-quente / lead-frio (histórico do CRM)
    */
   mqlAt?: string | null;
 }

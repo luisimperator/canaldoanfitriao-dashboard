@@ -1,7 +1,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 // Fluxo de MQL: quantos contatos NOVOS viraram MQL por dia. MQL = recebeu uma
-// das tags lead-a5e / lead-gigantes / lead-quente / lead-muito-quente, contado
+// das tags lead-a5e / lead-gigantes / lead-quente / lead-muito-quente / lead-frio, contado
 // no dia em que a TAG chegou (RPC mql_new_daily sobre leads.mql_at) — não pela
 // criação do lead nem pela atribuição a vendedor. É o número que responde
 // "tem MQL pra mais um vendedor?".

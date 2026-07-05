@@ -147,7 +147,7 @@ export default async function VisaoGeralPage() {
           <LeadsMqlChart data={mqlSeries} />
           <p className="text-xs text-slate-400 mt-2">
             MQL = contato que recebeu tag de qualificação (lead-a5e, lead-gigantes, lead-quente ou
-            lead-muito-quente), contado no dia em que a tag chegou. Taxa de qualificação nos últimos 30 dias:{" "}
+            lead-muito-quente ou lead-frio — muito-frio fica fora), contado no dia em que a tag chegou. Taxa de qualificação nos últimos 30 dias:{" "}
             <strong>{taxaMql !== null ? `${num(taxaMql, 1)}%` : "—"}</strong> ({num(mql30)} MQL de{" "}
             {num(leads30.length)} leads). Cada vendedor processa ~{num(mqlCap.avgPerMonth)} MQL/mês
             (média dos últimos 90 dias).
