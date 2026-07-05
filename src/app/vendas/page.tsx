@@ -358,7 +358,7 @@ export default async function VendasPage({
 
           <p className="text-xs text-slate-400 mt-3">
             MQL novo = contato na data em que RECEBEU a tag de qualificação (lead-a5e,
-            lead-gigantes, lead-quente ou lead-muito-quente; histórico do CRM
+            lead-gigantes, lead-quente, lead-muito-quente ou lead-frio; histórico do CRM
             {mqlFlow.historySince
               ? `, registrado desde ${mqlFlow.historySince.slice(8, 10)}/${mqlFlow.historySince.slice(5, 7)}`
               : ""}

@@ -140,7 +140,8 @@ export function dailyLeadSeries(leads: Lead[], days: number, today = isoToday())
 // ---------- MQL (tag de qualificação no CRM) ----------
 //
 // MQL = contato que recebeu uma das tags lead-a5e / lead-gigantes /
-// lead-quente / lead-muito-quente. O momento em que vira MQL é o momento em
+// lead-quente / lead-muito-quente / lead-frio (muito-frio fica fora: 0% de
+// conversão medida). O momento em que vira MQL é o momento em
 // que a tag chega (leads.mql_at, carimbado pelo histórico de eventos) — não a
 // atribuição a vendedor. isMqlLead é a definição única no app.
 

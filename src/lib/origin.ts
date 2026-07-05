@@ -3,7 +3,7 @@
 // page; o sync (api/sync/mailchimp) grava em lead.utm.
 //
 // "Qualidade" aqui = virou MQL. MQL = contato que recebeu uma das tags
-// lead-a5e / lead-gigantes / lead-quente / lead-muito-quente (mesma definição
+// lead-a5e / lead-gigantes / lead-quente / lead-muito-quente / lead-frio (mesma definição
 // do resto do painel: leads.mql_at carimbado pelo histórico do CRM). A taxa de
 // qualificação (MQL ÷ leads) diz quanto cada origem gera de lead que REALMENTE
 // interessa, não só volume.
