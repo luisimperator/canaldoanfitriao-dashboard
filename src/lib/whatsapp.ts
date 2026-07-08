@@ -33,6 +33,20 @@ export function verifyWhatsappSignature(
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+// Link "clique para conversar" (wa.me) a partir do telefone salvo no lead/
+// conversa. Unnichat e Mailchimp gravam o número em formatos variados: com
+// máscara, com ou sem o DDI 55 — aqui tudo vira o formato que o wa.me aceita.
+export function waLink(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  let digits = String(phone).replace(/\D/g, "").replace(/^0+/, "");
+  if (!digits) return null;
+  // Número brasileiro sem DDI (DDD + 8-9 dígitos) ganha o 55 na frente.
+  if (digits.length === 10 || digits.length === 11) digits = `55${digits}`;
+  // Fora da faixa E.164 (país + número) não dá para montar link confiável.
+  if (digits.length < 12 || digits.length > 15) return null;
+  return `https://wa.me/${digits}`;
+}
+
 export interface SendResult {
   ok: boolean;
   id?: string;

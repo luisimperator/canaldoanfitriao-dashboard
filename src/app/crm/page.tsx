@@ -1,5 +1,6 @@
 import { getDashboardData } from "@/lib/data";
 import { num } from "@/lib/format";
+import { waLink } from "@/lib/whatsapp";
 import { Card, DemoBanner, PageHeader } from "@/components/ui";
 import type { Lead } from "@/lib/types";
 
@@ -112,6 +113,16 @@ export default async function CrmPage() {
                           <div className="text-[11px] text-slate-500 mt-0.5 truncate">
                             👤 {responsavel}
                           </div>
+                        )}
+                        {waLink(lead.phone) && (
+                          <a
+                            href={waLink(lead.phone)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100"
+                          >
+                            💬 WhatsApp
+                          </a>
                         )}
                       </div>
                     );
