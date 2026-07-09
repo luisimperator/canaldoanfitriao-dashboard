@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
 import { isoToday, monthKey, monthlyCashflow, spendByCategory, sum } from "@/lib/metrics";
 import { brl, shortDate, monthLabel } from "@/lib/format";
@@ -53,10 +54,18 @@ export default async function FinanceiroPage({
 
   return (
     <div>
-      <PageHeader
-        title="Financeiro"
-        subtitle="Entradas e saídas da conta do Canal do Anfitrião (Banco Inter)"
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          title="Financeiro"
+          subtitle="Entradas e saídas da conta do Canal do Anfitrião (Banco Inter)"
+        />
+        <Link
+          href="/financeiro/extrato"
+          className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700"
+        >
+          🏦 Extrato do banco →
+        </Link>
+      </div>
       <DemoBanner show={data.isDemo} />
 
       <div className="mb-4 flex items-center justify-between gap-3">
