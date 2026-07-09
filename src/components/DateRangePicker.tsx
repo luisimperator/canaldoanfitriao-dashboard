@@ -144,7 +144,24 @@ export function DateRangePicker({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-[19rem] max-h-[80vh] overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+        <>
+          {/* No mobile o popover ancorado vazava pra fora da tela — vira uma
+              folha centralizada com backdrop; no desktop segue ancorado. */}
+          <div
+            className="fixed inset-0 z-30 bg-slate-900/40 sm:hidden"
+            onClick={() => setOpen(false)}
+          />
+          <div className="fixed inset-x-3 top-16 z-40 mx-auto max-w-[21rem] max-h-[75vh] overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[19rem] sm:max-h-[80vh] sm:shadow-lg">
+          <div className="mb-1 flex items-center justify-between sm:hidden">
+            <span className="text-sm font-semibold text-slate-900">Período</span>
+            <button
+              onClick={() => setOpen(false)}
+              className="rounded-md px-2 py-0.5 text-slate-500 hover:bg-slate-100"
+              aria-label="Fechar"
+            >
+              ✕
+            </button>
+          </div>
           <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1">Atalhos</div>
           <div className="grid grid-cols-2 gap-1 mb-3">
             {presets.map((p) => (
@@ -293,7 +310,8 @@ export function DateRangePicker({
               OK
             </button>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
