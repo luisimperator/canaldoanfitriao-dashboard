@@ -129,8 +129,13 @@ export default async function VendasPage({
   // Conversão REAL de MQL, por coorte (comprou curso DEPOIS de virar MQL) — a
   // razão vendas÷MQL de fluxos independentes inflava a conversão. Mede o
   // processo de TAG, não o time: a automação taggeia só parte dos atendidos.
+  // Só MQLs MADUROS (14+ dias desde a tag) entram na taxa: o histórico começa
+  // em 15/06 e MQL recente ainda não teve tempo de comprar — contá-lo como
+  // "não comprou" censurava a conversão pra baixo (auditoria de 05/07).
   const convCohort =
-    cohort && cohort.mqlsTotal > 0 ? cohort.mqlsCompraram / cohort.mqlsTotal : null;
+    cohort && cohort.mqlsMaduros > 0
+      ? cohort.mqlsMadurosCompraram / cohort.mqlsMaduros
+      : null;
 
   // Venda DO TIME = tem vendedor atribuído (a UTM diego/flavio do link vira
   // seller_id na venda). É o critério de comissão — independe da tag de MQL.
@@ -142,8 +147,10 @@ export default async function VendasPage({
   const vendasTime30 = curso30.filter((s) => s.sellerId != null).length;
 
   // Tem MQL pra mais vendedor? Projeta o fluxo de 30d em MQL/mês e divide
-  // pelo tamanho do time simulado — é a conta da comissão.
-  const mqlPerMonth = w30 ? Math.round(w30.perDay * 30) : null;
+  // pelo tamanho do time simulado — é a conta da comissão. Usa a MEDIANA
+  // diária (não a média): dois dias de lançamento inflavam a projeção em ~50%
+  // e a conta de contratação não pode depender de pico.
+  const mqlPerMonth = w30 ? Math.round(w30.perDayMedian * 30) : null;
 
   const activeSellers = data.sellers.filter((s) => s.isActive).length;
   const d0Rate = speedTotal.atribuidos > 0 ? speedTotal.d0 / speedTotal.atribuidos : null;
@@ -244,9 +251,13 @@ export default async function VendasPage({
           label="Conversão real de MQL"
           value={convCohort !== null ? `${num(convCohort * 100, 1)}%` : "—"}
           hint={
-            cohort
-              ? `${num(cohort.mqlsCompraram)} de ${num(cohort.mqlsTotal)} MQLs compraram curso (todo o histórico)`
-              : "coorte: comprou depois de virar MQL"
+            cohort && cohort.mqlsMaduros > 0
+              ? `${num(cohort.mqlsMadurosCompraram)} de ${num(cohort.mqlsMaduros)} MQLs com 14+ dias de vida compraram curso${
+                  mqlFlow?.historySince
+                    ? ` (histórico desde ${mqlFlow.historySince.slice(8, 10)}/${mqlFlow.historySince.slice(5, 7)})`
+                    : ""
+                }`
+              : "ainda sem MQLs maduros (14+ dias desde a tag) para medir"
           }
         />
         <KpiCard
@@ -298,8 +309,8 @@ export default async function VendasPage({
           {mqlPerMonth !== null && (
             <>
               <p className="text-sm text-slate-700 mb-2">
-                No ritmo dos últimos 30 dias, o funil gera{" "}
-                <strong>~{num(mqlPerMonth)} MQL/mês</strong>
+                No ritmo típico dos últimos 30 dias (mediana diária, imune a pico de
+                lançamento), o funil gera <strong>~{num(mqlPerMonth)} MQL/mês</strong>
                 {vendasCurso30 > 0 && (
                   <>
                     {" "}

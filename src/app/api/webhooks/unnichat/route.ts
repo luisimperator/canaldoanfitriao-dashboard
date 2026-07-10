@@ -177,6 +177,17 @@ export async function POST(req: NextRequest) {
     const { data: allSellers } = await supabase.from("sellers").select("id, name");
     const wanted = normName(String(seller));
     sellerId = (allSellers ?? []).find((s) => normName(s.name) === wanted)?.id ?? null;
+    if (!sellerId) {
+      // Fallback pelo primeiro nome, quando é inequívoco: o cadastro em
+      // `sellers` pode ter só "Breno" e o Unnichat mandar "Breno Sobrenome"
+      // (ou vice-versa). Só casa se exatamente UM vendedor tem esse primeiro
+      // nome — dois "João" não podem virar chute.
+      const first = wanted.split(" ")[0];
+      const byFirst = (allSellers ?? []).filter(
+        (s) => normName(s.name).split(" ")[0] === first
+      );
+      if (first && byFirst.length === 1) sellerId = byFirst[0].id;
+    }
     if (!sellerId) extra.atendente = String(seller);
   }
 

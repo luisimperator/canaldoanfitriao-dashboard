@@ -16,6 +16,9 @@ export interface MqlWindow {
   total: number;
   perDay: number;
   perBusinessDay: number;
+  /** mediana do nº diário (com zeros nos dias sem MQL) — robusta a pico de
+   *  lançamento, que infla a média em ~50% e distorce a conta de contratação */
+  perDayMedian: number;
 }
 
 export interface MqlFlow {
@@ -48,6 +51,11 @@ export interface MqlCohort {
   mqlsCompraram: number;
   vendasCurso30d: number;
   vendas30dDeMql: number;
+  /** MQLs com 14+ dias desde a tag: os únicos com tempo de maturação para a
+   *  taxa de conversão ser honesta (sem eles, MQL de anteontem conta como
+   *  "não comprou" e a conversão fica censurada pra baixo) */
+  mqlsMaduros: number;
+  mqlsMadurosCompraram: number;
 }
 
 export async function getMqlCohort(): Promise<MqlCohort | null> {
@@ -63,6 +71,8 @@ export async function getMqlCohort(): Promise<MqlCohort | null> {
       mqlsCompraram: Number(r.mqls_compraram),
       vendasCurso30d: Number(r.vendas_curso_30d),
       vendas30dDeMql: Number(r.vendas_30d_de_mql),
+      mqlsMaduros: Number(r.mqls_maduros ?? 0),
+      mqlsMadurosCompraram: Number(r.mqls_maduros_compraram ?? 0),
     };
   } catch {
     return null;
@@ -87,6 +97,7 @@ export async function getMqlFlow(): Promise<MqlFlow | null> {
       Math.round((Date.parse(b + "T12:00Z") - Date.parse(a + "T12:00Z")) / msDay) + 1;
     const historyDays = daysBetween(historySince, today);
 
+    const byDay = new Map(daily.map((d) => [d.day, d.mql]));
     const windows: MqlWindow[] = [7, 30, 90].map((days) => {
       const startMs = Date.parse(today + "T12:00Z") - (days - 1) * msDay;
       const start = new Date(startMs).toISOString().slice(0, 10);
@@ -95,12 +106,27 @@ export async function getMqlFlow(): Promise<MqlFlow | null> {
       const effectiveDays = Math.min(days, daysBetween(effStart, today));
       const total = daily.filter((d) => d.day >= effStart).reduce((s, d) => s + d.mql, 0);
       const biz = Math.max(1, businessDaysBetween(effStart, today));
+      // Mediana sobre a série COMPLETA da janela (dias sem MQL contam 0) —
+      // só olhar os dias com evento superestimaria o ritmo típico.
+      const series: number[] = [];
+      for (let ms = Date.parse(effStart + "T12:00Z"); ms <= Date.parse(today + "T12:00Z"); ms += msDay) {
+        series.push(byDay.get(new Date(ms).toISOString().slice(0, 10)) ?? 0);
+      }
+      series.sort((a, b) => a - b);
+      const mid = series.length >> 1;
+      const perDayMedian =
+        series.length === 0
+          ? 0
+          : series.length % 2
+            ? series[mid]
+            : (series[mid - 1] + series[mid]) / 2;
       return {
         days,
         effectiveDays,
         total,
         perDay: total / Math.max(1, effectiveDays),
         perBusinessDay: total / biz,
+        perDayMedian,
       };
     });
 
