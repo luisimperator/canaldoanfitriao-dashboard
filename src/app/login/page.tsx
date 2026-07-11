@@ -48,7 +48,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex min-h-screen items-center justify-center bg-slate-900 px-4">
+    <div className="fixed inset-0 z-30 flex min-h-screen items-center justify-center bg-slate-900 dark:bg-violet-600 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <div className="text-xl font-bold text-white">Canal do Anfitrião</div>
@@ -56,16 +56,16 @@ export default function LoginPage() {
         </div>
         <form
           onSubmit={forgot ? handleReset : handleSubmit}
-          className="rounded-xl bg-white p-6 shadow-lg space-y-4"
+          className="rounded-xl bg-white dark:bg-[#15121f] p-6 shadow-lg space-y-4"
         >
           {!supabaseUrl ? (
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-zinc-400">
               Modo demonstração: login desativado.
             </p>
           ) : (
             <>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">
                   E-mail
                 </label>
                 <input
@@ -74,12 +74,12 @@ export default function LoginPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-rose-500 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm text-slate-900 dark:text-zinc-100 focus:border-rose-500 focus:outline-none"
                 />
               </div>
               {!forgot && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                  <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">
                     Senha
                   </label>
                   <input
@@ -88,12 +88,12 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-rose-500 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm text-slate-900 dark:text-zinc-100 focus:border-rose-500 focus:outline-none"
                   />
                 </div>
               )}
-              {error && <p className="text-xs text-rose-600">{error}</p>}
-              {info && <p className="text-xs text-emerald-600">{info}</p>}
+              {error && <p className="text-xs text-rose-600 dark:text-rose-400">{error}</p>}
+              {info && <p className="text-xs text-emerald-600 dark:text-emerald-400">{info}</p>}
               <button
                 type="submit"
                 disabled={loading}
@@ -114,7 +114,7 @@ export default function LoginPage() {
                   setError(null);
                   setInfo(null);
                 }}
-                className="w-full text-center text-xs text-slate-500 hover:text-slate-700"
+                className="w-full text-center text-xs text-slate-500 dark:text-zinc-400 hover:text-slate-700"
               >
                 {forgot ? "← Voltar ao login" : "Esqueci minha senha"}
               </button>

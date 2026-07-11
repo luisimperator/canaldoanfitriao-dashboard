@@ -1,8 +1,19 @@
 @import "tailwindcss";
 
+/* Tema por classe: <html class="dark"> liga o modo escuro (toggle no menu). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  --chart-grid: #e2e8f0;
+}
+
+/* Modo escuro na vibe "OS": navy-violeta profundo, texto zinc. */
+.dark {
+  --background: #0b0a13;
+  --foreground: #e4e4e7;
+  --chart-grid: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
@@ -14,4 +25,20 @@
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* recharts no escuro: tooltip/legend têm cores fixas por padrão. */
+.dark .recharts-default-tooltip {
+  background: #1a1726 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.dark .recharts-tooltip-label,
+.dark .recharts-tooltip-item {
+  color: #e4e4e7 !important;
+}
+.dark .recharts-legend-item-text {
+  color: #a1a1aa !important;
+}
+.dark .recharts-cartesian-axis-tick-value {
+  fill: #71717a;
 }

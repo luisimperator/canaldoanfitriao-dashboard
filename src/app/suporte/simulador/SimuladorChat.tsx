@@ -203,10 +203,10 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
   const isChefe = mode === "chefe";
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col h-[72vh]">
+    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] shadow-sm flex flex-col h-[72vh]">
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {msgs.length === 0 && (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-400 dark:text-zinc-500">
             <strong>Como cliente</strong>, escreva como alguém no WhatsApp (ex.: &quot;até quando
             vai meu acesso? meu e-mail é fulano@email.com&quot;). Quando a IA responder, troque
             para <strong>Chefe</strong> e dê a correção (ex.: &quot;seja mais breve e nunca prometa
@@ -218,7 +218,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
           if (m.kind === "chefe") {
             return (
               <div key={i} className="flex justify-center">
-                <div className="max-w-[90%] rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                <div className="max-w-[90%] rounded-lg border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
                   <span className="font-semibold">👔 Chefe (cliente não vê):</span> {m.content}
                 </div>
               </div>
@@ -229,11 +229,11 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
             <div key={i} className={`flex ${isCliente ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap ${
-                  isCliente ? "bg-rose-600 text-white" : "bg-slate-100 text-slate-800"
+                  isCliente ? "bg-rose-600 text-white" : "bg-slate-100 dark:bg-white/[0.07] text-slate-800 dark:text-zinc-200"
                 }`}
               >
                 {m.corrigida && (
-                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
                     ✏️ resposta corrigida
                   </div>
                 )}
@@ -241,12 +241,12 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
                 {m.kind === "ia" && (m.escalated || (m.tools && m.tools.length > 0)) && (
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {m.escalated && (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                      <span className="rounded-full bg-amber-100 dark:bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
                         escalado → fila humana
                       </span>
                     )}
                     {m.tools?.map((t, j) => (
-                      <span key={j} className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                      <span key={j} className="rounded-full bg-slate-200 dark:bg-white/10 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-zinc-400">
                         {t}
                       </span>
                     ))}
@@ -259,30 +259,30 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
 
         {typing && (
           <div className="flex justify-start">
-            <div className="rounded-2xl bg-slate-100 px-3.5 py-2 text-sm text-slate-400">digitando…</div>
+            <div className="rounded-2xl bg-slate-100 dark:bg-white/[0.07] px-3.5 py-2 text-sm text-slate-400 dark:text-zinc-500">digitando…</div>
           </div>
         )}
 
         {/* Cartão: salvar a bronca como regra permanente */}
         {rule && (
-          <div className="rounded-xl border border-sky-300 bg-sky-50 p-3">
+          <div className="rounded-xl border border-sky-300 bg-sky-50 dark:bg-sky-500/10 p-3">
             {rule.loading ? (
               <p className="text-sm text-sky-800">Gerando sugestão de regra…</p>
             ) : rule.saved ? (
-              <p className="text-sm font-medium text-emerald-700">
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                 ✅ Regra salva no treinamento — agora vale pra todos os atendimentos.{" "}
-                <button onClick={() => setRule(null)} className="underline text-emerald-700">fechar</button>
+                <button onClick={() => setRule(null)} className="underline text-emerald-700 dark:text-emerald-300">fechar</button>
               </p>
             ) : (
               <div className="space-y-2">
-                <div className="text-xs font-semibold uppercase tracking-wide text-sky-700">
+                <div className="text-xs font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
                   Salvar como regra permanente?
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-2">
                   <select
                     value={rule.bloco}
                     onChange={(e) => setRule({ ...rule, bloco: e.target.value })}
-                    className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-slate-300 dark:border-white/15 px-2 py-1.5 text-sm"
                   >
                     {KB_BLOCOS.map((b) => (
                       <option key={b.key} value={b.key}>{b.label}</option>
@@ -292,7 +292,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
                     value={rule.titulo}
                     onChange={(e) => setRule({ ...rule, titulo: e.target.value })}
                     placeholder="Título da regra"
-                    className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                    className="rounded-lg border border-slate-300 dark:border-white/15 px-2 py-1.5 text-sm"
                   />
                 </div>
                 <textarea
@@ -300,7 +300,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
                   onChange={(e) => setRule({ ...rule, conteudo: e.target.value })}
                   rows={3}
                   placeholder="Texto da regra (a IA vai seguir sempre)"
-                  className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-lg border border-slate-300 dark:border-white/15 px-2 py-1.5 text-sm"
                 />
                 <div className="flex gap-2">
                   <button
@@ -312,7 +312,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
                   </button>
                   <button
                     onClick={() => setRule(null)}
-                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-white"
+                    className="rounded-lg border border-slate-300 dark:border-white/15 px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:bg-white"
                   >
                     Descartar
                   </button>
@@ -324,15 +324,15 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
         <div ref={endRef} />
       </div>
 
-      {error && <div className="px-4 py-2 text-sm text-rose-600 border-t border-slate-100">{error}</div>}
+      {error && <div className="px-4 py-2 text-sm text-rose-600 dark:text-rose-400 border-t border-slate-100 dark:border-white/[0.06]">{error}</div>}
 
-      <div className="border-t border-slate-200 p-3">
+      <div className="border-t border-slate-200 dark:border-white/10 p-3">
         {/* alterna quem está falando */}
-        <div className="mb-2 inline-flex rounded-lg border border-slate-200 p-0.5 text-sm">
+        <div className="mb-2 inline-flex rounded-lg border border-slate-200 dark:border-white/10 p-0.5 text-sm">
           <button
             onClick={() => setMode("cliente")}
             className={`rounded-md px-3 py-1 font-medium ${
-              !isChefe ? "bg-rose-600 text-white" : "text-slate-600"
+              !isChefe ? "bg-rose-600 text-white" : "text-slate-600 dark:text-zinc-400"
             }`}
           >
             🧑 Cliente
@@ -340,7 +340,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
           <button
             onClick={() => setMode("chefe")}
             className={`rounded-md px-3 py-1 font-medium ${
-              isChefe ? "bg-amber-500 text-white" : "text-slate-600"
+              isChefe ? "bg-amber-500 text-white" : "text-slate-600 dark:text-zinc-400"
             }`}
           >
             👔 Chefe
@@ -365,7 +365,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
                   : "Mensagem do cliente…"
             }
             className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none disabled:bg-slate-50 ${
-              isChefe ? "border-amber-300 focus:border-amber-500" : "border-slate-300 focus:border-rose-500"
+              isChefe ? "border-amber-300 dark:border-amber-500/40 focus:border-amber-500" : "border-slate-300 dark:border-white/15 focus:border-rose-500"
             }`}
           />
           <button
@@ -386,7 +386,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
               setRule(null);
               setError(null);
             }}
-            className="mt-2 text-xs text-slate-400 hover:text-slate-600"
+            className="mt-2 text-xs text-slate-400 dark:text-zinc-500 hover:text-slate-600"
           >
             Limpar treino
           </button>

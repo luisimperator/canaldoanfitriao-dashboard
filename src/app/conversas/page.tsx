@@ -24,14 +24,14 @@ const OUTCOMES = [
 ];
 
 const OUTCOME_BADGE: Record<string, string> = {
-  won: "bg-emerald-100 text-emerald-700",
-  lost: "bg-rose-100 text-rose-700",
-  open: "bg-slate-100 text-slate-600",
+  won: "bg-emerald-100 text-emerald-700 dark:text-emerald-300",
+  lost: "bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300",
+  open: "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400",
 };
 
 function chip(active: boolean): string {
   return `rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-    active ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+    active ? "bg-slate-900 dark:bg-violet-600 text-white" : "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/15"
   }`;
 }
 
@@ -78,7 +78,7 @@ export default async function ConversasPage({
       <Card className="mb-4">
         <div className="flex flex-col gap-3">
           <div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Resultado</div>
+            <div className="text-xs font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5">Resultado</div>
             <div className="flex flex-wrap gap-2">
               {OUTCOMES.map((o) => (
                 <Link key={o.v} href={`/conversas?outcome=${o.v}&seller=${seller}${carry}`} className={chip(outcome === o.v)}>
@@ -88,7 +88,7 @@ export default async function ConversasPage({
             </div>
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Vendedor</div>
+            <div className="text-xs font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5">Vendedor</div>
             <div className="flex flex-wrap gap-2">
               <Link href={`/conversas?outcome=${outcome}&seller=all${carry}`} className={chip(seller === "all")}>
                 Todos
@@ -101,11 +101,11 @@ export default async function ConversasPage({
             </div>
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Período (última atividade)</div>
+            <div className="text-xs font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5">Período (última atividade)</div>
             <DateRangePicker minYear={2024} />
           </div>
-          <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-            <span className="text-sm text-slate-500">
+          <div className="flex items-center justify-between border-t border-slate-100 dark:border-white/[0.06] pt-3">
+            <span className="text-sm text-slate-500 dark:text-zinc-400">
               {num(rows.length)} conversa(s) no filtro
             </span>
             <a
@@ -120,7 +120,7 @@ export default async function ConversasPage({
 
       <Card title="Conversas">
         {rows.length === 0 ? (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-400 dark:text-zinc-500">
             Nenhuma conversa nesse filtro ainda. A coleta puxa as conversas dos contatos atendidos
             (via API do Unnichat) e roda a cada 3h — vai enchendo conforme o time atende.
           </p>
@@ -128,7 +128,7 @@ export default async function ConversasPage({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                   <th className="py-2 font-medium">Contato</th>
                   <th className="py-2 font-medium">Vendedor</th>
                   <th className="py-2 font-medium">Resultado</th>
@@ -138,20 +138,20 @@ export default async function ConversasPage({
               </thead>
               <tbody>
                 {rows.map((c) => (
-                  <tr key={c.contact_id} className="border-b border-slate-100 last:border-0">
-                    <td className="py-1.5 text-slate-700">{c.contact_name ?? "—"}</td>
-                    <td className="py-1.5 text-slate-600">{c.seller ?? "—"}</td>
+                  <tr key={c.contact_id} className="border-b border-slate-100 dark:border-white/[0.06] last:border-0">
+                    <td className="py-1.5 text-slate-700 dark:text-zinc-300">{c.contact_name ?? "—"}</td>
+                    <td className="py-1.5 text-slate-600 dark:text-zinc-400">{c.seller ?? "—"}</td>
                     <td className="py-1.5">
                       <span
                         className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                          OUTCOME_BADGE[c.outcome ?? "open"] ?? "bg-slate-100 text-slate-600"
+                          OUTCOME_BADGE[c.outcome ?? "open"] ?? "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400"
                         }`}
                       >
                         {c.outcome === "won" ? "Fechou" : c.outcome === "lost" ? "Não fechou" : "Em aberto"}
                       </span>
                     </td>
-                    <td className="py-1.5 text-right tabular-nums text-slate-600">{num(c.msg_count ?? 0)}</td>
-                    <td className="py-1.5 text-right text-slate-500 tabular-nums whitespace-nowrap">
+                    <td className="py-1.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">{num(c.msg_count ?? 0)}</td>
+                    <td className="py-1.5 text-right text-slate-500 dark:text-zinc-400 tabular-nums whitespace-nowrap">
                       {c.last_at ? new Date(c.last_at).toLocaleDateString("pt-BR") : "—"}
                     </td>
                   </tr>

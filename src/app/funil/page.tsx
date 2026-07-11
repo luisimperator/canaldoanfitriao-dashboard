@@ -182,11 +182,11 @@ export default async function FunilPage({
 
       <Card title="Funil semanal: entraram → quentes → A5E/Gigantes" className="mb-4">
         <div className="flex items-center justify-between gap-3 mb-3">
-          <span className="text-xs text-slate-500">Período</span>
+          <span className="text-xs text-slate-500 dark:text-zinc-400">Período</span>
           <DateRangePicker minYear={2026} />
         </div>
         {cohort.length === 0 ? (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-400 dark:text-zinc-500">
             Coletando. Conforme os leads entram pelo Unnichat, viram quentes e compram A5E/Gigantes,
             esta coorte semanal preenche — aí dá pra ver a conversão real de cada semana.
           </p>
@@ -194,7 +194,7 @@ export default async function FunilPage({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                   <th className="py-2 font-medium">Semana</th>
                   <th className="py-2 font-medium text-right">Entraram</th>
                   <th className="py-2 font-medium text-right">Viraram quentes</th>
@@ -204,14 +204,14 @@ export default async function FunilPage({
               </thead>
               <tbody>
                 {cohort.map((r) => (
-                  <tr key={r.semana} className="border-b border-slate-100 last:border-0">
-                    <td className="py-1.5 text-slate-600 tabular-nums">
+                  <tr key={r.semana} className="border-b border-slate-100 dark:border-white/[0.06] last:border-0">
+                    <td className="py-1.5 text-slate-600 dark:text-zinc-400 tabular-nums">
                       {new Date(r.semana + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
                     </td>
-                    <td className="py-1.5 text-right tabular-nums text-slate-700 font-medium">{num(r.entraram)}</td>
-                    <td className="py-1.5 text-right tabular-nums text-rose-600">{num(r.quentes)}</td>
-                    <td className="py-1.5 text-right tabular-nums text-emerald-600 font-semibold">{num(r.converteram)}</td>
-                    <td className="py-1.5 text-right tabular-nums text-slate-500">
+                    <td className="py-1.5 text-right tabular-nums text-slate-700 dark:text-zinc-300 font-medium">{num(r.entraram)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-rose-600 dark:text-rose-400">{num(r.quentes)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-emerald-600 dark:text-emerald-400 font-semibold">{num(r.converteram)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-500 dark:text-zinc-400">
                       {r.entraram > 0 ? `${num((r.converteram / r.entraram) * 100, 1)}%` : "—"}
                     </td>
                   </tr>
@@ -220,7 +220,7 @@ export default async function FunilPage({
             </table>
           </div>
         )}
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-400 dark:text-zinc-500">
           Coorte por semana de ENTRADA do lead no Unnichat: quantos entraram, quantos viraram
           quentes, e quantos compraram Anfitrião 5 Estrelas ou Gigantes (cruzado por e-mail com a
           Eduzz). Preenche conforme os dados entram.
@@ -228,7 +228,7 @@ export default async function FunilPage({
       </Card>
 
       <Card title="Pesquisa de qualificação (Unnichat) — quem respondeu e perfil" className="mb-4">
-        <p className="text-xs text-slate-500 mb-3">
+        <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
           Pesquisa disparada para os leads novos no WhatsApp (faturamento, nº de imóveis, tipo de
           operação). <strong>{num(surveyTotal)}</strong> contatos responderam até agora.
         </p>
@@ -237,7 +237,7 @@ export default async function FunilPage({
           <div className="overflow-x-auto mb-5">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                   <th className="py-2 font-medium">Semana</th>
                   <th className="py-2 font-medium text-right">Entraram</th>
                   <th className="py-2 font-medium text-right">Responderam</th>
@@ -246,13 +246,13 @@ export default async function FunilPage({
               </thead>
               <tbody>
                 {surveyWeekly.map((r) => (
-                  <tr key={r.semana} className="border-b border-slate-100 last:border-0">
-                    <td className="py-1.5 text-slate-600 tabular-nums">
+                  <tr key={r.semana} className="border-b border-slate-100 dark:border-white/[0.06] last:border-0">
+                    <td className="py-1.5 text-slate-600 dark:text-zinc-400 tabular-nums">
                       {new Date(r.semana + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
                     </td>
-                    <td className="py-1.5 text-right tabular-nums text-slate-700 font-medium">{num(r.entraram)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-700 dark:text-zinc-300 font-medium">{num(r.entraram)}</td>
                     <td className="py-1.5 text-right tabular-nums text-teal-600">{num(r.responderam)}</td>
-                    <td className="py-1.5 text-right tabular-nums text-slate-500">
+                    <td className="py-1.5 text-right tabular-nums text-slate-500 dark:text-zinc-400">
                       {r.entraram > 0 ? `${num((r.responderam / r.entraram) * 100, 1)}%` : "—"}
                     </td>
                   </tr>
@@ -264,7 +264,7 @@ export default async function FunilPage({
 
         <div className="grid md:grid-cols-2 gap-5">
           <div>
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+            <h3 className="text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wide mb-2">
               Faturamento dos respondentes
             </h3>
             <div className="space-y-2">
@@ -273,12 +273,12 @@ export default async function FunilPage({
                 return (
                   <div key={d.valor}>
                     <div className="flex justify-between text-xs mb-0.5">
-                      <span className="text-slate-600">{d.valor}</span>
-                      <span className="font-semibold text-slate-900 tabular-nums">
-                        {num(d.n)} <span className="text-slate-400 font-normal">({num(pct, 0)}%)</span>
+                      <span className="text-slate-600 dark:text-zinc-400">{d.valor}</span>
+                      <span className="font-semibold text-slate-900 dark:text-zinc-100 tabular-nums">
+                        {num(d.n)} <span className="text-slate-400 dark:text-zinc-500 font-normal">({num(pct, 0)}%)</span>
                       </span>
                     </div>
-                    <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div className="h-2.5 rounded-full bg-slate-100 dark:bg-white/[0.07] overflow-hidden">
                       <div className="h-full rounded-full bg-teal-500" style={{ width: `${Math.max(2, pct)}%` }} />
                     </div>
                   </div>
@@ -287,7 +287,7 @@ export default async function FunilPage({
             </div>
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+            <h3 className="text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wide mb-2">
               Nº de imóveis dos respondentes
             </h3>
             <div className="space-y-2">
@@ -296,12 +296,12 @@ export default async function FunilPage({
                 return (
                   <div key={d.valor}>
                     <div className="flex justify-between text-xs mb-0.5">
-                      <span className="text-slate-600">{d.valor}</span>
-                      <span className="font-semibold text-slate-900 tabular-nums">
-                        {num(d.n)} <span className="text-slate-400 font-normal">({num(pct, 0)}%)</span>
+                      <span className="text-slate-600 dark:text-zinc-400">{d.valor}</span>
+                      <span className="font-semibold text-slate-900 dark:text-zinc-100 tabular-nums">
+                        {num(d.n)} <span className="text-slate-400 dark:text-zinc-500 font-normal">({num(pct, 0)}%)</span>
                       </span>
                     </div>
-                    <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div className="h-2.5 rounded-full bg-slate-100 dark:bg-white/[0.07] overflow-hidden">
                       <div className="h-full rounded-full bg-rose-500" style={{ width: `${Math.max(2, pct)}%` }} />
                     </div>
                   </div>
@@ -311,7 +311,7 @@ export default async function FunilPage({
           </div>
         </div>
 
-        <p className="mt-4 text-xs text-slate-400">
+        <p className="mt-4 text-xs text-slate-400 dark:text-zinc-500">
           A tabela semanal respeita o período selecionado acima. As barras de perfil são sobre todos
           os {num(surveyTotal)} respondentes (a pesquisa só captura leads novos, então cobre quem
           entrou após ela ir ao ar, ~abril/2026).
@@ -343,23 +343,23 @@ export default async function FunilPage({
                     </span>
                   </div>
                   {i < stages.length - 1 && (
-                    <div className="text-slate-300 leading-none my-1 text-xs">▼</div>
+                    <div className="text-slate-300 dark:text-zinc-600 leading-none my-1 text-xs">▼</div>
                   )}
                 </div>
               );
             })}
           </div>
-          <div className="mt-5 border-t border-slate-100 pt-4">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+          <div className="mt-5 border-t border-slate-100 dark:border-white/[0.06] pt-4">
+            <h3 className="text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wide mb-2">
               Situação atual dos leads (30 dias)
             </h3>
             <table className="w-full text-sm">
               <tbody>
                 {byStatus.map(([status, count]) => (
-                  <tr key={status} className="border-b border-slate-50 last:border-0">
-                    <td className="py-1.5 text-slate-600">{STATUS_LABELS[status] ?? status}</td>
-                    <td className="py-1.5 text-right font-medium text-slate-900">{num(count)}</td>
-                    <td className="py-1.5 text-right text-slate-400 w-16">
+                  <tr key={status} className="border-b border-slate-50 dark:border-white/[0.04] last:border-0">
+                    <td className="py-1.5 text-slate-600 dark:text-zinc-400">{STATUS_LABELS[status] ?? status}</td>
+                    <td className="py-1.5 text-right font-medium text-slate-900 dark:text-zinc-100">{num(count)}</td>
+                    <td className="py-1.5 text-right text-slate-400 dark:text-zinc-500 w-16">
                       {num((count / leads30.length) * 100, 1)}%
                     </td>
                   </tr>
@@ -378,7 +378,7 @@ export default async function FunilPage({
             title="Lista de espera do time de vendas (por tag)"
             className="lg:col-span-3"
           >
-            <p className="text-xs text-slate-500 mb-3">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
               {num(waitingTotal)} contatos marcados no Mailchimp para atendimento
               ativo, separados da base fria/newsletter.
             </p>
@@ -386,13 +386,13 @@ export default async function FunilPage({
               {byWaitingBucket.map(([label, count]) => (
                 <div
                   key={label}
-                  className="rounded-lg bg-amber-50 border border-amber-200 p-4"
+                  className="rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 p-4"
                 >
-                  <div className="text-xs text-amber-700">{label}</div>
-                  <div className="text-xl font-bold tabular-nums text-slate-900 mt-1">
+                  <div className="text-xs text-amber-700 dark:text-amber-300">{label}</div>
+                  <div className="text-xl font-bold tabular-nums text-slate-900 dark:text-zinc-100 mt-1">
                     {num(count)}
                   </div>
-                  <div className="text-xs text-slate-400 mt-0.5">
+                  <div className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">
                     {num((count / waitingTotal) * 100, 1)}% da lista
                   </div>
                 </div>
@@ -407,13 +407,13 @@ export default async function FunilPage({
               {byPipelineStage.map(([stage, count]) => (
                 <div
                   key={stage}
-                  className="rounded-lg bg-slate-50 border border-slate-200 p-4"
+                  className="rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 p-4"
                 >
-                  <div className="text-xs text-slate-500">{stage}</div>
-                  <div className="text-xl font-bold tabular-nums text-slate-900 mt-1">
+                  <div className="text-xs text-slate-500 dark:text-zinc-400">{stage}</div>
+                  <div className="text-xl font-bold tabular-nums text-slate-900 dark:text-zinc-100 mt-1">
                     {num(count)}
                   </div>
-                  <div className="text-xs text-slate-400 mt-0.5">
+                  <div className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">
                     {num((count / pipelineTotal) * 100, 1)}% dos contatos
                   </div>
                 </div>

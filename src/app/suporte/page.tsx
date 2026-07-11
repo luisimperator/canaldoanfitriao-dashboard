@@ -58,7 +58,7 @@ export default async function SuportePage({
         subtitle="Atendimento pós-venda ao cliente. Consulte o cliente, acompanhe a fila de casos escalados e treine a IA."
       />
 
-      <div className="mb-6 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+      <div className="mb-6 rounded-lg border border-sky-200 bg-sky-50 dark:bg-sky-500/10 px-4 py-3 text-sm text-sky-800">
         <strong>Fases 1 e 2 no ar:</strong> consulta do cliente, fila de handoff,
         treinamento e o <Link href="/suporte/simulador" className="underline font-medium">cérebro
         de IA</Link> (responde × escala). Falta a Fase 3: ligar no WhatsApp pela
@@ -79,7 +79,7 @@ export default async function SuportePage({
             name="email"
             defaultValue={email}
             placeholder="e-mail cadastrado na compra"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
           />
           <button
             type="submit"
@@ -90,21 +90,21 @@ export default async function SuportePage({
         </form>
 
         {lookup && "error" in lookup && (
-          <p className="mt-3 text-sm text-rose-600">{lookup.error}</p>
+          <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">{lookup.error}</p>
         )}
 
         {lookup && !("error" in lookup) && (
           <div className="mt-4">
             {!lookup.found ? (
-              <p className="text-sm text-slate-600">{lookup.resumo}</p>
+              <p className="text-sm text-slate-600 dark:text-zinc-400">{lookup.resumo}</p>
             ) : (
               <>
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                       lookup.isCliente
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-slate-100 text-slate-600"
+                        ? "bg-emerald-100 text-emerald-700 dark:text-emerald-300"
+                        : "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400"
                     }`}
                   >
                     {lookup.isCliente ? "Cliente" : "Não é cliente"}
@@ -113,15 +113,15 @@ export default async function SuportePage({
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         lookup.assinatura.ativa
-                          ? "bg-sky-100 text-sky-700"
-                          : "bg-slate-100 text-slate-600"
+                          ? "bg-sky-100 text-sky-700 dark:text-sky-300"
+                          : "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400"
                       }`}
                     >
                       Assinatura {lookup.assinatura.ativa ? "ativa" : "inativa"}
                     </span>
                   )}
                   {lookup.inadimplente && (
-                    <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700">
+                    <span className="rounded-full bg-rose-100 dark:bg-rose-500/15 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:text-rose-300">
                       ⚠️ Inadimplente
                     </span>
                   )}
@@ -134,7 +134,7 @@ export default async function SuportePage({
                   <Field label="Documento" value={lookup.documento} />
                 </div>
 
-                <p className="mb-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                <p className="mb-4 rounded-lg bg-slate-50 dark:bg-white/[0.04] px-3 py-2 text-sm text-slate-700 dark:text-zinc-300">
                   {lookup.resumo}
                 </p>
 
@@ -142,7 +142,7 @@ export default async function SuportePage({
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                        <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                           <th className="py-2 font-medium">Produto</th>
                           <th className="py-2 font-medium">Origem</th>
                           <th className="py-2 font-medium text-right">Valor</th>
@@ -152,25 +152,25 @@ export default async function SuportePage({
                       </thead>
                       <tbody>
                         {lookup.compras.map((c, i) => (
-                          <tr key={i} className="border-b border-slate-100 last:border-0">
-                            <td className="py-1.5 text-slate-700">
+                          <tr key={i} className="border-b border-slate-100 dark:border-white/[0.06] last:border-0">
+                            <td className="py-1.5 text-slate-700 dark:text-zinc-300">
                               {c.produto ?? "—"}
                               {c.assinatura && (
-                                <span className="ml-1.5 rounded bg-sky-50 px-1 text-[10px] font-medium text-sky-600">
+                                <span className="ml-1.5 rounded bg-sky-50 dark:bg-sky-500/10 px-1 text-[10px] font-medium text-sky-600">
                                   recorrente
                                 </span>
                               )}
                             </td>
-                            <td className="py-1.5 text-slate-500">
+                            <td className="py-1.5 text-slate-500 dark:text-zinc-400">
                               {c.fonte === "eduzz" ? "Eduzz" : "TMB"}
                             </td>
-                            <td className="py-1.5 text-right tabular-nums text-slate-600">
+                            <td className="py-1.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">
                               {c.valor != null ? brl(c.valor) : "—"}
                             </td>
-                            <td className="py-1.5 text-slate-600">
+                            <td className="py-1.5 text-slate-600 dark:text-zinc-400">
                               {c.status ? STATUS_PT[c.status] ?? c.status : "—"}
                             </td>
-                            <td className="py-1.5 text-right text-slate-500 tabular-nums whitespace-nowrap">
+                            <td className="py-1.5 text-right text-slate-500 dark:text-zinc-400 tabular-nums whitespace-nowrap">
                               {fmtDate(c.data)}
                             </td>
                           </tr>
@@ -182,15 +182,15 @@ export default async function SuportePage({
 
                 {lookup.parcelados.length > 0 && (
                   <div className="mt-4">
-                    <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                    <h3 className="text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wide mb-2">
                       Parcelados (TMB)
                     </h3>
                     {lookup.parcelados.map((p) => (
                       <div
                         key={p.pedidoId}
-                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 mb-2"
+                        className="rounded-lg border border-slate-200 dark:border-white/10 px-3 py-2 text-sm text-slate-600 dark:text-zinc-400 mb-2"
                       >
-                        <span className="font-medium text-slate-800">{p.produto ?? "Pedido"}</span> ·{" "}
+                        <span className="font-medium text-slate-800 dark:text-zinc-200">{p.produto ?? "Pedido"}</span> ·{" "}
                         {p.statusFinanceiro ?? "—"} · {p.parcelas ?? "?"}x de{" "}
                         {p.valorParcela != null ? brl(p.valorParcela) : "—"}
                         {p.melhorDiaPagamento != null && ` · vence dia ${p.melhorDiaPagamento}`}
@@ -213,10 +213,10 @@ export default async function SuportePage({
       </Card>
 
       <div className="flex flex-wrap gap-4 text-sm">
-        <Link href="/suporte/simulador" className="font-semibold text-rose-600 hover:text-rose-500">
+        <Link href="/suporte/simulador" className="font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-500">
           → Simular atendimento da IA
         </Link>
-        <Link href="/suporte/treinamento" className="font-semibold text-rose-600 hover:text-rose-500">
+        <Link href="/suporte/treinamento" className="font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-500">
           → Treinar a IA (base de conhecimento)
         </Link>
       </div>
@@ -227,8 +227,8 @@ export default async function SuportePage({
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="flex gap-2">
-      <span className="text-slate-400">{label}:</span>
-      <span className="text-slate-700 break-all">{value || "—"}</span>
+      <span className="text-slate-400 dark:text-zinc-500">{label}:</span>
+      <span className="text-slate-700 dark:text-zinc-300 break-all">{value || "—"}</span>
     </div>
   );
 }

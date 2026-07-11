@@ -84,7 +84,7 @@ export default async function FunilCrmPage() {
       <div>
         <PageHeader title="Funil CRM (Unnichat)" subtitle="Pipeline de vendas, etapa a etapa" />
         <Card>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-zinc-400">
             Sem snapshot do pipeline ainda. Ele vem do export do CRM do Unnichat.
           </p>
         </Card>
@@ -135,18 +135,18 @@ export default async function FunilCrmPage() {
             return (
               <div key={s.etapa}>
                 <div className="flex justify-between items-baseline text-sm mb-1">
-                  <span className="text-slate-700">{s.etapa}</span>
-                  <span className="text-slate-900 font-semibold">
+                  <span className="text-slate-700 dark:text-zinc-300">{s.etapa}</span>
+                  <span className="text-slate-900 dark:text-zinc-100 font-semibold">
                     {num(s.count)}
                     {s.valor > 0 && (
-                      <span className="text-emerald-600 font-normal"> · {brl(s.valor)}</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-normal"> · {brl(s.valor)}</span>
                     )}
                     {s.dias_mediana !== null && s.dias_mediana >= 7 && (
                       <span className="text-rose-500 font-normal"> · {s.dias_mediana}d parado</span>
                     )}
                   </span>
                 </div>
-                <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-3 rounded-full bg-slate-100 dark:bg-white/[0.07] overflow-hidden">
                   <div
                     className={`h-full rounded-full ${stageColor(s.etapa)}`}
                     style={{ width: `${Math.max(2, pct)}%` }}
@@ -156,7 +156,7 @@ export default async function FunilCrmPage() {
             );
           })}
         </div>
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-400 dark:text-zinc-500">
           Foto do pipeline em {new Date(crm.as_of).toLocaleDateString("pt-BR")} ({num(t.deals)}{" "}
           negócios). Vermelho = parado (gargalo); verde = perto do fechamento. Os webhooks por
           etapa mantêm o histórico de transições vivo daqui pra frente.
@@ -167,7 +167,7 @@ export default async function FunilCrmPage() {
         <Card title="Por atendente">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+              <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                 <th className="py-2 font-medium">Atendente</th>
                 <th className="py-2 font-medium text-right">Negócios</th>
                 <th className="py-2 font-medium text-right">Valor</th>
@@ -175,10 +175,10 @@ export default async function FunilCrmPage() {
             </thead>
             <tbody>
               {crm.by_atendente.map((a) => (
-                <tr key={a.nome} className="border-b border-slate-100 last:border-0">
-                  <td className="py-1.5 text-slate-700">{a.nome}</td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-600">{num(a.count)}</td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-900 font-medium">
+                <tr key={a.nome} className="border-b border-slate-100 dark:border-white/[0.06] last:border-0">
+                  <td className="py-1.5 text-slate-700 dark:text-zinc-300">{a.nome}</td>
+                  <td className="py-1.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">{num(a.count)}</td>
+                  <td className="py-1.5 text-right tabular-nums text-slate-900 dark:text-zinc-100 font-medium">
                     {brl(a.valor)}
                   </td>
                 </tr>
@@ -189,14 +189,14 @@ export default async function FunilCrmPage() {
 
         <Card title="Motivos de perda">
           {crm.motivos_perda.length === 0 ? (
-            <p className="text-sm text-slate-400">Sem perdas registradas.</p>
+            <p className="text-sm text-slate-400 dark:text-zinc-500">Sem perdas registradas.</p>
           ) : (
             <table className="w-full text-sm">
               <tbody>
                 {crm.motivos_perda.map((m) => (
-                  <tr key={m.razao} className="border-b border-slate-100 last:border-0">
-                    <td className="py-1.5 text-slate-700">{m.razao}</td>
-                    <td className="py-1.5 text-right tabular-nums text-slate-900 font-medium">
+                  <tr key={m.razao} className="border-b border-slate-100 dark:border-white/[0.06] last:border-0">
+                    <td className="py-1.5 text-slate-700 dark:text-zinc-300">{m.razao}</td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-900 dark:text-zinc-100 font-medium">
                       {num(m.count)}
                     </td>
                   </tr>
@@ -204,7 +204,7 @@ export default async function FunilCrmPage() {
               </tbody>
             </table>
           )}
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-slate-400 dark:text-zinc-500">
             Dica: hoje 100% das perdas estão como &quot;motivo não informado&quot;. Pedir o motivo
             ao fechar perdido vira inteligência de objeção.
           </p>
@@ -213,7 +213,7 @@ export default async function FunilCrmPage() {
 
       <Card title="Taxa de fechamento por vendedor (semanal)" className="mb-4">
         {closing.length === 0 ? (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-400 dark:text-zinc-500">
             Começando a coletar agora. Cada movimento no Unnichat carimba o vendedor
             (via API) — os números de quem passou × quem fechou aparecem aqui conforme
             o time atende e fecha.
@@ -222,7 +222,7 @@ export default async function FunilCrmPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                   <th className="py-2 font-medium">Vendedor</th>
                   <th className="py-2 font-medium">Semana</th>
                   <th className="py-2 font-medium text-right">Passaram</th>
@@ -232,19 +232,19 @@ export default async function FunilCrmPage() {
               </thead>
               <tbody>
                 {closing.slice(0, 20).map((r, i) => (
-                  <tr key={i} className="border-b border-slate-100 last:border-0">
-                    <td className="py-1.5 text-slate-700">{r.seller}</td>
-                    <td className="py-1.5 text-slate-500 tabular-nums">
+                  <tr key={i} className="border-b border-slate-100 dark:border-white/[0.06] last:border-0">
+                    <td className="py-1.5 text-slate-700 dark:text-zinc-300">{r.seller}</td>
+                    <td className="py-1.5 text-slate-500 dark:text-zinc-400 tabular-nums">
                       {new Date(r.period + "T00:00:00").toLocaleDateString("pt-BR", {
                         day: "2-digit",
                         month: "2-digit",
                       })}
                     </td>
-                    <td className="py-1.5 text-right tabular-nums text-slate-600">{num(r.passaram)}</td>
-                    <td className="py-1.5 text-right tabular-nums text-slate-600">{num(r.fecharam)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">{num(r.passaram)}</td>
+                    <td className="py-1.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">{num(r.fecharam)}</td>
                     <td
                       className={`py-1.5 text-right tabular-nums font-semibold ${
-                        r.taxa !== null && r.taxa >= 20 ? "text-emerald-600" : "text-slate-700"
+                        r.taxa !== null && r.taxa >= 20 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-700 dark:text-zinc-300"
                       }`}
                     >
                       {r.taxa !== null ? `${num(r.taxa, 1)}%` : "—"}
@@ -255,7 +255,7 @@ export default async function FunilCrmPage() {
             </table>
           </div>
         )}
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-400 dark:text-zinc-500">
           &quot;Passaram&quot; = contatos distintos que o vendedor tocou na semana;
           &quot;Fecharam&quot; = os que viraram ganho. Coleta daqui pra frente.
         </p>
@@ -266,7 +266,7 @@ export default async function FunilCrmPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 border-b border-slate-200">
+                <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                   <th className="py-2 font-medium">Quando</th>
                   <th className="py-2 font-medium">Contato</th>
                   <th className="py-2 font-medium">Etapa</th>
@@ -274,12 +274,12 @@ export default async function FunilCrmPage() {
               </thead>
               <tbody>
                 {events.map((e, i) => (
-                  <tr key={i} className="border-b border-slate-100 last:border-0">
-                    <td className="py-1.5 text-slate-500 tabular-nums whitespace-nowrap">
+                  <tr key={i} className="border-b border-slate-100 dark:border-white/[0.06] last:border-0">
+                    <td className="py-1.5 text-slate-500 dark:text-zinc-400 tabular-nums whitespace-nowrap">
                       {fmt(e.event_at)}
                     </td>
-                    <td className="py-1.5 text-slate-700">{e.name ?? "—"}</td>
-                    <td className="py-1.5 text-slate-600">{e.stage ?? "—"}</td>
+                    <td className="py-1.5 text-slate-700 dark:text-zinc-300">{e.name ?? "—"}</td>
+                    <td className="py-1.5 text-slate-600 dark:text-zinc-400">{e.stage ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

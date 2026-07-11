@@ -25,7 +25,7 @@ export default async function TreinamentoPage() {
         subtitle="A base de conhecimento que o atendimento automático usa para responder. Organize por bloco; quanto melhor o conteúdo, mais casos a IA resolve sozinha."
       />
       <div className="mb-4 text-sm">
-        <Link href="/suporte" className="text-slate-500 hover:text-slate-800">
+        <Link href="/suporte" className="text-slate-500 dark:text-zinc-400 hover:text-slate-800">
           ← Voltar pro Suporte
         </Link>
       </div>

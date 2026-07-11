@@ -235,7 +235,7 @@ export default async function VendasPage({
       {/* Seletor GLOBAL da página: os cards abaixo e o gráfico mensal seguem
           este período — é aqui que se compara os ratios ao longo do tempo. */}
       <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="text-xs text-slate-500">Período dos indicadores</span>
+        <span className="text-xs text-slate-500 dark:text-zinc-400">Período dos indicadores</span>
         <DateRangePicker placeholder="Últimos 30 dias" />
       </div>
 
@@ -279,11 +279,11 @@ export default async function VendasPage({
             {[w7, w30, w90].map(
               (w) =>
                 w && (
-                  <div key={w.days} className="rounded-lg bg-slate-50 px-3 py-2.5 text-center">
-                    <p className="text-2xl font-bold text-slate-900 tabular-nums">
+                  <div key={w.days} className="rounded-lg bg-slate-50 dark:bg-white/[0.04] px-3 py-2.5 text-center">
+                    <p className="text-2xl font-bold text-slate-900 dark:text-zinc-100 tabular-nums">
                       {num(w.perBusinessDay, 1)}
                     </p>
-                    <p className="text-[11px] text-slate-500 leading-tight">
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-tight">
                       MQL/dia útil
                       <br />
                       {w.effectiveDays < w.days
@@ -297,7 +297,7 @@ export default async function VendasPage({
 
           {mqlPerMonth !== null && (
             <>
-              <p className="text-sm text-slate-700 mb-2">
+              <p className="text-sm text-slate-700 dark:text-zinc-300 mb-2">
                 No ritmo dos últimos 30 dias, o funil gera{" "}
                 <strong>~{num(mqlPerMonth)} MQL/mês</strong>
                 {vendasCurso30 > 0 && (
@@ -313,7 +313,7 @@ export default async function VendasPage({
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs text-slate-400">
+                    <tr className="text-left text-xs text-slate-400 dark:text-zinc-500">
                       <th className="py-1.5 font-medium">Time</th>
                       <th className="py-1.5 font-medium text-right">MQL/vendedor/mês</th>
                       <th className="py-1.5 font-medium text-right">MQL/vendedor/dia útil</th>
@@ -331,19 +331,19 @@ export default async function VendasPage({
                       return (
                         <tr
                           key={team}
-                          className={`border-t border-slate-100 ${isNow ? "bg-rose-50/50" : ""}`}
+                          className={`border-t border-slate-100 dark:border-white/[0.06] ${isNow ? "bg-rose-50/50" : ""}`}
                         >
-                          <td className="py-1.5 text-slate-700">
+                          <td className="py-1.5 text-slate-700 dark:text-zinc-300">
                             {team} vendedores{isNow ? " (hoje)" : ""}
                           </td>
-                          <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900">
+                          <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900 dark:text-zinc-100">
                             {num(perSeller, 0)}
                           </td>
-                          <td className="py-1.5 text-right tabular-nums text-slate-700">
+                          <td className="py-1.5 text-right tabular-nums text-slate-700 dark:text-zinc-300">
                             {num(perSeller / 21, 1)}
                           </td>
                           {vendasTime30 > 0 && (
-                            <td className="py-1.5 text-right tabular-nums text-slate-700">
+                            <td className="py-1.5 text-right tabular-nums text-slate-700 dark:text-zinc-300">
                               ~{num(vendasTime30 / team, 1)}
                             </td>
                           )}
@@ -356,7 +356,7 @@ export default async function VendasPage({
             </>
           )}
 
-          <p className="text-xs text-slate-400 mt-3">
+          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-3">
             MQL novo = contato na data em que RECEBEU a tag de qualificação (lead-a5e,
             lead-gigantes, lead-quente, lead-muito-quente ou lead-frio; histórico do CRM
             {mqlFlow.historySince
@@ -376,31 +376,31 @@ export default async function VendasPage({
           {selectedMonth > firstMonth ? (
             <Link
               href={`/vendas?mes=${shiftMonth(selectedMonth, -1)}`}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+              className="rounded-lg border border-slate-200 dark:border-white/10 px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-white/5"
             >
               ◀ {monthLabel(shiftMonth(selectedMonth, -1))}
             </Link>
           ) : (
-            <span className="px-3 py-1.5 text-sm text-slate-300">◀</span>
+            <span className="px-3 py-1.5 text-sm text-slate-300 dark:text-zinc-600">◀</span>
           )}
-          <span className="min-w-44 text-center text-sm font-semibold text-slate-900">
+          <span className="min-w-44 text-center text-sm font-semibold text-slate-900 dark:text-zinc-100">
             {monthTitle(selectedMonth)}
           </span>
           {!isCurrentMonth ? (
             <Link
               href={`/vendas?mes=${shiftMonth(selectedMonth, 1)}`}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+              className="rounded-lg border border-slate-200 dark:border-white/10 px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-white/5"
             >
               {monthLabel(shiftMonth(selectedMonth, 1))} ▶
             </Link>
           ) : (
-            <span className="px-3 py-1.5 text-sm text-slate-300">▶</span>
+            <span className="px-3 py-1.5 text-sm text-slate-300 dark:text-zinc-600">▶</span>
           )}
         </div>
         <div className="overflow-x-auto -mx-5 px-5">
         <table className="w-full text-sm min-w-[640px] tabular-nums">
           <thead>
-            <tr className="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
+            <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 uppercase tracking-wide border-b border-slate-200 dark:border-white/10">
               <th className="py-2">Vendedor</th>
               {isCurrentMonth && <th className="py-2 text-right">Hoje</th>}
               <th className="py-2 text-right">No mês</th>
@@ -412,13 +412,13 @@ export default async function VendasPage({
           </thead>
           <tbody>
             {stats.map((s) => (
-              <tr key={s.seller.id} className="border-b border-slate-50 last:border-0">
-                <td className="py-2.5 font-medium text-slate-900">{s.seller.name}</td>
+              <tr key={s.seller.id} className="border-b border-slate-50 dark:border-white/[0.04] last:border-0">
+                <td className="py-2.5 font-medium text-slate-900 dark:text-zinc-100">{s.seller.name}</td>
                 {isCurrentMonth && <td className="py-2.5 text-right">{num(s.salesToday)}</td>}
                 <td className="py-2.5 text-right font-semibold">{num(s.salesMonth)}</td>
                 <td className="py-2.5 text-right">{brl(s.revenueMonth)}</td>
-                <td className="py-2.5 text-right text-slate-500">{num(s.salesPrevMonth)}</td>
-                <td className="py-2.5 text-right text-slate-500">{num(s.leadsAssignedMonth)}</td>
+                <td className="py-2.5 text-right text-slate-500 dark:text-zinc-400">{num(s.salesPrevMonth)}</td>
+                <td className="py-2.5 text-right text-slate-500 dark:text-zinc-400">{num(s.leadsAssignedMonth)}</td>
                 <td className="py-2.5 text-right">
                   {s.leadsPerSaleMonth !== null ? num(s.leadsPerSaleMonth, 1) : "—"}
                 </td>
@@ -427,7 +427,7 @@ export default async function VendasPage({
           </tbody>
         </table>
         </div>
-        <p className="text-xs text-slate-400 mt-3">
+        <p className="text-xs text-slate-400 dark:text-zinc-500 mt-3">
           “Leads por venda” = leads quentes encaminhados ao vendedor no mês ÷ vendas fechadas no
           mês. Quanto menor, melhor o aproveitamento.
         </p>
@@ -435,7 +435,7 @@ export default async function VendasPage({
 
       <Card title={`Compradores de curso × temperatura — ${monthTitle(selectedMonth)}`} className="mb-4">
         {compradoresMes === 0 ? (
-          <p className="text-sm text-slate-500">Nenhuma venda de curso no mês selecionado.</p>
+          <p className="text-sm text-slate-500 dark:text-zinc-400">Nenhuma venda de curso no mês selecionado.</p>
         ) : (
           <>
             <div className="grid gap-5 md:grid-cols-3">
@@ -449,7 +449,7 @@ export default async function VendasPage({
                   );
                 })}
             </div>
-            <p className="mt-3 text-xs text-slate-400">
+            <p className="mt-3 text-xs text-slate-400 dark:text-zinc-500">
               Um comprador por e-mail; temperatura = tag mais alta que o lead já recebeu no CRM.
               &quot;Sem temperatura&quot; = está no CRM mas a automação não qualificou; &quot;fora do
               CRM&quot; = comprou pela base/e-mail (ou com e-mail diferente do WhatsApp).
@@ -460,7 +460,7 @@ export default async function VendasPage({
 
       <Card title="Velocidade no atendimento (speed-to-lead) — últimos 30 dias" className="mb-4">
         {speed.length === 0 ? (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-zinc-400">
             Sem dados de conversa ainda (ou a função do banco não foi aplicada — migração
             0005_speed_to_lead).
           </p>
@@ -491,7 +491,7 @@ export default async function VendasPage({
               />
             </div>
 
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 mb-3">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-zinc-400 mb-3">
               <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Dia 0</span>
               <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-400" /> D+1</span>
               <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-orange-500" /> D+2</span>
@@ -511,15 +511,15 @@ export default async function VendasPage({
                 return (
                   <div key={r.seller}>
                     <div className="flex items-baseline justify-between mb-1 text-sm">
-                      <span className="font-medium text-slate-900">{r.seller}</span>
-                      <span className="text-slate-500">
-                        <span className="font-semibold text-emerald-600">
+                      <span className="font-medium text-slate-900 dark:text-zinc-100">{r.seller}</span>
+                      <span className="text-slate-500 dark:text-zinc-400">
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                           {pct(r.d0, r.atribuidos)}%
                         </span>{" "}
                         no dia 0 · {num(r.atribuidos)} leads
                       </span>
                     </div>
-                    <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100">
+                    <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100 dark:bg-white/[0.07]">
                       {segs.map((s, i) =>
                         s.v > 0 ? (
                           <div
@@ -538,7 +538,7 @@ export default async function VendasPage({
             <div className="overflow-x-auto -mx-5 px-5 mt-4">
               <table className="w-full text-sm min-w-[560px] tabular-nums">
                 <thead>
-                  <tr className="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
+                  <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 uppercase tracking-wide border-b border-slate-200 dark:border-white/10">
                     <th className="py-2">Vendedor</th>
                     <th className="py-2 text-right">Atribuídos</th>
                     <th className="py-2 text-right">Dia 0</th>
@@ -550,22 +550,22 @@ export default async function VendasPage({
                 </thead>
                 <tbody>
                   {speed.map((r) => (
-                    <tr key={r.seller} className="border-b border-slate-50 last:border-0">
-                      <td className="py-2 font-medium text-slate-900">{r.seller}</td>
-                      <td className="py-2 text-right text-slate-500">{num(r.atribuidos)}</td>
-                      <td className="py-2 text-right font-semibold text-emerald-700">
+                    <tr key={r.seller} className="border-b border-slate-50 dark:border-white/[0.04] last:border-0">
+                      <td className="py-2 font-medium text-slate-900 dark:text-zinc-100">{r.seller}</td>
+                      <td className="py-2 text-right text-slate-500 dark:text-zinc-400">{num(r.atribuidos)}</td>
+                      <td className="py-2 text-right font-semibold text-emerald-700 dark:text-emerald-300">
                         {pct(r.d0, r.atribuidos)}%
                       </td>
                       <td className="py-2 text-right">{pct(r.d1, r.atribuidos)}%</td>
                       <td className="py-2 text-right">{pct(r.d2, r.atribuidos)}%</td>
                       <td className="py-2 text-right">{pct(r.d3plus, r.atribuidos)}%</td>
-                      <td className="py-2 text-right text-slate-500">{pct(r.nunca, r.atribuidos)}%</td>
+                      <td className="py-2 text-right text-slate-500 dark:text-zinc-400">{pct(r.nunca, r.atribuidos)}%</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-slate-400 mt-3">
+            <p className="text-xs text-slate-400 dark:text-zinc-500 mt-3">
               “Dia 0” = o vendedor mandou a 1ª mensagem humana no mesmo dia útil em que o lead
               chegou (exclui automações). D+1/D+2/D+3+ = dias ÚTEIS de atraso até a 1ª resposta
               (sexta→segunda = 1 dia, não conta fim de semana). “Não conversado” = nunca teve
@@ -594,10 +594,10 @@ export default async function VendasPage({
           <div
             className={`rounded-lg px-4 py-3 mb-4 text-sm font-semibold ${
               capTone === "good"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30"
                 : capTone === "warn"
-                  ? "bg-amber-50 text-amber-700 border border-amber-200"
-                  : "bg-rose-50 text-rose-700 border border-rose-200"
+                  ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30"
+                  : "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30"
             }`}
           >
             {capHeadline}
@@ -606,7 +606,7 @@ export default async function VendasPage({
             <div className="overflow-x-auto mb-3">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs text-slate-400">
+                  <tr className="text-left text-xs text-slate-400 dark:text-zinc-500">
                     <th className="py-1.5 font-medium">Tipo de dia</th>
                     <th className="py-1.5 font-medium text-right">dias</th>
                     <th className="py-1.5 font-medium text-right">leads</th>
@@ -616,24 +616,24 @@ export default async function VendasPage({
                 </thead>
                 <tbody>
                   {d0Load.map((r) => (
-                    <tr key={r.bucket} className="border-t border-slate-100">
-                      <td className="py-1.5 text-slate-700">
+                    <tr key={r.bucket} className="border-t border-slate-100 dark:border-white/[0.06]">
+                      <td className="py-1.5 text-slate-700 dark:text-zinc-300">
                         {r.bucket === "calmo"
                           ? "Calmo (≤10 leads)"
                           : r.bucket === "medio"
                             ? "Médio (11-25)"
                             : "Pico (>25)"}
                       </td>
-                      <td className="py-1.5 text-right tabular-nums text-slate-500">{num(r.dias)}</td>
-                      <td className="py-1.5 text-right tabular-nums text-slate-700">{num(r.leads)}</td>
+                      <td className="py-1.5 text-right tabular-nums text-slate-500 dark:text-zinc-400">{num(r.dias)}</td>
+                      <td className="py-1.5 text-right tabular-nums text-slate-700 dark:text-zinc-300">{num(r.leads)}</td>
                       <td
                         className={`py-1.5 text-right font-semibold tabular-nums ${
-                          r.leads > 0 && r.d0 / r.leads >= 0.6 ? "text-emerald-600" : "text-slate-900"
+                          r.leads > 0 && r.d0 / r.leads >= 0.6 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-zinc-100"
                         }`}
                       >
                         {r.leads > 0 ? `${num((r.d0 / r.leads) * 100, 0)}%` : "—"}
                       </td>
-                      <td className="py-1.5 text-right tabular-nums text-slate-500">
+                      <td className="py-1.5 text-right tabular-nums text-slate-500 dark:text-zinc-400">
                         {r.leads > 0 ? `${num((r.nunca / r.leads) * 100, 0)}%` : "—"}
                       </td>
                     </tr>
@@ -644,21 +644,21 @@ export default async function VendasPage({
           )}
           <dl className="space-y-2.5 text-sm">
             <div className="flex justify-between">
-              <dt className="text-slate-600">Leads atribuídos (30 dias)</dt>
-              <dd className="font-semibold text-slate-900">{num(speedTotal.atribuidos)}</dd>
+              <dt className="text-slate-600 dark:text-zinc-400">Leads atribuídos (30 dias)</dt>
+              <dd className="font-semibold text-slate-900 dark:text-zinc-100">{num(speedTotal.atribuidos)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-600">Atendidos no mesmo dia útil (geral)</dt>
-              <dd className="font-semibold text-slate-900">
+              <dt className="text-slate-600 dark:text-zinc-400">Atendidos no mesmo dia útil (geral)</dt>
+              <dd className="font-semibold text-slate-900 dark:text-zinc-100">
                 {d0Rate !== null ? `${num(d0Rate * 100, 0)}%` : "—"}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-600">Time atual (vendedores ativos)</dt>
-              <dd className="font-semibold text-slate-900">{num(activeSellers)}</dd>
+              <dt className="text-slate-600 dark:text-zinc-400">Time atual (vendedores ativos)</dt>
+              <dd className="font-semibold text-slate-900 dark:text-zinc-100">{num(activeSellers)}</dd>
             </div>
           </dl>
-          <p className="text-xs text-slate-400 mt-4">
+          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-4">
             Como ler: se o dia 0 é alto no pico (todo mundo mobilizado) e baixo no dia calmo, o
             gargalo é rotina/processo — contratar não muda isso; um alerta de lead novo + meta de
             resposta no dia muda. Só se o pico for pior que o calmo é que falta gente. Dia 0 = 1ª
@@ -685,12 +685,12 @@ const PERFIL_DOT: Record<string, string> = {
 function PerfilTable({ titulo, rows }: { titulo: string; rows: { perfil: string; n: number }[] }) {
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">{titulo}</p>
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">{titulo}</p>
       <table className="w-full text-sm">
         <tbody>
           {rows.map((r) => (
-            <tr key={r.perfil} className="border-t border-slate-100">
-              <td className="py-1.5 text-slate-700">
+            <tr key={r.perfil} className="border-t border-slate-100 dark:border-white/[0.06]">
+              <td className="py-1.5 text-slate-700 dark:text-zinc-300">
                 <span className="inline-flex items-center gap-1.5">
                   {PERFIL_DOT[r.perfil] && (
                     <span
@@ -701,7 +701,7 @@ function PerfilTable({ titulo, rows }: { titulo: string; rows: { perfil: string;
                   {r.perfil}
                 </span>
               </td>
-              <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900 w-10">
+              <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900 dark:text-zinc-100 w-10">
                 {r.n}
               </td>
             </tr>

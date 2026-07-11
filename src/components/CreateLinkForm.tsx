@@ -28,8 +28,8 @@ export function CreateLinkForm() {
   });
 
   const upd = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
-  const field = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
-  const lbl = "block text-xs font-semibold text-slate-600 mb-1";
+  const field = "w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm";
+  const lbl = "block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1";
 
   async function submit() {
     setBusy(true);
@@ -67,7 +67,7 @@ export function CreateLinkForm() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+    <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-5 space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className={lbl}>Apelido (vira o nome do link e o rastreio)</label>
@@ -125,7 +125,7 @@ export function CreateLinkForm() {
         </div>
         <div className="sm:col-span-2">
           <label className={lbl}>
-            URL do vídeo no YouTube <span className="font-normal text-slate-400">(opcional, pra mostrar a miniatura depois do upload)</span>
+            URL do vídeo no YouTube <span className="font-normal text-slate-400 dark:text-zinc-500">(opcional, pra mostrar a miniatura depois do upload)</span>
           </label>
           <input
             className={field}
@@ -135,7 +135,7 @@ export function CreateLinkForm() {
           />
         </div>
       </div>
-      {err && <p className="text-xs text-rose-600">{err}</p>}
+      {err && <p className="text-xs text-rose-600 dark:text-rose-400">{err}</p>}
       <div className="flex gap-2">
         <button
           onClick={submit}
@@ -146,7 +146,7 @@ export function CreateLinkForm() {
         </button>
         <button
           onClick={() => setOpen(false)}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          className="rounded-lg border border-slate-300 dark:border-white/15 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5"
         >
           Cancelar
         </button>

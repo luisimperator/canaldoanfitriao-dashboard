@@ -108,8 +108,8 @@ export default async function EncontroPage() {
       <div
         className={`mb-4 rounded-lg border px-4 py-3 text-sm font-semibold ${
           bateAntes
-            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-            : "border-amber-200 bg-amber-50 text-amber-700"
+            ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+            : "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300"
         }`}
       >
         {ritmo === 0
@@ -148,7 +148,7 @@ export default async function EncontroPage() {
           eventDate={ddmm(FIM_VENDAS)}
           eventLabel="último dia de venda"
         />
-        <p className="mt-2 text-xs text-slate-400">
+        <p className="mt-2 text-xs text-slate-400 dark:text-zinc-500">
           Linha cheia = acumulado vendido · tracejada = projeção no ritmo médio dos últimos 7
           dias · pontilhada = meta de {num(META)} · vertical = último dia de venda ({ddmm(FIM_VENDAS)}; o evento é {ddmm(EVENTO)}).
         </p>
@@ -157,7 +157,7 @@ export default async function EncontroPage() {
       <Card title="Por tipo de ingresso">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs text-slate-400">
+            <tr className="text-left text-xs text-slate-400 dark:text-zinc-500">
               <th className="py-1.5 font-medium">Tipo</th>
               <th className="py-1.5 font-medium text-right">Ingressos</th>
               <th className="py-1.5 font-medium text-right">Receita</th>
@@ -165,26 +165,26 @@ export default async function EncontroPage() {
           </thead>
           <tbody>
             {tipos.map((t) => (
-              <tr key={t.tipo} className="border-t border-slate-100">
-                <td className="py-1.5 text-slate-700">{t.tipo}</td>
-                <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900">
+              <tr key={t.tipo} className="border-t border-slate-100 dark:border-white/[0.06]">
+                <td className="py-1.5 text-slate-700 dark:text-zinc-300">{t.tipo}</td>
+                <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900 dark:text-zinc-100">
                   {num(t.n)}
                 </td>
-                <td className="py-1.5 text-right tabular-nums text-slate-700">{brl(t.receita)}</td>
+                <td className="py-1.5 text-right tabular-nums text-slate-700 dark:text-zinc-300">{brl(t.receita)}</td>
               </tr>
             ))}
-            <tr className="border-t border-slate-200">
-              <td className="py-1.5 font-semibold text-slate-900">Total</td>
-              <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900">
+            <tr className="border-t border-slate-200 dark:border-white/10">
+              <td className="py-1.5 font-semibold text-slate-900 dark:text-zinc-100">Total</td>
+              <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900 dark:text-zinc-100">
                 {num(vendidos)}
               </td>
-              <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900">
+              <td className="py-1.5 text-right font-semibold tabular-nums text-slate-900 dark:text-zinc-100">
                 {brl(receita)}
               </td>
             </tr>
           </tbody>
         </table>
-        <p className="mt-2 text-xs text-slate-400">
+        <p className="mt-2 text-xs text-slate-400 dark:text-zinc-500">
           Conta todo ingresso pago do 4º Encontro (Start, VIP, 2ª cadeiras e cortesias
           Black Friday — {num(cortesias)} saíram a R$ 0). Vendas via Eduzz.
         </p>

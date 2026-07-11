@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import type { TabDef } from "@/lib/access";
 import { InstallButton } from "@/components/InstallButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Navegação com estado "pendente": ao clicar, o item já fica destacado e mostra
 // um spinner na hora (feedback imediato), antes mesmo de a página carregar.
@@ -139,6 +140,7 @@ function Footer({
       <InstallButton />
       {email ? (
         <div className="flex items-center justify-between gap-2">
+          <ThemeToggle />
           <span className="truncate text-slate-400">{email}</span>
           <button
             onClick={logout}
@@ -168,7 +170,7 @@ export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null 
   return (
     <>
       {/* Celular: barra superior só com a marca + hambúrguer */}
-      <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 bg-slate-900 px-4 py-3 text-slate-200 shadow-md">
+      <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 bg-slate-900 dark:bg-[#0e0c17] px-4 py-3 text-slate-200 shadow-md">
         <button
           onClick={() => setOpen(true)}
           aria-label="Abrir menu"
@@ -180,13 +182,14 @@ export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null 
         </button>
         <span className="text-base font-bold text-white">Canal do Anfitrião</span>
         <span className="text-[11px] font-medium text-rose-400">dashboard</span>
+        <ThemeToggle className="ml-auto" />
       </header>
 
       {/* Celular: drawer lateral deslizante */}
       {open && (
         <div className="lg:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
-          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[85%] flex-col bg-slate-900 text-slate-200 shadow-2xl">
+          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[85%] flex-col bg-slate-900 dark:bg-[#0e0c17] text-slate-200 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 px-4 py-4">
               <Brand />
               <button
@@ -208,7 +211,7 @@ export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null 
       )}
 
       {/* Desktop: barra lateral fixa */}
-      <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-slate-900 text-slate-200">
+      <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-slate-900 dark:bg-[#0e0c17] text-slate-200">
         <div className="border-b border-slate-800 px-5 py-5">
           <Brand />
         </div>

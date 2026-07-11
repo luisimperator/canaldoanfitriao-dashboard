@@ -54,17 +54,17 @@ export function UploadExtrato() {
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={result.state === "sending"}
-        className="rounded-lg bg-slate-900 text-white text-sm font-medium px-4 py-2 hover:bg-slate-700 disabled:opacity-50"
+        className="rounded-lg bg-slate-900 dark:bg-violet-600 text-white text-sm font-medium px-4 py-2 hover:bg-slate-700 dark:hover:bg-violet-500 disabled:opacity-50"
       >
         {result.state === "sending" ? "Enviando…" : "Enviar extrato (OFX ou CSV)"}
       </button>
       {result.state === "ok" && (
-        <p className="text-sm text-emerald-600 mt-2">{result.message}</p>
+        <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-2">{result.message}</p>
       )}
       {result.state === "error" && (
-        <p className="text-sm text-rose-600 mt-2">{result.message}</p>
+        <p className="text-sm text-rose-600 dark:text-rose-400 mt-2">{result.message}</p>
       )}
-      <p className="text-xs text-slate-400 mt-2">
+      <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
         Baixe o extrato OFX no Internet Banking do Inter. Lançamentos repetidos são ignorados
         automaticamente. Quando a integração direta com o Inter estiver ativa, este passo deixa
         de ser necessário.

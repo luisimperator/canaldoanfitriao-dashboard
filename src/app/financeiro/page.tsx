@@ -60,8 +60,14 @@ export default async function FinanceiroPage({
           subtitle="Entradas e saídas da conta do Canal do Anfitrião (Banco Inter)"
         />
         <Link
+          href="/financeiro/projecao"
+          className="shrink-0 rounded-lg border border-slate-300 dark:border-white/15 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5"
+        >
+          📈 Projeção →
+        </Link>
+        <Link
           href="/financeiro/extrato"
-          className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700"
+          className="shrink-0 rounded-lg bg-slate-900 dark:bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-violet-500"
         >
           🏦 Extrato do banco →
         </Link>
@@ -69,7 +75,7 @@ export default async function FinanceiroPage({
       <DemoBanner show={data.isDemo} />
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="text-xs text-slate-500">Período (fluxo e despesas)</span>
+        <span className="text-xs text-slate-500 dark:text-zinc-400">Período (fluxo e despesas)</span>
         <DateRangePicker />
       </div>
 
@@ -100,17 +106,17 @@ export default async function FinanceiroPage({
           <table className="w-full text-sm">
             <tbody>
               {recent.map((t) => (
-                <tr key={t.id} className="border-b border-slate-50 last:border-0">
-                  <td className="py-2 text-slate-400 w-14">{shortDate(t.transactionDate)}</td>
-                  <td className="py-2 text-slate-700">
+                <tr key={t.id} className="border-b border-slate-50 dark:border-white/[0.04] last:border-0">
+                  <td className="py-2 text-slate-400 dark:text-zinc-500 w-14">{shortDate(t.transactionDate)}</td>
+                  <td className="py-2 text-slate-700 dark:text-zinc-300">
                     {t.description}
-                    <span className="block text-xs text-slate-400">
+                    <span className="block text-xs text-slate-400 dark:text-zinc-500">
                       {(t.categoryId && catName.get(t.categoryId)) || "Sem categoria"}
                     </span>
                   </td>
                   <td
                     className={`py-2 text-right font-medium whitespace-nowrap ${
-                      t.direction === "in" ? "text-emerald-600" : "text-rose-600"
+                      t.direction === "in" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
                     }`}
                   >
                     {t.direction === "in" ? "+" : "−"} {brl(t.amount)}
