@@ -45,7 +45,7 @@ export function GoalPaceChart({
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data} margin={{ top: 16, right: 16, bottom: 0, left: -16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
         <XAxis dataKey="date" tick={{ fontSize: 11 }} minTickGap={40} />
         <YAxis
           tick={{ fontSize: 11 }}
@@ -98,7 +98,7 @@ export function LeadsMqlChart({
   return (
     <ResponsiveContainer width="100%" height={280}>
       <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
         <XAxis dataKey="date" tick={{ fontSize: 11 }} minTickGap={32} />
         <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
         <Tooltip />
@@ -132,7 +132,7 @@ export function LeadsTrendChart({
   return (
     <ResponsiveContainer width="100%" height={280}>
       <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
         <XAxis dataKey="date" tick={{ fontSize: 11 }} minTickGap={32} />
         <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
         <Tooltip />
@@ -181,14 +181,14 @@ function SellerTooltip({
     .filter((r) => r.real > 0 || r.gap > 0);
   if (rows.length === 0) return null;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm">
-      <div className="font-semibold text-slate-900 mb-1">{label}</div>
+    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] px-3 py-2 text-xs shadow-sm">
+      <div className="font-semibold text-slate-900 dark:text-zinc-100 mb-1">{label}</div>
       {rows.map((r) => (
-        <div key={r.name} className="text-slate-600">
+        <div key={r.name} className="text-slate-600 dark:text-zinc-400">
           <span style={{ color: r.color }}>●</span> {r.name}:{" "}
-          <span className="font-medium text-slate-900">{brlTooltip(r.real)}</span>
+          <span className="font-medium text-slate-900 dark:text-zinc-100">{brlTooltip(r.real)}</span>
           {r.gap > 0 && (
-            <span className="text-slate-400"> → proj. {brlTooltip(r.real + r.gap)}</span>
+            <span className="text-slate-400 dark:text-zinc-500"> → proj. {brlTooltip(r.real + r.gap)}</span>
           )}
         </div>
       ))}
@@ -208,7 +208,7 @@ export function SalesBySellerChart({
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
         <XAxis dataKey="month" tick={{ fontSize: 11 }} minTickGap={16} />
         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
         <Tooltip
@@ -256,10 +256,10 @@ function TeamTooltip({
   const realizado = Number(payload.find((p) => p.dataKey === "realizado")?.value ?? 0);
   const gap = Number(payload.find((p) => p.dataKey === "projecao")?.value ?? 0);
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm">
-      <div className="font-semibold text-slate-900 mb-1">{label}</div>
-      <div className="text-slate-600">
-        Realizado: <span className="font-medium text-slate-900">{brlTooltip(realizado)}</span>
+    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] px-3 py-2 text-xs shadow-sm">
+      <div className="font-semibold text-slate-900 dark:text-zinc-100 mb-1">{label}</div>
+      <div className="text-slate-600 dark:text-zinc-400">
+        Realizado: <span className="font-medium text-slate-900 dark:text-zinc-100">{brlTooltip(realizado)}</span>
       </div>
       {gap > 0 && (
         <div className="mt-0.5 text-rose-400">
@@ -279,7 +279,7 @@ export function TeamHistoryChart({
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
         <XAxis dataKey="month" tick={{ fontSize: 11 }} minTickGap={16} />
         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
         <Tooltip content={<TeamTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
@@ -305,7 +305,7 @@ export function CashflowChart({
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
         <XAxis dataKey="month" tick={{ fontSize: 11 }} />
         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
         <Tooltip formatter={brlTooltip} />
@@ -328,7 +328,7 @@ export function CacRoasChart({
   return (
     <ResponsiveContainer width="100%" height={300}>
       <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
         <XAxis dataKey="month" tick={{ fontSize: 11 }} minTickGap={16} />
         <YAxis
           yAxisId="money"
@@ -376,7 +376,7 @@ export function BarsChart({
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
         <XAxis dataKey={xKey} tick={{ fontSize: 11 }} minTickGap={8} />
         <YAxis
           tick={{ fontSize: 11 }}
@@ -424,12 +424,41 @@ export function SpendByCategoryChart({
   return (
     <ResponsiveContainer width="100%" height={Math.max(180, data.length * 44)}>
       <BarChart data={data} layout="vertical" margin={{ top: 0, right: 16, bottom: 0, left: 40 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" horizontal={false} />
         <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
         <YAxis type="category" dataKey="category" tick={{ fontSize: 11 }} width={170} />
         <Tooltip formatter={brlTooltip} />
         <Bar dataKey="total" name="Total" fill="#e11d48" radius={[0, 3, 3, 0]} />
       </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// Projeção de saldo em 3 cenários: base sólida na cor da marca; conservador e
+// otimista tracejados em tinta neutra/verde. Linha do zero como referência
+// (abaixo dela = caixa negativo).
+export function ProjectionChart({
+  data,
+}: {
+  data: { mes: string; cons: number; base: number; otm: number }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+        <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+        <YAxis
+          tick={{ fontSize: 11 }}
+          tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`}
+          width={44}
+        />
+        <Tooltip formatter={brlTooltip} />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <ReferenceLine y={0} stroke="#f43f5e" strokeDasharray="2 5" />
+        <Line type="monotone" dataKey="otm" name="Otimista (+20%)" stroke="#10b981" strokeWidth={2} strokeDasharray="6 5" dot={false} />
+        <Line type="monotone" dataKey="base" name="Base (média 6m)" stroke="#e11d48" strokeWidth={2.5} dot={{ r: 3 }} />
+        <Line type="monotone" dataKey="cons" name="Conservador (−20%)" stroke="#94a3b8" strokeWidth={2} strokeDasharray="6 5" dot={false} />
+      </LineChart>
     </ResponsiveContainer>
   );
 }

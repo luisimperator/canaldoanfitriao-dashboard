@@ -45,7 +45,15 @@ export default async function RootLayout({
   if (access.isAdmin) visibleTabs.push(ADMIN_TAB);
 
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${geistSans.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        {/* Aplica o tema ANTES da hidratação (sem flash): escolha salva > preferência do sistema. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-full">
         <PwaRegister />
         <div className="flex min-h-screen flex-col lg:flex-row">

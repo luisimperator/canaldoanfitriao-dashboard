@@ -145,7 +145,7 @@ export default async function VisaoGeralPage() {
       <div className="grid lg:grid-cols-3 gap-4">
         <Card title="Leads e MQL por dia (últimos 60 dias)" className="lg:col-span-2">
           <LeadsMqlChart data={mqlSeries} />
-          <p className="text-xs text-slate-400 mt-2">
+          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
             MQL = contato que recebeu tag de qualificação (lead-a5e, lead-gigantes, lead-quente ou
             lead-muito-quente ou lead-frio — muito-frio fica fora), contado no dia em que a tag chegou. Taxa de qualificação nos últimos 30 dias:{" "}
             <strong>{taxaMql !== null ? `${num(taxaMql, 1)}%` : "—"}</strong> ({num(mql30)} MQL de{" "}
@@ -159,11 +159,11 @@ export default async function VisaoGeralPage() {
         <Card title="Funil (últimos 30 dias)" className="lg:col-span-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
             {stages.map((stage, i) => (
-              <div key={stage.label} className="rounded-lg bg-slate-50 border border-slate-200 p-4">
-                <div className="text-xs text-slate-500">{stage.label}</div>
-                <div className="text-xl font-bold text-slate-900 mt-1">{num(stage.count)}</div>
+              <div key={stage.label} className="rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 p-4">
+                <div className="text-xs text-slate-500 dark:text-zinc-400">{stage.label}</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-zinc-100 mt-1">{num(stage.count)}</div>
                 {i > 0 && stages[0].count > 0 && (
-                  <div className="text-xs text-slate-400 mt-0.5">
+                  <div className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">
                     {num((stage.count / stages[0].count) * 100, 1)}% dos captados
                   </div>
                 )}

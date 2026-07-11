@@ -59,7 +59,7 @@ export function InstallButton() {
         📲 Instalar app
       </button>
       {showTip && iosHint && (
-        <p className="mt-2 text-[11px] leading-snug text-slate-400">
+        <p className="mt-2 text-[11px] leading-snug text-slate-400 dark:text-zinc-500">
           No iPhone: toque em <strong>Compartilhar</strong> (o quadrado com a setinha ⬆) e depois
           em <strong>“Adicionar à Tela de Início”</strong>.
         </p>

@@ -79,24 +79,24 @@ export default function UtmBuilderPage() {
     }
   }
 
-  const field = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
-  const labelCls = "block text-xs font-semibold text-slate-600 mb-1";
+  const field = "w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm";
+  const labelCls = "block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1";
 
   return (
     <div>
       <div className="mb-4">
-        <Link href="/origem" className="text-sm text-rose-600 hover:underline">
+        <Link href="/origem" className="text-sm text-rose-600 dark:text-rose-400 hover:underline">
           ← Origem dos leads
         </Link>
       </div>
-      <h1 className="text-2xl font-bold text-slate-900">Gerador de link com UTM</h1>
-      <p className="text-sm text-slate-500 mt-1 mb-6">
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">Gerador de link com UTM</h1>
+      <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1 mb-6">
         Use o mesmo padrão em todo link e QR code. Assim a página de Origem
         consegue dizer exatamente o que trouxe cada lead.
       </p>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-5 space-y-4">
           <div>
             <label className={labelCls}>URL da página (lista de espera / LP)</label>
             <input className={field} value={base} onChange={(e) => setBase(e.target.value)} />
@@ -132,7 +132,7 @@ export default function UtmBuilderPage() {
           <div>
             <label className={labelCls}>
               Campanha / lançamento (utm_campaign){" "}
-              <span className="font-normal text-slate-400">ex.: sad-jan-2026, gigantes-abr26</span>
+              <span className="font-normal text-slate-400 dark:text-zinc-500">ex.: sad-jan-2026, gigantes-abr26</span>
             </label>
             <input className={field} value={campaign} onChange={(e) => setCampaign(e.target.value)} />
           </div>
@@ -140,7 +140,7 @@ export default function UtmBuilderPage() {
           <div>
             <label className={labelCls}>
               Vídeo / criativo (utm_content){" "}
-              <span className="font-normal text-slate-400">o que aparece pra pessoa</span>
+              <span className="font-normal text-slate-400 dark:text-zinc-500">o que aparece pra pessoa</span>
             </label>
             <input className={field} value={content} onChange={(e) => setContent(e.target.value)} />
           </div>
@@ -148,7 +148,7 @@ export default function UtmBuilderPage() {
           <div>
             <label className={labelCls}>
               Vídeo de origem (vidorigem){" "}
-              <span className="font-normal text-slate-400">id do YouTube ou handle do podcast</span>
+              <span className="font-normal text-slate-400 dark:text-zinc-500">id do YouTube ou handle do podcast</span>
             </label>
             <input
               className={field}
@@ -160,14 +160,14 @@ export default function UtmBuilderPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+          <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400 mb-2">
               Link pronto
             </p>
             {url ? (
-              <p className="break-all text-sm text-slate-800">{url}</p>
+              <p className="break-all text-sm text-slate-800 dark:text-zinc-200">{url}</p>
             ) : (
-              <p className="text-sm text-rose-600">URL inválida — confira o endereço da página.</p>
+              <p className="text-sm text-rose-600 dark:text-rose-400">URL inválida — confira o endereço da página.</p>
             )}
             <button
               onClick={copy}
@@ -183,8 +183,8 @@ export default function UtmBuilderPage() {
             )}
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-xs leading-relaxed text-slate-600">
-            <p className="font-semibold text-slate-700 mb-1">O padrão, em uma linha:</p>
+          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] p-5 text-xs leading-relaxed text-slate-600 dark:text-zinc-400">
+            <p className="font-semibold text-slate-700 dark:text-zinc-300 mb-1">O padrão, em uma linha:</p>
             <ul className="list-disc pl-4 space-y-1">
               <li>
                 <strong>utm_source</strong> = a plataforma (youtube, instagram, facebook…).

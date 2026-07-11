@@ -13,7 +13,7 @@ export default async function UsuariosPage() {
       <div>
         <PageHeader title="Usuários" subtitle="Gestão de acesso" />
         <Card>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-zinc-400">
             Esta área é restrita a administradores.
           </p>
         </Card>

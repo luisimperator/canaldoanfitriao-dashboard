@@ -51,7 +51,7 @@ export default async function CacPage({
       <DemoBanner show={data.isDemo} />
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="text-xs text-slate-500">Período</span>
+        <span className="text-xs text-slate-500 dark:text-zinc-400">Período</span>
         <DateRangePicker />
       </div>
 
@@ -73,13 +73,13 @@ export default async function CacPage({
 
       <Card title="Investimento × faturamento × ROAS" className="mb-4">
         <CacRoasChart data={chart} />
-        <p className="mt-2 text-xs text-slate-400">
+        <p className="mt-2 text-xs text-slate-400 dark:text-zinc-500">
           ROAS e CAC são <strong>blended</strong>: usam o faturamento total (inclui
           orgânico e recompra), não só o que é atribuído ao anúncio. Servem pra
           decidir o nível de investimento, não pra atribuição por clique.
         </p>
         {rows.some((r) => r.spendIncomplete) && (
-          <p className="mt-1 text-xs text-amber-600">
+          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
             ⚠️ Meses marcados com ⚠️ têm dias de investimento sem registro (sync de
             anúncios fora do ar no período) — o CAC real é maior e o ROAS menor do
             que o mostrado.
@@ -91,7 +91,7 @@ export default async function CacPage({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-slate-500 border-b border-slate-100">
+              <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/[0.06]">
                 <th className="py-2 font-medium">Mês</th>
                 <th className="py-2 font-medium text-right">Investimento</th>
                 <th className="py-2 font-medium text-right">Faturamento</th>
@@ -102,8 +102,8 @@ export default async function CacPage({
             </thead>
             <tbody>
               {[...rows].reverse().map((r) => (
-                <tr key={r.month} className="border-b border-slate-50 last:border-0">
-                  <td className="py-1.5 text-slate-700">
+                <tr key={r.month} className="border-b border-slate-50 dark:border-white/[0.04] last:border-0">
+                  <td className="py-1.5 text-slate-700 dark:text-zinc-300">
                     {monthLabel(r.month)}
                     {r.spendIncomplete && (
                       <span
@@ -114,25 +114,25 @@ export default async function CacPage({
                       </span>
                     )}
                   </td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-600">
+                  <td className="py-1.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">
                     {r.spend > 0 ? brl(r.spend) : "—"}
                   </td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-900 font-medium">
+                  <td className="py-1.5 text-right tabular-nums text-slate-900 dark:text-zinc-100 font-medium">
                     {r.revenue > 0 ? brl(r.revenue) : "—"}
                   </td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-600">{num(r.sales)}</td>
-                  <td className="py-1.5 text-right tabular-nums text-slate-600">
+                  <td className="py-1.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">{num(r.sales)}</td>
+                  <td className="py-1.5 text-right tabular-nums text-slate-600 dark:text-zinc-400">
                     {r.cac !== null ? brl(r.cac) : "—"}
                   </td>
                   <td
                     className={`py-1.5 text-right tabular-nums font-semibold ${
                       r.roas === null
-                        ? "text-slate-300"
+                        ? "text-slate-300 dark:text-zinc-600"
                         : r.roas >= 3
-                          ? "text-emerald-600"
+                          ? "text-emerald-600 dark:text-emerald-400"
                           : r.roas >= 1
-                            ? "text-amber-600"
-                            : "text-rose-600"
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-rose-600 dark:text-rose-400"
                     }`}
                   >
                     {r.roas !== null ? `${num(r.roas, 1)}x` : "—"}

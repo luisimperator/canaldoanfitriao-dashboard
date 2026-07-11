@@ -53,42 +53,42 @@ export default function AtualizarSenhaPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex min-h-screen items-center justify-center bg-slate-900 px-4">
+    <div className="fixed inset-0 z-30 flex min-h-screen items-center justify-center bg-slate-900 dark:bg-violet-600 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <div className="text-xl font-bold text-white">Canal do Anfitrião</div>
           <div className="text-xs font-medium text-rose-400 mt-0.5">redefinir senha</div>
         </div>
-        <form onSubmit={handleSubmit} className="rounded-xl bg-white p-6 shadow-lg space-y-4">
+        <form onSubmit={handleSubmit} className="rounded-xl bg-white dark:bg-[#15121f] p-6 shadow-lg space-y-4">
           {done ? (
-            <p className="text-sm text-emerald-600">Senha redefinida! Redirecionando…</p>
+            <p className="text-sm text-emerald-600 dark:text-emerald-400">Senha redefinida! Redirecionando…</p>
           ) : !ready ? (
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-zinc-400">
               Abra esta página pelo link enviado ao seu e-mail. Validando o link…
             </p>
           ) : (
             <>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Nova senha</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">Nova senha</label>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-rose-500 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm text-slate-900 dark:text-zinc-100 focus:border-rose-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Confirmar senha</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">Confirmar senha</label>
                 <input
                   type="password"
                   required
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-rose-500 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm text-slate-900 dark:text-zinc-100 focus:border-rose-500 focus:outline-none"
                 />
               </div>
-              {error && <p className="text-xs text-rose-600">{error}</p>}
+              {error && <p className="text-xs text-rose-600 dark:text-rose-400">{error}</p>}
               <button
                 type="submit"
                 disabled={loading}

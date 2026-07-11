@@ -73,7 +73,7 @@ export default async function LinksPage() {
 
       {links.length === 0 ? (
         <Card title="Nenhum link ainda">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-zinc-400">
             Crie o primeiro em <strong>+ Novo link / QR</strong>. Você escolhe um apelido
             (ex.: <em>sublocação-vídeo-junho</em>), o produto e a lista de destino; sai um
             link curto <code>{SHORT_BASE}/…</code> e um QR pra colocar no vídeo. O destino
@@ -91,47 +91,47 @@ export default async function LinksPage() {
             return (
               <div
                 key={lk.slug}
-                className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col sm:flex-row gap-4"
+                className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4 flex flex-col sm:flex-row gap-4"
               >
                 <div className="shrink-0">
                   <QrCode value={short} size={96} filename={`qr-${lk.slug}.png`} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-slate-900">{lk.label || lk.slug}</span>
+                    <span className="font-semibold text-slate-900 dark:text-zinc-100">{lk.label || lk.slug}</span>
                     {lk.product && (
-                      <span className="rounded-full bg-slate-100 text-slate-600 text-[11px] px-2 py-0.5">
+                      <span className="rounded-full bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400 text-[11px] px-2 py-0.5">
                         {lk.product}
                       </span>
                     )}
                     {lk.utm_source && (
-                      <span className="rounded-full bg-rose-50 text-rose-600 text-[11px] px-2 py-0.5">
+                      <span className="rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] px-2 py-0.5">
                         {lk.utm_source}
                       </span>
                     )}
                   </div>
                   <div className="mt-1 flex items-center gap-2 flex-wrap">
-                    <code className="text-xs text-slate-500 break-all">{short}</code>
+                    <code className="text-xs text-slate-500 dark:text-zinc-400 break-all">{short}</code>
                     <CopyButton text={short} />
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-400 truncate">→ {lk.destination}</p>
+                  <p className="mt-1 text-[11px] text-slate-400 dark:text-zinc-500 truncate">→ {lk.destination}</p>
                   <div className="mt-2 flex gap-5 text-sm tabular-nums">
                     <span>
-                      <span className="font-semibold text-slate-900">{num(scans)}</span>{" "}
-                      <span className="text-slate-400 text-xs">scans</span>
+                      <span className="font-semibold text-slate-900 dark:text-zinc-100">{num(scans)}</span>{" "}
+                      <span className="text-slate-400 dark:text-zinc-500 text-xs">scans</span>
                     </span>
                     <span>
-                      <span className="font-semibold text-slate-900">{num(lead.leads)}</span>{" "}
-                      <span className="text-slate-400 text-xs">leads</span>
+                      <span className="font-semibold text-slate-900 dark:text-zinc-100">{num(lead.leads)}</span>{" "}
+                      <span className="text-slate-400 dark:text-zinc-500 text-xs">leads</span>
                     </span>
                     <span>
-                      <span className="font-semibold text-emerald-600">{num(lead.mql)}</span>{" "}
-                      <span className="text-slate-400 text-xs">MQL</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{num(lead.mql)}</span>{" "}
+                      <span className="text-slate-400 dark:text-zinc-500 text-xs">MQL</span>
                     </span>
                     {conv !== null && (
                       <span>
-                        <span className="font-semibold text-slate-700">{num(conv, 0)}%</span>{" "}
-                        <span className="text-slate-400 text-xs">scan→lead</span>
+                        <span className="font-semibold text-slate-700 dark:text-zinc-300">{num(conv, 0)}%</span>{" "}
+                        <span className="text-slate-400 dark:text-zinc-500 text-xs">scan→lead</span>
                       </span>
                     )}
                   </div>
@@ -142,7 +142,7 @@ export default async function LinksPage() {
                     <img
                       src={`https://i.ytimg.com/vi/${yid}/mqdefault.jpg`}
                       alt=""
-                      className="h-16 w-28 rounded-md object-cover bg-slate-100"
+                      className="h-16 w-28 rounded-md object-cover bg-slate-100 dark:bg-white/[0.07]"
                     />
                   </a>
                 )}

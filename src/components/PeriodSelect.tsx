@@ -16,7 +16,7 @@ export function PeriodSelect({
 }) {
   const pathname = usePathname();
   return (
-    <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
+    <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-0.5">
       {options.map((o) => {
         const active = o.value === current;
         return (
@@ -25,7 +25,7 @@ export function PeriodSelect({
             href={`${pathname}?${param}=${o.value}`}
             scroll={false}
             className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
-              active ? "bg-slate-900 text-white" : "text-slate-500 hover:text-slate-800"
+              active ? "bg-slate-900 dark:bg-violet-600 text-white" : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
             }`}
           >
             {o.label}

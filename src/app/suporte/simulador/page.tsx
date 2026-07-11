@@ -15,22 +15,22 @@ export default function SimuladorPage() {
         subtitle="Fale como cliente e veja a IA responder; troque para Chefe pra corrigir (o cliente não vê) — a IA ajusta na hora e sugere uma regra pra você salvar no treinamento. Nada aqui vai pro WhatsApp."
       />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <Link href="/suporte" className="text-sm text-slate-500 hover:text-slate-800">
+        <Link href="/suporte" className="text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-800">
           ← Voltar pro Suporte
         </Link>
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-            enabled ? "bg-slate-100 text-slate-600" : "bg-slate-100 text-slate-400"
+            enabled ? "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400" : "bg-slate-100 dark:bg-white/[0.07] text-slate-400 dark:text-zinc-500"
           }`}
           title="Modelo da IA em uso (variável SUPPORT_AI_MODEL)"
         >
           <span className={`h-2 w-2 rounded-full ${enabled ? "bg-emerald-500" : "bg-slate-300"}`} />
-          Modelo: <span className="font-semibold text-slate-700">{model}</span>
+          Modelo: <span className="font-semibold text-slate-700 dark:text-zinc-300">{model}</span>
         </span>
       </div>
 
       {!enabled && (
-        <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="mb-4 rounded-lg border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
           <strong>IA desligada:</strong> defina a variável <code>ANTHROPIC_API_KEY</code> no
           servidor para ativar o cérebro de atendimento. O restante da tela já funciona.
         </div>
@@ -38,7 +38,7 @@ export default function SimuladorPage() {
 
       <SimuladorChat enabled={enabled} />
 
-      <p className="mt-4 text-xs text-slate-400">
+      <p className="mt-4 text-xs text-slate-400 dark:text-zinc-500">
         Quando a IA precisa de uma ação interna (cancelamento, reembolso, brinde,
         etc.) ela abre um caso na <Link href="/suporte" className="underline">fila de
         handoff</Link> automaticamente.

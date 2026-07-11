@@ -83,7 +83,7 @@ export default async function ExtratoPage({
   const catName = new Map(data.finCategories.map((c) => [c.id, c.name]));
   const chip = (ativo: boolean) =>
     `rounded-full px-3 py-1.5 text-sm ${
-      ativo ? "bg-rose-600 text-white font-semibold" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+      ativo ? "bg-rose-600 text-white font-semibold" : "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/15"
     }`;
   const qs = (t: string) => {
     const p = new URLSearchParams();
@@ -136,9 +136,9 @@ export default async function ExtratoPage({
             name="q"
             defaultValue={sp.q ?? ""}
             placeholder="Buscar (ex.: eduzz, aluguel, pix...)"
-            className="w-48 sm:w-64 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+            className="w-48 sm:w-64 rounded-lg border border-slate-300 dark:border-white/15 px-3 py-1.5 text-sm"
           />
-          <button className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700">
+          <button className="rounded-lg bg-slate-900 dark:bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-violet-500">
             Buscar
           </button>
         </form>
@@ -146,18 +146,18 @@ export default async function ExtratoPage({
 
       <Card title={`Extrato · ${fmtDia(from)} → ${fmtDia(to)}`}>
         {dias.length === 0 ? (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-zinc-400">
             Nenhum lançamento no período{q ? ` para “${sp.q}”` : ""}.
           </p>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-white/[0.06]">
             {dias.map(({ dia, txs }) => (
               <div key={dia} className="py-2">
                 <div className="flex items-baseline justify-between mb-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                     {fmtDia(dia)}
                   </p>
-                  <p className="text-[11px] tabular-nums text-slate-400">
+                  <p className="text-[11px] tabular-nums text-slate-400 dark:text-zinc-500">
                     saldo do dia: {brl(saldoFimDoDia.get(dia) ?? 0)}
                   </p>
                 </div>
@@ -165,11 +165,11 @@ export default async function ExtratoPage({
                   {txs.map((t) => (
                     <li key={t.id} className="flex items-baseline justify-between gap-3">
                       <span className="min-w-0">
-                        <span className="block truncate text-sm text-slate-700">
+                        <span className="block truncate text-sm text-slate-700 dark:text-zinc-300">
                           {t.description || "(sem descrição)"}
                         </span>
                         {(t.counterparty || t.categoryId) && (
-                          <span className="block truncate text-[11px] text-slate-400">
+                          <span className="block truncate text-[11px] text-slate-400 dark:text-zinc-500">
                             {[t.counterparty, t.categoryId ? catName.get(t.categoryId) : null]
                               .filter(Boolean)
                               .join(" · ")}
@@ -178,7 +178,7 @@ export default async function ExtratoPage({
                       </span>
                       <span
                         className={`shrink-0 tabular-nums text-sm font-semibold ${
-                          t.direction === "in" ? "text-emerald-600" : "text-slate-900"
+                          t.direction === "in" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-zinc-100"
                         }`}
                       >
                         {t.direction === "in" ? "+" : "−"}
@@ -192,27 +192,27 @@ export default async function ExtratoPage({
           </div>
         )}
 
-        <div className="mt-3 border-t border-slate-200 pt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-          <span className="text-slate-600">
+        <div className="mt-3 border-t border-slate-200 dark:border-white/10 pt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+          <span className="text-slate-600 dark:text-zinc-400">
             Soma do período{q ? ` (filtro “${sp.q}”)` : ""}:
           </span>
-          <span className="font-semibold text-emerald-600 tabular-nums">+{brl(entradas)}</span>
-          <span className="font-semibold text-slate-900 tabular-nums">−{brl(saidas)}</span>
+          <span className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">+{brl(entradas)}</span>
+          <span className="font-semibold text-slate-900 dark:text-zinc-100 tabular-nums">−{brl(saidas)}</span>
           <span
             className={`font-semibold tabular-nums ${
-              entradas - saidas >= 0 ? "text-emerald-600" : "text-rose-600"
+              entradas - saidas >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
             }`}
           >
             = {brl(entradas - saidas)}
           </span>
-          <span className="text-slate-400">
+          <span className="text-slate-400 dark:text-zinc-500">
             {listadas.length} lançamento{listadas.length === 1 ? "" : "s"}
             {truncado ? ` (mostrando os ${MAX_ROWS} mais recentes)` : ""}
           </span>
         </div>
       </Card>
 
-      <p className="mt-4 text-xs text-slate-400">
+      <p className="mt-4 text-xs text-slate-400 dark:text-zinc-500">
         Espelho da conta PJ do Banco Inter via sync automático (a cada ~30 min) — pode haver
         pequena defasagem em relação ao app do banco. “Saldo do dia” = saldo acumulado no fim
         daquele dia considerando todo o histórico importado.

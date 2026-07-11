@@ -40,19 +40,19 @@ export function QrCode({
           src={src}
           alt="QR code"
           style={{ width: size, height: size }}
-          className="rounded-md border border-slate-100"
+          className="rounded-md border border-slate-100 dark:border-white/[0.06]"
         />
       ) : (
         <div
           style={{ width: size, height: size }}
-          className="rounded-md border border-slate-100 bg-slate-50"
+          className="rounded-md border border-slate-100 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.04]"
         />
       )}
       {download && src && (
         <a
           href={src}
           download={filename}
-          className="rounded-md border border-slate-300 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+          className="rounded-md border border-slate-300 dark:border-white/15 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5"
         >
           Baixar QR
         </a>
