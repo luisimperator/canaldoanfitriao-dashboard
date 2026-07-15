@@ -19,11 +19,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Informe a data do pagamento." }, { status: 400 });
   }
 
+  const prevista = Boolean(body?.prevista);
+
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 503 });
   }
-  const { error } = await supabase.from("provisao_saidas").insert({ descricao, valor, data });
+  const { error } = await supabase
+    .from("provisao_saidas")
+    .insert({ descricao, valor, data, prevista });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

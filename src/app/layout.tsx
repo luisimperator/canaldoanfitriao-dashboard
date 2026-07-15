@@ -4,7 +4,7 @@ import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { PwaRegister } from "@/components/PwaRegister";
 import { getAccess } from "@/lib/supabase-server";
-import { ADMIN_TAB, TABS } from "@/lib/access";
+import { ADMIN_TAB, TABS, canAccess } from "@/lib/access";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +41,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const access = await getAccess();
-  const visibleTabs = TABS.filter((t) => access.isAdmin || access.tabs.includes(t.href));
+  // canAccess mapeia subpáginas pra aba dona (ex.: /financeiro/provisao →
+  // /financeiro), então quem tem Financeiro liberado vê os subitens também.
+  const visibleTabs = TABS.filter((t) => canAccess(t.href, access));
   if (access.isAdmin) visibleTabs.push(ADMIN_TAB);
 
   return (
