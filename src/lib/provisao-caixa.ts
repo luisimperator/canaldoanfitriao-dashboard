@@ -24,6 +24,8 @@ export interface SaidaProgramada {
   descricao: string;
   valor: number;
   data: string; // YYYY-MM-DD
+  /** true = ainda não agendada de fato (ex.: DDA emitido) — entra como previsão */
+  prevista?: boolean;
 }
 
 export interface ProvisaoCaixa {

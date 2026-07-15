@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
 import { getProvisaoCaixa, somaAte, METODO_LABEL } from "@/lib/provisao-caixa";
 import { getSaidasInter } from "@/lib/saidas-inter";
+import { fundeDias, getProvisaoAsaas } from "@/lib/provisao-asaas";
+import { CashCurveChart } from "@/components/CashCurveChart";
 import { brl, shortDate } from "@/lib/format";
 import { Card, DemoBanner, PageHeader } from "@/components/ui";
 import { ProvisaoTimeline } from "@/components/ProvisaoTimeline";
@@ -26,10 +28,18 @@ function fimDoMes(iso: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+// 4º Encontro de Anfitriões — marcado na curva de caixa enquanto não passa.
+const EVENTO = { dia: "2026-07-18", label: "4º Encontro" };
+
 export default async function ProvisaoPage() {
   const data = await getDashboardData();
   const p = await getProvisaoCaixa();
-  const inter = p ? await getSaidasInter(p.hoje) : { ok: false, saidas: [] as never[] };
+  const [inter, asaas] = p
+    ? await Promise.all([getSaidasInter(p.hoje), getProvisaoAsaas(p.hoje)])
+    : [
+        { ok: false, saidas: [] as never[] },
+        { ok: false, erro: undefined, saldo: 0, pagoPorDia: [], vencerPorDia: [] },
+      ];
 
   if (!p) {
     return (
@@ -47,7 +57,15 @@ export default async function ProvisaoPage() {
 
   const saldoEduzz =
     p.saldoEduzzAncora != null ? p.saldoEduzzAncora.valor + p.liberadoDesdeAncora : null;
-  const disponivel = p.saldoInter + (saldoEduzz ?? 0);
+  const disponivel = p.saldoInter + (saldoEduzz ?? 0) + asaas.saldo;
+
+  // Eduzz + Asaas fundidos por dia (mesmo shape, mesmas séries do gráfico)
+  const pagoAll = fundeDias(p.pagoPorDia, asaas.pagoPorDia);
+  const vencerAll = fundeDias(p.aVencerPorDia, asaas.vencerPorDia);
+  const aLiberarTotal = Math.round(pagoAll.reduce((a, d) => a + d.valor, 0));
+  const aLiberarCobrancas = pagoAll.reduce((a, d) => a + d.cobrancas, 0);
+  const aVencerTotal = Math.round(vencerAll.reduce((a, d) => a + d.valor, 0));
+  const aVencerCobrancas = vencerAll.reduce((a, d) => a + d.cobrancas, 0);
 
   const corte30 = addDias(p.hoje, 30);
   const corteMes = fimDoMes(p.hoje);
@@ -58,12 +76,12 @@ export default async function ProvisaoPage() {
   const mesCap = mesNome.charAt(0).toUpperCase() + mesNome.slice(1);
 
   const d30 = {
-    pago: somaAte(p.pagoPorDia, corte30),
-    prev: somaAte(p.aVencerPorDia, corte30),
+    pago: somaAte(pagoAll, corte30),
+    prev: somaAte(vencerAll, corte30),
   };
   const mes = {
-    pago: somaAte(p.pagoPorDia, corteMes),
-    prev: somaAte(p.aVencerPorDia, corteMes),
+    pago: somaAte(pagoAll, corteMes),
+    prev: somaAte(vencerAll, corteMes),
   };
 
   // saídas previstas = agendados no Inter (boletos/pagamentos) + manuais
@@ -101,7 +119,7 @@ export default async function ProvisaoPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader
           title="Provisão de caixa"
-          subtitle="Quanto já caiu (Inter + Eduzz) e quando o resto libera na Eduzz"
+          subtitle="Quanto já caiu (Inter + Eduzz + Asaas) e quando o resto libera"
         />
         <Link
           href="/financeiro"
@@ -134,6 +152,7 @@ export default async function ProvisaoPage() {
             ) : (
               <> · Eduzz não informado</>
             )}
+            {asaas.ok && <> · Asaas {brl(asaas.saldo)}</>}
           </div>
           <div className="mt-1.5">
             <SaldoEduzzForm atual={p.saldoEduzzAncora?.valor ?? null} />
@@ -142,13 +161,13 @@ export default async function ProvisaoPage() {
 
         <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4">
           <div className="font-mono text-[10px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-widest">
-            A liberar (Eduzz)
+            A liberar {asaas.ok ? "(Eduzz + Asaas)" : "(Eduzz)"}
           </div>
           <div className="text-xl sm:text-2xl font-bold tabular-nums mt-1 text-amber-600 dark:text-amber-400">
-            {brl(p.aLiberarTotal)}
+            {brl(aLiberarTotal)}
           </div>
           <div className="text-xs text-slate-400 dark:text-zinc-500 mt-1">
-            {p.aLiberarCobrancas} cobranças pagas, ainda não creditadas
+            {aLiberarCobrancas} cobranças pagas, ainda não creditadas
           </div>
         </div>
 
@@ -179,37 +198,77 @@ export default async function ProvisaoPage() {
         </div>
       </div>
 
-      <p className="mb-4 text-xs text-slate-400 dark:text-zinc-500">
-        Valores líquidos (taxa da Eduzz já descontada).
+      <p className="mb-2 text-xs text-slate-400 dark:text-zinc-500">
+        Valores líquidos (taxas da Eduzz e do Asaas já descontadas).
       </p>
+
+      {!asaas.ok && "erro" in asaas && asaas.erro && (
+        <div className="mb-4 rounded-lg border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+          Asaas fora da conta: {asaas.erro} Os números mostram só Eduzz + Inter por enquanto.
+        </div>
+      )}
+
+      <Card title="Curva de caixa projetada" className="mb-4">
+        <CashCurveChart
+          hoje={p.hoje}
+          disponivel={disponivel}
+          entradas={[
+            ...pagoAll.map((d) => ({
+              dia: d.dia,
+              valor: d.valor,
+              nome: `Liberações pagas · ${d.cobrancas} cobrança${d.cobrancas === 1 ? "" : "s"}`,
+            })),
+            ...vencerAll.map((d) => ({
+              dia: d.dia,
+              valor: d.valor,
+              nome: `A vencer (previsão) · ${d.cobrancas}`,
+            })),
+          ]}
+          saidas={[
+            ...inter.saidas.map((s) => ({ dia: s.data, valor: s.valor, nome: s.descricao })),
+            ...p.saidasProgramadas.map((s) => ({
+              dia: s.data,
+              valor: s.valor,
+              nome: s.prevista ? `${s.descricao} (previsão)` : s.descricao,
+            })),
+          ]}
+          evento={EVENTO}
+        />
+        <p className="mt-2 text-xs text-slate-400 dark:text-zinc-500">
+          Saldo dia a dia = disponível agora + liberações previstas − saídas previstas. Se a
+          linha se aproxima do fundo de 10% (ou fura o zero), é disrupção de caixa à vista —
+          antecipe recebíveis ou reagende saídas antes do vale.
+        </p>
+      </Card>
 
       <Card title="Linha do tempo de liberação" className="mb-4">
         <ProvisaoTimeline
-          pago={p.pagoPorDia}
-          vencer={p.aVencerPorDia}
+          pago={pagoAll}
+          vencer={vencerAll}
           disponivel={disponivel}
           hoje={p.hoje}
           saidas={saidasFuturas}
         />
       </Card>
 
-      <Card title={`Liberações confirmadas — pago (${brl(p.aLiberarTotal)})`} className="mb-4">
-        {p.pagoPorDia.length === 0 ? (
+      <Card title={`Liberações confirmadas — pago (${brl(aLiberarTotal)})`} className="mb-4">
+        {pagoAll.length === 0 ? (
           <p className="text-sm text-slate-600 dark:text-zinc-400">
             Nada pago aguardando liberação no momento — todo o dinheiro recebido já está disponível.
           </p>
         ) : (
-          <ProvisaoRows dias={p.pagoPorDia} hoje={p.hoje} tone="emerald" />
+          <ProvisaoRows dias={pagoAll} hoje={p.hoje} tone="emerald" />
         )}
       </Card>
 
-      {p.aVencerPorDia.length > 0 && (
-        <Card title={`A vencer — previsão (${brl(p.aVencerTotal)})`} className="mb-4">
+      {vencerAll.length > 0 && (
+        <Card title={`A vencer — previsão (${brl(aVencerTotal)})`} className="mb-4">
           <p className="mb-3 text-xs text-slate-400 dark:text-zinc-500">
-            Cobranças ainda não pagas ({p.aVencerCobrancas}), assumindo pagamento no vencimento.
-            O prazo de liberação usa a mediana real por meio de pagamento ({lagLabel}).
+            Cobranças ainda não pagas ({aVencerCobrancas}), assumindo pagamento no vencimento.
+            Eduzz: mediana real por método ({lagLabel}).
+            {asaas.ok && <> Asaas: cartão ~30d, Pix/boleto ~1d.</>}
           </p>
-          <ProvisaoRows dias={p.aVencerPorDia} hoje={p.hoje} tone="amber" />
+          <ProvisaoRows dias={vencerAll} hoje={p.hoje} tone="amber" />
         </Card>
       )}
 
@@ -285,8 +344,9 @@ export default async function ProvisaoPage() {
       </Card>
 
       <p className="mt-4 text-xs text-slate-400 dark:text-zinc-500">
-        Liberações pagas usam o creditDate exato da Eduzz. Datas com ~ são previsão: pagamento
-        no vencimento + prazo mediano do método ({lagLabel}, medidos nos últimos 120 dias).
+        Liberações pagas usam o creditDate exato da Eduzz e o estimatedCreditDate do Asaas.
+        Datas com ~ são previsão: pagamento no vencimento + prazo mediano do método
+        ({lagLabel}, medidos nos últimos 120 dias na Eduzz; no Asaas, cartão ~30d e Pix/boleto ~1d).
         O saldo Eduzz é informado manualmente e corrigido com o que liberou desde então.
         Saídas previstas: boletos e pagamentos agendados na conta do Inter (60 dias à frente)
         + saídas cadastradas na mão. Atualizado {atualizado}.

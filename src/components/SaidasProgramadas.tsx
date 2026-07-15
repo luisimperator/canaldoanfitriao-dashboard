@@ -11,7 +11,7 @@ import { dayLabel } from "@/components/ProvisaoTimeline";
 
 export function SaidasProgramadas({ saidas, hoje }: { saidas: SaidaProgramada[]; hoje: string }) {
   const router = useRouter();
-  const [form, setForm] = useState({ descricao: "", valor: "", data: "" });
+  const [form, setForm] = useState({ descricao: "", valor: "", data: "", prevista: false });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -23,14 +23,19 @@ export function SaidasProgramadas({ saidas, hoje }: { saidas: SaidaProgramada[];
       const res = await fetch("/api/financeiro/provisao/saidas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ descricao: form.descricao, valor: num, data: form.data }),
+        body: JSON.stringify({
+          descricao: form.descricao,
+          valor: num,
+          data: form.data,
+          prevista: form.prevista,
+        }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
         setErr(j.error ?? `Erro ${res.status}`);
         return;
       }
-      setForm({ descricao: "", valor: "", data: "" });
+      setForm({ descricao: "", valor: "", data: "", prevista: false });
       router.refresh();
     } catch {
       setErr("Falha de rede");
@@ -68,12 +73,26 @@ export function SaidasProgramadas({ saidas, hoje }: { saidas: SaidaProgramada[];
             >
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                  {s.prevista && "~ "}
                   {s.descricao}
                 </div>
-                <div className="text-xs text-slate-400 dark:text-zinc-500">{dayLabel(s.data, hoje)}</div>
+                <div className="text-xs text-slate-400 dark:text-zinc-500">
+                  {dayLabel(s.data, hoje)}
+                  {s.prevista && (
+                    <>
+                      {" "}
+                      ·{" "}
+                      <span className="rounded bg-amber-100 dark:bg-amber-500/15 px-1 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                        previsão — não agendado
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold tabular-nums text-rose-600 dark:text-rose-400">
+                <span
+                  className={`text-sm font-bold tabular-nums ${s.prevista ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"}`}
+                >
                   − {brl(s.valor)}
                 </span>
                 <button
@@ -110,6 +129,14 @@ export function SaidasProgramadas({ saidas, hoje }: { saidas: SaidaProgramada[];
           value={form.data}
           onChange={(e) => setForm((f) => ({ ...f, data: e.target.value }))}
         />
+        <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400">
+          <input
+            type="checkbox"
+            checked={form.prevista}
+            onChange={(e) => setForm((f) => ({ ...f, prevista: e.target.checked }))}
+          />
+          ainda não agendado (ex.: DDA emitido)
+        </label>
         <button
           onClick={adicionar}
           disabled={busy}
