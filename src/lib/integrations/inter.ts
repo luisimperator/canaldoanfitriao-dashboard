@@ -106,12 +106,12 @@ function request(
   });
 }
 
-async function getToken(creds: InterCreds): Promise<string> {
+async function getToken(creds: InterCreds, scope: string = SCOPE): Promise<string> {
   const form = new URLSearchParams({
     client_id: creds.clientId,
     client_secret: creds.clientSecret,
     grant_type: "client_credentials",
-    scope: SCOPE,
+    scope,
   }).toString();
 
   const res = await request(creds, {
@@ -183,6 +183,77 @@ export async function fetchInterTransacoes(
   } while (pagina < totalPaginas);
 
   return all;
+}
+
+export interface InterPagamentoAgendado {
+  data: string; // data de pagamento agendada (YYYY-MM-DD)
+  valor: number;
+  descricao: string;
+  status: string;
+}
+
+// Status que significam "não vai mais sair" — tudo o mais numa janela futura
+// é pagamento agendado/pendente de aprovação.
+const STATUS_ENCERRADO = /REALIZADO|PAGO|CANCELAD|DEVOLVID|ERRO|REJEITAD|EXPIRAD/i;
+
+/**
+ * Consulta boletos/pagamentos agendados no Inter (GET /banking/v2/pagamento,
+ * filtrando pela data de pagamento). Exige o escopo `pagamento-boleto.read`
+ * habilitado na aplicação do Internet Banking — sem ele o token é negado.
+ */
+export async function fetchInterPagamentosAgendados(
+  creds: InterCreds,
+  dataInicio: string,
+  dataFim: string
+): Promise<InterPagamentoAgendado[]> {
+  const token = await getToken(creds, "pagamento-boleto.read");
+  const qs = new URLSearchParams({
+    dataInicio,
+    dataFim,
+    filtrarDataPor: "PAGAMENTO",
+  }).toString();
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/json",
+  };
+  if (creds.contaCorrente) headers["x-conta-corrente"] = creds.contaCorrente;
+
+  const res = await request(creds, {
+    method: "GET",
+    path: `/banking/v2/pagamento?${qs}`,
+    headers,
+  });
+  if (res.status !== 200) {
+    throw new InterApiError(`Falha ao consultar pagamentos (${res.status}): ${res.body}`);
+  }
+
+  // O formato varia entre versões: pode ser um array direto ou um objeto com a
+  // lista dentro. Os nomes dos campos também têm variantes — tratamos todas.
+  const json = JSON.parse(res.body) as unknown;
+  const lista: Record<string, unknown>[] = Array.isArray(json)
+    ? (json as Record<string, unknown>[])
+    : (((json as Record<string, unknown>)?.pagamentos ??
+        (json as Record<string, unknown>)?.transacoes ??
+        []) as Record<string, unknown>[]);
+
+  const out: InterPagamentoAgendado[] = [];
+  for (const p of lista) {
+    const status = String(p.statusPagamento ?? p.status ?? "");
+    if (STATUS_ENCERRADO.test(status)) continue;
+    const valor = Number(p.valorPagamento ?? p.valorNominal ?? p.valorPagar ?? p.valor);
+    const data = String(p.dataPagamento ?? p.dataVencimentoDigitada ?? "").slice(0, 10);
+    if (!Number.isFinite(valor) || valor <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(data)) continue;
+    const descricao =
+      String(
+        p.nomeBeneficiario ??
+          (p.beneficiario as Record<string, unknown> | undefined)?.nome ??
+          p.descricao ??
+          ""
+      ).trim() || "Boleto agendado";
+    out.push({ data, valor, descricao, status });
+  }
+  return out.sort((a, b) => a.data.localeCompare(b.data));
 }
 
 export interface FinTransactionRow {

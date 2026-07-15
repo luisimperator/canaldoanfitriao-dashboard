@@ -55,11 +55,14 @@ export function ProvisaoTimeline({
   vencer,
   disponivel,
   hoje,
+  saidas = [],
 }: {
   pago: ProvisaoDia[];
   vencer: ProvisaoDia[];
   disponivel: number;
   hoje: string;
+  /** saídas previstas (Inter + manuais) — descontadas do saldo acumulado */
+  saidas?: { dia: string; valor: number }[];
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(640);
@@ -122,9 +125,12 @@ export function ProvisaoTimeline({
     }
   }
 
-  // saldo acumulado até o dia do hover (ambas as séries, inclusive)
+  // saldo acumulado até o dia do hover: entradas (ambas as séries) menos as
+  // saídas previstas até o mesmo dia, inclusive
+  const saidasAte = (dia: string) =>
+    saidas.filter((s) => s.dia <= dia).reduce((a, s) => a + s.valor, 0);
   const acumulado = (dia: string) =>
-    disponivel + marks.filter((m) => m.dia <= dia).reduce((a, m) => a + m.valor, 0);
+    disponivel + marks.filter((m) => m.dia <= dia).reduce((a, m) => a + m.valor, 0) - saidasAte(dia);
   const temPrevisaoAte = (dia: string) => marks.some((m) => !m.pago && m.dia <= dia);
 
   function onMove(e: React.MouseEvent<SVGRectElement>) {
@@ -295,6 +301,12 @@ export function ProvisaoTimeline({
             </span>
             {temPrevisaoAte(hover.dia) && (
               <span className="text-amber-600 dark:text-amber-400"> (com previsão)</span>
+            )}
+            {saidasAte(hover.dia) > 0 && (
+              <span className="text-rose-600 dark:text-rose-400">
+                {" "}
+                (− {brl(saidasAte(hover.dia))} de saídas)
+              </span>
             )}
           </div>
         </div>

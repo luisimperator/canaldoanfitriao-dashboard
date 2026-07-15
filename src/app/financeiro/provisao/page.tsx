@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/data";
 import { getProvisaoCaixa, somaAte, METODO_LABEL } from "@/lib/provisao-caixa";
+import { getSaidasInter } from "@/lib/saidas-inter";
 import { brl, shortDate } from "@/lib/format";
 import { Card, DemoBanner, PageHeader } from "@/components/ui";
 import { ProvisaoTimeline } from "@/components/ProvisaoTimeline";
 import { ProvisaoRows } from "@/components/ProvisaoRows";
 import { SaldoEduzzForm } from "@/components/SaldoEduzzForm";
+import { SaidasProgramadas } from "@/components/SaidasProgramadas";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,7 @@ function fimDoMes(iso: string): string {
 export default async function ProvisaoPage() {
   const data = await getDashboardData();
   const p = await getProvisaoCaixa();
+  const inter = p ? await getSaidasInter(p.hoje) : { ok: false, saidas: [] as never[] };
 
   if (!p) {
     return (
@@ -63,16 +66,23 @@ export default async function ProvisaoPage() {
     prev: somaAte(p.aVencerPorDia, corteMes),
   };
 
-  // saídas previstas até o fim do mês: recorrentes que ainda não venceram,
-  // com piso na média pro-rata (a média cobre o que não é recorrente).
-  const diaHoje = Number(p.hoje.slice(8, 10));
-  const diasNoMes = Number(corteMes.slice(8, 10));
-  const recorrentesRestantes = p.saidasRecorrentes
-    .filter((s) => s.dia >= diaHoje)
-    .reduce((a, s) => a + s.valor, 0);
-  const mediaProRata = (p.mediaSaidasMes * (diasNoMes - diaHoje)) / diasNoMes;
-  const saidasPrevistas = Math.round(Math.max(recorrentesRestantes, mediaProRata));
-  const saldoFimMes = Math.round(disponivel + mes.pago + mes.prev - saidasPrevistas);
+  // saídas previstas = agendados no Inter (boletos/pagamentos) + manuais
+  const saidasFuturas = [
+    ...inter.saidas.map((s) => ({ dia: s.data, valor: s.valor })),
+    ...p.saidasProgramadas.map((s) => ({ dia: s.data, valor: s.valor })),
+  ];
+  const saidasMes = Math.round(
+    saidasFuturas.filter((s) => s.dia <= corteMes).reduce((a, s) => a + s.valor, 0)
+  );
+  const interTotal = Math.round(inter.saidas.reduce((a, s) => a + s.valor, 0));
+  const saldoFimMes = Math.round(disponivel + mes.pago + mes.prev - saidasMes);
+
+  const emDias = (iso: string) => {
+    const n = Math.round(
+      (Date.parse(`${iso}T12:00:00Z`) - Date.parse(`${p.hoje}T12:00:00Z`)) / 86_400_000
+    );
+    return n <= 0 ? "hoje" : n === 1 ? "amanhã" : `em ${n} dias`;
+  };
 
   const lagLabel = Object.entries(p.lags)
     .map(([m, d]) => `${(METODO_LABEL[m] ?? m).toLowerCase()} ~${Math.round(d)}d`)
@@ -179,6 +189,7 @@ export default async function ProvisaoPage() {
           vencer={p.aVencerPorDia}
           disponivel={disponivel}
           hoje={p.hoje}
+          saidas={saidasFuturas}
         />
       </Card>
 
@@ -206,18 +217,18 @@ export default async function ProvisaoPage() {
         <div className="grid gap-3 sm:grid-cols-3 mb-4">
           <div>
             <div className="font-mono text-[10px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-widest">
-              Média de saídas/mês
+              Agendado no Inter (60 dias)
             </div>
-            <div className="text-lg font-bold tabular-nums text-slate-900 dark:text-zinc-100">
-              {brl(p.mediaSaidasMes)}
+            <div className="text-lg font-bold tabular-nums text-rose-600 dark:text-rose-400">
+              {brl(interTotal)}
             </div>
           </div>
           <div>
             <div className="font-mono text-[10px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-widest">
-              Previsto até o fim de {mesCap}
+              Sai até o fim de {mesCap}
             </div>
             <div className="text-lg font-bold tabular-nums text-rose-600 dark:text-rose-400">
-              {brl(saidasPrevistas)}
+              {brl(saidasMes)}
             </div>
           </div>
           <div>
@@ -235,45 +246,50 @@ export default async function ProvisaoPage() {
           </div>
         </div>
 
-        {p.saidasRecorrentes.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-slate-400 dark:text-zinc-500">
-                  <th className="py-1.5 font-medium">Saída recorrente</th>
-                  <th className="py-1.5 font-medium text-right">Dia típico</th>
-                  <th className="py-1.5 font-medium text-right">Valor típico</th>
-                </tr>
-              </thead>
-              <tbody>
-                {p.saidasRecorrentes.map((s) => (
-                  <tr key={s.quem} className="border-t border-slate-100 dark:border-white/[0.06]">
-                    <td className="py-1.5 pr-2 text-slate-700 dark:text-zinc-300">
-                      <span className="line-clamp-1">{s.quem}</span>
-                      <span className="text-[11px] text-slate-400 dark:text-zinc-500">
-                        apareceu em {s.meses} dos últimos 4 meses
-                      </span>
-                    </td>
-                    <td className="py-1.5 text-right tabular-nums text-slate-500 dark:text-zinc-400">
-                      dia {s.dia}
-                    </td>
-                    <td className="py-1.5 text-right tabular-nums font-semibold text-slate-900 dark:text-zinc-100">
-                      {brl(s.valor)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {!inter.ok && (
+          <div className="mb-3 rounded-lg border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+            Não consegui listar os pagamentos agendados no Inter
+            {"erro" in inter && inter.erro ? <> ({inter.erro})</> : null}. Se a integração ainda
+            não tem a permissão, habilite o escopo <strong>Pagamento de boletos (consulta)</strong>{" "}
+            na aplicação do Internet Banking PJ. Enquanto isso, cadastre as saídas na mão abaixo.
           </div>
         )}
+
+        {inter.saidas.length > 0 && (
+          <div className="mb-3 space-y-2">
+            {inter.saidas.map((s, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02] px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                    {s.descricao}
+                  </div>
+                  <div className="text-xs text-slate-400 dark:text-zinc-500">
+                    {shortDate(s.data)} · {emDias(s.data)} ·{" "}
+                    <span className="rounded bg-slate-100 dark:bg-white/10 px-1 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+                      agendado no Inter
+                    </span>
+                  </div>
+                </div>
+                <span className="shrink-0 text-sm font-bold tabular-nums text-rose-600 dark:text-rose-400">
+                  − {brl(s.valor)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <SaidasProgramadas saidas={p.saidasProgramadas} hoje={p.hoje} />
       </Card>
 
       <p className="mt-4 text-xs text-slate-400 dark:text-zinc-500">
         Liberações pagas usam o creditDate exato da Eduzz. Datas com ~ são previsão: pagamento
         no vencimento + prazo mediano do método ({lagLabel}, medidos nos últimos 120 dias).
         O saldo Eduzz é informado manualmente e corrigido com o que liberou desde então.
-        Saídas recorrentes: apareceram em ≥3 dos últimos 4 meses no extrato do Inter.
-        Atualizado {atualizado}.
+        Saídas previstas: boletos e pagamentos agendados na conta do Inter (60 dias à frente)
+        + saídas cadastradas na mão. Atualizado {atualizado}.
       </p>
     </div>
   );

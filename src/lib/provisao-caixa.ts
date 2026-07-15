@@ -19,11 +19,11 @@ export interface ProvisaoDia {
   items: ProvisaoItem[];
 }
 
-export interface SaidaRecorrente {
-  quem: string;
+export interface SaidaProgramada {
+  id: string;
+  descricao: string;
   valor: number;
-  dia: number; // dia típico do mês
-  meses: number; // em quantos dos últimos 4 meses apareceu
+  data: string; // YYYY-MM-DD
 }
 
 export interface ProvisaoCaixa {
@@ -38,8 +38,7 @@ export interface ProvisaoCaixa {
   aVencerTotal: number;
   aVencerCobrancas: number;
   lags: Record<string, number>;
-  saidasRecorrentes: SaidaRecorrente[];
-  mediaSaidasMes: number;
+  saidasProgramadas: SaidaProgramada[];
 }
 
 interface RpcShape {
@@ -54,8 +53,7 @@ interface RpcShape {
   a_vencer_total: number;
   a_vencer_cobrancas: number;
   lags: Record<string, number>;
-  saidas_recorrentes: SaidaRecorrente[];
-  media_saidas_mes: number | null;
+  saidas_programadas: SaidaProgramada[];
 }
 
 export async function getProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
@@ -79,8 +77,7 @@ export async function getProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
       aVencerTotal: raw.a_vencer_total ?? 0,
       aVencerCobrancas: raw.a_vencer_cobrancas ?? 0,
       lags: raw.lags ?? {},
-      saidasRecorrentes: raw.saidas_recorrentes ?? [],
-      mediaSaidasMes: raw.media_saidas_mes ?? 0,
+      saidasProgramadas: raw.saidas_programadas ?? [],
     };
   } catch {
     return null;
