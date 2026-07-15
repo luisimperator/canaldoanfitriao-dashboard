@@ -433,32 +433,3 @@ export function SpendByCategoryChart({
     </ResponsiveContainer>
   );
 }
-
-// Projeção de saldo em 3 cenários: base sólida na cor da marca; conservador e
-// otimista tracejados em tinta neutra/verde. Linha do zero como referência
-// (abaixo dela = caixa negativo).
-export function ProjectionChart({
-  data,
-}: {
-  data: { mes: string; cons: number; base: number; otm: number }[];
-}) {
-  return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
-        <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
-        <YAxis
-          tick={{ fontSize: 11 }}
-          tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`}
-          width={44}
-        />
-        <Tooltip formatter={brlTooltip} />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
-        <ReferenceLine y={0} stroke="#f43f5e" strokeDasharray="2 5" />
-        <Line type="monotone" dataKey="otm" name="Otimista (+20%)" stroke="#10b981" strokeWidth={2} strokeDasharray="6 5" dot={false} />
-        <Line type="monotone" dataKey="base" name="Base (média 6m)" stroke="#e11d48" strokeWidth={2.5} dot={{ r: 3 }} />
-        <Line type="monotone" dataKey="cons" name="Conservador (−20%)" stroke="#94a3b8" strokeWidth={2} strokeDasharray="6 5" dot={false} />
-      </LineChart>
-    </ResponsiveContainer>
-  );
-}
