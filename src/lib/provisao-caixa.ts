@@ -31,6 +31,8 @@ export interface SaidaProgramada {
 export interface ProvisaoCaixa {
   hoje: string;
   saldoInter: number;
+  /** Saldo cravado: soma do extrato completo da Eduzz (venda − reembolso − saque − tarifa). */
+  saldoEduzzExtrato: { valor: number; atualizadoEm: string } | null;
   saldoEduzzAncora: { valor: number; informadoEm: string } | null;
   liberadoDesdeAncora: number;
   aLiberarTotal: number;
@@ -46,6 +48,7 @@ export interface ProvisaoCaixa {
 interface RpcShape {
   hoje: string;
   saldo_inter: number | null;
+  saldo_eduzz_extrato: { valor: number; atualizado_em: string } | null;
   saldo_eduzz_ancora: { valor: number; informado_em: string } | null;
   liberado_desde_ancora: number | null;
   a_liberar_total: number;
@@ -68,6 +71,9 @@ export async function getProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
     return {
       hoje: raw.hoje,
       saldoInter: raw.saldo_inter ?? 0,
+      saldoEduzzExtrato: raw.saldo_eduzz_extrato
+        ? { valor: raw.saldo_eduzz_extrato.valor, atualizadoEm: raw.saldo_eduzz_extrato.atualizado_em }
+        : null,
       saldoEduzzAncora: raw.saldo_eduzz_ancora
         ? { valor: raw.saldo_eduzz_ancora.valor, informadoEm: raw.saldo_eduzz_ancora.informado_em }
         : null,
