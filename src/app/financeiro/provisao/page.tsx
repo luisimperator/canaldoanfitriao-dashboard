@@ -55,8 +55,14 @@ export default async function ProvisaoPage() {
     );
   }
 
+  // Fonte do saldo Eduzz: extrato completo (cravado, sync automático); a âncora
+  // manual só entra se o extrato ainda não tiver sincronizado.
   const saldoEduzz =
-    p.saldoEduzzAncora != null ? p.saldoEduzzAncora.valor + p.liberadoDesdeAncora : null;
+    p.saldoEduzzExtrato != null
+      ? p.saldoEduzzExtrato.valor
+      : p.saldoEduzzAncora != null
+        ? p.saldoEduzzAncora.valor + p.liberadoDesdeAncora
+        : null;
   const disponivel = p.saldoInter + (saldoEduzz ?? 0) + asaas.saldo;
 
   // Eduzz + Asaas fundidos por dia (mesmo shape, mesmas séries do gráfico)
@@ -145,8 +151,12 @@ export default async function ProvisaoPage() {
               <>
                 {" "}
                 · Eduzz {brl(saldoEduzz)}
-                {p.liberadoDesdeAncora > 0 && p.saldoEduzzAncora && (
-                  <> ({brl(p.saldoEduzzAncora.valor)} em {shortDate(p.saldoEduzzAncora.informadoEm.slice(0, 10))} + {brl(p.liberadoDesdeAncora)} liberados)</>
+                {p.saldoEduzzExtrato != null ? (
+                  <> (extrato)</>
+                ) : (
+                  p.liberadoDesdeAncora > 0 && p.saldoEduzzAncora && (
+                    <> ({brl(p.saldoEduzzAncora.valor)} em {shortDate(p.saldoEduzzAncora.informadoEm.slice(0, 10))} + {brl(p.liberadoDesdeAncora)} liberados)</>
+                  )
                 )}
               </>
             ) : (
@@ -154,9 +164,11 @@ export default async function ProvisaoPage() {
             )}
             {asaas.ok && <> · Asaas {brl(asaas.saldo)}</>}
           </div>
-          <div className="mt-1.5">
-            <SaldoEduzzForm atual={p.saldoEduzzAncora?.valor ?? null} />
-          </div>
+          {p.saldoEduzzExtrato == null && (
+            <div className="mt-1.5">
+              <SaldoEduzzForm atual={p.saldoEduzzAncora?.valor ?? null} />
+            </div>
+          )}
         </div>
 
         <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4">
@@ -347,7 +359,11 @@ export default async function ProvisaoPage() {
         Liberações pagas usam o creditDate exato da Eduzz e o estimatedCreditDate do Asaas.
         Datas com ~ são previsão: pagamento no vencimento + prazo mediano do método
         ({lagLabel}, medidos nos últimos 120 dias na Eduzz; no Asaas, cartão ~30d e Pix/boleto ~1d).
-        O saldo Eduzz é informado manualmente e corrigido com o que liberou desde então.
+        {p.saldoEduzzExtrato != null ? (
+          <>O saldo Eduzz é a soma do extrato completo (vendas − reembolsos − saques − tarifas), sincronizado a cada 2h.{" "}</>
+        ) : (
+          <>O saldo Eduzz é informado manualmente e corrigido com o que liberou desde então.{" "}</>
+        )}
         Saídas previstas: boletos e pagamentos agendados na conta do Inter (60 dias à frente)
         + saídas cadastradas na mão. Atualizado {atualizado}.
       </p>
