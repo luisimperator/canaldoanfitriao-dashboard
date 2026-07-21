@@ -667,6 +667,16 @@ export default async function VendasPage({
           </p>
         </Card>
       </div>
+
+      {/* Acesso discreto à página do 4º Encontro (saiu do menu, mas segue viva) */}
+      <p className="mt-6 text-right">
+        <Link
+          href="/encontro"
+          className="text-[11px] text-slate-300 hover:text-slate-500 dark:text-zinc-700 dark:hover:text-zinc-400"
+        >
+          🎟 4º Encontro
+        </Link>
+      </p>
     </div>
   );
 }
