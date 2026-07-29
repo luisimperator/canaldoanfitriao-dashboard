@@ -225,9 +225,13 @@ export async function fetchInterPagamentosBruto(
 }
 
 /**
- * Consulta boletos/pagamentos agendados no Inter (GET /banking/v2/pagamento,
- * filtrando pela data de pagamento). Exige o escopo `pagamento-boleto.read`
- * habilitado na aplicação do Internet Banking — sem ele o token é negado.
+ * Consulta boletos/pagamentos agendados no Inter (GET /banking/v2/pagamento).
+ * Exige o escopo `pagamento-boleto.read` habilitado na aplicação do Internet
+ * Banking — sem ele o token é negado.
+ *
+ * Filtra por VENCIMENTO, não por PAGAMENTO: um boleto do DDA/agendado ainda
+ * não tem data de pagamento na janela futura, então `filtrarDataPor=PAGAMENTO`
+ * devolvia lista vazia e as saídas previstas apareciam zeradas.
  */
 export async function fetchInterPagamentosAgendados(
   creds: InterCreds,
@@ -238,7 +242,7 @@ export async function fetchInterPagamentosAgendados(
   const qs = new URLSearchParams({
     dataInicio,
     dataFim,
-    filtrarDataPor: "PAGAMENTO",
+    filtrarDataPor: "VENCIMENTO",
   }).toString();
 
   const headers: Record<string, string> = {
@@ -270,7 +274,12 @@ export async function fetchInterPagamentosAgendados(
     const status = String(p.statusPagamento ?? p.status ?? "");
     if (STATUS_ENCERRADO.test(status)) continue;
     const valor = Number(p.valorPagamento ?? p.valorNominal ?? p.valorPagar ?? p.valor);
-    const data = String(p.dataPagamento ?? p.dataVencimentoDigitada ?? "").slice(0, 10);
+    // Quando o pagamento já está agendado, a data agendada é quando o dinheiro
+    // sai; se ela não existe (ou ficou para trás, caso de boleto do DDA ainda
+    // não agendado), vale o vencimento.
+    const agendada = String(p.dataPagamento ?? "").slice(0, 10);
+    const vencimento = String(p.dataVencimentoTitulo ?? p.dataVencimentoDigitada ?? "").slice(0, 10);
+    const data = agendada >= dataInicio ? agendada : vencimento;
     if (!Number.isFinite(valor) || valor <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(data)) continue;
     const descricao =
       String(
