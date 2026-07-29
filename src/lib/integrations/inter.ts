@@ -197,6 +197,34 @@ export interface InterPagamentoAgendado {
 const STATUS_ENCERRADO = /REALIZADO|PAGO|CANCELAD|DEVOLVID|ERRO|REJEITAD|EXPIRAD/i;
 
 /**
+ * Chamada crua ao endpoint de pagamentos, sem filtrar status. Serve para
+ * diagnóstico ("o Inter está devolvendo alguma coisa?") — a página usa a
+ * versão filtrada abaixo.
+ */
+export async function fetchInterPagamentosBruto(
+  creds: InterCreds,
+  dataInicio: string,
+  dataFim: string,
+  filtrarDataPor: "PAGAMENTO" | "VENCIMENTO" | "INCLUSAO" = "PAGAMENTO"
+): Promise<{ status: number; body: unknown }> {
+  const token = await getToken(creds, "pagamento-boleto.read");
+  const qs = new URLSearchParams({ dataInicio, dataFim, filtrarDataPor }).toString();
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/json",
+  };
+  if (creds.contaCorrente) headers["x-conta-corrente"] = creds.contaCorrente;
+  const res = await request(creds, { method: "GET", path: `/banking/v2/pagamento?${qs}`, headers });
+  let body: unknown;
+  try {
+    body = JSON.parse(res.body);
+  } catch {
+    body = res.body.slice(0, 2000);
+  }
+  return { status: res.status, body };
+}
+
+/**
  * Consulta boletos/pagamentos agendados no Inter (GET /banking/v2/pagamento,
  * filtrando pela data de pagamento). Exige o escopo `pagamento-boleto.read`
  * habilitado na aplicação do Internet Banking — sem ele o token é negado.
