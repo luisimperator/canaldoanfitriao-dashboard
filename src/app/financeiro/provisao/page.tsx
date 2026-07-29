@@ -352,7 +352,7 @@ export default async function ProvisaoPage() {
           </div>
         )}
 
-        <SaidasProgramadas saidas={p.saidasProgramadas} hoje={p.hoje} />
+        <SaidasProgramadas saidas={p.saidasProgramadas} pagas={p.saidasPagas} hoje={p.hoje} />
       </Card>
 
       <p className="mt-4 text-xs text-slate-400 dark:text-zinc-500">
@@ -364,8 +364,9 @@ export default async function ProvisaoPage() {
         ) : (
           <>O saldo Eduzz é informado manualmente e corrigido com o que liberou desde então.{" "}</>
         )}
-        Saídas previstas: boletos e pagamentos agendados na conta do Inter (60 dias à frente)
-        + saídas cadastradas na mão. Atualizado {atualizado}.
+        Saídas previstas: boletos do Inter pela data de vencimento (60 dias à frente; boleto do DDA
+        entra no dia em que vence) + saídas cadastradas na mão. Previsão cujo pagamento já apareceu
+        no extrato sai do saldo projetado sozinha. Atualizado {atualizado}.
       </p>
     </div>
   );

@@ -26,6 +26,8 @@ export interface SaidaProgramada {
   data: string; // YYYY-MM-DD
   /** true = ainda não agendada de fato (ex.: DDA emitido) — entra como previsão */
   prevista?: boolean;
+  /** Preenchido quando o pagamento foi achado no extrato: sai do saldo projetado. */
+  paga_em?: string;
 }
 
 export interface ProvisaoCaixa {
@@ -43,6 +45,8 @@ export interface ProvisaoCaixa {
   aVencerCobrancas: number;
   lags: Record<string, number>;
   saidasProgramadas: SaidaProgramada[];
+  /** Previsões já quitadas (conciliadas com o extrato) — fora do saldo projetado. */
+  saidasPagas: SaidaProgramada[];
 }
 
 interface RpcShape {
@@ -59,6 +63,7 @@ interface RpcShape {
   a_vencer_cobrancas: number;
   lags: Record<string, number>;
   saidas_programadas: SaidaProgramada[];
+  saidas_pagas: SaidaProgramada[] | null;
 }
 
 export async function getProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
@@ -86,6 +91,7 @@ export async function getProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
       aVencerCobrancas: raw.a_vencer_cobrancas ?? 0,
       lags: raw.lags ?? {},
       saidasProgramadas: raw.saidas_programadas ?? [],
+      saidasPagas: raw.saidas_pagas ?? [],
     };
   } catch {
     return null;
