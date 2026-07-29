@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
   }
 
   const prevista = Boolean(body?.prevista);
+  // Trecho do beneficiário no extrato: deixa a baixa automática mais segura
+  // (sem ele, a conciliação casa só por valor e data).
+  const matchTexto = String(body?.matchTexto ?? "").trim() || null;
 
   const supabase = getSupabaseAdmin();
   if (!supabase) {
@@ -27,7 +30,7 @@ export async function POST(req: NextRequest) {
   }
   const { error } = await supabase
     .from("provisao_saidas")
-    .insert({ descricao, valor, data, prevista });
+    .insert({ descricao, valor, data, prevista, match_texto: matchTexto });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

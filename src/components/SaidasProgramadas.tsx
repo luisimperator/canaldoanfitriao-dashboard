@@ -8,10 +8,28 @@ import { dayLabel } from "@/components/ProvisaoTimeline";
 
 // Pagamentos agendados na mão: lista + cadastro + remoção.
 // Grava em provisao_saidas via /api/financeiro/provisao/saidas.
+//
+// `pagas` são previsões que o extrato já quitou (conciliação automática por
+// valor + data + beneficiário): ficam listadas como comprovante, sem pesar no
+// saldo projetado.
 
-export function SaidasProgramadas({ saidas, hoje }: { saidas: SaidaProgramada[]; hoje: string }) {
+export function SaidasProgramadas({
+  saidas,
+  pagas = [],
+  hoje,
+}: {
+  saidas: SaidaProgramada[];
+  pagas?: SaidaProgramada[];
+  hoje: string;
+}) {
   const router = useRouter();
-  const [form, setForm] = useState({ descricao: "", valor: "", data: "", prevista: false });
+  const [form, setForm] = useState({
+    descricao: "",
+    valor: "",
+    data: "",
+    prevista: false,
+    matchTexto: "",
+  });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -28,6 +46,7 @@ export function SaidasProgramadas({ saidas, hoje }: { saidas: SaidaProgramada[];
           valor: num,
           data: form.data,
           prevista: form.prevista,
+          matchTexto: form.matchTexto,
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -35,7 +54,7 @@ export function SaidasProgramadas({ saidas, hoje }: { saidas: SaidaProgramada[];
         setErr(j.error ?? `Erro ${res.status}`);
         return;
       }
-      setForm({ descricao: "", valor: "", data: "", prevista: false });
+      setForm({ descricao: "", valor: "", data: "", prevista: false, matchTexto: "" });
       router.refresh();
     } catch {
       setErr("Falha de rede");
@@ -109,6 +128,46 @@ export function SaidasProgramadas({ saidas, hoje }: { saidas: SaidaProgramada[];
         </div>
       )}
 
+      {pagas.length > 0 && (
+        <div className="mb-3 space-y-1.5">
+          {pagas.map((s) => (
+            <div
+              key={s.id}
+              className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.015] px-4 py-2"
+            >
+              <div className="min-w-0">
+                <div className="truncate text-sm text-slate-400 dark:text-zinc-500 line-through">
+                  {s.descricao}
+                </div>
+                <div className="text-xs text-slate-400 dark:text-zinc-600">
+                  vencia {dayLabel(s.data, hoje)} ·{" "}
+                  <span className="rounded bg-emerald-100 dark:bg-emerald-500/15 px-1 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                    paga {s.paga_em ? s.paga_em.split("-").reverse().slice(0, 2).join("/") : ""}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm tabular-nums text-slate-400 dark:text-zinc-600 line-through">
+                  − {brl(s.valor)}
+                </span>
+                <button
+                  onClick={() => remover(s.id)}
+                  disabled={busy}
+                  title="Remover da lista"
+                  className="text-slate-300 dark:text-zinc-700 hover:text-rose-600 dark:hover:text-rose-400 disabled:opacity-50"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+          <p className="text-[11px] text-slate-400 dark:text-zinc-600">
+            Baixadas pelo extrato do Inter (valor e beneficiário conferem) — já não pesam no saldo
+            projetado.
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
         <input
           className={`${field} w-full sm:w-64`}
@@ -128,6 +187,13 @@ export function SaidasProgramadas({ saidas, hoje }: { saidas: SaidaProgramada[];
           type="date"
           value={form.data}
           onChange={(e) => setForm((f) => ({ ...f, data: e.target.value }))}
+        />
+        <input
+          className={`${field} w-full sm:w-44`}
+          placeholder="Beneficiário no extrato"
+          title="Trecho do nome como aparece no extrato (ex.: facebook). Serve para dar baixa sozinho quando o pagamento cair."
+          value={form.matchTexto}
+          onChange={(e) => setForm((f) => ({ ...f, matchTexto: e.target.value }))}
         />
         <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400">
           <input
