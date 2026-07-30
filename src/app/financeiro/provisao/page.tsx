@@ -275,10 +275,22 @@ export default async function ProvisaoPage() {
             ...saidaDistribuicao,
           ]}
           evento={EVENTO}
+          colchao={
+            politica
+              ? {
+                  valor: politica.colchaoExigido,
+                  label:
+                    politica.cofreAntes >= politica.pisoOperacional
+                      ? "cofre acumulado"
+                      : "piso operacional",
+                }
+              : undefined
+          }
         />
         <p className="mt-2 text-xs text-slate-400 dark:text-zinc-500">
-          Saldo dia a dia = disponível agora + liberações previstas − saídas previstas. Se a
-          linha se aproxima do fundo de 10% (ou fura o zero), é disrupção de caixa à vista —
+          Saldo dia a dia = disponível agora + liberações previstas − saídas previstas. A linha
+          tracejada é o colchão que a política de caixa exige (o maior entre o piso operacional
+          e o cofre acumulado); se o saldo se aproxima dela, é disrupção de caixa à vista —
           antecipe recebíveis ou reagende saídas antes do vale.
           {saidaDistribuicao.length > 0 && distrib && (
             <>
