@@ -33,8 +33,14 @@ export interface DistribuicaoStatus {
   podeFechar: boolean;
   /** O que vale hoje: cravado se já fechou, senão o vivo. */
   valor: number;
-  /** Recalculado agora, mesmo depois de cravado (pra comparar). */
+  /** Recalculado agora, mesmo depois de cravado (pra comparar). Já redondo. */
   valorVivo: number;
+  /** Antes de arredondar — a conta cheia do caixa livre. */
+  valorBruto: number;
+  /** Passo do arredondamento (R$ 1.000 por padrão). */
+  arredondamento: number;
+  /** Quanto se tira ALÉM do caixa livre por causa do arredondamento pra cima. */
+  extraArredondamento: number;
   socios: SocioDistribuicao[];
   realizado: {
     total: number;
@@ -66,6 +72,9 @@ interface RpcShape {
   pode_fechar: boolean;
   valor: number;
   valor_vivo: number;
+  valor_bruto: number;
+  arredondamento: number;
+  extra_arredondamento: number;
   socios: RpcSocio[] | null;
   realizado: {
     total: number;
@@ -128,6 +137,9 @@ async function fetchDistribuicao(): Promise<DistribuicaoStatus | null> {
       podeFechar: Boolean(r.pode_fechar),
       valor: r.valor ?? 0,
       valorVivo: r.valor_vivo ?? 0,
+      valorBruto: r.valor_bruto ?? 0,
+      arredondamento: r.arredondamento ?? 0,
+      extraArredondamento: r.extra_arredondamento ?? 0,
       socios: (r.socios ?? []).map((s) => ({
         id: s.id,
         nome: s.nome,

@@ -59,6 +59,12 @@ export function CardDistribuicao({
           <div className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">
             {pct(1 - p.percentualReserva)} do caixa livre · os outros{" "}
             {pct(p.percentualReserva)} ({brl(p.vaiProCofre)}) vão pro cofre
+            {d && d.extraArredondamento > 0 && !pago && (
+              <>
+                {" "}
+                · redondo pra cima ({brl(d.valorBruto)} + {brl(d.extraArredondamento)})
+              </>
+            )}
           </div>
 
           {d && !pago && (
@@ -138,6 +144,12 @@ export function CardDistribuicao({
                     s.destino
                   )}
                 </div>
+                {/* Sócio que não retirou tudo deixou o resto de giro na empresa */}
+                {sPago && s.valor - s.pago > 1 && (
+                  <div className="mt-1 text-[11px] text-violet-600 dark:text-violet-300">
+                    deixou {brl(s.valor - s.pago)} na empresa (cota era {brl(s.valor)})
+                  </div>
+                )}
               </div>
             );
           })}
