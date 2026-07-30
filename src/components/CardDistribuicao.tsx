@@ -59,10 +59,11 @@ export function CardDistribuicao({
           <div className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">
             {pct(1 - p.percentualReserva)} do caixa livre · os outros{" "}
             {pct(p.percentualReserva)} ({brl(p.vaiProCofre)}) vão pro cofre
-            {d && d.extraArredondamento > 0 && !pago && (
+            {d && d.sobraArredondamento > 0 && !pago && (
               <>
                 {" "}
-                · redondo pra cima ({brl(d.valorBruto)} + {brl(d.extraArredondamento)})
+                · redondo pra baixo ({brl(d.valorBruto)} − {brl(d.sobraArredondamento)} que
+                ficam na conta)
               </>
             )}
           </div>

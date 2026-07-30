@@ -39,8 +39,8 @@ export interface DistribuicaoStatus {
   valorBruto: number;
   /** Passo do arredondamento (R$ 1.000 por padrão). */
   arredondamento: number;
-  /** Quanto se tira ALÉM do caixa livre por causa do arredondamento pra cima. */
-  extraArredondamento: number;
+  /** Troco do arredondamento pra baixo: fica na conta e entra no bolo seguinte. */
+  sobraArredondamento: number;
   socios: SocioDistribuicao[];
   realizado: {
     total: number;
@@ -74,7 +74,7 @@ interface RpcShape {
   valor_vivo: number;
   valor_bruto: number;
   arredondamento: number;
-  extra_arredondamento: number;
+  sobra_arredondamento: number;
   socios: RpcSocio[] | null;
   realizado: {
     total: number;
@@ -141,7 +141,7 @@ async function fetchDistribuicao(): Promise<DistribuicaoStatus | null> {
       valorVivo: r.valor_vivo ?? 0,
       valorBruto: r.valor_bruto ?? 0,
       arredondamento: r.arredondamento ?? 0,
-      extraArredondamento: r.extra_arredondamento ?? 0,
+      sobraArredondamento: r.sobra_arredondamento ?? 0,
       socios: (r.socios ?? []).map((s) => ({
         id: s.id,
         nome: s.nome,
