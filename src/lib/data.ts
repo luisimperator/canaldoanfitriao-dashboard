@@ -38,9 +38,12 @@ function spDay(ts: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d);
 }
 
-// O Supabase devolve no máximo 1000 linhas por consulta; com o histórico
-// completo de vendas é preciso paginar até varrer a tabela inteira.
+// O Supabase devolve no máximo 1000 linhas por consulta; com 45 mil leads são
+// dezenas de páginas. Buscá-las em fila (uma esperando a outra) custava ~15s
+// por request — as páginas são independentes, então vão todas de uma vez,
+// em lotes, depois de um count() para saber quantas são.
 const PAGE = 1000;
+const CONCORRENCIA = 8;
 
 async function selectAll(
   supabase: ReturnType<typeof getSupabase>,
@@ -49,21 +52,37 @@ async function selectAll(
   orderBy = "id"
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rows: any[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabase
-      .from(table)
-      .select(columns)
-      .order(orderBy, { ascending: true })
-      .range(from, from + PAGE - 1);
-    if (error) {
-      throw new Error(`Erro ao consultar o Supabase (${table}): ${error.message}`);
-    }
-    rows.push(...(data ?? []));
-    if (!data || data.length < PAGE) break;
+  const { count, error: countError } = await supabase
+    .from(table)
+    .select("*", { count: "exact", head: true });
+  if (countError) {
+    throw new Error(`Erro ao contar o Supabase (${table}): ${countError.message}`);
   }
-  return rows;
+  const total = count ?? 0;
+  if (total === 0) return [];
+
+  const inicios: number[] = [];
+  for (let from = 0; from < total; from += PAGE) inicios.push(from);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const paginas: any[][] = new Array(inicios.length);
+  for (let i = 0; i < inicios.length; i += CONCORRENCIA) {
+    const lote = inicios.slice(i, i + CONCORRENCIA);
+    await Promise.all(
+      lote.map(async (from, j) => {
+        const { data, error } = await supabase
+          .from(table)
+          .select(columns)
+          .order(orderBy, { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) {
+          throw new Error(`Erro ao consultar o Supabase (${table}): ${error.message}`);
+        }
+        paginas[i + j] = data ?? [];
+      })
+    );
+  }
+  return paginas.flat();
 }
 
 async function fetchDashboardFromSupabase(): Promise<DashboardData> {
@@ -142,10 +161,13 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
 // carga paga o custo; as navegações seguintes reusam o resultado, então trocar
 // de aba fica instantâneo. Os syncs (cron a cada 30min, webhooks) levam no
 // máximo ~60s pra refletir — aceitável num painel de acompanhamento.
+// 60s deixava quase todo acesso caindo em cache miss (e o miss é caro). Os
+// syncs que alimentam essas tabelas rodam a cada 30 min no melhor caso, então
+// 5 minutos não atrasa nada e transforma a navegação em instantânea.
 const getCachedDashboardData = unstable_cache(
   fetchDashboardFromSupabase,
   ["dashboard-data-v1"],
-  { revalidate: 60, tags: ["dashboard"] }
+  { revalidate: 300, tags: ["dashboard"] }
 );
 
 export async function getDashboardData(): Promise<DashboardData> {

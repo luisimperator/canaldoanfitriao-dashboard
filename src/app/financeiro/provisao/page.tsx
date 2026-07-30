@@ -10,6 +10,8 @@ import { ProvisaoTimeline } from "@/components/ProvisaoTimeline";
 import { ProvisaoRows } from "@/components/ProvisaoRows";
 import { SaldoEduzzForm } from "@/components/SaldoEduzzForm";
 import { SaidasProgramadas } from "@/components/SaidasProgramadas";
+import { CardDistribuicao } from "@/components/CardDistribuicao";
+import { getPoliticaDistribuicao, proximaDistribuicao } from "@/lib/politica-distribuicao";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +36,16 @@ const EVENTO = { dia: "2026-07-18", label: "4º Encontro" };
 export default async function ProvisaoPage() {
   const data = await getDashboardData();
   const p = await getProvisaoCaixa();
-  const [inter, asaas] = p
-    ? await Promise.all([getSaidasInter(p.hoje), getProvisaoAsaas(p.hoje)])
+  const [inter, asaas, politica] = p
+    ? await Promise.all([
+        getSaidasInter(p.hoje),
+        getProvisaoAsaas(p.hoje),
+        getPoliticaDistribuicao(proximaDistribuicao(p.hoje)),
+      ])
     : [
         { ok: false, saidas: [] as never[] },
         { ok: false, erro: undefined, saldo: 0, pagoPorDia: [], vencerPorDia: [] },
+        null,
       ];
 
   if (!p) {
@@ -135,6 +142,8 @@ export default async function ProvisaoPage() {
         </Link>
       </div>
       <DemoBanner show={data.isDemo} />
+
+      {politica && <CardDistribuicao p={politica} />}
 
       {/* KPIs */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-2">

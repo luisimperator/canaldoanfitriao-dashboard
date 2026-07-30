@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import {
   fetchAsaasBalance,
   fetchAsaasPayments,
@@ -62,7 +63,18 @@ function agrupaPorDia(
     .sort((a, b) => a.dia.localeCompare(b.dia));
 }
 
+// Três chamadas REST ao Asaas (saldo + confirmadas + pendentes) por render:
+// cacheadas junto com o resto da provisão.
+const getProvisaoAsaasCached = unstable_cache(fetchProvisaoAsaas, ["provisao-asaas-v1"], {
+  revalidate: 300,
+  tags: ["provisao"],
+});
+
 export async function getProvisaoAsaas(hoje: string): Promise<ProvisaoAsaas> {
+  return getProvisaoAsaasCached(hoje);
+}
+
+async function fetchProvisaoAsaas(hoje: string): Promise<ProvisaoAsaas> {
   const cfg = getAsaasConfig();
   if (!cfg) {
     return { ok: false, erro: "ASAAS_API_KEY não configurada.", saldo: 0, pagoPorDia: [], vencerPorDia: [] };

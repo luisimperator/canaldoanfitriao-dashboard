@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 // Provisão de caixa: quando o dinheiro da Eduzz cai de verdade, somado ao
@@ -66,7 +67,20 @@ interface RpcShape {
   saidas_pagas: SaidaProgramada[] | null;
 }
 
+// A RPC varre eduzz_sales_raw inteira (~2,3s). Sem cache, a página pagava isso
+// em toda navegação — e duas vezes, já que a política de distribuição chama a
+// mesma função por dentro.
+const getProvisaoCaixaCached = unstable_cache(
+  fetchProvisaoCaixa,
+  ["provisao-caixa-v1"],
+  { revalidate: 300, tags: ["provisao"] }
+);
+
 export async function getProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
+  return getProvisaoCaixaCached();
+}
+
+async function fetchProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
   const admin = getSupabaseAdmin();
   if (!admin) return null;
   try {
