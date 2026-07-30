@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import {
   fetchInterPagamentosAgendados,
   getInterCreds,
@@ -20,7 +21,18 @@ function addDias(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// A consulta ao Inter é mTLS e passa por um token OAuth a cada chamada: custa
+// segundos. Boleto agendado não muda de minuto em minuto, então vale cache.
+const getSaidasInterCached = unstable_cache(fetchSaidasInter, ["saidas-inter-v1"], {
+  revalidate: 300,
+  tags: ["provisao"],
+});
+
 export async function getSaidasInter(hoje: string, dias = 60): Promise<SaidasInter> {
+  return getSaidasInterCached(hoje, dias);
+}
+
+async function fetchSaidasInter(hoje: string, dias = 60): Promise<SaidasInter> {
   const creds = getInterCreds();
   if (!creds) {
     return { ok: false, erro: "Credenciais do Inter não configuradas.", saidas: [] };
