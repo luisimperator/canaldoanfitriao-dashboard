@@ -11,7 +11,6 @@ import { ProvisaoRows } from "@/components/ProvisaoRows";
 import { SaldoEduzzForm } from "@/components/SaldoEduzzForm";
 import { SaidasProgramadas } from "@/components/SaidasProgramadas";
 import { CardDistribuicao } from "@/components/CardDistribuicao";
-import { getPoliticaDistribuicao, proximaDistribuicao } from "@/lib/politica-distribuicao";
 import { getDistribuicao } from "@/lib/distribuicao";
 
 export const dynamic = "force-dynamic";
@@ -37,19 +36,20 @@ const EVENTO = { dia: "2026-07-18", label: "4º Encontro" };
 export default async function ProvisaoPage() {
   const data = await getDashboardData();
   const p = await getProvisaoCaixa();
-  const [inter, asaas, politica, distrib] = p
+  // distribuicao_status() já traz a política por dentro — pedir as duas coisas
+  // separadas fazia a página varrer eduzz_sales_raw uma vez a mais.
+  const [inter, asaas, distrib] = p
     ? await Promise.all([
         getSaidasInter(p.hoje),
         getProvisaoAsaas(p.hoje),
-        getPoliticaDistribuicao(proximaDistribuicao(p.hoje)),
         getDistribuicao(),
       ])
     : [
         { ok: false, saidas: [] as never[] },
         { ok: false, erro: undefined, saldo: 0, pagoPorDia: [], vencerPorDia: [] },
         null,
-        null,
       ];
+  const politica = distrib?.politica ?? null;
 
   if (!p) {
     return (

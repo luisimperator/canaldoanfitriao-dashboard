@@ -85,9 +85,11 @@ interface RpcShape {
   politica: Record<string, unknown> | null;
 }
 
-// A RPC chama provisao_caixa() por dentro (varredura de ~2,3s).
-const getDistribuicaoCached = unstable_cache(fetchDistribuicao, ["distribuicao-v1"], {
-  revalidate: 300,
+// A RPC chama provisao_caixa() por dentro (varredura de ~2,3s). TTL curto de
+// propósito: é dinheiro na tela e mudança de parâmetro (piso, %) tem que
+// aparecer rápido. A chave leva versão — bumpar invalida na hora do deploy.
+const getDistribuicaoCached = unstable_cache(fetchDistribuicao, ["distribuicao-v2"], {
+  revalidate: 60,
   tags: ["provisao"],
 });
 

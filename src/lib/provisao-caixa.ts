@@ -72,8 +72,8 @@ interface RpcShape {
 // mesma função por dentro.
 const getProvisaoCaixaCached = unstable_cache(
   fetchProvisaoCaixa,
-  ["provisao-caixa-v1"],
-  { revalidate: 300, tags: ["provisao"] }
+  ["provisao-caixa-v2"],
+  { revalidate: 60, tags: ["provisao"] }
 );
 
 export async function getProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
