@@ -12,6 +12,7 @@ import { SaldoEduzzForm } from "@/components/SaldoEduzzForm";
 import { SaidasProgramadas } from "@/components/SaidasProgramadas";
 import { CardDistribuicao } from "@/components/CardDistribuicao";
 import { getPoliticaDistribuicao, proximaDistribuicao } from "@/lib/politica-distribuicao";
+import { getDistribuicao } from "@/lib/distribuicao";
 
 export const dynamic = "force-dynamic";
 
@@ -36,15 +37,17 @@ const EVENTO = { dia: "2026-07-18", label: "4º Encontro" };
 export default async function ProvisaoPage() {
   const data = await getDashboardData();
   const p = await getProvisaoCaixa();
-  const [inter, asaas, politica] = p
+  const [inter, asaas, politica, distrib] = p
     ? await Promise.all([
         getSaidasInter(p.hoje),
         getProvisaoAsaas(p.hoje),
         getPoliticaDistribuicao(proximaDistribuicao(p.hoje)),
+        getDistribuicao(),
       ])
     : [
         { ok: false, saidas: [] as never[] },
         { ok: false, erro: undefined, saldo: 0, pagoPorDia: [], vencerPorDia: [] },
+        null,
         null,
       ];
 
@@ -97,10 +100,27 @@ export default async function ProvisaoPage() {
     prev: somaAte(vencerAll, corteMes),
   };
 
+  // Retirada dos sócios: entra na projeção como saída no dia da transferência.
+  // Se o Pix já saiu (baixa automática pelo extrato), o dinheiro já saiu do
+  // saldo do Inter — aí não entra de novo, senão conta dobrado.
+  const distribuicaoPaga = (distrib?.realizado.total ?? 0) > 0;
+  const saidaDistribuicao =
+    distrib && !distribuicaoPaga && distrib.valor > 0 && distrib.dataDistribuicao >= p.hoje
+      ? [
+          {
+            dia: distrib.dataDistribuicao,
+            valor: distrib.valor,
+            nome: `Distribuição sócios${distrib.fechado ? "" : " (prévia)"}`,
+          },
+        ]
+      : [];
+
   // saídas previstas = agendados no Inter (boletos/pagamentos) + manuais
+  //                    + a retirada dos sócios
   const saidasFuturas = [
     ...inter.saidas.map((s) => ({ dia: s.data, valor: s.valor })),
     ...p.saidasProgramadas.map((s) => ({ dia: s.data, valor: s.valor })),
+    ...saidaDistribuicao.map((s) => ({ dia: s.dia, valor: s.valor })),
   ];
   const saidasMes = Math.round(
     saidasFuturas.filter((s) => s.dia <= corteMes).reduce((a, s) => a + s.valor, 0)
@@ -143,7 +163,7 @@ export default async function ProvisaoPage() {
       </div>
       <DemoBanner show={data.isDemo} />
 
-      {politica && <CardDistribuicao p={politica} />}
+      {politica && <CardDistribuicao p={politica} d={distrib} />}
 
       {/* KPIs */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-2">
@@ -252,6 +272,7 @@ export default async function ProvisaoPage() {
               valor: s.valor,
               nome: s.prevista ? `${s.descricao} (previsão)` : s.descricao,
             })),
+            ...saidaDistribuicao,
           ]}
           evento={EVENTO}
         />
@@ -259,6 +280,14 @@ export default async function ProvisaoPage() {
           Saldo dia a dia = disponível agora + liberações previstas − saídas previstas. Se a
           linha se aproxima do fundo de 10% (ou fura o zero), é disrupção de caixa à vista —
           antecipe recebíveis ou reagende saídas antes do vale.
+          {saidaDistribuicao.length > 0 && distrib && (
+            <>
+              {" "}
+              O degrau de {shortDate(distrib.dataDistribuicao)} é a retirada dos sócios
+              ({brl(distrib.valor)}
+              {distrib.fechado ? ", cravada" : ", prévia — muda até " + shortDate(distrib.dataFechamento)}).
+            </>
+          )}
         </p>
       </Card>
 
