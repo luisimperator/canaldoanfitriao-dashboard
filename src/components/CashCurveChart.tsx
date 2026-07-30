@@ -5,8 +5,14 @@ import { brl } from "@/lib/format";
 
 // Curva de caixa projetada: saldo dia a dia (disponível + entradas previstas
 // − saídas previstas), com barras de entrada, marcadores de saída, linha do
-// dia do evento, "menor caixa" no vale e o fundo de caixa de 10%. É o gráfico
-// de disrupção: se a linha encosta no fundo (ou fura o zero), tem aperto.
+// dia do evento, "menor caixa" no vale e o colchão exigido pela política de
+// caixa. É o gráfico de disrupção: se a linha encosta no colchão (ou fura o
+// zero), tem aperto.
+//
+// O colchão vem da política (piso operacional ou cofre acumulado, o que for
+// maior) — antes essa linha era "10% do disponível", um piso que subia quando
+// o caixa estava gordo e descia quando estava magro, ou seja, o oposto do que
+// um piso de segurança precisa fazer.
 
 interface Fluxo {
   dia: string; // YYYY-MM-DD
@@ -39,12 +45,15 @@ export function CashCurveChart({
   entradas,
   saidas,
   evento,
+  colchao,
 }: {
   hoje: string;
   disponivel: number;
   entradas: Fluxo[];
   saidas: Fluxo[];
   evento?: { dia: string; label: string };
+  /** Piso que a política de caixa exige (piso operacional ou cofre acumulado). */
+  colchao?: { valor: number; label: string };
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(680);
@@ -95,9 +104,9 @@ export function CashCurveChart({
     dias.push({ dia, saldo, entrada, saida });
   }
 
-  const fundo = Math.round(disponivel * 0.1);
+  const piso = colchao ? Math.round(colchao.valor) : null;
   const menor = dias.reduce((a, d) => (d.saldo < a.saldo ? d : a), dias[0]);
-  const maxSaldo = Math.max(...dias.map((d) => d.saldo), fundo);
+  const maxSaldo = Math.max(...dias.map((d) => d.saldo), piso ?? 0);
   const minSaldo = Math.min(...dias.map((d) => d.saldo), 0);
   const maxEntrada = Math.max(...dias.map((d) => d.entrada), 1);
 
@@ -187,11 +196,15 @@ export function CashCurveChart({
           <line x1={M_X} y1={yOf(0)} x2={width - M_X} y2={yOf(0)} stroke="#e11d48" strokeWidth={1} strokeDasharray="4 3" opacity={0.7} />
         )}
 
-        {/* fundo de caixa 10% */}
-        <line x1={M_X} y1={yOf(fundo)} x2={width - M_X} y2={yOf(fundo)} stroke="#d97706" strokeWidth={1} strokeDasharray="5 4" opacity={0.8} />
-        <text x={width - M_X - 4} y={yOf(fundo) - 5} textAnchor="end" fontSize={10} fontWeight={600} className="fill-amber-600 dark:fill-amber-400">
-          fundo 10% · {brl(fundo)}
-        </text>
+        {/* colchão exigido pela política de caixa */}
+        {piso !== null && (
+          <>
+            <line x1={M_X} y1={yOf(piso)} x2={width - M_X} y2={yOf(piso)} stroke="#d97706" strokeWidth={1} strokeDasharray="5 4" opacity={0.8} />
+            <text x={width - M_X - 4} y={yOf(piso) - 5} textAnchor="end" fontSize={10} fontWeight={600} className="fill-amber-600 dark:fill-amber-400">
+              colchão · {brl(piso)} ({colchao!.label})
+            </text>
+          </>
+        )}
 
         {/* barras de entrada (na base) */}
         {dias.filter((d) => d.entrada > 0).map((d) => {
@@ -302,7 +315,9 @@ export function CashCurveChart({
         {mostraEvento && (
           <span className="inline-flex items-center gap-1.5"><span className="h-0.5 w-4 rounded" style={{ background: "#8b5cf6" }} /> {evento.label} ({dataUTC(evento.dia).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" })})</span>
         )}
-        <span className="inline-flex items-center gap-1.5"><span className="h-0.5 w-4 rounded border-t border-dashed" style={{ borderColor: "#d97706" }} /> Fundo de caixa 10%</span>
+        {colchao && (
+          <span className="inline-flex items-center gap-1.5"><span className="h-0.5 w-4 rounded border-t border-dashed" style={{ borderColor: "#d97706" }} /> Colchão exigido</span>
+        )}
       </div>
     </div>
   );
