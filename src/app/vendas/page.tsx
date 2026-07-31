@@ -160,12 +160,21 @@ export default async function VendasPage({
     revenue.set(key, (revenue.get(key) ?? 0) + sale.amount);
   }
   const months = [...monthsSet].sort().filter((m) => m >= rangeFrom && m <= rangeTo);
-  const activeNames = data.sellers.filter((s) => s.isActive).map((s) => s.name);
+  // O gráfico é histórico: quem saiu da empresa continua aparecendo nos meses
+  // em que vendeu (senão o faturamento do período some da tela junto com a
+  // pessoa). Entram os ativos + os inativos que têm venda na janela.
+  const chartNames = data.sellers
+    .filter(
+      (s) =>
+        s.isActive ||
+        months.some((mk) => (revenue.get(`${mk}|${s.name}`) ?? 0) > 0)
+    )
+    .map((s) => s.name);
   const dayOfMonthNow = Number(today.slice(8, 10));
   const daysInCurrentMonth = Number(lastDayOf(currentMonth).slice(8, 10));
   const monthly = months.map((mk) => {
     const row: Record<string, string | number> = { month: monthLabel(mk) };
-    for (const name of activeNames) {
+    for (const name of chartNames) {
       const real = Math.round(revenue.get(`${mk}|${name}`) ?? 0);
       row[name] = real;
       row[`${name}__proj`] =
@@ -587,7 +596,7 @@ export default async function VendasPage({
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card title="Faturamento por vendedor por mês">
-          <SalesBySellerChart data={monthly} sellers={activeNames} projected />
+          <SalesBySellerChart data={monthly} sellers={chartNames} projected />
         </Card>
 
         <Card title="Atendimento no dia 0 — falta gente ou falta processo?">
