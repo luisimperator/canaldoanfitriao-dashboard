@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   extFromMime,
   fetchWhatsappMedia,
+  getWhatsappConfig,
   sendWhatsappText,
   verifyWhatsappSignature,
 } from "@/lib/whatsapp";
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
   const mode = params.get("hub.mode");
   const token = params.get("hub.verify_token");
   const challenge = params.get("hub.challenge");
-  const expected = process.env.WHATSAPP_VERIFY_TOKEN;
+  const expected = (await getWhatsappConfig()).verifyToken;
 
   if (mode === "subscribe" && expected && token === expected) {
     return new NextResponse(challenge ?? "", { status: 200 });
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const raw = await req.text();
   const sig = req.headers.get("x-hub-signature-256");
-  const sigOk = verifyWhatsappSignature(raw, sig);
+  const sigOk = await verifyWhatsappSignature(raw, sig);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let body: any = null;
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, note: "sem supabase" });
   }
 
-  const autoReply = process.env.WHATSAPP_AUTO_REPLY === "true";
+  const autoReply = (await getWhatsappConfig()).autoReply;
 
   const entries = Array.isArray(body?.entry) ? body.entry : [];
   for (const entry of entries) {
