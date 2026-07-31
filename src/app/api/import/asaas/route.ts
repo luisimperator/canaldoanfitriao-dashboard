@@ -12,7 +12,7 @@ import {
 // app. Esta rota é chamada pelo cron do Supabase com ?key=, comparada com o
 // segredo asaas_sync_key do Vault (mesmo padrão do sync do Inter).
 //
-// GET /api/sync/asaas?key=...&dias=120
+// GET /api/import/asaas?key=...&dias=120
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
