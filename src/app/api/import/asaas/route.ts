@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   fetchAsaasCustomers,
-  fetchAsaasPaymentsByPaymentDate,
+  fetchAsaasPaymentsByCreation,
   getAsaasConfig,
 } from "@/lib/integrations/asaas";
 
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   try {
     const [clientes, cobrancas] = await Promise.all([
       fetchAsaasCustomers(cfg),
-      fetchAsaasPaymentsByPaymentDate(cfg, de, ate),
+      fetchAsaasPaymentsByCreation(cfg, de, ate),
     ]);
 
     if (clientes.length > 0) {
@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
           numero_fatura: p.invoiceNumber ?? null,
           due_date: p.dueDate ?? null,
           payment_date: p.paymentDate ?? null,
+          confirmed_date: p.confirmedDate ?? null,
           credit_date: p.creditDate ?? p.estimatedCreditDate ?? null,
           raw: p,
           synced_at: new Date().toISOString(),

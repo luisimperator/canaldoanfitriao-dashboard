@@ -137,8 +137,12 @@ export async function fetchAsaasCustomers(cfg: AsaasConfig): Promise<AsaasCustom
   return all;
 }
 
-/** Cobranças por data de PAGAMENTO (não por vencimento). */
-export async function fetchAsaasPaymentsByPaymentDate(
+/**
+ * Cobranças por data de CRIAÇÃO. Filtrar por paymentDate deixava de fora
+ * cobrança confirmada que ainda não liquidou (cartão em D+30) — e é
+ * justamente esse o caso do saldo de mentoria pago no cartão.
+ */
+export async function fetchAsaasPaymentsByCreation(
   cfg: AsaasConfig,
   de: string,
   ate: string
@@ -150,8 +154,8 @@ export async function fetchAsaasPaymentsByPaymentDate(
     const qs = new URLSearchParams({
       limit: String(limit),
       offset: String(offset),
-      "paymentDate[ge]": de,
-      "paymentDate[le]": ate,
+      "dateCreated[ge]": de,
+      "dateCreated[le]": ate,
     });
     const page = await asaasGet<{ data?: AsaasPaymentFull[]; hasMore?: boolean }>(
       cfg,
