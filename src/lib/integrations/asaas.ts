@@ -99,3 +99,69 @@ export async function fetchAsaasPayments(
   const allowed = new Set(opts.status);
   return all.filter((p) => allowed.has(p.status));
 }
+
+// --- Sync pro banco (atribuição de vendedor) ---
+//
+// A provisão de caixa olha o crédito (D+30 do cartão). Aqui é outra pergunta:
+// QUANDO a venda foi feita — e isso é a data em que a fatura foi paga.
+
+export interface AsaasCustomer {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  cpfCnpj?: string | null;
+  mobilePhone?: string | null;
+}
+
+export interface AsaasPaymentFull extends AsaasPayment {
+  customer?: string | null;
+  invoiceNumber?: string | null;
+}
+
+/** Todos os clientes cadastrados (paginado). */
+export async function fetchAsaasCustomers(cfg: AsaasConfig): Promise<AsaasCustomer[]> {
+  const limit = 100;
+  const all: AsaasCustomer[] = [];
+  let offset = 0;
+  for (;;) {
+    const page = await asaasGet<{ data?: AsaasCustomer[]; hasMore?: boolean }>(
+      cfg,
+      `/customers?limit=${limit}&offset=${offset}`
+    );
+    const items = page.data ?? [];
+    all.push(...items);
+    if (!page.hasMore || items.length === 0) break;
+    offset += limit;
+    if (offset > 10_000) break; // trava de segurança
+  }
+  return all;
+}
+
+/** Cobranças por data de PAGAMENTO (não por vencimento). */
+export async function fetchAsaasPaymentsByPaymentDate(
+  cfg: AsaasConfig,
+  de: string,
+  ate: string
+): Promise<AsaasPaymentFull[]> {
+  const limit = 100;
+  const all: AsaasPaymentFull[] = [];
+  let offset = 0;
+  for (;;) {
+    const qs = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+      "paymentDate[ge]": de,
+      "paymentDate[le]": ate,
+    });
+    const page = await asaasGet<{ data?: AsaasPaymentFull[]; hasMore?: boolean }>(
+      cfg,
+      `/payments?${qs.toString()}`
+    );
+    const items = page.data ?? [];
+    all.push(...items);
+    if (!page.hasMore || items.length === 0) break;
+    offset += limit;
+    if (offset > 10_000) break;
+  }
+  return all;
+}
