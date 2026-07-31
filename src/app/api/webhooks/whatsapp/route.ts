@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { sendWhatsappText, verifyWhatsappSignature } from "@/lib/whatsapp";
+import {
+  extFromMime,
+  fetchWhatsappMedia,
+  sendWhatsappText,
+  verifyWhatsappSignature,
+} from "@/lib/whatsapp";
 import { runSupportAgent, type AgentMessage } from "@/lib/support-ai";
 
 // Webhook do WhatsApp Cloud API (Meta) — Fase 3 do Suporte.
@@ -21,6 +26,24 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300; // a IA pode levar alguns segundos (hobby da Vercel limita a 60)
 
 const HISTORY_LIMIT = 40;
+
+// Tipos que viram anexo (o resto vira texto ou é ignorado).
+const MEDIA_TYPES = ["image", "audio", "video", "document", "sticker"] as const;
+
+// Texto legível de uma mensagem, seja qual for o tipo. Áudio e imagem não têm
+// texto — mas legenda (caption) tem, e é o que o cliente escreveu junto.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function textoDe(msg: any): string {
+  if (msg?.type === "text") return String(msg?.text?.body ?? "");
+  if (msg?.type === "button") return String(msg?.button?.text ?? "");
+  if (msg?.type === "interactive") {
+    return String(
+      msg?.interactive?.button_reply?.title ?? msg?.interactive?.list_reply?.title ?? ""
+    );
+  }
+  const cap = msg?.[msg?.type]?.caption;
+  return typeof cap === "string" ? cap : "";
+}
 
 // --- Verificação (GET) ---
 export async function GET(req: NextRequest) {
@@ -82,25 +105,101 @@ export async function POST(req: NextRequest) {
     for (const change of changes) {
       const value = change?.value;
       const messages = Array.isArray(value?.messages) ? value.messages : [];
+      // Nome do contato (vem uma vez por evento, não por mensagem).
+      const perfil = Array.isArray(value?.contacts) ? value.contacts[0] : null;
+      const nomeContato: string | null = perfil?.profile?.name
+        ? String(perfil.profile.name)
+        : null;
+
+      // Recibos de entrega/leitura das NOSSAS mensagens.
+      const statuses = Array.isArray(value?.statuses) ? value.statuses : [];
+      for (const st of statuses) {
+        const id = String(st?.id ?? "");
+        const status = String(st?.status ?? "");
+        if (!id || !status) continue;
+        await supabase
+          .from("support_messages")
+          .update({ wa_status: status })
+          .eq("wa_message_id", id);
+      }
+
       for (const msg of messages) {
-        if (msg?.type !== "text" || !msg?.text?.body) continue;
-        const from = String(msg.from ?? "");
-        const waId = String(msg.id ?? "");
-        const text = String(msg.text.body ?? "");
-        if (!from || !waId || !text) continue;
+        const from = String(msg?.from ?? "");
+        const waId = String(msg?.id ?? "");
+        const tipo = String(msg?.type ?? "");
+        if (!from || !waId || !tipo) continue;
+
+        const text = textoDe(msg);
+        const isMedia = (MEDIA_TYPES as readonly string[]).includes(tipo);
+        // Sem texto e sem mídia (ex.: reaction, system) — não vira mensagem.
+        if (!text && !isMedia) continue;
 
         // CLAIM (dedupe): ON CONFLICT DO NOTHING via upsert ignoreDuplicates.
         // Se não voltar linha, outra entrega já está cuidando — pula.
         const { data: claimed } = await supabase
           .from("support_messages")
           .upsert(
-            { wa_phone: from, direction: "in", text, wa_message_id: waId },
+            {
+              wa_phone: from,
+              direction: "in",
+              text: text || null,
+              tipo,
+              media_id: isMedia ? String(msg?.[tipo]?.id ?? "") || null : null,
+              media_mime: isMedia ? String(msg?.[tipo]?.mime_type ?? "") || null : null,
+              wa_message_id: waId,
+              autor: "cliente",
+            },
             { onConflict: "wa_message_id", ignoreDuplicates: true }
           )
           .select("id");
         if (!claimed || claimed.length === 0) continue;
+        const rowId = claimed[0].id as string;
 
-        if (!autoReply) continue; // modo observação: só guarda, não responde
+        if (nomeContato) {
+          await supabase
+            .from("support_conversas")
+            .update({ nome: nomeContato })
+            .eq("wa_phone", from)
+            .is("nome", null);
+        }
+
+        // Baixa o anexo e guarda no Storage (a URL da Meta expira e exige token).
+        if (isMedia) {
+          const mediaId = String(msg?.[tipo]?.id ?? "");
+          if (mediaId) {
+            const media = await fetchWhatsappMedia(mediaId);
+            if (media.ok && media.bytes) {
+              const mime = media.mime ?? "application/octet-stream";
+              const path = `${from}/${waId}.${extFromMime(mime)}`;
+              const up = await supabase.storage
+                .from("whatsapp")
+                .upload(path, media.bytes, { contentType: mime, upsert: true });
+              if (!up.error) {
+                await supabase
+                  .from("support_messages")
+                  .update({ media_path: path, media_mime: mime })
+                  .eq("id", rowId);
+              }
+            } else {
+              await supabase.from("webhook_log").insert({
+                source: "whatsapp",
+                note: "falha ao baixar mídia",
+                body: { waId, error: media.error },
+              });
+            }
+          }
+        }
+
+        // A IA responde só texto — anexo sempre vai pro humano.
+        if (!autoReply || isMedia) continue; // modo observação: só guarda
+
+        // Conversa com a IA desligada na mão fica só com o humano.
+        const { data: conversa } = await supabase
+          .from("support_conversas")
+          .select("ia_ativa")
+          .eq("wa_phone", from)
+          .maybeSingle();
+        if (conversa && conversa.ia_ativa === false) continue;
 
         // Histórico da conversa (mensagens anteriores deste número).
         const { data: prior } = await supabase
@@ -126,6 +225,9 @@ export async function POST(req: NextRequest) {
               wa_phone: from,
               direction: "out",
               text: part,
+              tipo: "text",
+              autor: "ia",
+              wa_message_id: sent.id ?? null,
               // marca o caso só na última mensagem do turno
               escalated: i === result.messages.length - 1 ? result.escalated : false,
             });
