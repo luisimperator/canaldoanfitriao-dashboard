@@ -1,0 +1,18 @@
+-- Venda que começa na Eduzz e termina no Asaas.
+--
+-- Padrão real: o cliente paga a entrada na Eduzz (ex.: "Mentoria Alfaiate
+-- (Entrada)") e o saldo vai por cobrança no Asaas dias depois — valor
+-- qualquer, às vezes no CNPJ da empresa enquanto a Eduzz saiu no CPF da
+-- pessoa. A venda é UMA só e o vendedor é o mesmo.
+--
+-- Casamento por CLIENTE, nesta ordem: e-mail -> documento -> nome normalizado.
+-- (Caso real: Eduzz CPF 97108804034 x Asaas CNPJ 42996789000122, mesmo e-mail
+--  pedagogoempresarial@gmail.com — o documento sozinho não resolveria.)
+--
+-- DATA DA VENDA = data em que a fatura foi PAGA. O crédito (D+30 do cartão)
+-- só importa na provisão de caixa, não na atribuição do vendedor.
+--
+-- Conteúdo aplicado: tabelas asaas_clientes/asaas_cobrancas, colunas
+-- sales.fonte e sales.asaas_payment_id, funções nome_chave(),
+-- casar_asaas_com_vendas() e asaas_sync_key(), view asaas_sem_vendedor.
+-- (Migração aplicada via MCP; ver histórico do Supabase para o corpo exato.)
