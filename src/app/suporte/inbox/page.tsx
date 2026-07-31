@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { SupportInbox } from "@/components/SupportInbox";
-import { whatsappConfigured } from "@/lib/whatsapp";
+import { getWhatsappConfig } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +11,10 @@ export const dynamic = "force-dynamic";
 // antes da migração de propósito: o número só deve sair do aplicativo quando
 // já houver onde atender.
 
-export default function InboxPage() {
-  const pronto = whatsappConfigured();
-  const autoReply = process.env.WHATSAPP_AUTO_REPLY === "true";
+export default async function InboxPage() {
+  const cfg = await getWhatsappConfig();
+  const pronto = Boolean(cfg.token && cfg.phoneNumberId);
+  const autoReply = cfg.autoReply;
 
   return (
     <div>
@@ -34,12 +35,9 @@ export default function InboxPage() {
         <div className="mb-4 rounded-xl border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 p-4 text-sm text-amber-900 dark:text-amber-100">
           <p className="font-semibold">WhatsApp oficial ainda não conectado.</p>
           <p className="mt-1 text-[13px] leading-relaxed">
-            Faltam as credenciais da Cloud API na Vercel:{" "}
-            <code className="rounded bg-black/10 px-1">WHATSAPP_TOKEN</code>,{" "}
-            <code className="rounded bg-black/10 px-1">WHATSAPP_PHONE_NUMBER_ID</code>,{" "}
-            <code className="rounded bg-black/10 px-1">WHATSAPP_APP_SECRET</code> e{" "}
-            <code className="rounded bg-black/10 px-1">WHATSAPP_VERIFY_TOKEN</code>. O webhook a
-            cadastrar na Meta é{" "}
+            Faltam as credenciais da Cloud API (token permanente, id do número, app secret e
+            verify token). Elas ficam no Vault do Supabase — não precisa mexer na Vercel. O
+            webhook a cadastrar na Meta é{" "}
             <code className="rounded bg-black/10 px-1">/api/webhooks/whatsapp</code> (campo{" "}
             <em>messages</em>). Esta tela já funciona — assim que a primeira mensagem chegar, ela
             aparece aqui.
