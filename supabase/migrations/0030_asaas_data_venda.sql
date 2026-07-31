@@ -1,0 +1,13 @@
+-- Data da venda no Asaas: às vezes o Asaas preenche a confirmação (cartão),
+-- às vezes o pagamento (Pix/boleto), às vezes os dois. Vale o MAIS CEDO —
+-- é quando o cliente efetivamente pagou. O crédito (D+30 do cartão) segue
+-- valendo só na provisão de caixa, não na atribuição de vendedor.
+--
+-- Também: a busca de cobranças passa a ser por data de CRIAÇÃO, porque
+-- filtrar por paymentDate deixava de fora cobrança confirmada no cartão que
+-- ainda não liquidou — exatamente o caso do saldo de mentoria.
+--
+-- Aplicado via MCP: coluna asaas_cobrancas.confirmed_date, função
+-- asaas_data_venda(), casar_asaas_com_vendas() e view asaas_sem_vendedor
+-- atualizadas. Corrigido também o status da venda inserida ('paga', não
+-- 'paid') e o ON CONFLICT do índice parcial.
