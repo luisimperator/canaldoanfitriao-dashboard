@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CorrigirIA } from "@/components/CorrigirIA";
 
 // Caixa de entrada do suporte: lista de conversas + thread + resposta.
 //
@@ -77,6 +78,8 @@ export function SupportInbox() {
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [conversa, setConversa] = useState<Conversa | null>(null);
   const [texto, setTexto] = useState("");
+  // id da mensagem da IA que está sendo corrigida (modo chefe)
+  const [corrigindo, setCorrigindo] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const fimRef = useRef<HTMLDivElement>(null);
@@ -272,10 +275,16 @@ export function SupportInbox() {
             </div>
 
             <div className="flex-1 space-y-2 overflow-y-auto p-4">
-              {mensagens.map((m) => {
+              {mensagens.map((m, i) => {
                 const meu = m.direction === "out";
+                // pergunta que originou a resposta da IA (pro modo chefe)
+                const perguntaAnterior =
+                  m.autor === "ia"
+                    ? [...mensagens.slice(0, i)].reverse().find((x) => x.direction === "in")
+                        ?.text ?? ""
+                    : "";
                 return (
-                  <div key={m.id} className={`flex ${meu ? "justify-end" : "justify-start"}`}>
+                  <div key={m.id} className={`flex flex-col ${meu ? "items-end" : "items-start"}`}>
                     <div
                       className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                         meu
@@ -314,6 +323,25 @@ export function SupportInbox() {
                         {meu && m.wa_status && <span>· {m.wa_status}</span>}
                       </div>
                     </div>
+
+                    {/* Modo chefe: só faz sentido em cima do que a IA falou */}
+                    {m.autor === "ia" && corrigindo !== m.id && (
+                      <button
+                        onClick={() => setCorrigindo(m.id)}
+                        className="mt-0.5 text-[10px] text-slate-400 hover:text-amber-600 dark:text-zinc-600 dark:hover:text-amber-400"
+                      >
+                        ✎ corrigir a IA
+                      </button>
+                    )}
+                    {corrigindo === m.id && (
+                      <div className="w-full max-w-[85%]">
+                        <CorrigirIA
+                          mensagemCliente={perguntaAnterior}
+                          respostaIA={m.text ?? ""}
+                          onFechar={() => setCorrigindo(null)}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
