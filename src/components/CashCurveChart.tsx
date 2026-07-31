@@ -180,7 +180,8 @@ export function CashCurveChart({
         {segundas.map((s, i) => (
           <g key={s}>
             <line x1={xOf(s)} y1={M_TOP - 4} x2={xOf(s)} y2={baseY} className="stroke-slate-200 dark:stroke-white/[0.06]" strokeWidth={1} />
-            {i % tickCada === 0 && (
+            {/* a data só aparece se não estiver em cima do "hoje" */}
+            {i % tickCada === 0 && xOf(s) - M_X > 34 && (
               <text x={xOf(s)} y={baseY + 16} textAnchor="middle" fontSize={10} className="fill-slate-400 dark:fill-zinc-500">
                 {dataUTC(s).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" })}
               </text>
@@ -256,7 +257,13 @@ export function CashCurveChart({
           <circle cx={xOf(menor.dia)} cy={yOf(menor.saldo)} r={5} fill="none" stroke="#d97706" strokeWidth={1.5} strokeDasharray="2 2" />
           <text
             x={Math.min(Math.max(xOf(menor.dia) + 8, 70), width - 190)}
-            y={yOf(menor.saldo) + 22}
+            /* Quando o vale está perto do colchão, os dois rótulos caem na
+               mesma linha e viram um borrão: aí este sobe pra cima do ponto. */
+            y={
+              piso !== null && Math.abs(yOf(menor.saldo) + 22 - (yOf(piso) - 5)) < 18
+                ? yOf(menor.saldo) - 12
+                : yOf(menor.saldo) + 22
+            }
             fontSize={11}
             fontWeight={700}
             className="fill-amber-600 dark:fill-amber-400"
