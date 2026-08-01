@@ -98,6 +98,17 @@ export interface SendResult {
   error?: string;
 }
 
+// O WhatsApp usa *negrito* com UM asterisco; markdown usa **dois**. A IA
+// escreve em markdown por hábito e o cliente recebia "**Gigantes**" com os
+// asteriscos na cara. Também não existe ### nem [texto](link) no WhatsApp.
+function paraWhatsapp(texto: string): string {
+  return texto
+    .replace(/\*\*\*(.+?)\*\*\*/g, "*_$1_*")   // ***x*** -> *_x_*
+    .replace(/\*\*(.+?)\*\*/g, "*$1*")         // **x**   -> *x*
+    .replace(/^#{1,6}\s+/gm, "")                // ## título -> título
+    .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, "$1: $2"); // link markdown
+}
+
 // Envia uma mensagem de texto simples para um número (E.164 sem o '+').
 export async function sendWhatsappText(to: string, body: string): Promise<SendResult> {
   const { token, phoneNumberId: phoneId } = await getWhatsappConfig();
@@ -116,7 +127,7 @@ export async function sendWhatsappText(to: string, body: string): Promise<SendRe
           messaging_product: "whatsapp",
           to,
           type: "text",
-          text: { body: body.slice(0, 4096), preview_url: false },
+          text: { body: paraWhatsapp(body).slice(0, 4096), preview_url: false },
         }),
       }
     );

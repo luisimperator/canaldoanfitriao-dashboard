@@ -180,13 +180,15 @@ export function SupportInbox() {
   const janelaFechada = conversa != null && restante === null;
 
   return (
-    <div className="grid gap-3 lg:grid-cols-[320px_1fr]">
+    // Cada painel tem a própria altura e o próprio scroll: sem isso a página
+    // inteira crescia com a conversa e virava rolagem infinita no celular.
+    <div className="grid gap-3 lg:h-[calc(100vh-230px)] lg:grid-cols-[320px_1fr]">
       {/* Lista de conversas */}
-      <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] overflow-hidden">
+      <div className="flex max-h-[38vh] flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] lg:max-h-none lg:h-full">
         <div className="border-b border-slate-200 dark:border-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
           Conversas ({conversas.length})
         </div>
-        <div className="max-h-[70vh] overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {conversas.length === 0 && (
             <p className="px-3 py-6 text-sm text-slate-500 dark:text-zinc-400">
               Nenhuma conversa ainda. Quando o número oficial receber a primeira mensagem, ela
@@ -237,7 +239,7 @@ export function SupportInbox() {
       </div>
 
       {/* Thread */}
-      <div className="flex min-h-[70vh] flex-col rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f]">
+      <div className="flex h-[65vh] flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] lg:h-full">
         {!ativa || !conversa ? (
           <div className="flex flex-1 items-center justify-center p-6 text-sm text-slate-500 dark:text-zinc-400">
             Escolha uma conversa à esquerda.
@@ -274,7 +276,7 @@ export function SupportInbox() {
               </div>
             </div>
 
-            <div className="flex-1 space-y-2 overflow-y-auto p-4">
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
               {mensagens.map((m, i) => {
                 const meu = m.direction === "out";
                 // pergunta que originou a resposta da IA (pro modo chefe)
