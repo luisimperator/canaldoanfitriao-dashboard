@@ -1,11 +1,13 @@
--- Receita de YouTube entra pela conta pessoal do Rômulo e é repassada pra
--- empresa por Pix, 1x por mês, na faixa de R$ 3 a 6 mil. No extrato aparece
--- como "Pix recebido — Romulo Villela Ponte", indistinguível de qualquer
--- outro Pix dele — e ele também manda valores grandes e avulsos que NÃO são
--- receita (R$ 47.756 em jan/26, R$ 76.276 em 02/mar/26 — este último bate no
--- centavo com o "Pix enviado devolvido" de mesmo valor, ou seja, ida e volta).
+-- O AdSense do canal cai na conta pessoal do Rômulo e ele repassa pra empresa
+-- por Pix, 1x por mês, na faixa de R$ 3 a 6 mil. O extrato da PJ só enxerga o
+-- repasse, então é ali que a receita de YouTube aparece.
 --
--- Casar só pelo nome jogaria R$ 141 mil de movimentação de sócio dentro do
+-- No extrato isso é só "Pix recebido — Romulo Villela Ponte", indistinguível
+-- dos repasses grandes e avulsos que ele também faz e que NÃO são receita
+-- (R$ 47.756 em jan/26; R$ 76.276 em 02/mar/26, que bate no centavo com o
+-- "Pix enviado devolvido" de mesmo valor, ou seja, ida e volta).
+--
+-- Casar só pelo nome jogaria R$ 158.806 de movimentação de sócio dentro do
 -- faturamento. Por isso a regra ganha faixa de valor.
 
 alter table public.fin_rules add column if not exists valor_min numeric;
@@ -56,7 +58,7 @@ end;
 $$;
 
 insert into public.fin_categories (slug, group_name, name, kind)
-values ('youtube', 'Receitas', 'YouTube (repasse do Rômulo)', 'receita')
+values ('youtube', 'Receitas', 'YouTube (AdSense)', 'receita')
 on conflict (slug) where slug is not null do update
   set group_name = excluded.group_name,
       name       = excluded.name,
