@@ -217,7 +217,10 @@ export async function POST(req: NextRequest) {
           }));
 
         try {
-          const result = await runSupportAgent(text, history);
+          const result = await runSupportAgent(text, history, [], {
+            phone: from,
+            nome: nomeContato,
+          });
           // Envia em mensagens separadas, como um atendente no WhatsApp.
           for (let i = 0; i < result.messages.length; i++) {
             const part = result.messages[i];

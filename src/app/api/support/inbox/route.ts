@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getAccess } from "@/lib/supabase-server";
 import { sendWhatsappText } from "@/lib/whatsapp";
+import { resolveWaPhone } from "@/lib/support";
 
 // Caixa de entrada do suporte.
 //
@@ -25,7 +26,10 @@ async function guard() {
 export async function GET(req: NextRequest) {
   const ctx = await guard();
   if (!ctx) return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
-  const phone = req.nextUrl.searchParams.get("phone");
+  const pedido = req.nextUrl.searchParams.get("phone");
+  // A fila de handoff manda o telefone como o cliente escreveu ("11-97467-7033").
+  // Resolvemos pro wa_phone real antes de puxar a conversa.
+  const phone = pedido ? (await resolveWaPhone(pedido)) ?? pedido : null;
 
   if (!phone) {
     const { data, error } = await ctx.admin

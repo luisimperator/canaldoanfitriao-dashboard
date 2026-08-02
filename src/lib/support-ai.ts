@@ -14,9 +14,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { findCustomer, blocoLabel, KB_BLOCOS, type KbItem } from "@/lib/support";
 
-// Modelo padrão: Claude Opus 4.8. Configurável por env para trocar por
-// claude-haiku-4-5 / claude-sonnet-4-6 se quiser reduzir custo/latência.
-const MODEL = process.env.SUPPORT_AI_MODEL || "claude-opus-4-8";
+// Modelo padrão: Claude Sonnet 5 — dá conta do atendimento com bem menos
+// custo/latência que o Opus. Configurável por env (SUPPORT_AI_MODEL) para
+// trocar por claude-opus-5 / claude-haiku-4-5 quando fizer sentido.
+const MODEL = process.env.SUPPORT_AI_MODEL || "claude-sonnet-5";
 const EFFORT = process.env.SUPPORT_AI_EFFORT || "medium";
 const SALES_CONTACT =
   process.env.SUPPORT_SALES_CONTACT || "+55 11 92507-2167";
@@ -65,7 +66,23 @@ const HANDOFF_MOTIVOS = [
   "outro",
 ];
 
-async function buildSystemPrompt(): Promise<string> {
+/** Quem está do outro lado desta conversa — vem do próprio WhatsApp. */
+export interface AgentContact {
+  /** wa_phone como a Meta manda (só dígitos, com DDI). */
+  phone?: string | null;
+  /** Nome do perfil do WhatsApp, quando a Meta manda. */
+  nome?: string | null;
+}
+
+/** 5511974677033 → +55 (11) 97467-7033 (mesmo formato da caixa de entrada). */
+function telefoneBonito(p: string): string {
+  const d = p.replace(/\D/g, "");
+  if (d.length === 13) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 9)}-${d.slice(9)}`;
+  if (d.length === 12) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 8)}-${d.slice(8)}`;
+  return `+${d}`;
+}
+
+async function buildSystemPrompt(contact?: AgentContact): Promise<string> {
   const admin = getSupabaseAdmin();
   let kb: KbItem[] = [];
   if (admin) {
@@ -99,6 +116,15 @@ async function buildSystemPrompt(): Promise<string> {
       "\n(A base de conhecimento ainda está vazia. Responda com cautela e escale o que não souber.)\n";
   }
 
+  // A conversa acontece DENTRO do WhatsApp: o número já é conhecido. Sem isso
+  // aqui a IA pedia "me confirma o melhor WhatsApp pra contato" pra quem estava
+  // justamente falando por WhatsApp.
+  const bloco = contact?.phone
+    ? `\n# Contato desta conversa (você já tem)\n- WhatsApp: ${telefoneBonito(contact.phone)}${
+        contact.nome ? `\n- Nome no perfil: ${contact.nome}` : ""
+      }\nÉ por esse número que a conversa está acontecendo. Use-o em create_handoff sem perguntar.\n`
+    : "";
+
   return `Você é o atendente de SUPORTE pós-venda do Canal do Anfitrião, no WhatsApp.
 Seu papel é resolver dúvidas de quem JÁ é cliente (comprou). Você NÃO faz vendas.
 
@@ -108,6 +134,7 @@ Seu papel é resolver dúvidas de quem JÁ é cliente (comprou). Você NÃO faz 
 3. Você é pós-venda. Quem quer COMPRAR é encaminhado ao comercial: ${SALES_CONTACT}.
 4. Responda em português, de forma curta, cordial e objetiva, como no WhatsApp.
 5. Como no WhatsApp, NÃO mande um textão. Quando a resposta tiver mais de uma ideia (ex.: cumprimento + pergunta, ou explicação + próximo passo), divida em mensagens curtas: ponha uma linha contendo apenas [BREAK] entre cada mensagem (no máximo 3 a 4). Se uma frase só já resolve, não use [BREAK].
+6. NUNCA pergunte o número de WhatsApp da pessoa — a conversa já é no WhatsApp dela e você tem o número. Nada de "me confirma o melhor número". Se fizer diferença avisar, apenas CONFIRME o que você já tem, numa frase só e sem travar o atendimento (ex.: "vou registrar com esse mesmo número, (11) 97467-7033 — se preferir outro, é só me dizer"). Não espere resposta pra abrir o caso.
 
 # Quem é quem
 - É CLIENTE (lookup mostra compra confirmada): dê suporte completo.
@@ -117,6 +144,7 @@ Seu papel é resolver dúvidas de quem JÁ é cliente (comprou). Você NÃO faz 
 Você conduz procedimentos guiados passo a passo (ex.: orientar o cancelamento, coletar o endereço do brinde, explicar a renovação) e SÓ então escala — já com tudo coletado. Use create_handoff para abrir um caso na fila humana quando a conclusão exigir AÇÃO interna nossa: cancelamento de renovação, reembolso, divergência/cashback de pagamento, brinde não recebido (com endereço coletado), transferência de ingresso, ou qualquer alteração que dependa de um humano. Antes de escalar, colete e resuma tudo no campo "resumo" (cliente, e-mail, pedido, o que já foi coletado, ação necessária).
 Dúvidas de INFORMAÇÃO/consulta (valores, datas, acesso, validade, "estou inadimplente?", "minha renovação está ativa?") você responde sozinho usando o lookup e a base de conhecimento, sem escalar. Quando a compra no lookup já trouxer "dataReembolso", informe essa data diretamente ao cliente — só escale por causa da data do estorno se esse campo vier vazio.
 
+${bloco}
 # Base de conhecimento (seu treinamento)
 ${baseConhecimento}`;
 }
@@ -150,7 +178,11 @@ const TOOLS: Anthropic.Tool[] = [
         },
         email: { type: "string" },
         nome: { type: "string" },
-        telefone: { type: "string" },
+        telefone: {
+          type: "string",
+          description:
+            "Deixe em branco: o telefone da conversa é preenchido automaticamente. Só informe se o cliente pedir contato em OUTRO número.",
+        },
         dados_coletados: {
           type: "object",
           description: "Dados estruturados coletados (ex.: endereço do brinde).",
@@ -161,8 +193,12 @@ const TOOLS: Anthropic.Tool[] = [
   },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function runTool(name: string, input: any): Promise<{ text: string; handoffId?: string }> {
+async function runTool(
+  name: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: any,
+  contact?: AgentContact
+): Promise<{ text: string; handoffId?: string }> {
   if (name === "lookup_customer") {
     const result = await findCustomer({
       email: input?.email ? String(input.email) : undefined,
@@ -183,8 +219,11 @@ async function runTool(name: string, input: any): Promise<{ text: string; handof
         motivo,
         resumo: input?.resumo ? String(input.resumo) : null,
         email: input?.email ? String(input.email) : null,
-        nome: input?.nome ? String(input.nome) : null,
-        telefone: input?.telefone ? String(input.telefone) : null,
+        nome: input?.nome ? String(input.nome) : contact?.nome ?? null,
+        // O telefone da conversa é a fonte da verdade — a IA não precisa (nem
+        // deve) perguntar. Só respeita o que ela mandar se o cliente indicou
+        // outro número.
+        telefone: input?.telefone ? String(input.telefone) : contact?.phone ?? null,
         dados_coletados: input?.dados_coletados ?? null,
       })
       .select("id")
@@ -201,7 +240,8 @@ async function runTool(name: string, input: any): Promise<{ text: string; handof
 export async function runSupportAgent(
   message: string,
   history: AgentMessage[] = [],
-  supervisorNotes: string[] = []
+  supervisorNotes: string[] = [],
+  contact?: AgentContact
 ): Promise<AgentResult> {
   if (!aiConfigured()) {
     const off = "A IA de suporte ainda não está ligada (falta a ANTHROPIC_API_KEY no servidor).";
@@ -209,7 +249,7 @@ export async function runSupportAgent(
   }
 
   const client = new Anthropic();
-  let system = await buildSystemPrompt();
+  let system = await buildSystemPrompt(contact);
   if (supervisorNotes.length > 0) {
     // Canal do "chefe" (modo treino): instruções de operador que o cliente não
     // vê e que a IA deve obedecer acima de tudo nesta conversa.
@@ -227,11 +267,13 @@ export async function runSupportAgent(
   let handoffId: string | null = null;
 
   // adaptive thinking + effort só existem em parte da família (Opus 4.6+/Sonnet
-  // 4.6/Fable 5). No Haiku 4.5 esses parâmetros dão 400, então omitimos.
+  // 4.6+/Fable 5). No Haiku 4.5 esses parâmetros dão 400, então omitimos.
   const ADAPTIVE_MODELS = new Set([
+    "claude-opus-5",
     "claude-opus-4-8",
     "claude-opus-4-7",
     "claude-opus-4-6",
+    "claude-sonnet-5",
     "claude-sonnet-4-6",
     "claude-fable-5",
   ]);
@@ -258,7 +300,7 @@ export async function runSupportAgent(
       for (const block of response.content) {
         if (block.type === "tool_use") {
           usedTools.push(block.name);
-          const out = await runTool(block.name, block.input);
+          const out = await runTool(block.name, block.input, contact);
           if (out.handoffId) handoffId = out.handoffId;
           toolResults.push({
             type: "tool_result",

@@ -246,6 +246,36 @@ function onlyDigits(s: string): string {
   return (s || "").replace(/\D+/g, "");
 }
 
+/**
+ * Acha o wa_phone real de uma conversa a partir de um telefone escrito de
+ * qualquer jeito ("11-97467-7033", "+55 (11) 97467-7033", "5511974677033").
+ *
+ * Os cards antigos da fila guardaram o telefone como o cliente digitou; o
+ * WhatsApp guarda só dígitos com DDI. Casar pelos 8 últimos dígitos resolve
+ * também o nono dígito, que aparece num lado e some no outro.
+ */
+export async function resolveWaPhone(input: string): Promise<string | null> {
+  const d = onlyDigits(input);
+  if (d.length < 8) return null;
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+
+  const { data: exato } = await admin
+    .from("support_conversas")
+    .select("wa_phone")
+    .eq("wa_phone", d)
+    .maybeSingle();
+  if (exato?.wa_phone) return exato.wa_phone;
+
+  const { data: parecido } = await admin
+    .from("support_conversas")
+    .select("wa_phone,ultimo_em")
+    .like("wa_phone", `%${d.slice(-8)}`)
+    .order("ultimo_em", { ascending: false, nullsFirst: false })
+    .limit(1);
+  return parecido?.[0]?.wa_phone ?? null;
+}
+
 // CPF pode estar gravado em dígitos puros ou formatado — tentamos as duas.
 function cpfVariants(raw: string): string[] {
   const d = onlyDigits(raw);
