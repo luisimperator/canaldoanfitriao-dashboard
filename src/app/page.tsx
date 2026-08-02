@@ -20,13 +20,6 @@ import { LeadsMqlChart, LeadsMqlMonthlyChart, SourcePie } from "@/components/cha
 
 export const dynamic = "force-dynamic";
 
-const SOURCE_LABELS: Record<string, string> = {
-  meta_ads: "Meta Ads",
-  google_ads: "Google Ads",
-  organico: "Orgânico",
-  outro: "Outro",
-};
-
 export default async function VisaoGeralPage() {
   const data = await getDashboardData();
   const today = isoToday();
