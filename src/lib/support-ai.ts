@@ -13,6 +13,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { findCustomer, blocoLabel, KB_BLOCOS, type KbItem } from "@/lib/support";
+import { avisarCasoNovo } from "@/lib/alertas";
 
 // Modelo padrão: Claude Sonnet 5 — dá conta do atendimento com bem menos
 // custo/latência que o Opus. Configurável por env (SUPPORT_AI_MODEL) para
@@ -258,6 +259,18 @@ async function runTool(
       .select("id")
       .single();
     if (error) return { text: JSON.stringify({ error: error.message }) };
+
+    // Toca o WhatsApp de quem está de plantão. Só em conversa real (contact
+    // preenchido): no simulador ninguém precisa ser acordado. Nunca derruba o
+    // atendimento — falhou o aviso, o caso continua na fila do painel.
+    if (data?.id && contact?.phone) {
+      try {
+        await avisarCasoNovo(data.id);
+      } catch {
+        // silêncio de propósito
+      }
+    }
+
     return {
       text: JSON.stringify({ ok: true, id: data?.id }),
       handoffId: data?.id,
