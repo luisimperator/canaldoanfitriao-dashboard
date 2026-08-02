@@ -37,6 +37,15 @@ interface Mensagem {
   created_at: string;
 }
 
+interface TemplateAprovado {
+  id: string;
+  name: string;
+  language: string;
+  status: string;
+  body: string;
+  params: number;
+}
+
 const POLL_MS = 10_000;
 
 function hora(iso: string): string {
@@ -84,6 +93,10 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
   const [corrigindo, setCorrigindo] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // Retomada fora da janela de 24h: template aprovado + os valores das variáveis.
+  const [aprovados, setAprovados] = useState<TemplateAprovado[]>([]);
+  const [templateEsc, setTemplateEsc] = useState("");
+  const [templateParams, setTemplateParams] = useState<string[]>([]);
   const fimRef = useRef<HTMLDivElement>(null);
 
   const carregarLista = useCallback(async () => {
@@ -180,6 +193,55 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
 
   const restante = janelaRestante(conversa?.ultima_entrada_em ?? null);
   const janelaFechada = conversa != null && restante === null;
+  const templateAtivo = aprovados.find((t) => t.name === templateEsc) ?? null;
+
+  // Só busca os templates quando a janela fecha — é uma ida à Meta e não faz
+  // sentido pagar isso em toda conversa aberta.
+  useEffect(() => {
+    if (!janelaFechada || aprovados.length > 0) return;
+    const t = setTimeout(async () => {
+      const res = await fetch("/api/support/templates");
+      if (!res.ok) return;
+      const j = await res.json();
+      const lista = (j.templates ?? []) as TemplateAprovado[];
+      setAprovados(lista.filter((x) => x.status === "APPROVED"));
+    }, 0);
+    return () => clearTimeout(t);
+  }, [janelaFechada, aprovados.length]);
+
+  async function enviarTemplate() {
+    if (!ativa || !templateAtivo) return;
+    setEnviando(true);
+    setErro(null);
+    try {
+      const res = await fetch("/api/support/inbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: ativa,
+          template: templateAtivo.name,
+          language: templateAtivo.language,
+          params: Array.from(
+            { length: templateAtivo.params },
+            (_, i) => templateParams[i] ?? ""
+          ),
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErro(j.error ?? `Erro ${res.status}`);
+        return;
+      }
+      setTemplateEsc("");
+      setTemplateParams([]);
+      await carregarThread(ativa);
+      await carregarLista();
+    } catch {
+      setErro("Falha de rede");
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   return (
     // Cada painel tem a própria altura e o próprio scroll: sem isso a página
@@ -354,10 +416,72 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
 
             <div className="border-t border-slate-200 dark:border-white/10 p-3">
               {janelaFechada ? (
-                <p className="rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
-                  Janela de 24h fechada — o WhatsApp não entrega mensagem livre agora. Só com
-                  template aprovado, ou espere o cliente escrever de novo.
-                </p>
+                <div className="rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2">
+                  <p className="text-xs text-amber-800 dark:text-amber-200">
+                    Janela de 24h fechada. O WhatsApp não entrega mensagem livre agora — só
+                    template aprovado. Assim que a pessoa responder, a janela reabre e você volta a
+                    escrever normalmente.
+                  </p>
+
+                  {aprovados.length === 0 ? (
+                    <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-300">
+                      Nenhum template aprovado ainda.{" "}
+                      <a href="/suporte/avisos" className="font-semibold underline">
+                        Criar um em Avisos e templates
+                      </a>
+                      .
+                    </p>
+                  ) : (
+                    <div className="mt-2 space-y-2">
+                      <select
+                        value={templateEsc}
+                        onChange={(e) => {
+                          setTemplateEsc(e.target.value);
+                          setTemplateParams([]);
+                        }}
+                        className="w-full rounded-lg border border-amber-300 dark:border-amber-500/40 bg-white dark:bg-white/5 px-2 py-1.5 text-xs text-slate-900 dark:text-zinc-100"
+                      >
+                        <option value="">Escolha um template aprovado…</option>
+                        {aprovados.map((t) => (
+                          <option key={t.id} value={t.name}>
+                            {t.name} ({t.params} {t.params === 1 ? "variável" : "variáveis"})
+                          </option>
+                        ))}
+                      </select>
+
+                      {templateAtivo && (
+                        <>
+                          <p className="whitespace-pre-wrap rounded bg-white/60 dark:bg-black/20 px-2 py-1.5 text-[11px] text-slate-600 dark:text-zinc-300">
+                            {templateAtivo.body}
+                          </p>
+                          {Array.from({ length: templateAtivo.params }, (_, i) => (
+                            <input
+                              key={i}
+                              value={templateParams[i] ?? ""}
+                              onChange={(e) => {
+                                const v = [...templateParams];
+                                v[i] = e.target.value;
+                                setTemplateParams(v);
+                              }}
+                              placeholder={`valor de {{${i + 1}}}`}
+                              className="w-full rounded-lg border border-amber-300 dark:border-amber-500/40 bg-white dark:bg-white/5 px-2 py-1.5 text-xs text-slate-900 dark:text-zinc-100"
+                            />
+                          ))}
+                          <button
+                            onClick={enviarTemplate}
+                            disabled={enviando}
+                            className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 disabled:opacity-50"
+                          >
+                            {enviando ? "Enviando..." : "Enviar template"}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {erro && (
+                    <p className="mt-1.5 text-[11px] text-rose-600 dark:text-rose-400">{erro}</p>
+                  )}
+                </div>
               ) : (
                 <>
                   <div className="flex items-end gap-2">
