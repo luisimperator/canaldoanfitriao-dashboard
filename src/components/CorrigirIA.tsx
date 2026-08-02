@@ -121,7 +121,15 @@ export function CorrigirIA({
 
       {!sugestao ? (
         <>
-          <p className="mt-1 text-[11px] text-amber-800/80 dark:text-amber-200/70">
+          {/* A pergunta que originou a resposta pode estar rolada pra fora da
+              tela. Sem ela na frente, a correção sai genérica. */}
+          {mensagemCliente.trim() && (
+            <p className="mt-1.5 border-l-2 border-amber-300 dark:border-amber-500/40 pl-2 text-[11px] italic text-amber-800/70 dark:text-amber-200/60">
+              Cliente perguntou: “{mensagemCliente.trim().slice(0, 180)}
+              {mensagemCliente.trim().length > 180 ? "…" : ""}”
+            </p>
+          )}
+          <p className="mt-1.5 text-[11px] text-amber-800/80 dark:text-amber-200/70">
             Escreva do seu jeito o que ela deveria ter feito. Eu transformo em regra.
           </p>
           <textarea

@@ -97,7 +97,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
       ),
       selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status, utm, lead_id"),
       selectAll(supabase, "ad_spend", "date, platform, amount", "date"),
-      selectAll(supabase, "fin_categories", "id, group_name, name"),
+      selectAll(supabase, "fin_categories", "id, group_name, name, kind, slug"),
       selectAll(
         supabase,
         "fin_transactions",
@@ -140,7 +140,14 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
       (r): AdSpend => ({ date: String(r.date), platform: r.platform, amount: Number(r.amount) })
     ),
     finCategories: finCategories.map(
-      (r): FinCategory => ({ id: r.id, groupName: r.group_name, name: r.name })
+      (r): FinCategory => ({
+        id: r.id,
+        groupName: r.group_name,
+        name: r.name,
+        // categoria antiga sem kind cai em despesa, que é o caso comum
+        kind: r.kind ?? "oe",
+        slug: r.slug ?? null,
+      })
     ),
     finTransactions: finTransactions.map(
       (r): FinTransaction => ({

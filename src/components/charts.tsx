@@ -597,3 +597,76 @@ export function SpendByCategoryChart({
     </ResponsiveContainer>
   );
 }
+
+// ---------- Visão geral financeira (estilo Heavy Drops OS) ----------
+
+// Entradas vs Saídas por mês: duas barras finas lado a lado, sem legenda
+// (a cor já diz — verde entra, rosa sai). O mês corrente vem esmaecido porque
+// ainda está correndo; comparar ele com um mês fechado engana.
+export function EntradasSaidasChart({
+  data,
+}: {
+  data: { label: string; faturamento: number; despesa: number; parcial: boolean }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -12 }} barGap={2}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
+        <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+        <YAxis
+          tick={{ fontSize: 11 }}
+          tickLine={false}
+          axisLine={false}
+          tickFormatter={(v) => `R$ ${Math.round(Number(v) / 1000)} mil`}
+          width={78}
+        />
+        <Tooltip formatter={brlTooltip} cursor={{ fill: "rgba(148,163,184,0.08)" }} />
+        <Bar dataKey="faturamento" name="Entradas" fill="#34d399" radius={[2, 2, 0, 0]} maxBarSize={11}>
+          {data.map((d) => (
+            <Cell key={d.label} fillOpacity={d.parcial ? 0.4 : 1} />
+          ))}
+        </Bar>
+        <Bar dataKey="despesa" name="Saídas" fill="#fb7185" radius={[2, 2, 0, 0]} maxBarSize={11}>
+          {data.map((d) => (
+            <Cell key={d.label} fillOpacity={d.parcial ? 0.4 : 1} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// Resultado mensal: uma linha só, com o zero marcado. O que importa aqui é
+// enxergar quando o mês virou negativo, não o valor exato de cada ponto.
+export function ResultadoLinhaChart({
+  data,
+}: {
+  data: { label: string; resultado: number; parcial: boolean }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
+        <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+        <YAxis
+          tick={{ fontSize: 11 }}
+          tickLine={false}
+          axisLine={false}
+          tickFormatter={(v) => `R$ ${Math.round(Number(v) / 1000)} mil`}
+          width={78}
+        />
+        <Tooltip formatter={brlTooltip} />
+        <ReferenceLine y={0} stroke="var(--chart-grid)" strokeWidth={1} />
+        <Line
+          type="monotone"
+          dataKey="resultado"
+          name="Resultado"
+          stroke="#8b5cf6"
+          strokeWidth={2}
+          dot={{ r: 3.5, fill: "#8b5cf6", strokeWidth: 0 }}
+          activeDot={{ r: 5 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}

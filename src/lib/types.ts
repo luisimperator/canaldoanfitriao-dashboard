@@ -78,8 +78,12 @@ export type FinDirection = "in" | "out";
 
 export interface FinCategory {
   id: string;
-  groupName: "Receitas" | "Despesas";
+  groupName: "Receitas" | "Despesas" | "Fora do resultado";
   name: string;
+  /** Papel no resultado — é o que o DRE lê. Ver migração 0032. */
+  kind: "receita" | "tvc" | "oe" | "distribuicao" | "neutro";
+  /** Chave estável usada pelas regras de classificação. */
+  slug: string | null;
 }
 
 export interface FinTransaction {
