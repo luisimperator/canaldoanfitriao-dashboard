@@ -390,13 +390,17 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
                       </div>
                     </div>
 
-                    {/* Modo chefe: só faz sentido em cima do que a IA falou */}
+                    {/* Modo chefe: só faz sentido em cima do que a IA falou.
+                        Era um link de 10px em cinza-sobre-cinza e ninguém
+                        achava — se a correção não é vista, o erro da IA se
+                        repete pra sempre. */}
                     {m.autor === "ia" && corrigindo !== m.id && (
                       <button
                         onClick={() => setCorrigindo(m.id)}
-                        className="mt-0.5 text-[10px] text-slate-400 hover:text-amber-600 dark:text-zinc-600 dark:hover:text-amber-400"
+                        className="mt-1 inline-flex items-center gap-1 rounded-full border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20"
+                        title="Diga o que ela deveria ter respondido; virá uma regra permanente do treinamento"
                       >
-                        ✎ corrigir a IA
+                        👔 Corrigir a IA → virar regra
                       </button>
                     )}
                     {corrigindo === m.id && (
