@@ -57,7 +57,7 @@ export default async function VisaoGeralPage() {
   const taxaMql = leads30.length > 0 ? (mql30 / leads30.length) * 100 : null;
   const mqlPerDay = mql30 / 30;
   const mqlSeries = mqlDailySeries(data.leads, 60, today);
-  const mqlMensal = mqlMonthlySeries(data.leads, 12, today);
+  const mqlMensal = mqlMonthlySeries(data.leads, 6, today);
   const mqlCap = mqlPerSeller(data, 90, today);
   // A origem vem das tags do CRM (leadOrigem), não do campo `source` do banco:
   // ele chega "outro" em ~100% dos leads e a rosca virava uma fatia só.
@@ -155,12 +155,13 @@ export default async function VisaoGeralPage() {
             (média dos últimos 90 dias).
           </p>
         </Card>
-        <Card title="Leads e MQL por mês (12 meses)" className="lg:col-span-2">
+        <Card title="Leads e MQL por mês (6 meses)" className="lg:col-span-2">
           <LeadsMqlMonthlyChart data={mqlMensal} />
           <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
             Mesmo critério de MQL da série diária, agregado por mês. A linha âmbar é a taxa de
-            qualificação (MQL ÷ leads) no eixo da direita. O mês corrente aparece mais claro
-            porque ainda está correndo — comparar ele com um mês fechado engana.
+            qualificação (MQL ÷ leads) no eixo da direita. A parte clara da última barra é a
+            <strong> projeção do mês</strong>: quanto fecha se o ritmo dos dias já corridos se
+            mantiver até o fim — mesma régua do gráfico de faturamento por vendedor.
           </p>
         </Card>
         <Card title="Origem dos leads (30 dias)">
