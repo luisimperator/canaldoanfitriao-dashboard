@@ -10,19 +10,15 @@ import {
   mqlPerSeller,
   paidSales,
   sum,
+  mqlMonthlySeries,
+  leadOrigem,
+  TICKET_CONVERSAO,
 } from "@/lib/metrics";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import { LeadsMqlChart, SourcePie } from "@/components/charts";
+import { LeadsMqlChart, LeadsMqlMonthlyChart, SourcePie } from "@/components/charts";
 
 export const dynamic = "force-dynamic";
-
-const SOURCE_LABELS: Record<string, string> = {
-  meta_ads: "Meta Ads",
-  google_ads: "Google Ads",
-  organico: "Orgânico",
-  outro: "Outro",
-};
 
 export default async function VisaoGeralPage() {
   const data = await getDashboardData();
@@ -51,7 +47,7 @@ export default async function VisaoGeralPage() {
   const cac = cap.sales30d > 0 ? spend30 / cap.sales30d : null;
 
   const leads30 = inRange(data.leads, (l) => l.createdAt, start30, today);
-  const stages = funnelStages(leads30);
+  const stages = funnelStages(leads30, data.sales);
 
   // MQL = contato que recebeu tag de qualificação (mql_at). MQL ⊆ leads.
   const mqlMonth = data.leads.filter(
@@ -61,13 +57,19 @@ export default async function VisaoGeralPage() {
   const taxaMql = leads30.length > 0 ? (mql30 / leads30.length) * 100 : null;
   const mqlPerDay = mql30 / 30;
   const mqlSeries = mqlDailySeries(data.leads, 60, today);
+  const mqlMensal = mqlMonthlySeries(data.leads, 12, today);
   const mqlCap = mqlPerSeller(data, 90, today);
+  // A origem vem das tags do CRM (leadOrigem), não do campo `source` do banco:
+  // ele chega "outro" em ~100% dos leads e a rosca virava uma fatia só.
   const bySource = Object.entries(
     leads30.reduce<Record<string, number>>((acc, l) => {
-      acc[l.source] = (acc[l.source] ?? 0) + 1;
+      const o = leadOrigem(l);
+      acc[o] = (acc[o] ?? 0) + 1;
       return acc;
     }, {})
-  ).map(([source, value]) => ({ name: SOURCE_LABELS[source] ?? source, value }));
+  )
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
 
   const capTone =
     cap.verdict === "pode_contratar" ? "good" : cap.verdict === "quase" ? "warn" : "neutral";
@@ -153,6 +155,14 @@ export default async function VisaoGeralPage() {
             (média dos últimos 90 dias).
           </p>
         </Card>
+        <Card title="Leads e MQL por mês (12 meses)" className="lg:col-span-2">
+          <LeadsMqlMonthlyChart data={mqlMensal} />
+          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
+            Mesmo critério de MQL da série diária, agregado por mês. A linha âmbar é a taxa de
+            qualificação (MQL ÷ leads) no eixo da direita. O mês corrente aparece mais claro
+            porque ainda está correndo — comparar ele com um mês fechado engana.
+          </p>
+        </Card>
         <Card title="Origem dos leads (30 dias)">
           <SourcePie data={bySource} />
         </Card>
@@ -170,6 +180,12 @@ export default async function VisaoGeralPage() {
               </div>
             ))}
           </div>
+          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-3">
+            &quot;Convertidos&quot; conta venda de verdade ligada ao lead — curso (A5E ou
+            Gigantes) ou qualquer produto acima de R$ {TICKET_CONVERSAO}. O status
+            &quot;convertido&quot; do CRM não serve de medida: ele é marcado quando o contato
+            compra qualquer coisa, inclusive ingresso de R$ 57, e inflava a conversão.
+          </p>
         </Card>
       </div>
     </div>
