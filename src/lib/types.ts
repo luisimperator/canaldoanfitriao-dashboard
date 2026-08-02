@@ -61,6 +61,8 @@ export interface Sale {
   saleDate: string; // ISO date
   amount: number; // BRL
   sellerId: string;
+  /** lead do CRM que originou a venda (quando a conciliação achou o dono) */
+  leadId?: string | null;
   product: string;
   status: "paga" | "reembolsada";
   utm?: SaleUtm | null;

@@ -91,19 +91,76 @@ export interface FunnelStage {
   count: number;
 }
 
-export function funnelStages(leads: Lead[]): FunnelStage[] {
+/** Piso de ticket pra uma venda contar como conversão do funil. */
+export const TICKET_CONVERSAO = 600;
+
+/**
+ * Venda que conta como conversão do funil: curso (A5E / Gigantes) ou qualquer
+ * produto acima do piso de ticket.
+ *
+ * O status "convertido" do CRM não serve pra isso: a automação marca o contato
+ * como convertido quando ele compra QUALQUER coisa — ingresso de R$ 57,
+ * checklist de R$ 50 — e o funil mostrava 24% de conversão, que não existe.
+ */
+export function isConversionSale(s: Sale): boolean {
+  return isCourseSale(s) || s.amount >= TICKET_CONVERSAO;
+}
+
+export function funnelStages(leads: Lead[], sales: Sale[] = []): FunnelStage[] {
   const total = leads.length;
   const frio = leads.filter((l) => l.status === "frio").length;
   const espera = leads.filter((l) => l.status === "lista_espera").length;
   const quente = leads.filter((l) => l.status === "quente").length;
   const perdido = leads.filter((l) => l.status === "perdido").length;
-  const convertido = leads.filter((l) => l.status === "convertido").length;
+  const convertidoCrm = leads.filter((l) => l.status === "convertido").length;
+
+  // Converteu = tem venda de verdade ligada ao lead, e venda que conta.
+  const doFunil = new Set(leads.map((l) => l.id));
+  const comVenda = new Set(
+    paidSales(sales)
+      .filter((s) => s.leadId && doFunil.has(s.leadId) && isConversionSale(s))
+      .map((s) => s.leadId as string)
+  );
+
   return [
     { label: "Leads captados", count: total },
     { label: "Frios / lista de espera", count: frio + espera },
-    { label: "Quentes (com vendedor)", count: quente + perdido + convertido },
-    { label: "Convertidos (venda)", count: convertido },
+    { label: "Quentes (com vendedor)", count: quente + perdido + convertidoCrm },
+    { label: "Convertidos (venda)", count: comVenda.size },
   ];
+}
+
+// ---------- Origem do lead ----------
+
+/**
+ * De onde o lead veio. O campo `source` do banco chega quase sempre como
+ * "outro" (o Unnichat não manda origem), mas a informação existe nas TAGS que
+ * a automação aplica — lista-de-espera, evento-4encontro, gigantes-*, lead-a5e.
+ * Aqui a gente lê de lá, com o utm por cima quando existir.
+ */
+export function leadOrigem(l: Lead): string {
+  const utm = l.utm?.source?.trim();
+  if (utm) return utm.toLowerCase().includes("ig") || utm.toLowerCase().includes("fb")
+    ? "Meta Ads"
+    : utm;
+
+  const raw = l.extra && typeof l.extra === "object" ? (l.extra as Record<string, unknown>).tags : null;
+  const tags = String(raw ?? "").toLowerCase();
+
+  if (tags.includes("4encontro") || tags.includes("evento-")) return "Evento (4º Encontro)";
+  if (tags.includes("ingresso")) return "Evento (4º Encontro)";
+  if (tags.includes("gigantes")) return "Gigantes";
+  if (tags.includes("lead-a5e") || tags.includes("a5e")) return "A5E";
+  if (tags.includes("lista-de-espera")) return "Lista de espera";
+  if (tags.includes("respondeu-pesquisa") || tags.includes("pesquisa")) return "Pesquisa";
+  if (tags.includes("imersao") || tags.includes("imersão")) return "Imersão";
+
+  const produto = l.extra && typeof l.extra === "object"
+    ? String((l.extra as Record<string, unknown>).produto ?? "")
+    : "";
+  if (produto) return produto.charAt(0).toUpperCase() + produto.slice(1);
+
+  return "Sem origem";
 }
 
 // ---------- Ritmo de leads ----------
@@ -175,6 +232,56 @@ export function mqlDailySeries(leads: Lead[], days: number, today = isoToday()):
     const d = daysAgo(i, new Date(today));
     const e = byDay.get(d) ?? { leads: 0, mql: 0 };
     out.push({ date: d, leads: e.leads, mql: e.mql });
+  }
+  return out;
+}
+
+export interface MqlMonthPoint {
+  month: string;      // YYYY-MM
+  label: string;      // "jul/26"
+  leads: number;
+  mql: number;
+  taxa: number | null; // % de qualificação do mês
+  parcial: boolean;    // mês corrente, ainda correndo
+}
+
+/**
+ * Leads e MQL por MÊS. A série diária mostra o pulso; a mensal mostra a
+ * tendência — 60 dias de linha não deixam ver se o mês está melhor ou pior
+ * que o anterior.
+ */
+export function mqlMonthlySeries(
+  leads: Lead[],
+  months: number,
+  today = isoToday()
+): MqlMonthPoint[] {
+  const mesAtual = today.slice(0, 7);
+  const byMonth = new Map<string, { leads: number; mql: number }>();
+  const bump = (d: string, k: "leads" | "mql") => {
+    const m = d.slice(0, 7);
+    const e = byMonth.get(m) ?? { leads: 0, mql: 0 };
+    e[k]++;
+    byMonth.set(m, e);
+  };
+  for (const l of leads) {
+    bump(l.createdAt.slice(0, 10), "leads");
+    if (l.mqlAt) bump(l.mqlAt.slice(0, 10), "mql");
+  }
+
+  const out: MqlMonthPoint[] = [];
+  const [y0, m0] = mesAtual.split("-").map(Number);
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(y0, m0 - 1 - i, 1));
+    const mk = d.toISOString().slice(0, 7);
+    const e = byMonth.get(mk) ?? { leads: 0, mql: 0 };
+    out.push({
+      month: mk,
+      label: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" }),
+      leads: e.leads,
+      mql: e.mql,
+      taxa: e.leads > 0 ? (e.mql / e.leads) * 100 : null,
+      parcial: mk === mesAtual,
+    });
   }
   return out;
 }

@@ -90,6 +90,60 @@ export function GoalPaceChart({
   );
 }
 
+// Leads e MQL por mês: barras (volume) + linha da taxa de qualificação no eixo
+// da direita. O mês corrente aparece hachurado porque ainda está correndo —
+// comparar ele com um mês fechado engana.
+export function LeadsMqlMonthlyChart({
+  data,
+}: {
+  data: { label: string; leads: number; mql: number; taxa: number | null; parcial: boolean }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <ComposedChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -16 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+        <YAxis yAxisId="qtd" tick={{ fontSize: 11 }} allowDecimals={false} />
+        <YAxis
+          yAxisId="taxa"
+          orientation="right"
+          tick={{ fontSize: 11 }}
+          unit="%"
+          domain={[0, 100]}
+        />
+        <Tooltip
+          formatter={(v, name) =>
+            name === "Qualificação"
+              ? [`${Number(v ?? 0).toFixed(1)}%`, name]
+              : [String(v ?? ""), name]
+          }
+        />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Bar yAxisId="qtd" dataKey="leads" name="Leads" fill="#94a3b8" radius={[3, 3, 0, 0]}>
+          {data.map((d) => (
+            <Cell key={d.label} fillOpacity={d.parcial ? 0.45 : 1} />
+          ))}
+        </Bar>
+        <Bar yAxisId="qtd" dataKey="mql" name="MQL" fill="#e11d48" radius={[3, 3, 0, 0]}>
+          {data.map((d) => (
+            <Cell key={d.label} fillOpacity={d.parcial ? 0.45 : 1} />
+          ))}
+        </Bar>
+        <Line
+          yAxisId="taxa"
+          type="monotone"
+          dataKey="taxa"
+          name="Qualificação"
+          stroke="#f59e0b"
+          strokeWidth={2}
+          dot={{ r: 3 }}
+          connectNulls
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
+
 export function LeadsMqlChart({
   data,
 }: {

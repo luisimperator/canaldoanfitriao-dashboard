@@ -95,7 +95,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         "leads",
         "id, created_at, source, status, seller_id, pipeline_stage, name, phone, extra, mql_at"
       ),
-      selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status, utm"),
+      selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status, utm, lead_id"),
       selectAll(supabase, "ad_spend", "date, platform, amount", "date"),
       selectAll(supabase, "fin_categories", "id, group_name, name"),
       selectAll(
@@ -130,6 +130,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         saleDate: String(r.sale_date).slice(0, 10),
         amount: Number(r.amount),
         sellerId: r.seller_id,
+        leadId: r.lead_id ?? null,
         product: r.product,
         status: r.status,
         utm: r.utm,
