@@ -241,6 +241,9 @@ export interface MqlMonthPoint {
   label: string;      // "jul/26"
   leads: number;
   mql: number;
+  /** quanto FALTA pro mês fechar no ritmo atual (só no mês corrente) */
+  leadsProj: number;
+  mqlProj: number;
   taxa: number | null; // % de qualificação do mês
   parcial: boolean;    // mês corrente, ainda correndo
 }
@@ -274,13 +277,21 @@ export function mqlMonthlySeries(
     const d = new Date(Date.UTC(y0, m0 - 1 - i, 1));
     const mk = d.toISOString().slice(0, 7);
     const e = byMonth.get(mk) ?? { leads: 0, mql: 0 };
+    const parcial = mk === mesAtual;
+    // Projeção do mês corrente: mantém o ritmo do que já correu até hoje.
+    // (mesma régua do gráfico de faturamento por vendedor)
+    const diaHoje = Number(today.slice(8, 10));
+    const diasNoMes = new Date(Date.UTC(y0, m0, 0)).getUTCDate();
+    const fator = parcial && diaHoje > 0 ? diasNoMes / diaHoje : 1;
     out.push({
       month: mk,
       label: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" }),
       leads: e.leads,
       mql: e.mql,
+      leadsProj: parcial ? Math.max(0, Math.round(e.leads * fator) - e.leads) : 0,
+      mqlProj: parcial ? Math.max(0, Math.round(e.mql * fator) - e.mql) : 0,
       taxa: e.leads > 0 ? (e.mql / e.leads) * 100 : null,
-      parcial: mk === mesAtual,
+      parcial,
     });
   }
   return out;

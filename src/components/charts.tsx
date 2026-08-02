@@ -96,7 +96,15 @@ export function GoalPaceChart({
 export function LeadsMqlMonthlyChart({
   data,
 }: {
-  data: { label: string; leads: number; mql: number; taxa: number | null; parcial: boolean }[];
+  data: {
+    label: string;
+    leads: number;
+    mql: number;
+    leadsProj: number;
+    mqlProj: number;
+    taxa: number | null;
+    parcial: boolean;
+  }[];
 }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
@@ -119,16 +127,26 @@ export function LeadsMqlMonthlyChart({
           }
         />
         <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Bar yAxisId="qtd" dataKey="leads" name="Leads" fill="#94a3b8" radius={[3, 3, 0, 0]}>
-          {data.map((d) => (
-            <Cell key={d.label} fillOpacity={d.parcial ? 0.45 : 1} />
-          ))}
-        </Bar>
-        <Bar yAxisId="qtd" dataKey="mql" name="MQL" fill="#e11d48" radius={[3, 3, 0, 0]}>
-          {data.map((d) => (
-            <Cell key={d.label} fillOpacity={d.parcial ? 0.45 : 1} />
-          ))}
-        </Bar>
+        <Bar yAxisId="qtd" dataKey="leads" name="Leads" stackId="leads" fill="#94a3b8" />
+        <Bar
+          yAxisId="qtd"
+          dataKey="leadsProj"
+          name="Leads (projeção)"
+          stackId="leads"
+          fill="#94a3b8"
+          fillOpacity={0.3}
+          radius={[3, 3, 0, 0]}
+        />
+        <Bar yAxisId="qtd" dataKey="mql" name="MQL" stackId="mql" fill="#e11d48" />
+        <Bar
+          yAxisId="qtd"
+          dataKey="mqlProj"
+          name="MQL (projeção)"
+          stackId="mql"
+          fill="#e11d48"
+          fillOpacity={0.3}
+          radius={[3, 3, 0, 0]}
+        />
         <Line
           yAxisId="taxa"
           type="monotone"
