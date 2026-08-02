@@ -162,6 +162,98 @@ export function LeadsMqlMonthlyChart({
   );
 }
 
+// Resultado mensal: faturamento x custos x distribuição (barras, R$) e a
+// margem líquida por cima (linha, %). A parte clara das barras é a projeção
+// do mês corrente no ritmo dos dias corridos — mesma leitura do gráfico de
+// leads e da projeção de vendas.
+export function ResultadoMensalChart({
+  data,
+}: {
+  data: {
+    label: string;
+    faturamento: number;
+    custos: number;
+    distribuicao: number;
+    faturamentoProj: number;
+    custosProj: number;
+    margem: number | null;
+    parcial: boolean;
+  }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <ComposedChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 8 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+        <YAxis
+          yAxisId="rs"
+          tick={{ fontSize: 11 }}
+          tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`}
+        />
+        <YAxis
+          yAxisId="margem"
+          orientation="right"
+          tick={{ fontSize: 11 }}
+          unit="%"
+          domain={[-100, 100]}
+        />
+        <Tooltip
+          formatter={(v, name) =>
+            name === "Margem líquida"
+              ? [`${Number(v ?? 0).toFixed(1)}%`, name]
+              : [brlTooltip(v), name]
+          }
+        />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Bar
+          yAxisId="rs"
+          dataKey="faturamento"
+          name="Faturamento"
+          stackId="fat"
+          fill="#10b981"
+        />
+        <Bar
+          yAxisId="rs"
+          dataKey="faturamentoProj"
+          name="Faturamento (projeção)"
+          stackId="fat"
+          fill="#10b981"
+          fillOpacity={0.3}
+          radius={[3, 3, 0, 0]}
+        />
+        <Bar yAxisId="rs" dataKey="custos" name="Custos" stackId="cus" fill="#e11d48" />
+        <Bar
+          yAxisId="rs"
+          dataKey="custosProj"
+          name="Custos (projeção)"
+          stackId="cus"
+          fill="#e11d48"
+          fillOpacity={0.3}
+          radius={[3, 3, 0, 0]}
+        />
+        <Bar
+          yAxisId="rs"
+          dataKey="distribuicao"
+          name="Distribuição"
+          fill="#8b5cf6"
+          radius={[3, 3, 0, 0]}
+        />
+        <ReferenceLine yAxisId="margem" y={0} stroke="var(--chart-grid)" />
+        <Line
+          yAxisId="margem"
+          type="monotone"
+          dataKey="margem"
+          name="Margem líquida"
+          stroke="#f59e0b"
+          strokeWidth={2}
+          dot={{ r: 3 }}
+          connectNulls
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
+
 export function LeadsMqlChart({
   data,
 }: {

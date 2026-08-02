@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { brl, num } from "@/lib/format";
 import { Card, KpiCard, PageHeader } from "@/components/ui";
 import { getCustomer360 } from "@/lib/support";
+import { supportModelName } from "@/lib/support-ai";
 import { HandoffsList, type HandoffRow } from "./HandoffsList";
 
 export const dynamic = "force-dynamic";
@@ -59,10 +60,13 @@ export default async function SuportePage({
       />
 
       <div className="mb-6 rounded-lg border border-sky-200 bg-sky-50 dark:bg-sky-500/10 px-4 py-3 text-sm text-sky-800">
-        <strong>Fases 1 e 2 no ar:</strong> consulta do cliente, fila de handoff,
-        treinamento e o <Link href="/suporte/simulador" className="underline font-medium">cérebro
-        de IA</Link> (responde × escala). Falta a Fase 3: ligar no WhatsApp pela
-        Meta. A IA precisa da chave <code>ANTHROPIC_API_KEY</code> no servidor.
+        <strong>Tudo no ar:</strong> o número oficial já está ligado na Meta e a IA atende sozinha
+        no WhatsApp — as conversas ficam na{" "}
+        <Link href="/suporte/inbox" className="underline font-medium">caixa de entrada</Link>, os
+        casos que precisam de gente caem na fila aqui embaixo. Dá pra{" "}
+        <Link href="/suporte/simulador" className="underline font-medium">simular um atendimento</Link>{" "}
+        antes de soltar mudança, e corrigir a IA pelo “modo chefe” na conversa. Modelo em uso:{" "}
+        <code>{supportModelName()}</code>.
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 mb-6">

@@ -656,6 +656,95 @@ export function spendByCategory(
     .sort((a, b) => b.total - a.total);
 }
 
+// ---------- Resultado mensal (faturamento, custos, distribuição, margem) ----------
+//
+// Tudo sai do extrato do Inter (fin_transactions) — é o dinheiro que de fato
+// entrou e saiu da conta, o mesmo lastro da Provisão de caixa.
+
+// Saída pros sócios = distribuição, não custo. Espelha
+// distribuicao_socios.match_extrato (migração 0021_distribuicao_socios).
+const RE_SOCIO = /(romulo|rômulo|luis fernando|luiz fernando|heavy ?drops)/i;
+
+// Entrada que NÃO é faturamento: resgate de aplicação (dinheiro nosso voltando),
+// aporte de sócio, pix devolvido/estornado e transferência entre as empresas do
+// grupo. Sem isso o mês de julho aparecia R$ 48 mil maior do que vendeu.
+const RE_NAO_FATURAMENTO =
+  /(resgate|devolvid|estorn|canal do anfitri[ãa]o)/i;
+
+export interface ResultadoMesPoint {
+  month: string; // YYYY-MM
+  label: string; // "jul/26"
+  faturamento: number;
+  custos: number;
+  distribuicao: number;
+  /** Margem líquida = (faturamento − custos) / faturamento, em %. */
+  margem: number | null;
+  parcial: boolean; // mês corrente, ainda correndo
+  /** Quanto ainda deve entrar/sair até o fim do mês, no ritmo atual. */
+  faturamentoProj: number;
+  custosProj: number;
+}
+
+/**
+ * Faturamento, custos, distribuição e margem líquida por mês.
+ *
+ * A distribuição sai da conta de "custos" de propósito: não é despesa, é lucro
+ * indo pro bolso dos sócios (foi assim que combinamos de ler a margem). O mês
+ * corrente é projetado proporcionalmente aos dias corridos, como na projeção de
+ * vendas — mas só faturamento e custos: a distribuição acontece de uma vez, lá
+ * pelo dia 10, e projetá-la proporcionalmente inventaria número.
+ */
+export function resultadoMensalSeries(
+  data: DashboardData,
+  months = 6,
+  today = isoToday()
+): ResultadoMesPoint[] {
+  const mesAtual = today.slice(0, 7);
+  const by = new Map<string, { fat: number; custo: number; dist: number }>();
+  for (const t of data.finTransactions) {
+    const mk = t.transactionDate.slice(0, 7);
+    const e = by.get(mk) ?? { fat: 0, custo: 0, dist: 0 };
+    const texto = `${t.counterparty ?? ""} ${t.description ?? ""}`;
+    if (t.direction === "in") {
+      if (!RE_NAO_FATURAMENTO.test(texto) && !RE_SOCIO.test(texto)) e.fat += t.amount;
+    } else if (RE_SOCIO.test(texto)) {
+      e.dist += t.amount;
+    } else {
+      e.custo += t.amount;
+    }
+    by.set(mk, e);
+  }
+
+  const diaHoje = Number(today.slice(8, 10));
+  const [y0, m0] = mesAtual.split("-").map(Number);
+  const diasNoMes = new Date(Date.UTC(y0, m0, 0)).getUTCDate();
+  const fator = diaHoje > 0 ? diasNoMes / diaHoje : 1;
+
+  const out: ResultadoMesPoint[] = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(y0, m0 - 1 - i, 1));
+    const mk = d.toISOString().slice(0, 7);
+    const e = by.get(mk) ?? { fat: 0, custo: 0, dist: 0 };
+    const parcial = mk === mesAtual;
+    const fatProj = parcial ? Math.max(0, Math.round(e.fat * fator) - Math.round(e.fat)) : 0;
+    const custoProj = parcial ? Math.max(0, Math.round(e.custo * fator) - Math.round(e.custo)) : 0;
+    const fatTotal = Math.round(e.fat) + fatProj;
+    const custoTotal = Math.round(e.custo) + custoProj;
+    out.push({
+      month: mk,
+      label: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" }),
+      faturamento: Math.round(e.fat),
+      custos: Math.round(e.custo),
+      distribuicao: Math.round(e.dist),
+      margem: fatTotal > 0 ? ((fatTotal - custoTotal) / fatTotal) * 100 : null,
+      parcial,
+      faturamentoProj: fatProj,
+      custosProj: custoProj,
+    });
+  }
+  return out;
+}
+
 // ---------- Diagnóstico de gargalo ----------
 // Compara os últimos 30 dias com os 30 anteriores e pontua cada possível
 // freio do crescimento; o maior score é o gargalo a atacar primeiro.

@@ -11,12 +11,18 @@ import {
   paidSales,
   sum,
   mqlMonthlySeries,
+  resultadoMensalSeries,
   leadOrigem,
   TICKET_CONVERSAO,
 } from "@/lib/metrics";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import { LeadsMqlChart, LeadsMqlMonthlyChart, SourcePie } from "@/components/charts";
+import {
+  LeadsMqlChart,
+  LeadsMqlMonthlyChart,
+  ResultadoMensalChart,
+  SourcePie,
+} from "@/components/charts";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +65,8 @@ export default async function VisaoGeralPage() {
   const mqlSeries = mqlDailySeries(data.leads, 60, today);
   const mqlMensal = mqlMonthlySeries(data.leads, 6, today);
   const mqlCap = mqlPerSeller(data, 90, today);
+  const resultado = resultadoMensalSeries(data, 6, today);
+  const ultimoFechado = resultado.filter((r) => !r.parcial).at(-1) ?? null;
   // A origem vem das tags do CRM (leadOrigem), não do campo `source` do banco:
   // ele chega "outro" em ~100% dos leads e a rosca virava uma fatia só.
   const bySource = Object.entries(
@@ -166,6 +174,23 @@ export default async function VisaoGeralPage() {
         </Card>
         <Card title="Origem dos leads (30 dias)">
           <SourcePie data={bySource} />
+        </Card>
+        <Card title="Resultado por mês (6 meses)" className="lg:col-span-3">
+          <ResultadoMensalChart data={resultado} />
+          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
+            Direto do extrato do Inter — o dinheiro que de fato entrou e saiu da conta.{" "}
+            <strong>Faturamento</strong> = entradas do mês (fora resgate de aplicação, aporte de
+            sócio e transferência entre as empresas). <strong>Custos</strong> = todas as saídas,
+            menos a distribuição. <strong>Distribuição</strong> = o que foi pro Rômulo e pra Heavy
+            Drops — é lucro saindo, não despesa, por isso fica fora da margem.{" "}
+            <strong>Margem líquida</strong> = (faturamento − custos) ÷ faturamento, na linha âmbar
+            do eixo da direita
+            {ultimoFechado?.margem !== null && ultimoFechado
+              ? ` (${num(ultimoFechado.margem!, 1)}% em ${ultimoFechado.label}, último mês fechado)`
+              : ""}
+            . A parte clara das barras do mês corrente é a projeção no ritmo dos dias já corridos; a
+            distribuição não é projetada porque sai de uma vez só, lá pelo dia 10.
+          </p>
         </Card>
         <Card title="Funil (últimos 30 dias)" className="lg:col-span-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">

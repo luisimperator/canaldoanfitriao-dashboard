@@ -72,9 +72,11 @@ function janelaRestante(ultimaEntrada: string | null): number | null {
   return resta > 0 ? Math.floor(resta / 3600_000) : null;
 }
 
-export function SupportInbox() {
+export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
   const [conversas, setConversas] = useState<Conversa[]>([]);
-  const [ativa, setAtiva] = useState<string | null>(null);
+  // `inicial` vem do link da fila de casos escalados (?fone=): abre direto na
+  // conversa daquele cliente em vez de na tela vazia.
+  const [ativa, setAtiva] = useState<string | null>(inicial);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [conversa, setConversa] = useState<Conversa | null>(null);
   const [texto, setTexto] = useState("");
