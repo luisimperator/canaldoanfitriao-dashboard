@@ -130,7 +130,7 @@ async function buildSystemPrompt(contact?: AgentContact): Promise<string> {
 Seu papel é resolver dúvidas de quem JÁ é cliente (comprou). Você NÃO faz vendas.
 
 # Regras de ouro (inegociáveis)
-1. Identifique a pessoa antes de consultar ou agir, usando lookup_customer. Peça primeiro o e-mail da compra; se a pessoa não souber o e-mail, busque pelo CPF (com o CPF NÃO precisa do e-mail exato). Se a busca por nome trouxer vários cadastros, peça o CPF para confirmar. Quando localizar o cliente, confirme a identidade com uma pergunta simples (ex.: confirmar o nome ou o produto comprado) antes de tratar de reembolso/cancelamento. Nunca invente dados.
+1. Identifique a pessoa antes de consultar ou agir, usando lookup_customer. Peça primeiro o e-mail da compra; se a pessoa não souber o e-mail, busque pelo CPF ou CNPJ (com o documento NÃO precisa do e-mail exato). Se a busca por nome trouxer vários cadastros, peça o CPF/CNPJ para confirmar. Quando localizar o cliente, confirme a identidade com uma pergunta simples (ex.: confirmar o nome ou o produto comprado) antes de tratar de reembolso/cancelamento. Nunca invente dados.
 2. Alteração de dados cadastrais é SEMPRE pelo formulário que o próprio cliente preenche — você nunca altera dados aqui.
 3. Você é pós-venda. Quem quer COMPRAR é encaminhado ao comercial: ${SALES_CONTACT}.
 4. Responda em português, no jeito descrito em "Personalidade" logo abaixo.
@@ -183,12 +183,12 @@ const TOOLS: Anthropic.Tool[] = [
   {
     name: "lookup_customer",
     description:
-      "Busca o cliente por e-mail, CPF OU nome. Prefira e-mail; se o cliente não souber o e-mail, busque por CPF (basta o CPF, não precisa do e-mail exato). Use SEMPRE antes de responder dúvidas que dependem da situação da pessoa (acesso, pagamento, inadimplência, validade, renovação). Se a busca por nome retornar vários cadastros, peça o CPF. Retorna se é cliente, o que comprou, status da assinatura e se está inadimplente.",
+      "Busca o cliente por e-mail, CPF/CNPJ OU nome. Prefira e-mail; se o cliente não souber o e-mail, busque por CPF ou CNPJ (basta o documento, não precisa do e-mail exato). Use SEMPRE antes de responder dúvidas que dependem da situação da pessoa (acesso, pagamento, inadimplência, validade, renovação). Se a busca por nome retornar vários cadastros, peça o CPF/CNPJ. Retorna se é cliente, o que comprou, status da assinatura e se está inadimplente.",
     input_schema: {
       type: "object",
       properties: {
         email: { type: "string", description: "e-mail cadastrado na compra" },
-        cpf: { type: "string", description: "CPF do cliente (com ou sem pontuação)" },
+        cpf: { type: "string", description: "CPF ou CNPJ do cliente (com ou sem pontuação)" },
         nome: { type: "string", description: "nome completo (use só quando não há e-mail nem CPF)" },
       },
     },

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { brl, num } from "@/lib/format";
 import { Card, KpiCard, PageHeader } from "@/components/ui";
-import { getCustomer360 } from "@/lib/support";
+import { findCustomerSmart } from "@/lib/support";
 import { supportModelName } from "@/lib/support-ai";
 import { HandoffsList, type HandoffRow } from "./HandoffsList";
 
@@ -27,11 +27,12 @@ const STATUS_PT: Record<string, string> = {
 export default async function SuportePage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ email?: string; q?: string }>;
 }) {
   const sp = await searchParams;
-  const email = sp.email?.trim() ?? "";
-  const lookup = email ? await getCustomer360(email) : null;
+  // `q` é o campo coringa; `email` continua aceito pra não quebrar link antigo.
+  const q = (sp.q ?? sp.email ?? "").trim();
+  const lookup = q ? await findCustomerSmart(q) : null;
 
   const admin = getSupabaseAdmin();
   let handoffs: HandoffRow[] = [];
@@ -79,10 +80,10 @@ export default async function SuportePage({
       <Card title="Consultar cliente" className="mb-6">
         <form method="get" className="flex flex-col gap-2 sm:flex-row">
           <input
-            type="email"
-            name="email"
-            defaultValue={email}
-            placeholder="e-mail cadastrado na compra"
+            type="text"
+            name="q"
+            defaultValue={q}
+            placeholder="e-mail, CPF, CNPJ ou nome completo"
             className="w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
           />
           <button
