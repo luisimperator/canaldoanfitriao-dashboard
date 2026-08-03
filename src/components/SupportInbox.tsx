@@ -37,6 +37,26 @@ interface Mensagem {
   created_at: string;
 }
 
+// Perfil 360 devolvido por /api/support/customer (subset que a tela usa).
+interface ClienteLookup {
+  found: boolean;
+  email: string;
+  nome: string | null;
+  telefone: string | null;
+  documento: string | null;
+  isCliente: boolean;
+  inadimplente: boolean;
+  assinatura: { ativa: boolean; produto: string | null } | null;
+  compras: {
+    fonte: string;
+    produto: string | null;
+    valor: number | null;
+    data: string | null;
+    status: string | null;
+  }[];
+  resumo: string;
+}
+
 interface TemplateAprovado {
   id: string;
   name: string;
@@ -94,6 +114,12 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   // Retomada fora da janela de 24h: template aprovado + os valores das variáveis.
+  // Consultar cliente sem sair da conversa: campo coringa (e-mail/CPF/CNPJ/nome)
+  const [consultaAberta, setConsultaAberta] = useState(false);
+  const [consultaQ, setConsultaQ] = useState("");
+  const [consultando, setConsultando] = useState(false);
+  const [consultaErro, setConsultaErro] = useState<string | null>(null);
+  const [cliente, setCliente] = useState<ClienteLookup | null>(null);
   const [aprovados, setAprovados] = useState<TemplateAprovado[]>([]);
   const [templateEsc, setTemplateEsc] = useState("");
   const [templateParams, setTemplateParams] = useState<string[]>([]);
@@ -163,6 +189,26 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
       setErro("Falha de rede");
     } finally {
       setEnviando(false);
+    }
+  }
+
+  async function consultarCliente() {
+    if (!consultaQ.trim()) return;
+    setConsultando(true);
+    setConsultaErro(null);
+    setCliente(null);
+    try {
+      const res = await fetch(`/api/support/customer?q=${encodeURIComponent(consultaQ.trim())}`);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || j.error) {
+        setConsultaErro(j.error ?? `Erro ${res.status}`);
+        return;
+      }
+      setCliente(j as ClienteLookup);
+    } catch {
+      setConsultaErro("Falha de rede");
+    } finally {
+      setConsultando(false);
     }
   }
 
@@ -322,6 +368,16 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => setConsultaAberta((a) => !a)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                    consultaAberta
+                      ? "bg-sky-100 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300"
+                      : "border border-slate-300 dark:border-white/15 text-slate-600 dark:text-zinc-300"
+                  }`}
+                >
+                  🔍 Cliente
+                </button>
+                <button
                   onClick={alternarIA}
                   className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
                     conversa.ia_ativa
@@ -339,6 +395,106 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
                 </button>
               </div>
             </div>
+
+            {consultaAberta && (
+              <div className="max-h-72 overflow-y-auto border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] px-4 py-3">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    consultarCliente();
+                  }}
+                  className="flex gap-2"
+                >
+                  <input
+                    value={consultaQ}
+                    onChange={(e) => setConsultaQ(e.target.value)}
+                    placeholder="e-mail, CPF, CNPJ ou nome completo"
+                    className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-1.5 text-sm text-slate-900 dark:text-zinc-100"
+                  />
+                  <button
+                    type="submit"
+                    disabled={consultando || !consultaQ.trim()}
+                    className="shrink-0 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
+                  >
+                    {consultando ? "Buscando…" : "Consultar"}
+                  </button>
+                </form>
+                {consultaErro && (
+                  <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">{consultaErro}</p>
+                )}
+                {cliente && (
+                  <div className="mt-3">
+                    <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          cliente.isCliente
+                            ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                            : "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400"
+                        }`}
+                      >
+                        {cliente.isCliente ? "Cliente" : "Não é cliente"}
+                      </span>
+                      {cliente.assinatura && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            cliente.assinatura.ativa
+                              ? "bg-sky-100 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300"
+                              : "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400"
+                          }`}
+                        >
+                          Assinatura {cliente.assinatura.ativa ? "ativa" : "inativa"}
+                        </span>
+                      )}
+                      {cliente.inadimplente && (
+                        <span className="rounded-full bg-rose-100 dark:bg-rose-500/15 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
+                          ⚠️ Inadimplente
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 gap-x-4 gap-y-0.5 text-xs sm:grid-cols-2">
+                      <p className="text-slate-600 dark:text-zinc-400">
+                        <span className="text-slate-400 dark:text-zinc-500">Nome: </span>
+                        {cliente.nome ?? "—"}
+                      </p>
+                      <p className="break-all text-slate-600 dark:text-zinc-400">
+                        <span className="text-slate-400 dark:text-zinc-500">E-mail: </span>
+                        {cliente.email || "—"}
+                      </p>
+                      <p className="text-slate-600 dark:text-zinc-400">
+                        <span className="text-slate-400 dark:text-zinc-500">Telefone: </span>
+                        {cliente.telefone ?? "—"}
+                      </p>
+                      <p className="text-slate-600 dark:text-zinc-400">
+                        <span className="text-slate-400 dark:text-zinc-500">Documento: </span>
+                        {cliente.documento ?? "—"}
+                      </p>
+                    </div>
+                    <p className="mt-2 rounded-lg bg-white dark:bg-black/20 px-2.5 py-1.5 text-xs text-slate-700 dark:text-zinc-300">
+                      {cliente.resumo}
+                    </p>
+                    {cliente.compras.length > 0 && (
+                      <ul className="mt-2 space-y-0.5 text-xs text-slate-600 dark:text-zinc-400">
+                        {cliente.compras.slice(0, 6).map((c, i) => (
+                          <li key={i} className="truncate">
+                            · {c.produto ?? "—"}
+                            {c.valor != null &&
+                              ` — ${c.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}`}
+                            {c.status && ` · ${c.status}`}
+                            {c.data &&
+                              ` · ${new Date(c.data).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}`}
+                          </li>
+                        ))}
+                        {cliente.compras.length > 6 && (
+                          <li className="text-slate-400 dark:text-zinc-500">
+                            … e mais {cliente.compras.length - 6} — veja tudo em Tickets.
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
               {mensagens.map((m, i) => {

@@ -16,6 +16,43 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  // Caixinha mágica: escreve a regra de qualquer jeito, a IA organiza e salva.
+  const [prompt, setPrompt] = useState("");
+  const [organizando, setOrganizando] = useState(false);
+  const [promptErro, setPromptErro] = useState<string | null>(null);
+  const [promptOk, setPromptOk] = useState<KbItem | null>(null);
+
+  async function organizar() {
+    if (prompt.trim().length < 10) {
+      setPromptErro("Escreva a regra com um pouco mais de contexto.");
+      return;
+    }
+    setOrganizando(true);
+    setPromptErro(null);
+    setPromptOk(null);
+    try {
+      const res = await fetch("/api/support/kb/prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto: prompt }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setPromptErro(json.error ?? "Erro ao organizar a regra.");
+        return;
+      }
+      const saved = json.item as KbItem;
+      setItems((list) =>
+        [...list, saved].sort((a, b) => a.bloco.localeCompare(b.bloco) || a.ordem - b.ordem)
+      );
+      setPromptOk(saved);
+      setPrompt("");
+    } catch {
+      setPromptErro("Falha de rede.");
+    } finally {
+      setOrganizando(false);
+    }
+  }
 
   async function copy(it: KbItem) {
     const text = it.titulo ? `${it.titulo}\n\n${it.conteudo}` : it.conteudo;
@@ -92,7 +129,43 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Editor */}
-      <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-5 shadow-sm h-fit lg:sticky lg:top-6">
+      <div className="h-fit space-y-4 lg:sticky lg:top-6">
+        {/* Caixinha mágica: prompt livre → a IA escreve, classifica e salva */}
+        <div className="rounded-xl border-2 border-violet-300 dark:border-violet-500/40 bg-violet-50/60 dark:bg-violet-500/[0.07] p-5 shadow-sm">
+          <h2 className="mb-1 text-sm font-semibold text-slate-800 dark:text-zinc-200">
+            ✨ Escreva a regra do seu jeito
+          </h2>
+          <p className="mb-3 text-xs text-slate-500 dark:text-zinc-400">
+            Despeje a regra como você falaria (&ldquo;não promete prazo de reembolso, quem cuida
+            é o financeiro&rdquo;). A IA escreve direito, escolhe o bloco certo e salva — depois é
+            só revisar na lista.
+          </p>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={3}
+            placeholder="ex.: quando o cliente pedir nota fiscal, manda o link do portal da Eduzz e avisa que sai em até 2 dias úteis"
+            className="w-full rounded-lg border border-violet-200 dark:border-violet-500/30 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-zinc-100"
+          />
+          {promptErro && (
+            <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">{promptErro}</p>
+          )}
+          {promptOk && (
+            <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-400">
+              Salvei em <strong>{blocoLabel(promptOk.bloco)}</strong>: &ldquo;{promptOk.titulo}
+              &rdquo; — confira na lista (dá pra editar ou excluir).
+            </p>
+          )}
+          <button
+            onClick={organizar}
+            disabled={organizando || prompt.trim().length < 10}
+            className="mt-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
+          >
+            {organizando ? "Organizando…" : "Organizar e salvar"}
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-5 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-4">
           {form.id ? "Editar item" : "Novo item de treinamento"}
         </h2>
@@ -193,6 +266,7 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
               </button>
             )}
           </div>
+        </div>
         </div>
       </div>
 
