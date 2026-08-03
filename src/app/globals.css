@@ -32,6 +32,15 @@ body {
   color: var(--foreground);
 }
 
+/* Cinto e suspensório do color-scheme acima: alguns combos navegador/OS
+   ainda desenham o popup do <select> claro — força as opções escuras.
+   (Só option/optgroup; o select em si é estilizado por componente.) */
+.dark option,
+.dark optgroup {
+  background-color: #1a1726;
+  color: #e4e4e7;
+}
+
 /* recharts no escuro: tooltip/legend têm cores fixas por padrão. */
 .dark .recharts-default-tooltip {
   background: #1a1726 !important;
