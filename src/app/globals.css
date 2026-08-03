@@ -7,6 +7,10 @@
   --background: #f8fafc;
   --foreground: #0f172a;
   --chart-grid: #e2e8f0;
+  /* Sem isto o navegador desenha os controles nativos (popup de <select>,
+     scrollbar, date picker) no esquema claro mesmo com o tema escuro — texto
+     zinc herdado em cima de popup branco fica ilegível. */
+  color-scheme: light;
 }
 
 /* Modo escuro na vibe "OS": navy-violeta profundo, texto zinc. */
@@ -14,6 +18,7 @@
   --background: #0b0a13;
   --foreground: #e4e4e7;
   --chart-grid: rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
 }
 
 @theme inline {
