@@ -745,14 +745,18 @@ export function resultadoMensalSeries(
   return out;
 }
 
-// ---------- Diagnóstico de gargalo ----------
-// Compara os últimos 30 dias com os 30 anteriores e pontua cada possível
-// freio do crescimento; o maior score é o gargalo a atacar primeiro.
-
-export type BottleneckStatus = "ok" | "atencao" | "critico";
+// ---------- Restrição (Teoria das Restrições) ----------
+//
+// Goldratt: o throughput que interessa aqui é LUCRO LÍQUIDO, e a restrição é
+// o recurso que limita esse throughput — UMA por vez. "Piorou" não é
+// restrição: conversão caindo é sintoma e vira alerta de tendência; restrição
+// é falta de capacidade num elo — o time, o processo de atendimento ou a
+// geração de lead qualificado. Cada candidata carrega o ganho estimado de
+// ELEVÁ-LA em R$/mês de venda de curso, porque restrição se compara em
+// dinheiro, não em porcentagem.
 
 // Resumo de velocidade de atendimento (speed-to-lead), vindo da função SQL
-// seller_speed_to_lead — passado ao diagnóstico de gargalo.
+// seller_speed_to_lead — passado à análise de restrição.
 export interface SpeedSummary {
   atribuidos: number;
   conversados: number;
@@ -763,24 +767,48 @@ export interface SpeedSummary {
   nunca: number;
 }
 
-export interface BottleneckSignal {
-  kind: "leads" | "conversao" | "time" | "midia" | "velocidade";
-  label: string;
-  /** 0-100: quanto maior, mais esse fator trava o crescimento agora */
-  score: number;
-  status: BottleneckStatus;
-  headline: string;
-  detail: string;
-  action: string;
+/** Fatia do estudo calmo×pico (d0_by_day_load) — só o que a análise usa. */
+export interface D0LoadLite {
+  bucket: "calmo" | "medio" | "pico";
+  leads: number;
+  d0: number;
 }
 
-export interface BottleneckAnalysis {
-  primary: BottleneckSignal | null;
-  signals: BottleneckSignal[];
+export type RestricaoStatus = "ok" | "atencao" | "critico";
+export type RestricaoKind = "time" | "processo" | "demanda";
+
+export interface RestricaoCandidata {
+  kind: RestricaoKind;
+  label: string;
+  /** 0-100: força da evidência de que ESTE elo limita o throughput hoje */
+  score: number;
+  status: RestricaoStatus;
+  headline: string;
+  detail: string;
+  /** como explorar/elevar (passos 2 e 4 dos cinco passos de focalização) */
+  acao: string;
+  /** throughput estimado ao elevar: R$/mês em venda de curso (ordem de grandeza) */
+  ganhoMensal: number | null;
+}
+
+export interface TendenciaAlerta {
+  kind: "conversao" | "midia" | "leads";
+  label: string;
+  status: RestricaoStatus;
+  headline: string;
+  detail: string;
+}
+
+export interface RestricaoAnalysis {
+  /** A candidata com mais evidência — em ToC é uma por vez, não um ranking. */
+  restricao: RestricaoCandidata | null;
+  candidatas: RestricaoCandidata[];
+  alertas: TendenciaAlerta[];
+  ticketCurso: number | null;
   hasData: boolean;
 }
 
-function statusFor(score: number): BottleneckStatus {
+function statusFor(score: number): RestricaoStatus {
   return score >= 70 ? "critico" : score >= 40 ? "atencao" : "ok";
 }
 
@@ -796,236 +824,271 @@ function fmtBrl(value: number): string {
   });
 }
 
-export function bottleneckAnalysis(
+// Do estudo de speed-to-lead (90 dias, dias úteis): lead conversado converte
+// ~10%; quem nunca é conversado, ~3%. É a base dos ganhos estimados abaixo.
+const CONV_CONVERSADO = 0.1;
+const CONV_NUNCA = 0.03;
+
+/** Ticket mediano de venda de curso (90 dias) — mediana resiste a promoção. */
+export function ticketMedioCurso(data: DashboardData, today = isoToday()): number | null {
+  const start = daysAgo(89, new Date(today));
+  const vals = inRange(
+    paidSales(data.sales).filter(isCourseSale),
+    (s) => s.saleDate,
+    start,
+    today
+  ).map((s) => s.amount);
+  return median(vals);
+}
+
+export function restricaoAnalysis(
   data: DashboardData,
   today = isoToday(),
-  speed?: SpeedSummary | null
-): BottleneckAnalysis {
-  const curStart = daysAgo(29, new Date(today));
-  const prevStart = daysAgo(59, new Date(today));
-  const prevEnd = daysAgo(30, new Date(today));
+  speed?: SpeedSummary | null,
+  d0Load?: D0LoadLite[] | null,
+  /** janela (em dias) usada pra medir o speed — pra normalizar ganhos a /mês */
+  speedDays = 90
+): RestricaoAnalysis {
+  const ticket = ticketMedioCurso(data, today);
+  const cap = qualifiedCapacity30d(data, today);
+  const candidatas: RestricaoCandidata[] = [];
 
-  const leadsCur = inRange(data.leads, (l) => l.createdAt, curStart, today).length;
-  const leadsPrev = inRange(data.leads, (l) => l.createdAt, prevStart, prevEnd).length;
-  const salesCur = inRange(paidSales(data.sales), (s) => s.saleDate, curStart, today).length;
-  const salesPrev = inRange(paidSales(data.sales), (s) => s.saleDate, prevStart, prevEnd).length;
-
-  // ROBUSTO a lançamento: tendência de leads pela MEDIANA diária (ignora os
-  // poucos dias de pico) e conversão pela mediana de meses fechados.
-  const medLeadsCur = median(dailyCounts(data.leads, (l) => l.createdAt, curStart, today)) ?? 0;
-  const medLeadsPrev = median(dailyCounts(data.leads, (l) => l.createdAt, prevStart, prevEnd)) ?? 0;
-  const leadsTrend = medLeadsPrev > 0 ? (medLeadsCur - medLeadsPrev) / medLeadsPrev : null;
-
-  const closedB = lastClosedMonths(today, 6);
-  const leadsByB = countByMonth(data.leads, (l) => l.createdAt);
-  const salesByB = countByMonth(paidSales(data.sales), (s) => s.saleDate);
-  const convPerMonth = closedB.map((m) => {
-    const lm = leadsByB.get(m) ?? 0;
-    const sm = salesByB.get(m) ?? 0;
-    return lm > 0 ? sm / lm : null;
-  });
-  const convCur = median(convPerMonth.slice(0, 3).filter((x): x is number => x !== null));
-  const convPrev = median(convPerMonth.slice(3, 6).filter((x): x is number => x !== null));
-  const convTrend =
-    convCur !== null && convPrev !== null && convPrev > 0
-      ? (convCur - convPrev) / convPrev
+  // Vendas/mês que os leads atuais sustentam vs teto do time — usado pelas
+  // duas primeiras candidatas (são os dois lados da mesma conta).
+  const possiveis =
+    !cap.unreliable && cap.leadsPerSale && cap.robustMonthlyLeads !== null
+      ? cap.robustMonthlyLeads / cap.leadsPerSale
       : null;
+  const tetoTime = cap.activeSellers * cap.sellerMonthlyCapacity;
 
-  const adCur = sum(inRange(data.adSpend, (a) => a.date, curStart, today).map((a) => a.amount));
-  const adPrev = sum(
-    inRange(data.adSpend, (a) => a.date, prevStart, prevEnd).map((a) => a.amount)
-  );
-  const cacCur = salesCur > 0 && adCur > 0 ? adCur / salesCur : null;
-  const cacPrev = salesPrev > 0 && adPrev > 0 ? adPrev / salesPrev : null;
-  const cacTrend = cacCur !== null && cacPrev !== null ? (cacCur - cacPrev) / cacPrev : null;
-
-  // Capacidade medida sobre leads QUALIFICADOS (quentes + muito quentes), que é
-  // com quem o vendedor realmente fala — não sobre o total de leads.
-  const capacity = qualifiedCapacity30d(data, today);
-  const signals: BottleneckSignal[] = [];
-
-  // 1. Geração de leads (topo do funil) — só olha a TENDÊNCIA de entrada de
-  // leads. A questão de capacidade do time fica no sinal "time", para não
-  // gerar mensagem contraditória (ex.: "pouco lead" com leads em alta).
+  // ---- Candidata 1: o TIME é a restrição (lead qualificado sobrando) ----
   {
-    const drop = leadsTrend !== null ? Math.max(0, -leadsTrend) : 0;
     let score = 15;
-    if (drop >= 0.25) score = 85;
-    else if (drop >= 0.1) score = 55;
-    const r1 = (x: number) => x.toFixed(1).replace(".", ",");
-    const trendTxt =
-      leadsTrend === null
-        ? `Ritmo de ${r1(medLeadsCur)} leads/dia (mediana), sem base anterior para comparar`
-        : `Ritmo típico de ${r1(medLeadsCur)} leads/dia agora contra ${r1(medLeadsPrev)}/dia nos 30 dias anteriores (${leadsTrend < 0 ? "queda" : "alta"} de ${fmtPct(leadsTrend)}) — mediana diária, sem distorção de pico de lançamento`;
-    signals.push({
-      kind: "leads",
-      label: "Geração de leads",
-      score,
-      status: statusFor(score),
-      headline:
-        score >= 70
-          ? "Está entrando menos lead que antes"
-          : score >= 40
-            ? "Entrada de leads desacelerando"
-            : "Entrada de leads saudável",
-      detail: trendTxt + ".",
-      action:
-        score >= 40
-          ? "Aumente o investimento em mídia e reforce o orgânico: o topo do funil é o que está travando o resto."
-          : "Mantenha o ritmo de captação atual.",
-    });
-  }
-
-  // 2. Conversão (qualidade da venda)
-  {
-    const drop = convTrend !== null ? Math.max(0, -convTrend) : 0;
-    let score = 15;
-    if (drop >= 0.25) score = 90;
-    else if (drop >= 0.1) score = 60;
-    const convTxt =
-      convCur !== null && convPrev !== null
-        ? `A cada 100 leads, ${(convCur * 100).toFixed(1).replace(".", ",")} viram venda agora, contra ${(convPrev * 100).toFixed(1).replace(".", ",")} no período anterior`
-        : "Ainda não há vendas e leads suficientes para medir a conversão";
-    signals.push({
-      kind: "conversao",
-      label: "Conversão em venda",
-      score,
-      status: statusFor(score),
-      headline:
-        score >= 70
-          ? "Conversão caiu: o problema é vender melhor"
-          : score >= 40
-            ? "Conversão dando sinais de queda"
-            : "Conversão estável",
-      detail:
-        convTxt + (convTrend !== null && convTrend < 0 ? ` (queda de ${fmtPct(convTrend)}).` : "."),
-      action:
-        score >= 40
-          ? "Não adianta encher o funil: revise o roteiro com o time, ouça atendimentos e ataque as objeções mais comuns."
-          : "Aproveitamento dos leads está dentro do esperado.",
-    });
-  }
-
-  // 3. Capacidade do time — leads QUALIFICADOS (quentes + muito quentes) vs
-  // vendas de CURSO (A5E + Gigantes); ingressos do evento não contam.
-  {
-    const cap = capacity;
-    // time ocioso: o volume de qualificados sustenta MENOS vendedores que o time tem.
-    const ocioso = cap.supportedSellers !== null && cap.supportedSellers < cap.activeSellers;
-    let score = 10;
-    if (cap.unreliable) score = 10;
-    else if (cap.verdict === "pode_contratar") score = 80;
-    else if (cap.verdict === "quase") score = 45;
-    else if (ocioso) score = 50;
-
-    let headline: string;
-    let action: string;
+    let headline = "Time dá conta do volume de leads qualificados";
     let detail: string;
+    let acao = "Nada a elevar aqui agora.";
+    let ganho: number | null = null;
+
     if (cap.unreliable) {
-      headline = "Capacidade não estimável (qualificação incompleta no CRM)";
-      detail = `Não dá pra estimar a capacidade pelos leads qualificados: nos últimos 30 dias entraram ~${cap.qualified30} leads quentes/muito quentes, mas houve ${cap.sales30} vendas de curso — mais vendas do que leads quentes. Ou seja, boa parte das vendas não está passando pelo funil de leads quentes do CRM.`;
-      action =
-        "Garanta que os leads quentes sejam registrados no CRM (Unnichat) — só assim dá pra medir a capacidade real do time.";
+      score = 5;
+      headline = "Capacidade não estimável (CRM não captura os quentes)";
+      detail = `Nos últimos 30 dias houve ${cap.sales30} vendas de curso para ~${cap.qualified30} leads quentes registrados — mais venda que lead quente. Boa parte das vendas não passa pelo funil do CRM, então não dá pra saber se o time é a restrição.`;
+      acao = "Garanta o registro dos leads quentes no Unnichat antes de decidir contratação.";
     } else if (cap.supportedSellers === null) {
-      headline = "Time dá conta do volume atual";
       detail =
-        "Ainda não há leads qualificados (quentes/muito quentes) suficientes nos últimos 30 dias para estimar a capacidade do time.";
-      action = "Sem necessidade de contratar agora.";
+        "Ainda não há leads qualificados suficientes nos últimos 30 dias para estimar a capacidade.";
+    } else if (cap.verdict === "pode_contratar") {
+      score = 85;
+      headline = "O time é a restrição: tem lead qualificado sobrando";
+      ganho = ticket !== null ? Math.round(cap.sellerMonthlyCapacity * ticket) : null;
+      detail = `Entram ~${cap.robustMonthlyLeads} leads qualificados/mês e cada venda de curso exige ~${cap.leadsPerSale !== null ? cap.leadsPerSale.toFixed(1).replace(".", ",") : "?"}. Isso sustenta ${cap.supportedSellers} vendedor(es); o time tem ${cap.activeSellers}. Lead quente esperando é throughput evaporando — a fila de hoje não volta amanhã.`;
+      acao = `ELEVAR: contratar (ou ativar) mais um vendedor — no pico, um vendedor entrega ${cap.sellerMonthlyCapacity} vendas de curso/mês.`;
+    } else if (cap.verdict === "quase") {
+      score = 45;
+      headline = "Time perto de virar a restrição";
+      detail = `Faltam ~${cap.leadsGapForNextSeller} leads qualificados/mês para justificar o próximo vendedor. No ritmo atual, o time satura em breve.`;
+      acao = "EXPLORAR: prepare a próxima contratação antes de a fila se formar.";
     } else {
-      detail = `Nos últimos 30 dias entram ~${cap.robustMonthlyLeads} leads qualificados/mês (quentes + muito quentes, que é com quem o vendedor fala), e cada venda de curso exige ~${cap.leadsPerSale !== null ? cap.leadsPerSale.toFixed(1).replace(".", ",") : "?"}. Isso sustenta ${cap.supportedSellers} vendedor(es); o time tem ${cap.activeSellers}. Pico de ${cap.sellerMonthlyCapacity} vendas de curso/mês por vendedor.`;
-      headline =
-        score >= 70
-          ? "Tem lead qualificado sobrando: falta gente pra atender"
-          : cap.verdict === "quase"
-            ? "Time perto do limite"
-            : ocioso
-              ? "Sobra capacidade: falta lead qualificado"
-              : "Time dá conta do volume atual";
-      action =
-        score >= 70
-          ? "Contrate (ou ative) mais um vendedor antes de investir mais em mídia — hoje há lead qualificado sendo desperdiçado."
-          : cap.verdict === "quase"
-            ? "Prepare a próxima contratação: no ritmo atual o time satura em breve."
-            : ocioso
-              ? "Não contrate agora — o time comporta mais venda do que o volume de leads qualificados permite. Foque em gerar e qualificar mais leads quentes."
-              : "Sem necessidade de contratar agora.";
+      detail = `Entram ~${cap.robustMonthlyLeads ?? 0} leads qualificados/mês; o time de ${cap.activeSellers} dá conta com folga.`;
     }
-    signals.push({
+    candidatas.push({
       kind: "time",
       label: "Capacidade do time",
       score,
       status: statusFor(score),
       headline,
-      action,
       detail,
+      acao,
+      ganhoMensal: ganho,
     });
   }
 
-  // 4. Eficiência de mídia (CAC)
+  // ---- Candidata 2: a DEMANDA é a restrição (time ocioso, falta lead) ----
   {
-    const rise = cacTrend !== null ? Math.max(0, cacTrend) : 0;
-    let score = 10;
-    if (rise >= 0.3) score = 70;
-    else if (rise >= 0.15) score = 50;
-    const detail =
-      cacCur !== null && cacPrev !== null
-        ? `Cada venda custou ${fmtBrl(cacCur)} em anúncios nos últimos 30 dias, contra ${fmtBrl(cacPrev)} no período anterior${cacTrend !== null && cacTrend > 0 ? ` (alta de ${fmtPct(cacTrend)})` : ""}.`
-        : cacCur !== null
-          ? `Cada venda custou ${fmtBrl(cacCur)} em anúncios nos últimos 30 dias (sem investimento no período anterior para comparar).`
-          : "Sem dados suficientes de investimento em anúncios para calcular o custo por venda.";
-    signals.push({
-      kind: "midia",
-      label: "Eficiência de mídia",
+    const ocioso =
+      !cap.unreliable &&
+      cap.supportedSellers !== null &&
+      cap.supportedSellers < cap.activeSellers;
+    const gapVendas =
+      possiveis !== null ? Math.max(0, Math.round(tetoTime - possiveis)) : null;
+
+    let score = 15;
+    let headline = "Demanda ocupa o time — não é o elo fraco hoje";
+    let detail =
+      "O volume de leads qualificados sustenta o time atual; a restrição não está na captação.";
+    let acao = "Mantenha o ritmo de captação.";
+    let ganho: number | null = null;
+
+    if (cap.unreliable) {
+      score = 5;
+      headline = "Não estimável (mesmo motivo da capacidade)";
+      detail = "Sem funil confiável de leads quentes no CRM, não dá pra medir a demanda.";
+      acao = "Registre os quentes no CRM primeiro.";
+    } else if (ocioso && gapVendas !== null && gapVendas > 0) {
+      score = gapVendas >= cap.sellerMonthlyCapacity ? 75 : 55;
+      headline = "A geração de lead qualificado é a restrição: time ocioso";
+      ganho = ticket !== null ? Math.round(gapVendas * ticket) : null;
+      detail = `Os ~${cap.robustMonthlyLeads} qualificados/mês sustentam ~${possiveis !== null ? Math.round(possiveis) : "?"} vendas de curso, mas o time de ${cap.activeSellers} comporta até ~${tetoTime}. Sobra gente, falta lead quente.`;
+      acao =
+        "ELEVAR: mais captação e qualificação (mídia, orgânico, varrer a base fria). Contratar agora só aumentaria a ociosidade.";
+    }
+    candidatas.push({
+      kind: "demanda",
+      label: "Geração de lead qualificado",
       score,
       status: statusFor(score),
-      headline:
-        score >= 70
-          ? "Custo por venda disparou"
-          : score >= 40
-            ? "Custo por venda subindo"
-            : "Mídia com custo sob controle",
+      headline,
       detail,
-      action:
-        score >= 40
-          ? "Revise campanhas e criativos: o mesmo dinheiro está trazendo menos venda que antes."
-          : "Eficiência de mídia dentro do esperado.",
+      acao,
+      ganhoMensal: ganho,
     });
   }
 
-  // 5. Atendimento no mesmo dia útil = PROXY DE CAPACIDADE do time. Estudo (30
-  // dias, sem lançamento, em DIAS ÚTEIS): lead atendido converte ~10%; quem
-  // nunca é conversado, ~3%. Perder o dia 0 é sinal de fila acumulando — e fila
-  // acumulada vira lead nunca conversado (a faixa morta). Atraso em dias úteis
-  // (sexta→segunda = 1 dia), pra não punir fim de semana.
+  // ---- Candidata 3: o PROCESSO de atendimento é a restrição (dia 0) ----
   if (speed && speed.atribuidos > 0) {
     const d0Rate = speed.d0 / speed.atribuidos;
-    const naoConvRate = speed.nunca / speed.atribuidos;
     let score = 15;
-    if (d0Rate < 0.4) score = 85;
+    if (d0Rate < 0.4) score = 80;
     else if (d0Rate < 0.6) score = 55;
     const r0 = Math.round(d0Rate * 100);
-    const rNunca = Math.round(naoConvRate * 100);
-    signals.push({
-      kind: "velocidade",
-      label: "Atendimento no dia 0",
+
+    // calmo×pico decide o diagnóstico: d0 ruim no dia CALMO é rotina; d0 que
+    // só cai no pico é volume — e aí a restrição de verdade é o time.
+    let diagnostico = "";
+    if (d0Load && d0Load.length > 0) {
+      const rate = (b: D0LoadLite["bucket"]) => {
+        const x = d0Load.find((r) => r.bucket === b);
+        return x && x.leads > 0 ? x.d0 / x.leads : null;
+      };
+      const rc = rate("calmo");
+      const rp = rate("pico");
+      if (rc !== null && rp !== null) {
+        diagnostico =
+          rc <= rp
+            ? " O estudo calmo×pico mostra d0 pior (ou igual) nos dias CALMOS — é disciplina de rotina, não headcount."
+            : " O d0 só piora nos dias de pico — aí é volume; se persistir, a restrição é o time, não o processo.";
+      }
+    }
+
+    const ganho =
+      ticket !== null
+        ? Math.round(speed.nunca * (CONV_CONVERSADO - CONV_NUNCA) * ticket * (30 / speedDays))
+        : null;
+    candidatas.push({
+      kind: "processo",
+      label: "Processo de atendimento (dia 0)",
       score,
       status: statusFor(score),
       headline:
         score >= 70
-          ? `${100 - r0}% dos leads quentes não são atendidos no mesmo dia útil`
+          ? `${100 - r0}% dos quentes não são atendidos no mesmo dia útil`
           : score >= 40
-            ? `${100 - r0}% dos leads quentes esperam mais de um dia útil`
-            : "Maioria dos leads quentes é atendida no mesmo dia útil",
-      detail: `Só ${r0}% dos leads quentes são atendidos no mesmo dia útil. Lead conversado converte ~10%; quem nunca é conversado, só ~3%. Hoje ${speed.nunca} leads quentes (${rNunca}%) nunca foram conversados. (Atraso em dias úteis: sexta→segunda = 1 dia.) O estudo calmo×pico mostrou que o d0 é MAIOR nos dias de pico — o gargalo é rotina, não headcount.`,
-      action:
+            ? `${100 - r0}% dos quentes esperam mais de um dia útil`
+            : "Atendimento no dia 0 saudável",
+      detail: `Só ${r0}% dos leads quentes são atendidos no mesmo dia útil e ${speed.nunca} nunca foram conversados na janela. Lead conversado converte ~10%; nunca conversado, ~3% — fila morta é throughput perdido.${diagnostico}`,
+      acao:
         score >= 40
-          ? "O d0 cai nos dias calmos e sobe no pico — então contratar não resolve; processo resolve. Alerta de lead novo no WhatsApp + meta de 1ª resposta no mesmo dia + varredura diária da fila de nunca-conversados (que convertem 3x menos). Veja o detalhe em Vendas & time."
-          : "Capacidade saudável — o time atende no mesmo dia útil, sem acúmulo de fila.",
+          ? "EXPLORAR antes de gastar: alerta de lead novo no WhatsApp, meta de 1ª resposta no mesmo dia e varredura diária da fila de nunca-conversados."
+          : "Rotina de dia 0 funcionando — sem fila se formando.",
+      ganhoMensal: score >= 40 ? ganho : null,
     });
   }
 
-  signals.sort((a, b) => b.score - a.score);
-  const hasData = leadsCur + leadsPrev + salesCur + salesPrev > 0;
-  const primary = hasData && signals[0].score >= 40 ? signals[0] : null;
-  return { primary, signals, hasData };
+  candidatas.sort((a, b) => b.score - a.score);
+
+  // ---- Alertas de tendência: sintomas. Nenhum deles é restrição. ----
+  const alertas: TendenciaAlerta[] = [];
+  const curStart = daysAgo(29, new Date(today));
+  const prevStart = daysAgo(59, new Date(today));
+  const prevEnd = daysAgo(30, new Date(today));
+
+  // Conversão LEAD → venda de CURSO, meses fechados, mediana 3×3. Ingresso e
+  // produto avulso ficam fora: eram eles que produziam "conversão de 84%" (o
+  // numerador tinha 523 ingressos de evento pra 783 leads de curso).
+  {
+    const closed = lastClosedMonths(today, 6);
+    const leadsBy = countByMonth(data.leads, (l) => l.createdAt);
+    const cursoBy = countByMonth(paidSales(data.sales).filter(isCourseSale), (s) => s.saleDate);
+    const conv = closed.map((m) => {
+      const lm = leadsBy.get(m) ?? 0;
+      const sm = cursoBy.get(m) ?? 0;
+      return lm > 0 ? sm / lm : null;
+    });
+    const cur = median(conv.slice(0, 3).filter((x): x is number => x !== null));
+    const prev = median(conv.slice(3, 6).filter((x): x is number => x !== null));
+    const trend = cur !== null && prev !== null && prev > 0 ? (cur - prev) / prev : null;
+    const drop = trend !== null ? Math.max(0, -trend) : 0;
+    const status: RestricaoStatus = drop >= 0.25 ? "critico" : drop >= 0.1 ? "atencao" : "ok";
+    alertas.push({
+      kind: "conversao",
+      label: "Conversão em venda de curso",
+      status,
+      headline:
+        status === "ok" ? "Conversão estável" : `Conversão de curso caiu ${fmtPct(trend ?? 0)}`,
+      detail:
+        cur !== null && prev !== null
+          ? `A cada 100 leads, ${(cur * 100).toFixed(1).replace(".", ",")} viram venda de curso agora, contra ${(prev * 100).toFixed(1).replace(".", ",")} no trimestre anterior (mediana de meses fechados; só A5E + Gigantes contam).`
+          : "Sem meses fechados suficientes para comparar.",
+    });
+  }
+
+  // Custo de anúncio por venda de curso (mesmo numerador da conversão).
+  {
+    const cursoSales = paidSales(data.sales).filter(isCourseSale);
+    const sCur = inRange(cursoSales, (s) => s.saleDate, curStart, today).length;
+    const sPrev = inRange(cursoSales, (s) => s.saleDate, prevStart, prevEnd).length;
+    const adCur = sum(inRange(data.adSpend, (a) => a.date, curStart, today).map((a) => a.amount));
+    const adPrev = sum(
+      inRange(data.adSpend, (a) => a.date, prevStart, prevEnd).map((a) => a.amount)
+    );
+    const cacCur = sCur > 0 && adCur > 0 ? adCur / sCur : null;
+    const cacPrev = sPrev > 0 && adPrev > 0 ? adPrev / sPrev : null;
+    const trend = cacCur !== null && cacPrev !== null ? (cacCur - cacPrev) / cacPrev : null;
+    const rise = trend !== null ? Math.max(0, trend) : 0;
+    const status: RestricaoStatus = rise >= 0.3 ? "critico" : rise >= 0.15 ? "atencao" : "ok";
+    alertas.push({
+      kind: "midia",
+      label: "Custo de anúncio por venda de curso",
+      status,
+      headline:
+        status === "ok"
+          ? "Mídia com custo sob controle"
+          : `Custo por venda de curso subiu ${fmtPct(trend ?? 0)}`,
+      detail:
+        cacCur !== null && cacPrev !== null
+          ? `${fmtBrl(cacCur)} por venda de curso nos últimos 30 dias, contra ${fmtBrl(cacPrev)} nos 30 anteriores.`
+          : cacCur !== null
+            ? `${fmtBrl(cacCur)} por venda de curso nos últimos 30 dias (sem base anterior pra comparar).`
+            : "Sem investimento ou vendas suficientes para calcular.",
+    });
+  }
+
+  // Ritmo de entrada de leads (mediana diária, imune a pico de lançamento).
+  {
+    const medCur = median(dailyCounts(data.leads, (l) => l.createdAt, curStart, today)) ?? 0;
+    const medPrev = median(dailyCounts(data.leads, (l) => l.createdAt, prevStart, prevEnd)) ?? 0;
+    const trend = medPrev > 0 ? (medCur - medPrev) / medPrev : null;
+    const drop = trend !== null ? Math.max(0, -trend) : 0;
+    const status: RestricaoStatus = drop >= 0.25 ? "critico" : drop >= 0.1 ? "atencao" : "ok";
+    const r1 = (x: number) => x.toFixed(1).replace(".", ",");
+    alertas.push({
+      kind: "leads",
+      label: "Entrada de leads",
+      status,
+      headline:
+        status === "ok" ? "Entrada de leads saudável" : `Ritmo de leads caiu ${fmtPct(trend ?? 0)}`,
+      detail:
+        trend === null
+          ? `Ritmo de ${r1(medCur)} leads/dia (mediana), sem base anterior pra comparar.`
+          : `${r1(medCur)} leads/dia (mediana) agora, contra ${r1(medPrev)}/dia nos 30 anteriores.`,
+    });
+  }
+
+  const peso: Record<RestricaoStatus, number> = { critico: 2, atencao: 1, ok: 0 };
+  alertas.sort((a, b) => peso[b.status] - peso[a.status]);
+
+  const hasData = data.leads.length > 0 || paidSales(data.sales).length > 0;
+  const restricao =
+    hasData && candidatas.length > 0 && candidatas[0].score >= 40 ? candidatas[0] : null;
+  return { restricao, candidatas, alertas, ticketCurso: ticket, hasData };
 }

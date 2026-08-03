@@ -94,6 +94,8 @@ export interface FinTransaction {
   description: string;
   counterparty: string | null;
   categoryId: string | null;
+  /** 'manual' = classificado na mão, imune às regras (migração 0032). */
+  categorySource?: "rule" | "manual";
 }
 
 export interface DashboardData {

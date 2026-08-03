@@ -101,7 +101,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
       selectAll(
         supabase,
         "fin_transactions",
-        "id, transaction_date, amount, direction, description, counterparty, category_id"
+        "id, transaction_date, amount, direction, description, counterparty, category_id, category_source"
       ),
     ]);
 
@@ -158,6 +158,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         description: r.description,
         counterparty: r.counterparty,
         categoryId: r.category_id,
+        categorySource: r.category_source ?? "rule",
       })
     ),
     isDemo: false,
