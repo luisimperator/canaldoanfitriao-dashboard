@@ -16,6 +16,9 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  // O form manual fica recolhido: a caixinha mágica é o caminho padrão. Abre
+  // no clique ou automaticamente ao editar um item da lista.
+  const [formAberto, setFormAberto] = useState(false);
   // Caixinha mágica: escreve a regra de qualquer jeito, a IA organiza e salva.
   const [prompt, setPrompt] = useState("");
   const [organizando, setOrganizando] = useState(false);
@@ -66,6 +69,7 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   }
 
   function edit(it: KbItem) {
+    setFormAberto(true);
     setForm({
       id: it.id,
       bloco: it.bloco,
@@ -82,6 +86,7 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   function reset() {
     setForm(EMPTY);
     setError(null);
+    setFormAberto(false);
   }
 
   async function save() {
@@ -166,10 +171,18 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
         </div>
 
         <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-4">
-          {form.id ? "Editar item" : "Novo item de treinamento"}
-        </h2>
-        <div className="space-y-3">
+        <button
+          type="button"
+          onClick={() => setFormAberto((a) => !a)}
+          className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-700 dark:text-zinc-300"
+        >
+          <span>{form.id ? "Editar item" : "Novo item de treinamento (manual)"}</span>
+          <span className="text-xs text-slate-400 dark:text-zinc-500">
+            {formAberto ? "▾ recolher" : "▸ expandir"}
+          </span>
+        </button>
+        {formAberto && (
+        <div className="mt-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs font-medium text-slate-500 dark:text-zinc-400">Bloco</span>
@@ -267,6 +280,7 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
             )}
           </div>
         </div>
+        )}
         </div>
       </div>
 
