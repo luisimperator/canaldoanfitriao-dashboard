@@ -22,7 +22,7 @@ export const TABS: TabDef[] = [
   { href: "/links", label: "Links & QR", icon: "🔗", section: "Aquisição" },
   { href: "/cac", label: "CAC / ROAS", icon: "↗", section: "Aquisição" },
   { href: "/ltv", label: "LTV & recompra", icon: "∞", section: "Comercial" },
-  { href: "/suporte", label: "Suporte", icon: "🛟", section: "Suporte" },
+  { href: "/suporte", label: "Tickets", icon: "🛟", section: "Suporte" },
   { href: "/suporte/inbox", label: "Caixa de entrada", icon: "💬", section: "Suporte" },
   { href: "/suporte/simulador", label: "Cérebro da IA", icon: "🧠", section: "Suporte" },
   { href: "/suporte/treinamento", label: "Treinamento da IA", icon: "📚", section: "Suporte" },
