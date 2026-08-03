@@ -24,7 +24,7 @@ export const TABS: TabDef[] = [
   { href: "/ltv", label: "LTV & recompra", icon: "∞", section: "Comercial" },
   { href: "/suporte", label: "Tickets", icon: "🛟", section: "Suporte" },
   { href: "/suporte/inbox", label: "Whatsapp Suporte", icon: "💬", section: "Suporte" },
-  { href: "/suporte/simulador", label: "Cérebro da IA", icon: "🧠", section: "Suporte" },
+  { href: "/suporte/simulador", label: "Modo Treino IA", icon: "🧠", section: "Suporte" },
   { href: "/suporte/treinamento", label: "Treinamento da IA", icon: "📚", section: "Suporte" },
   { href: "/suporte/avisos", label: "Avisos e templates", icon: "🔔", section: "Suporte" },
   { href: "/financeiro/visao-geral", label: "Visão geral", icon: "◎", section: "Financeiro" },
