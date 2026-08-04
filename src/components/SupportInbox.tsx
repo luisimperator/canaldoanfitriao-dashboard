@@ -123,7 +123,9 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
   const [aprovados, setAprovados] = useState<TemplateAprovado[]>([]);
   const [templateEsc, setTemplateEsc] = useState("");
   const [templateParams, setTemplateParams] = useState<string[]>([]);
-  const fimRef = useRef<HTMLDivElement>(null);
+  const listaRef = useRef<HTMLDivElement>(null);
+  // conversa cuja carga inicial já rolou pro fim (troca de conversa reseta)
+  const roladaRef = useRef<string | null>(null);
 
   const carregarLista = useCallback(async () => {
     const res = await fetch("/api/support/inbox");
@@ -163,9 +165,21 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
     };
   }, [ativa, carregarThread]);
 
+  // Acompanha o fim da conversa SEM scrollIntoView: ele rola todos os
+  // ancestrais roláveis — a página inteira pulava pra baixo "do nada" a cada
+  // poll de 10s. Aqui só o painel de mensagens rola, e só quando faz sentido:
+  // ao abrir a conversa, ou se o usuário já está perto do fim. Quem subiu pra
+  // ler mensagem antiga não é puxado de volta.
   useEffect(() => {
-    fimRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensagens.length]);
+    const el = listaRef.current;
+    if (!el || mensagens.length === 0) return;
+    const abriuAgora = roladaRef.current !== ativa;
+    const pertoDoFim = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (abriuAgora || pertoDoFim) {
+      el.scrollTop = el.scrollHeight;
+      roladaRef.current = ativa;
+    }
+  }, [mensagens.length, ativa]);
 
   async function enviar() {
     if (!ativa || !texto.trim()) return;
@@ -496,7 +510,7 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
               </div>
             )}
 
-            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+            <div ref={listaRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
               {mensagens.map((m, i) => {
                 const meu = m.direction === "out";
                 // pergunta que originou a resposta da IA (pro modo chefe)
@@ -571,7 +585,6 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
                   </div>
                 );
               })}
-              <div ref={fimRef} />
             </div>
 
             <div className="border-t border-slate-200 dark:border-white/10 p-3">
