@@ -85,6 +85,38 @@ function telefoneBonito(p: string): string {
   return `+${d}`;
 }
 
+function semAcento(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+// Busca trechos no mapa de um curso (support_docs): devolve as linhas que
+// casam com todos os termos, com 2 linhas de contexto — em vez de despejar o
+// documento inteiro (centenas de linhas) na conversa. Sem termo, devolve o
+// cabeçalho (como funciona o acesso + tabela de anexos).
+function buscarNoMapa(doc: string, busca: string): string {
+  const linhas = doc.split("\n");
+  if (!busca) return linhas.slice(0, 45).join("\n");
+  const termos = semAcento(busca).split(/\s+/).filter(Boolean);
+  const hits: number[] = [];
+  linhas.forEach((l, i) => {
+    const n = semAcento(l);
+    if (termos.every((t) => n.includes(t))) hits.push(i);
+  });
+  if (hits.length === 0) return "";
+  const blocos: string[] = [];
+  let total = 0;
+  for (const i of hits) {
+    const trecho = linhas.slice(Math.max(0, i - 2), i + 3).join("\n");
+    blocos.push(trecho);
+    total += trecho.length;
+    if (total > 5000) {
+      blocos.push(`… (+${hits.length - blocos.length} ocorrências — refine a busca)`);
+      break;
+    }
+  }
+  return blocos.join("\n···\n");
+}
+
 async function buildSystemPrompt(contact?: AgentContact): Promise<string> {
   const admin = getSupabaseAdmin();
   let kb: KbItem[] = [];
@@ -186,6 +218,8 @@ Isso muda o TOM, não as regras. Continua valendo tudo: nunca inventar dado, sem
 Você conduz procedimentos guiados passo a passo (ex.: orientar o cancelamento, coletar o endereço do brinde, explicar a renovação) e SÓ então escala — já com tudo coletado. Use create_handoff para abrir um caso na fila humana quando a conclusão exigir AÇÃO interna nossa: cancelamento de renovação, reembolso, divergência/cashback de pagamento, brinde não recebido (com endereço coletado), transferência de ingresso, ou qualquer alteração que dependa de um humano. Antes de escalar, colete e resuma tudo no campo "resumo" (cliente, e-mail, pedido, o que já foi coletado, ação necessária).
 Dúvidas de INFORMAÇÃO/consulta (valores, datas, acesso, validade, "estou inadimplente?", "minha renovação está ativa?") você responde sozinho usando o lookup e a base de conhecimento, sem escalar. Quando a compra no lookup já trouxer "dataReembolso", informe essa data diretamente ao cliente — só escale por causa da data do estorno se esse campo vier vazio.
 
+# Cursos (onde está cada aula e material)
+Os clientes acessam dois cursos em app.nutror.com: Anfitrião 5 Estrelas (A5E) e Gigantes da Temporada. Quando perguntarem onde encontra uma aula, um tema ou um material (planilha, contrato, cartilha), use consultar_mapa_cursos e responda com o caminho exato (curso › módulo › aula). O lookup mostra qual curso a pessoa comprou — passe o curso na busca pra não indicar caminho do curso errado. Os materiais ficam DENTRO da própria aula (não existe aba de downloads): quem não acha o anexo deve abrir a aula indicada e procurar ali.
 ${bloco}
 # Base de conhecimento (seu treinamento)
 ${baseConhecimento}`;
@@ -202,6 +236,26 @@ const TOOLS: Anthropic.Tool[] = [
         email: { type: "string", description: "e-mail cadastrado na compra" },
         cpf: { type: "string", description: "CPF ou CNPJ do cliente (com ou sem pontuação)" },
         nome: { type: "string", description: "nome completo (use só quando não há e-mail nem CPF)" },
+      },
+    },
+  },
+  {
+    name: "consultar_mapa_cursos",
+    description:
+      "Consulta o mapa oficial de aulas e anexos dos cursos (Anfitrião 5 Estrelas e Gigantes da Temporada): em qual módulo/aula está cada conteúdo e onde baixar cada material. Use quando o aluno perguntar onde encontra uma aula, um tema ou um arquivo (planilha, contrato, cartilha, checklist). Busque pelo termo mais específico possível (ex.: 'contrato de administração', 'imposto de renda', 'controle-repasse'). Passe 'curso' quando souber qual curso a pessoa tem (o lookup mostra o que ela comprou) — evita indicar caminho do curso errado. Lembre ao aluno: os anexos ficam DENTRO da própria aula em app.nutror.com, não existe aba de downloads.",
+    input_schema: {
+      type: "object",
+      properties: {
+        busca: {
+          type: "string",
+          description:
+            "termo de busca (tema, nome da aula ou do arquivo); vazio devolve o resumo do curso com a tabela de anexos",
+        },
+        curso: {
+          type: "string",
+          enum: ["a5e", "gigantes"],
+          description: "limita a busca a um curso; omita para buscar nos dois",
+        },
       },
     },
   },
@@ -248,6 +302,33 @@ async function runTool(
       nome: input?.nome ? String(input.nome) : undefined,
     });
     return { text: JSON.stringify(result) };
+  }
+  if (name === "consultar_mapa_cursos") {
+    const admin = getSupabaseAdmin();
+    if (!admin) return { text: JSON.stringify({ error: "sem banco" }) };
+    const curso =
+      input?.curso === "a5e" || input?.curso === "gigantes" ? String(input.curso) : null;
+    const slugs = curso ? [`mapa-${curso}`] : ["mapa-a5e", "mapa-gigantes"];
+    const { data } = await admin
+      .from("support_docs")
+      .select("slug,titulo,conteudo")
+      .in("slug", slugs);
+    const docs = data ?? [];
+    if (docs.length === 0) {
+      return { text: JSON.stringify({ error: "mapa de cursos não carregado no banco" }) };
+    }
+    const busca = input?.busca ? String(input.busca).trim() : "";
+    const partes: string[] = [];
+    for (const d of docs) {
+      const r = buscarNoMapa(String(d.conteudo), busca);
+      if (r) partes.push(`# ${d.titulo}\n${r}`);
+    }
+    if (partes.length === 0) {
+      return {
+        text: `Nada no mapa casa com "${busca}". Tente um termo mais curto ou outro nome (ex.: "contrato", "imposto", "repasse", "vistoria").`,
+      };
+    }
+    return { text: partes.join("\n\n") };
   }
   if (name === "create_handoff") {
     const admin = getSupabaseAdmin();
