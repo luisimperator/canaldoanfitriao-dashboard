@@ -33,6 +33,10 @@ function quando(iso: string): string {
 
 export function CardRaspagem() {
   const [configurada, setConfigurada] = useState<boolean | null>(null);
+  // colchão e piso EM VIGOR no servidor — env na Vercel só vale após redeploy,
+  // então mostrar os números é o jeito de saber se a mudança pegou.
+  const [colchao, setColchao] = useState<number | null>(null);
+  const [piso, setPiso] = useState<number | null>(null);
   const [ultimas, setUltimas] = useState<Linha[]>([]);
   const [raspando, setRaspando] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -43,6 +47,8 @@ export function CardRaspagem() {
     if (!res.ok) return;
     const j = await res.json();
     setConfigurada(Boolean(j.configurada));
+    setColchao(typeof j.colchao === "number" ? j.colchao : null);
+    setPiso(typeof j.piso === "number" ? j.piso : null);
     setUltimas((j.ultimas ?? []) as Linha[]);
   }, []);
 
@@ -84,8 +90,11 @@ export function CardRaspagem() {
             Raspagem Asaas → Inter
           </h3>
           <p className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">
-            1× ao dia, às 19h40, deixando um colchão no Asaas. Só transfere
-            se a sobra passar do piso, pra não furar a cota de Pix grátis.
+            1× ao dia, às 19h40. Deixa{" "}
+            {colchao != null ? <strong>{brl(colchao)}</strong> : "um colchão"} no Asaas e só
+            transfere se a sobra passar de{" "}
+            {piso != null ? <strong>{brl(piso)}</strong> : "um piso"} — a cota do Asaas é de
+            30 Pix de saída grátis por mês.
           </p>
         </div>
         <button

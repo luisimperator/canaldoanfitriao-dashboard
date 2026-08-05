@@ -79,6 +79,19 @@ export interface RaspagemResult {
 const JANELA_ANTI_DUPLICATA_MIN = 30;
 
 /**
+ * Colchão e piso em vigor AGORA (das envs, com os defaults).
+ *
+ * A tela mostra esses dois números: env na Vercel só vale depois de um novo
+ * deploy, e sem ver o valor em vigor não dá pra saber se a mudança pegou.
+ */
+export function limitesRaspagem(): { colchao: number; piso: number } {
+  return {
+    colchao: Math.max(parseFloat(process.env.ASAAS_SWEEP_KEEP_BRL ?? "100") || 100, 0),
+    piso: Math.max(parseFloat(process.env.ASAAS_SWEEP_MIN_BRL ?? "500") || 500, 1),
+  };
+}
+
+/**
  * Executa UMA raspagem. `trigger` só nomeia a origem no log (cron/manual).
  *
  * O piso existe por causa da cota do Asaas: 30 Pix de saída grátis por mês.
@@ -87,8 +100,7 @@ const JANELA_ANTI_DUPLICATA_MIN = 30;
  */
 export async function runRaspagem(trigger: string): Promise<RaspagemResult> {
   const t0 = Date.now();
-  const colchao = Math.max(parseFloat(process.env.ASAAS_SWEEP_KEEP_BRL ?? "100") || 100, 0);
-  const piso = Math.max(parseFloat(process.env.ASAAS_SWEEP_MIN_BRL ?? "500") || 500, 1);
+  const { colchao, piso } = limitesRaspagem();
   const admin = getSupabaseAdmin();
 
   const registrar = async (r: RaspagemResult) => {
