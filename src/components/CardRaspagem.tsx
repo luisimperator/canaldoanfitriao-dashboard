@@ -84,7 +84,7 @@ export function CardRaspagem() {
             Raspagem Asaas → Inter
           </h3>
           <p className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">
-            3× ao dia (08h21, 15h e 19h40), deixando um colchão no Asaas. Só transfere
+            1× ao dia, às 19h40, deixando um colchão no Asaas. Só transfere
             se a sobra passar do piso, pra não furar a cota de Pix grátis.
           </p>
         </div>

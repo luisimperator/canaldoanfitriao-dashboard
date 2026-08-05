@@ -82,8 +82,8 @@ const JANELA_ANTI_DUPLICATA_MIN = 30;
  * Executa UMA raspagem. `trigger` só nomeia a origem no log (cron/manual).
  *
  * O piso existe por causa da cota do Asaas: 30 Pix de saída grátis por mês.
- * Com 3 janelas diárias, transferir qualquer trocado estouraria a cota e o
- * resto do mês viraria tarifa.
+ * Rodando 1× ao dia daria pra encostar na cota se todo dia tivesse sobra; o
+ * piso garante que só sai Pix quando o valor justifica.
  */
 export async function runRaspagem(trigger: string): Promise<RaspagemResult> {
   const t0 = Date.now();
