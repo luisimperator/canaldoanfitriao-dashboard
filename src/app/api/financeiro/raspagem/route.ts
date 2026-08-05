@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAccess } from "@/lib/supabase-server";
 import { canAccess } from "@/lib/access";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { resolveSweepDestino, runRaspagem } from "@/lib/asaas-raspagem";
+import { limitesRaspagem, resolveSweepDestino, runRaspagem } from "@/lib/asaas-raspagem";
 
 // Raspagem Asaas → Inter no braço (botão da Provisão de caixa) e status da
 // última execução. O automático é o cron do Supabase em /api/import/asaas-raspagem.
@@ -33,6 +33,7 @@ export async function GET() {
 
   return NextResponse.json({
     configurada: resolveSweepDestino() !== null,
+    ...limitesRaspagem(),
     ultimas: data ?? [],
   });
 }
