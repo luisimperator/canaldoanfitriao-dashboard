@@ -3,9 +3,10 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { runRaspagem } from "@/lib/asaas-raspagem";
 
 // Raspagem do caixa: manda via Pix o saldo do Asaas pra conta do Inter,
-// deixando o colchão (default R$ 100) pra tarifas. Roda 3× ao dia pelo cron do
-// Supabase (migração 0039), a última ANTES das 20h BRT, quando entra o limite
-// noturno de Pix. Miolo em src/lib/asaas-raspagem.ts.
+// deixando o colchão (default R$ 100) pra tarifas. Roda 1× ao dia pelo cron do
+// Supabase, às 19h40 BRT (migrações 0039 e 0040) — a janela da noite pega o dia
+// inteiro de vendas já liquidado e ainda cai ANTES das 20h, quando entra o
+// limite noturno de Pix. Miolo em src/lib/asaas-raspagem.ts.
 //
 // Fica sob /api/import porque é aí que o middleware libera chamada sem sessão
 // (src/proxy.ts) — a autorização é a chave.
