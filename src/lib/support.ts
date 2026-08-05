@@ -483,6 +483,7 @@ export const KB_BLOCOS: { key: string; label: string }[] = [
   { key: "dados", label: "Dados cadastrais / transferência" },
   { key: "pagamento", label: "Validade do acesso e pagamento" },
   { key: "brindes", label: "Brindes não recebidos" },
+  { key: "mentoria", label: "Mentoria Alfaiate" },
   { key: "regras_ouro", label: "Regras de ouro" },
   { key: "outro", label: "Outro" },
 ];
