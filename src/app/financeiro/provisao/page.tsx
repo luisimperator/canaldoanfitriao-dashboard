@@ -11,6 +11,7 @@ import { ProvisaoRows } from "@/components/ProvisaoRows";
 import { SaldoEduzzForm } from "@/components/SaldoEduzzForm";
 import { SaidasProgramadas } from "@/components/SaidasProgramadas";
 import { CardDistribuicao } from "@/components/CardDistribuicao";
+import { CardRaspagem } from "@/components/CardRaspagem";
 import { getDistribuicao } from "@/lib/distribuicao";
 
 export const dynamic = "force-dynamic";
@@ -164,6 +165,11 @@ export default async function ProvisaoPage() {
       <DemoBanner show={data.isDemo} />
 
       {politica && <CardDistribuicao p={politica} d={distrib} />}
+
+      {/* O saldo do Asaas acima não fica parado lá: a raspagem traz pro Inter. */}
+      <div className="mb-4">
+        <CardRaspagem />
+      </div>
 
       {/* KPIs */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-2">
