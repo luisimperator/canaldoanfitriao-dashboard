@@ -12,7 +12,8 @@ import {
 } from "@/lib/dre";
 import { brl } from "@/lib/format";
 import { DemoBanner } from "@/components/ui";
-import { DateRangePicker } from "@/components/DateRangePicker";
+import { PeriodoMenu } from "@/components/PeriodoMenu";
+import { ExportarCsv } from "@/components/ExportarCsv";
 import { EntradasSaidasChart, ResultadoLinhaChart } from "@/components/charts";
 
 export const dynamic = "force-dynamic";
@@ -195,7 +196,13 @@ export default async function VisaoGeralFinanceiraPage({
             Visão Geral
           </h1>
         </div>
-        <DateRangePicker placeholder="Este mês" />
+        <div className="flex items-center gap-2">
+          <ExportarCsv
+            href={`/api/export/financeiro?from=${de}&to=${ate}`}
+            periodo={etiquetaPeriodo(de, ate)}
+          />
+          <PeriodoMenu placeholder="Este mês" />
+        </div>
       </div>
 
       {/* Saldo: foto do caixa agora, não do período. */}
