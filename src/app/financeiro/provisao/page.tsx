@@ -199,6 +199,16 @@ export default async function ProvisaoPage() {
             )}
             {asaas.ok && <> · Asaas {brl(asaas.saldo)}</>}
           </div>
+          {p.saquesTransito.length > 0 && (
+            <div className="mt-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs text-amber-800 dark:text-amber-300">
+              + {brl(p.saquesTransitoTotal)} em trânsito
+              <span className="text-amber-700/70 dark:text-amber-300/60">
+                {" "}
+                · saque da Eduzz de {shortDate(p.saquesTransito[0].saiuEm)}, cai no Inter em{" "}
+                {shortDate(p.saquesTransito[0].chegaEm)}
+              </span>
+            </div>
+          )}
           {p.saldoEduzzExtrato == null && (
             <div className="mt-1.5">
               <SaldoEduzzForm atual={p.saldoEduzzAncora?.valor ?? null} />
@@ -260,6 +270,13 @@ export default async function ProvisaoPage() {
           hoje={p.hoje}
           disponivel={disponivel}
           entradas={[
+            // Saque já debitado na Eduzz, a caminho do Inter: é dinheiro certo,
+            // só não chegou. Sem ele a curva projeta um vale que não existe.
+            ...p.saquesTransito.map((s) => ({
+              dia: s.chegaEm,
+              valor: s.valor,
+              nome: `Saque da Eduzz de ${shortDate(s.saiuEm)} (em trânsito)`,
+            })),
             ...pagoAll.map((d) => ({
               dia: d.dia,
               valor: d.valor,
