@@ -31,11 +31,27 @@ export interface SaidaProgramada {
   paga_em?: string;
 }
 
+/**
+ * Saque pedido na Eduzz que ainda não pingou no Inter.
+ *
+ * A Eduzz debita na hora e o Pix cai no dia útil seguinte. No meio do caminho o
+ * dinheiro não está em nenhum dos dois saldos — sem isto aqui ele some do
+ * painel e a curva projeta um vale que não existe.
+ */
+export interface SaqueTransito {
+  id: string;
+  valor: number;
+  saiuEm: string; // YYYY-MM-DD
+  chegaEm: string; // YYYY-MM-DD (D+1 útil, nunca no passado)
+}
+
 export interface ProvisaoCaixa {
   hoje: string;
   saldoInter: number;
   /** Saldo cravado: soma do extrato completo da Eduzz (venda − reembolso − saque − tarifa). */
   saldoEduzzExtrato: { valor: number; atualizadoEm: string } | null;
+  saquesTransito: SaqueTransito[];
+  saquesTransitoTotal: number;
   saldoEduzzAncora: { valor: number; informadoEm: string } | null;
   liberadoDesdeAncora: number;
   aLiberarTotal: number;
@@ -55,6 +71,8 @@ interface RpcShape {
   saldo_inter: number | null;
   saldo_eduzz_extrato: { valor: number; atualizado_em: string } | null;
   saldo_eduzz_ancora: { valor: number; informado_em: string } | null;
+  saques_transito: { id: string; valor: number; saiu_em: string; chega_em: string }[] | null;
+  saques_transito_total: number | null;
   liberado_desde_ancora: number | null;
   a_liberar_total: number;
   a_liberar_cobrancas: number;
@@ -96,6 +114,13 @@ async function fetchProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
       saldoEduzzAncora: raw.saldo_eduzz_ancora
         ? { valor: raw.saldo_eduzz_ancora.valor, informadoEm: raw.saldo_eduzz_ancora.informado_em }
         : null,
+      saquesTransito: (raw.saques_transito ?? []).map((s) => ({
+        id: s.id,
+        valor: s.valor,
+        saiuEm: s.saiu_em,
+        chegaEm: s.chega_em,
+      })),
+      saquesTransitoTotal: raw.saques_transito_total ?? 0,
       liberadoDesdeAncora: raw.liberado_desde_ancora ?? 0,
       aLiberarTotal: raw.a_liberar_total ?? 0,
       aLiberarCobrancas: raw.a_liberar_cobrancas ?? 0,
