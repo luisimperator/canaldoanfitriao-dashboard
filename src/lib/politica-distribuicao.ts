@@ -69,6 +69,25 @@ export async function getPoliticaDistribuicao(
   return getPoliticaCached(data);
 }
 
+/** Mesma data, um mês pra frente: 2026-08-10 → 2026-09-10. */
+export function umMesDepois(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m, d)).toISOString().slice(0, 10);
+}
+
+/**
+ * Prévia da distribuição SEGUINTE, com a mesma régua da atual.
+ *
+ * É estimativa de verdade, não promessa: a maior parte das entradas do próximo
+ * ciclo ainda nem foi vendida, então o número sobe conforme o mês roda. Serve
+ * pra ter ordem de grandeza com antecedência, não pra planejar em cima.
+ */
+export async function getProximaDistribuicao(
+  dataAtual: string
+): Promise<PoliticaDistribuicao | null> {
+  return getPoliticaCached(umMesDepois(dataAtual));
+}
+
 async function fetchPolitica(data?: string): Promise<PoliticaDistribuicao | null> {
   const admin = getSupabaseAdmin();
   if (!admin) return null;
