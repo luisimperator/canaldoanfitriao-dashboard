@@ -74,7 +74,12 @@ export default async function ProvisaoPage() {
       : p.saldoEduzzAncora != null
         ? p.saldoEduzzAncora.valor + p.liberadoDesdeAncora
         : null;
-  const disponivel = p.saldoInter + (saldoEduzz ?? 0) + asaas.saldo;
+  // Transferência entre contas próprias não muda o caixa total. Enquanto o
+  // saque não pinga no Inter ele continua sendo dinheiro nosso, então entra no
+  // disponível — não como entrada futura. Tratá-lo como saída hoje e entrada
+  // amanhã abria um buraco fictício justo no dia de olhar o número.
+  const disponivel =
+    p.saldoInter + (saldoEduzz ?? 0) + asaas.saldo + p.saquesTransitoTotal;
 
   // Eduzz + Asaas fundidos por dia (mesmo shape, mesmas séries do gráfico)
   const pagoAll = fundeDias(p.pagoPorDia, asaas.pagoPorDia);
@@ -200,13 +205,10 @@ export default async function ProvisaoPage() {
             {asaas.ok && <> · Asaas {brl(asaas.saldo)}</>}
           </div>
           {p.saquesTransito.length > 0 && (
-            <div className="mt-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 px-2 py-1 text-xs text-amber-800 dark:text-amber-300">
-              + {brl(p.saquesTransitoTotal)} em trânsito
-              <span className="text-amber-700/70 dark:text-amber-300/60">
-                {" "}
-                · saque da Eduzz de {shortDate(p.saquesTransito[0].saiuEm)}, cai no Inter em{" "}
-                {shortDate(p.saquesTransito[0].chegaEm)}
-              </span>
+            <div className="mt-1.5 text-xs text-slate-400 dark:text-zinc-500">
+              Inclui {brl(p.saquesTransitoTotal)} em trânsito — saque da Eduzz de{" "}
+              {shortDate(p.saquesTransito[0].saiuEm)}, cai no Inter em{" "}
+              {shortDate(p.saquesTransito[0].chegaEm)}. Trocar de conta não muda o caixa.
             </div>
           )}
           {p.saldoEduzzExtrato == null && (
@@ -270,13 +272,9 @@ export default async function ProvisaoPage() {
           hoje={p.hoje}
           disponivel={disponivel}
           entradas={[
-            // Saque já debitado na Eduzz, a caminho do Inter: é dinheiro certo,
-            // só não chegou. Sem ele a curva projeta um vale que não existe.
-            ...p.saquesTransito.map((s) => ({
-              dia: s.chegaEm,
-              valor: s.valor,
-              nome: `Saque da Eduzz de ${shortDate(s.saiuEm)} (em trânsito)`,
-            })),
+            // O saque em trânsito NÃO entra aqui: ele já está no disponível,
+            // porque trocar de conta não é receber dinheiro novo. Somar nos
+            // dois lugares contaria duas vezes.
             ...pagoAll.map((d) => ({
               dia: d.dia,
               valor: d.valor,
