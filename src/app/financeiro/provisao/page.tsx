@@ -13,6 +13,7 @@ import { SaidasProgramadas } from "@/components/SaidasProgramadas";
 import { CardDistribuicao } from "@/components/CardDistribuicao";
 import { CardRaspagem } from "@/components/CardRaspagem";
 import { getDistribuicao } from "@/lib/distribuicao";
+import { getProximaDistribuicao } from "@/lib/politica-distribuicao";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,10 @@ export default async function ProvisaoPage() {
         null,
       ];
   const politica = distrib?.politica ?? null;
+  // Prévia do ciclo seguinte (mesma régua, um mês pra frente).
+  const proximaDistrib = politica
+    ? await getProximaDistribuicao(politica.dataDistribuicao)
+    : null;
 
   if (!p) {
     return (
@@ -169,7 +174,7 @@ export default async function ProvisaoPage() {
       </div>
       <DemoBanner show={data.isDemo} />
 
-      {politica && <CardDistribuicao p={politica} d={distrib} />}
+      {politica && <CardDistribuicao p={politica} d={distrib} proxima={proximaDistrib} />}
 
       {/* O saldo do Asaas acima não fica parado lá: a raspagem traz pro Inter. */}
       <div className="mb-4">
