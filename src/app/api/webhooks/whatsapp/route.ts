@@ -8,6 +8,7 @@ import {
   verifyWhatsappSignature,
 } from "@/lib/whatsapp";
 import { runSupportAgent, type AgentMessage } from "@/lib/support-ai";
+import { transcreverAudio } from "@/lib/transcricao";
 
 // Webhook do WhatsApp Cloud API (Meta) — Fase 3 do Suporte.
 //
@@ -165,6 +166,9 @@ export async function POST(req: NextRequest) {
         }
 
         // Baixa o anexo e guarda no Storage (a URL da Meta expira e exige token).
+        // Áudio ainda passa pelo Whisper: a transcrição vira o texto da
+        // mensagem — aparece no inbox e é o que a IA lê pra responder.
+        let transcricao: string | null = null;
         if (isMedia) {
           const mediaId = String(msg?.[tipo]?.id ?? "");
           if (mediaId) {
@@ -181,6 +185,23 @@ export async function POST(req: NextRequest) {
                   .update({ media_path: path, media_mime: mime })
                   .eq("id", rowId);
               }
+              if (tipo === "audio") {
+                try {
+                  transcricao = await transcreverAudio(media.bytes, mime);
+                  if (transcricao) {
+                    await supabase
+                      .from("support_messages")
+                      .update({ text: transcricao })
+                      .eq("id", rowId);
+                  }
+                } catch (e) {
+                  await supabase.from("webhook_log").insert({
+                    source: "whatsapp",
+                    note: "falha na transcrição do áudio",
+                    body: { waId, error: e instanceof Error ? e.message : String(e) },
+                  });
+                }
+              }
             } else {
               await supabase.from("webhook_log").insert({
                 source: "whatsapp",
@@ -191,8 +212,12 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // A IA responde só texto — anexo sempre vai pro humano.
-        if (!autoReply || isMedia) continue; // modo observação: só guarda
+        if (!autoReply) continue; // modo observação: só guarda
+
+        // A IA responde texto e áudio transcrito. Imagem/vídeo/documento ela
+        // não enxerga — esses seguem indo pro humano.
+        const textoPraIA = tipo === "audio" && transcricao ? transcricao : text;
+        if (isMedia && !(tipo === "audio" && transcricao)) continue;
 
         // Conversa com a IA desligada na mão fica só com o humano.
         const { data: conversa } = await supabase
@@ -217,10 +242,7 @@ export async function POST(req: NextRequest) {
           }));
 
         try {
-          const result = await runSupportAgent(text, history, [], {
-            phone: from,
-            nome: nomeContato,
-          });
+          const result = await runSupportAgent(textoPraIA, history);
           // Envia em mensagens separadas, como um atendente no WhatsApp.
           for (let i = 0; i < result.messages.length; i++) {
             const part = result.messages[i];
