@@ -246,44 +246,11 @@ function onlyDigits(s: string): string {
   return (s || "").replace(/\D+/g, "");
 }
 
-/**
- * Acha o wa_phone real de uma conversa a partir de um telefone escrito de
- * qualquer jeito ("11-97467-7033", "+55 (11) 97467-7033", "5511974677033").
- *
- * Os cards antigos da fila guardaram o telefone como o cliente digitou; o
- * WhatsApp guarda só dígitos com DDI. Casar pelos 8 últimos dígitos resolve
- * também o nono dígito, que aparece num lado e some no outro.
- */
-export async function resolveWaPhone(input: string): Promise<string | null> {
-  const d = onlyDigits(input);
-  if (d.length < 8) return null;
-  const admin = getSupabaseAdmin();
-  if (!admin) return null;
-
-  const { data: exato } = await admin
-    .from("support_conversas")
-    .select("wa_phone")
-    .eq("wa_phone", d)
-    .maybeSingle();
-  if (exato?.wa_phone) return exato.wa_phone;
-
-  const { data: parecido } = await admin
-    .from("support_conversas")
-    .select("wa_phone,ultimo_em")
-    .like("wa_phone", `%${d.slice(-8)}`)
-    .order("ultimo_em", { ascending: false, nullsFirst: false })
-    .limit(1);
-  return parecido?.[0]?.wa_phone ?? null;
-}
-
-// CPF (11 dígitos) e CNPJ (14) podem estar gravados em dígitos puros ou
-// formatados — tentamos as duas formas.
-function docVariants(raw: string): string[] {
+// CPF pode estar gravado em dígitos puros ou formatado — tentamos as duas.
+function cpfVariants(raw: string): string[] {
   const d = onlyDigits(raw);
-  if (d.length === 11) return [d, `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`];
-  if (d.length === 14)
-    return [d, `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`];
-  return d ? [d] : [];
+  if (d.length !== 11) return d ? [d] : [];
+  return [d, `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`];
 }
 
 function emptyLookup(label: string, resumo: string): CustomerLookup {
@@ -304,7 +271,7 @@ function emptyLookup(label: string, resumo: string): CustomerLookup {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function resolveByCpf(admin: any, cpf: string): Promise<{ emails: string[]; nome: string | null }> {
-  const variants = docVariants(cpf);
+  const variants = cpfVariants(cpf);
   if (variants.length === 0) return { emails: [], nome: null };
   const emails = new Set<string>();
   let nome: string | null = null;
@@ -395,14 +362,12 @@ export async function findCustomer(query: {
   if (!admin) return { error: "Supabase não configurado no servidor." };
 
   const cpf = (query.cpf ?? "").trim();
-  const docLen = onlyDigits(cpf).length;
-  if (docLen === 11 || docLen === 14) {
+  if (onlyDigits(cpf).length >= 11) {
     const { emails, nome } = await resolveByCpf(admin, cpf);
     if (emails.length >= 1) return getCustomer360(emails[0]);
-    const tipo = docLen === 14 ? "CNPJ" : "CPF";
     return emptyLookup(
       cpf,
-      `Não localizei cadastro com o ${tipo} informado${nome ? ` (${nome})` : ""}. Confirme o ${tipo} ou peça o e-mail da compra.`
+      `Não localizei cadastro com o CPF informado${nome ? ` (${nome})` : ""}. Confirme o CPF ou peça o e-mail da compra.`
     );
   }
 
@@ -419,24 +384,6 @@ export async function findCustomer(query: {
   }
 
   return { error: "Informe e-mail, CPF ou nome para a busca." };
-}
-
-// Campo coringa: decide sozinho se o texto é e-mail (tem @), CPF (11 dígitos),
-// CNPJ (14 dígitos) ou nome completo — e cai na busca certa.
-export async function findCustomerSmart(
-  qRaw: string
-): Promise<CustomerLookup | { error: string }> {
-  const q = (qRaw ?? "").trim();
-  if (!q) return { error: "Informe e-mail, CPF, CNPJ ou nome para a busca." };
-  if (q.includes("@")) return findCustomer({ email: q });
-  const d = onlyDigits(q);
-  const temLetra = /[a-zA-ZÀ-ú]/.test(q);
-  if (!temLetra && (d.length === 11 || d.length === 14)) return findCustomer({ cpf: q });
-  if (temLetra) return findCustomer({ nome: q });
-  return {
-    error:
-      "Não reconheci a busca: use e-mail, CPF (11 dígitos), CNPJ (14 dígitos) ou o nome completo.",
-  };
 }
 
 function buildResumo(c: {
@@ -483,7 +430,6 @@ export const KB_BLOCOS: { key: string; label: string }[] = [
   { key: "dados", label: "Dados cadastrais / transferência" },
   { key: "pagamento", label: "Validade do acesso e pagamento" },
   { key: "brindes", label: "Brindes não recebidos" },
-  { key: "mentoria", label: "Mentoria Alfaiate" },
   { key: "regras_ouro", label: "Regras de ouro" },
   { key: "outro", label: "Outro" },
 ];

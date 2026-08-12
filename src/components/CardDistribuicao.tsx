@@ -17,12 +17,9 @@ function pct(n: number): string {
 export function CardDistribuicao({
   p,
   d,
-  proxima,
 }: {
   p: PoliticaDistribuicao;
   d?: DistribuicaoStatus | null;
-  /** Prévia do ciclo seguinte — estimativa, some se não der pra calcular. */
-  proxima?: PoliticaDistribuicao | null;
 }) {
   const progresso = Math.max(0, Math.min(100, p.progressoMeta ?? 0));
   const faltaMeta = Math.max(0, p.metaValor - p.cofreDepois);
@@ -182,24 +179,6 @@ export function CardDistribuicao({
           tom="rose"
         />
       </div>
-
-      {/* Prévia do ciclo seguinte. Discreta de propósito: o mês mal começou, a
-          maior parte das entradas ainda nem foi vendida e o número vai subir —
-          é ordem de grandeza, não planejamento. */}
-      {proxima && (
-        <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 rounded-lg bg-emerald-100/50 dark:bg-emerald-500/10 px-2.5 py-1.5 text-[11px]">
-          <span className="text-slate-500 dark:text-zinc-400">
-            Próxima ({shortDate(proxima.dataDistribuicao)}) — prévia
-          </span>
-          <span className="tabular-nums font-semibold text-slate-700 dark:text-zinc-200">
-            ~{brl(proxima.aDistribuir)}
-          </span>
-          <span className="w-full text-slate-400 dark:text-zinc-500">
-            no ritmo de hoje, com {brl(proxima.vaiProCofre)} indo pro cofre. Tende a subir
-            conforme o mês roda — a maior parte das entradas ainda não foi vendida.
-          </span>
-        </div>
-      )}
 
       <p className="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-zinc-500">
         O caixa livre é o <strong>menor saldo</strong> projetado entre{" "}

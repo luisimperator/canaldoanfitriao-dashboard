@@ -95,13 +95,13 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         "leads",
         "id, created_at, source, status, seller_id, pipeline_stage, name, phone, extra, mql_at"
       ),
-      selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status, utm, lead_id"),
+      selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status, utm"),
       selectAll(supabase, "ad_spend", "date, platform, amount", "date"),
-      selectAll(supabase, "fin_categories", "id, group_name, name, kind, slug"),
+      selectAll(supabase, "fin_categories", "id, group_name, name"),
       selectAll(
         supabase,
         "fin_transactions",
-        "id, transaction_date, amount, direction, description, counterparty, category_id, category_source"
+        "id, transaction_date, amount, direction, description, counterparty, category_id"
       ),
     ]);
 
@@ -130,7 +130,6 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         saleDate: String(r.sale_date).slice(0, 10),
         amount: Number(r.amount),
         sellerId: r.seller_id,
-        leadId: r.lead_id ?? null,
         product: r.product,
         status: r.status,
         utm: r.utm,
@@ -140,14 +139,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
       (r): AdSpend => ({ date: String(r.date), platform: r.platform, amount: Number(r.amount) })
     ),
     finCategories: finCategories.map(
-      (r): FinCategory => ({
-        id: r.id,
-        groupName: r.group_name,
-        name: r.name,
-        // categoria antiga sem kind cai em despesa, que é o caso comum
-        kind: r.kind ?? "oe",
-        slug: r.slug ?? null,
-      })
+      (r): FinCategory => ({ id: r.id, groupName: r.group_name, name: r.name })
     ),
     finTransactions: finTransactions.map(
       (r): FinTransaction => ({
@@ -158,7 +150,6 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         description: r.description,
         counterparty: r.counterparty,
         categoryId: r.category_id,
-        categorySource: r.category_source ?? "rule",
       })
     ),
     isDemo: false,

@@ -13,15 +13,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { findCustomer, blocoLabel, KB_BLOCOS, type KbItem } from "@/lib/support";
-import { avisarCasoNovo } from "@/lib/alertas";
 
-// Modelo padrão: Claude Sonnet 5 — dá conta do atendimento com bem menos
-// custo/latência que o Opus. Configurável por env (SUPPORT_AI_MODEL) para
-// trocar por claude-opus-5 / claude-haiku-4-5 quando fizer sentido.
-const MODEL = process.env.SUPPORT_AI_MODEL || "claude-sonnet-5";
+// Modelo padrão: Claude Opus 4.8. Configurável por env para trocar por
+// claude-haiku-4-5 / claude-sonnet-4-6 se quiser reduzir custo/latência.
+const MODEL = process.env.SUPPORT_AI_MODEL || "claude-opus-4-8";
 const EFFORT = process.env.SUPPORT_AI_EFFORT || "medium";
-// Nome da atendente (Lia = L + IA). Configurável sem deploy via env.
-const NOME = process.env.SUPPORT_AI_NAME || "Lia";
 const SALES_CONTACT =
   process.env.SUPPORT_SALES_CONTACT || "+55 11 92507-2167";
 const MAX_TURNS = 6;
@@ -69,55 +65,7 @@ const HANDOFF_MOTIVOS = [
   "outro",
 ];
 
-/** Quem está do outro lado desta conversa — vem do próprio WhatsApp. */
-export interface AgentContact {
-  /** wa_phone como a Meta manda (só dígitos, com DDI). */
-  phone?: string | null;
-  /** Nome do perfil do WhatsApp, quando a Meta manda. */
-  nome?: string | null;
-}
-
-/** 5511974677033 → +55 (11) 97467-7033 (mesmo formato da caixa de entrada). */
-function telefoneBonito(p: string): string {
-  const d = p.replace(/\D/g, "");
-  if (d.length === 13) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 9)}-${d.slice(9)}`;
-  if (d.length === 12) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 8)}-${d.slice(8)}`;
-  return `+${d}`;
-}
-
-function semAcento(s: string): string {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
-
-// Busca trechos no mapa de um curso (support_docs): devolve as linhas que
-// casam com todos os termos, com 2 linhas de contexto — em vez de despejar o
-// documento inteiro (centenas de linhas) na conversa. Sem termo, devolve o
-// cabeçalho (como funciona o acesso + tabela de anexos).
-function buscarNoMapa(doc: string, busca: string): string {
-  const linhas = doc.split("\n");
-  if (!busca) return linhas.slice(0, 45).join("\n");
-  const termos = semAcento(busca).split(/\s+/).filter(Boolean);
-  const hits: number[] = [];
-  linhas.forEach((l, i) => {
-    const n = semAcento(l);
-    if (termos.every((t) => n.includes(t))) hits.push(i);
-  });
-  if (hits.length === 0) return "";
-  const blocos: string[] = [];
-  let total = 0;
-  for (const i of hits) {
-    const trecho = linhas.slice(Math.max(0, i - 2), i + 3).join("\n");
-    blocos.push(trecho);
-    total += trecho.length;
-    if (total > 5000) {
-      blocos.push(`… (+${hits.length - blocos.length} ocorrências — refine a busca)`);
-      break;
-    }
-  }
-  return blocos.join("\n···\n");
-}
-
-async function buildSystemPrompt(contact?: AgentContact): Promise<string> {
+async function buildSystemPrompt(): Promise<string> {
   const admin = getSupabaseAdmin();
   let kb: KbItem[] = [];
   if (admin) {
@@ -151,64 +99,15 @@ async function buildSystemPrompt(contact?: AgentContact): Promise<string> {
       "\n(A base de conhecimento ainda está vazia. Responda com cautela e escale o que não souber.)\n";
   }
 
-  // A conversa acontece DENTRO do WhatsApp: o número já é conhecido. Sem isso
-  // aqui a IA pedia "me confirma o melhor WhatsApp pra contato" pra quem estava
-  // justamente falando por WhatsApp.
-  const bloco = contact?.phone
-    ? `\n# Contato desta conversa (você já tem)\n- WhatsApp: ${telefoneBonito(contact.phone)}${
-        contact.nome ? `\n- Nome no perfil: ${contact.nome}` : ""
-      }\nÉ por esse número que a conversa está acontecendo. Use-o em create_handoff sem perguntar.\n`
-    : "";
-
-  return `Você é ${NOME}, atendente de SUPORTE pós-venda do Canal do Anfitrião, no WhatsApp.
+  return `Você é o atendente de SUPORTE pós-venda do Canal do Anfitrião, no WhatsApp.
 Seu papel é resolver dúvidas de quem JÁ é cliente (comprou). Você NÃO faz vendas.
-Se perguntarem seu nome, diga que é ${NOME}, do suporte do Canal do Anfitrião.
-
-# Missão (pense nisso antes de CADA resposta)
-Toda conversa tem dois objetivos ao mesmo tempo: RETER o cliente (ele seguir com a gente, renovar, comprar de novo) e ele sair EXTREMAMENTE bem atendido — do tipo que elogia o suporte pros amigos. Antes de responder, pense no todo, não só na pergunta da vez:
-- O que essa pessoa está tentando resolver DE VERDADE? (a pergunta literal às vezes é sintoma — "como cancelo?" pode ser "não achei o conteúdo que me prometeram")
-- O que faz ela continuar cliente? Resolver o problema pontual é o mínimo; o padrão é ela terminar a conversa mais confiante na compra do que quando começou.
-- Em pedido de cancelamento/reembolso: primeiro entenda o motivo real (UMA pergunta genuína, sem interrogatório). Muitas vezes o problema tem solução melhor que cancelar — acesso travado, dúvida de conteúdo, prazo. Ofereça essa saída se existir. Se a pessoa mantiver a decisão, respeite e encaminhe SEM fricção: retenção forçada destrói a satisfação e o cliente não volta nunca mais.
-- Nunca troque a satisfação de agora por retenção: sem enrolar, sem dificultar, sem script de "antes de cancelar, você já viu…" repetido. Reter é consequência de atender bem.
 
 # Regras de ouro (inegociáveis)
-1. Identifique a pessoa antes de consultar ou agir, usando lookup_customer. Peça primeiro o e-mail da compra; se a pessoa não souber o e-mail, busque pelo CPF ou CNPJ (com o documento NÃO precisa do e-mail exato). Se a busca por nome trouxer vários cadastros, peça o CPF/CNPJ para confirmar. Quando localizar o cliente, confirme a identidade com uma pergunta simples (ex.: confirmar o nome ou o produto comprado) antes de tratar de reembolso/cancelamento. Nunca invente dados.
+1. Identifique a pessoa antes de consultar ou agir, usando lookup_customer. Peça primeiro o e-mail da compra; se a pessoa não souber o e-mail, busque pelo CPF (com o CPF NÃO precisa do e-mail exato). Se a busca por nome trouxer vários cadastros, peça o CPF para confirmar. Quando localizar o cliente, confirme a identidade com uma pergunta simples (ex.: confirmar o nome ou o produto comprado) antes de tratar de reembolso/cancelamento. Nunca invente dados.
 2. Alteração de dados cadastrais é SEMPRE pelo formulário que o próprio cliente preenche — você nunca altera dados aqui.
 3. Você é pós-venda. Quem quer COMPRAR é encaminhado ao comercial: ${SALES_CONTACT}.
-4. Responda em português, no jeito descrito em "Personalidade" logo abaixo.
+4. Responda em português, de forma curta, cordial e objetiva, como no WhatsApp.
 5. Como no WhatsApp, NÃO mande um textão. Quando a resposta tiver mais de uma ideia (ex.: cumprimento + pergunta, ou explicação + próximo passo), divida em mensagens curtas: ponha uma linha contendo apenas [BREAK] entre cada mensagem (no máximo 3 a 4). Se uma frase só já resolve, não use [BREAK].
-6. NUNCA pergunte o número de WhatsApp da pessoa — a conversa já é no WhatsApp dela e você tem o número. Nada de "me confirma o melhor número". Se fizer diferença avisar, apenas CONFIRME o que você já tem, numa frase só e sem travar o atendimento (ex.: "vou registrar com esse mesmo número, (11) 97467-7033, se preferir outro é só falar"). Não espere resposta pra abrir o caso.
-
-# Personalidade
-Você não é um chatbot de SAC. Seja a pessoa com quem o cliente gostaria de falar às 2 da manhã: alguém competente, direto e que resolve. Nem robô corporativo, nem puxa-saco.
-
-**Ajude de verdade, não de araque.** Pule o "Que ótima pergunta!", o "Claro!", o "Fico feliz em ajudar!" e simplesmente ajude. A primeira mensagem já traz a resposta, não o aquecimento.
-
-**Seja resourceful antes de perguntar.** Consulte o lookup, leia o histórico da conversa, veja o que você já tem na mão. Volte com resposta, não com pergunta. Só pergunte o que você realmente não tem como descobrir sozinho.
-
-**Tenha opinião.** Quando houver dois caminhos, diga qual é o melhor e por quê, em uma frase. Se o cliente estiver prestes a fazer algo que não resolve o problema dele, fale. Assistente sem opinião é buscador com passos a mais.
-
-**Brevidade é obrigatória.** Curto ganha de longo, afiado ganha de vago. Conciso quando basta, detalhado quando importa de verdade (valor, prazo, o que ele precisa fazer). Uma ideia por mensagem.
-
-**Mostre que você olhou o caso (rápido ≠ seco).** Quando a resposta depende da situação da pessoa, traga os fatos DELA na resposta antes de seguir com o procedimento: "achei aqui: sua compra do Anfitrião 5 Estrelas foi em 12/03/2025, R$ 1.497,00 no cartão, tá ativa". Fatos do caso saem COMPLETOS, sem abreviar: data com dia/mês/ANO (12/03/2025, não "12/03"), valor com centavos (R$ 1.497,00, não "R$ 1.497"), nome do produto por extenso e forma de pagamento. Num reembolso, confirme o que vai ser reembolsado (produto, data da compra, valor exato) antes de encaminhar. Isso mostra que o caso foi olhado de verdade, dá segurança e corta ida-e-volta — é assim que a pessoa sente o caso tratado com carinho. A brevidade corta enrolação, NUNCA os fatos do caso: data, produto, valor e status não são textão, são o atendimento.
-
-**Nada de resposta pela metade.** Isso aqui vai direto pro WhatsApp de um cliente e não dá pra desenviar. Confira antes de mandar.
-
-Pule toda regra que soe corporativa: se a frase caberia num manual de RH, não cabe aqui.
-
-Não escreva:
-- "Prezado", "Sr./Sra.", "Nossa equipe especializada", "Peço que aguarde", "Conforme informado anteriormente".
-- "Fico à disposição", "Estamos à disposição", "Qualquer dúvida é só chamar", "Espero ter ajudado".
-- "Entendo perfeitamente sua frustração", "Lamento pelo transtorno". Não devolva a dor da pessoa pra provar empatia: empatia aqui é resolver rápido e falar claro.
-- "Vou proceder com a abertura de um chamado". Fale o que é: "vou registrar aqui pro time".
-- Despedida cerimoniosa ("um abraço e boa sorte com os negócios") e "posso ajudar em mais alguma coisa?" quando o assunto já acabou. Se acabou, acabou.
-
-Adaptações do canal (WhatsApp, cliente pagante):
-- Fale como se digita: "achei aqui", "deixa eu ver", "beleza", "pode deixar", "não, aqui não aparece nada".
-- Emoji quase nunca, no máximo um e só quando ele diz algo que a palavra não diz. Sem exclamação em série.
-- Sem palavrão. Afiado sim, agressivo não: com cliente irritado você é mais direto ainda, resolve e não dá sermão.
-
-Isso muda o TOM, não as regras. Continua valendo tudo: nunca inventar dado, sempre conferir no lookup, escalar o que precisa de humano.
 
 # Quem é quem
 - É CLIENTE (lookup mostra compra confirmada): dê suporte completo.
@@ -218,9 +117,6 @@ Isso muda o TOM, não as regras. Continua valendo tudo: nunca inventar dado, sem
 Você conduz procedimentos guiados passo a passo (ex.: orientar o cancelamento, coletar o endereço do brinde, explicar a renovação) e SÓ então escala — já com tudo coletado. Use create_handoff para abrir um caso na fila humana quando a conclusão exigir AÇÃO interna nossa: cancelamento de renovação, reembolso, divergência/cashback de pagamento, brinde não recebido (com endereço coletado), transferência de ingresso, ou qualquer alteração que dependa de um humano. Antes de escalar, colete e resuma tudo no campo "resumo" (cliente, e-mail, pedido, o que já foi coletado, ação necessária).
 Dúvidas de INFORMAÇÃO/consulta (valores, datas, acesso, validade, "estou inadimplente?", "minha renovação está ativa?") você responde sozinho usando o lookup e a base de conhecimento, sem escalar. Quando a compra no lookup já trouxer "dataReembolso", informe essa data diretamente ao cliente — só escale por causa da data do estorno se esse campo vier vazio.
 
-# Cursos (onde está cada aula e material)
-Os clientes acessam dois cursos em app.nutror.com: Anfitrião 5 Estrelas (A5E) e Gigantes da Temporada. Quando perguntarem onde encontra uma aula, um tema ou um material (planilha, contrato, cartilha), use consultar_mapa_cursos e responda com o caminho exato (curso › módulo › aula). O lookup mostra qual curso a pessoa comprou — passe o curso na busca pra não indicar caminho do curso errado. Os materiais ficam DENTRO da própria aula (não existe aba de downloads): quem não acha o anexo deve abrir a aula indicada e procurar ali.
-${bloco}
 # Base de conhecimento (seu treinamento)
 ${baseConhecimento}`;
 }
@@ -229,40 +125,20 @@ const TOOLS: Anthropic.Tool[] = [
   {
     name: "lookup_customer",
     description:
-      "Busca o cliente por e-mail, CPF/CNPJ OU nome. Prefira e-mail; se o cliente não souber o e-mail, busque por CPF ou CNPJ (basta o documento, não precisa do e-mail exato). Use SEMPRE antes de responder dúvidas que dependem da situação da pessoa (acesso, pagamento, inadimplência, validade, renovação). Se a busca por nome retornar vários cadastros, peça o CPF/CNPJ. Retorna se é cliente, o que comprou, status da assinatura e se está inadimplente.",
+      "Busca o cliente por e-mail, CPF OU nome. Prefira e-mail; se o cliente não souber o e-mail, busque por CPF (basta o CPF, não precisa do e-mail exato). Use SEMPRE antes de responder dúvidas que dependem da situação da pessoa (acesso, pagamento, inadimplência, validade, renovação). Se a busca por nome retornar vários cadastros, peça o CPF. Retorna se é cliente, o que comprou, status da assinatura e se está inadimplente.",
     input_schema: {
       type: "object",
       properties: {
         email: { type: "string", description: "e-mail cadastrado na compra" },
-        cpf: { type: "string", description: "CPF ou CNPJ do cliente (com ou sem pontuação)" },
+        cpf: { type: "string", description: "CPF do cliente (com ou sem pontuação)" },
         nome: { type: "string", description: "nome completo (use só quando não há e-mail nem CPF)" },
-      },
-    },
-  },
-  {
-    name: "consultar_mapa_cursos",
-    description:
-      "Consulta o mapa oficial de aulas e anexos dos cursos (Anfitrião 5 Estrelas e Gigantes da Temporada): em qual módulo/aula está cada conteúdo e onde baixar cada material. Use quando o aluno perguntar onde encontra uma aula, um tema ou um arquivo (planilha, contrato, cartilha, checklist). Busque pelo termo mais específico possível (ex.: 'contrato de administração', 'imposto de renda', 'controle-repasse'). Passe 'curso' quando souber qual curso a pessoa tem (o lookup mostra o que ela comprou) — evita indicar caminho do curso errado. Lembre ao aluno: os anexos ficam DENTRO da própria aula em app.nutror.com, não existe aba de downloads.",
-    input_schema: {
-      type: "object",
-      properties: {
-        busca: {
-          type: "string",
-          description:
-            "termo de busca (tema, nome da aula ou do arquivo); vazio devolve o resumo do curso com a tabela de anexos",
-        },
-        curso: {
-          type: "string",
-          enum: ["a5e", "gigantes"],
-          description: "limita a busca a um curso; omita para buscar nos dois",
-        },
       },
     },
   },
   {
     name: "create_handoff",
     description:
-      "Abre um caso na fila de atendimento humano quando a conclusão exige ação interna (cancelamento de renovação, reembolso, divergência/cashback, brinde não recebido, transferência de ingresso, alteração de dados) ou para encaminhar um lead ao comercial. Colete o máximo de informação ANTES de escalar.",
+      "Abre um caso na fila de atendimento humano quando a conclusão exige ação interna (cancelamento de renovação, reembolso, divergência/cashback, brinde não recebido, transferência de ingresso, alteração de dados) ou para encaminhar um lead ao comercial. Colete o máximo de informação ANTES de escalar. Chame UMA vez por caso: se você já registrou este caso na conversa, não chame de novo — apenas confirme ao cliente que está registrado.",
     input_schema: {
       type: "object",
       properties: {
@@ -274,11 +150,7 @@ const TOOLS: Anthropic.Tool[] = [
         },
         email: { type: "string" },
         nome: { type: "string" },
-        telefone: {
-          type: "string",
-          description:
-            "Deixe em branco: o telefone da conversa é preenchido automaticamente. Só informe se o cliente pedir contato em OUTRO número.",
-        },
+        telefone: { type: "string" },
         dados_coletados: {
           type: "object",
           description: "Dados estruturados coletados (ex.: endereço do brinde).",
@@ -289,12 +161,8 @@ const TOOLS: Anthropic.Tool[] = [
   },
 ];
 
-async function runTool(
-  name: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: any,
-  contact?: AgentContact
-): Promise<{ text: string; handoffId?: string }> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function runTool(name: string, input: any): Promise<{ text: string; handoffId?: string }> {
   if (name === "lookup_customer") {
     const result = await findCustomer({
       email: input?.email ? String(input.email) : undefined,
@@ -303,67 +171,62 @@ async function runTool(
     });
     return { text: JSON.stringify(result) };
   }
-  if (name === "consultar_mapa_cursos") {
-    const admin = getSupabaseAdmin();
-    if (!admin) return { text: JSON.stringify({ error: "sem banco" }) };
-    const curso =
-      input?.curso === "a5e" || input?.curso === "gigantes" ? String(input.curso) : null;
-    const slugs = curso ? [`mapa-${curso}`] : ["mapa-a5e", "mapa-gigantes"];
-    const { data } = await admin
-      .from("support_docs")
-      .select("slug,titulo,conteudo")
-      .in("slug", slugs);
-    const docs = data ?? [];
-    if (docs.length === 0) {
-      return { text: JSON.stringify({ error: "mapa de cursos não carregado no banco" }) };
-    }
-    const busca = input?.busca ? String(input.busca).trim() : "";
-    const partes: string[] = [];
-    for (const d of docs) {
-      const r = buscarNoMapa(String(d.conteudo), busca);
-      if (r) partes.push(`# ${d.titulo}\n${r}`);
-    }
-    if (partes.length === 0) {
-      return {
-        text: `Nada no mapa casa com "${busca}". Tente um termo mais curto ou outro nome (ex.: "contrato", "imposto", "repasse", "vistoria").`,
-      };
-    }
-    return { text: partes.join("\n\n") };
-  }
   if (name === "create_handoff") {
     const admin = getSupabaseAdmin();
     if (!admin) return { text: JSON.stringify({ error: "sem banco" }) };
     const motivo = HANDOFF_MOTIVOS.includes(String(input?.motivo))
       ? String(input.motivo)
       : "outro";
+    const email = input?.email ? String(input.email) : null;
+    const telefone = input?.telefone ? String(input.telefone) : null;
+
+    // Trava anti-duplicata. Cada mensagem do cliente roda o agente de novo, e
+    // um "ta bom"/"obrigado" depois da escalada fazia o modelo registrar o
+    // MESMO caso outra vez (o histórico que ele relê só tem os textos, não as
+    // chamadas de ferramenta). Caso não-resolvido recente, do mesmo motivo,
+    // pro mesmo contato = mesmo caso: devolve o existente em vez de criar.
+    const contato: string[] = [];
+    if (telefone) contato.push(`telefone.eq.${telefone}`);
+    if (email) contato.push(`email.eq.${email}`);
+    if (contato.length > 0) {
+      const desde = new Date(Date.now() - 14 * 86_400_000).toISOString();
+      const { data: aberto } = await admin
+        .from("support_handoffs")
+        .select("id")
+        .eq("motivo", motivo)
+        .neq("status", "resolvido")
+        .gte("created_at", desde)
+        .or(contato.join(","))
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (aberto) {
+        return {
+          text: JSON.stringify({
+            ok: true,
+            id: aberto.id,
+            ja_existia: true,
+            aviso:
+              "Este cliente já tem um caso aberto com esse motivo — não criei outro. Apenas confirme ao cliente que está registrado.",
+          }),
+          handoffId: aberto.id,
+        };
+      }
+    }
+
     const { data, error } = await admin
       .from("support_handoffs")
       .insert({
         motivo,
         resumo: input?.resumo ? String(input.resumo) : null,
-        email: input?.email ? String(input.email) : null,
-        nome: input?.nome ? String(input.nome) : contact?.nome ?? null,
-        // O telefone da conversa é a fonte da verdade — a IA não precisa (nem
-        // deve) perguntar. Só respeita o que ela mandar se o cliente indicou
-        // outro número.
-        telefone: input?.telefone ? String(input.telefone) : contact?.phone ?? null,
+        email,
+        nome: input?.nome ? String(input.nome) : null,
+        telefone,
         dados_coletados: input?.dados_coletados ?? null,
       })
       .select("id")
       .single();
     if (error) return { text: JSON.stringify({ error: error.message }) };
-
-    // Toca o WhatsApp de quem está de plantão. Só em conversa real (contact
-    // preenchido): no simulador ninguém precisa ser acordado. Nunca derruba o
-    // atendimento — falhou o aviso, o caso continua na fila do painel.
-    if (data?.id && contact?.phone) {
-      try {
-        await avisarCasoNovo(data.id);
-      } catch {
-        // silêncio de propósito
-      }
-    }
-
     return {
       text: JSON.stringify({ ok: true, id: data?.id }),
       handoffId: data?.id,
@@ -375,8 +238,7 @@ async function runTool(
 export async function runSupportAgent(
   message: string,
   history: AgentMessage[] = [],
-  supervisorNotes: string[] = [],
-  contact?: AgentContact
+  supervisorNotes: string[] = []
 ): Promise<AgentResult> {
   if (!aiConfigured()) {
     const off = "A IA de suporte ainda não está ligada (falta a ANTHROPIC_API_KEY no servidor).";
@@ -384,7 +246,7 @@ export async function runSupportAgent(
   }
 
   const client = new Anthropic();
-  let system = await buildSystemPrompt(contact);
+  let system = await buildSystemPrompt();
   if (supervisorNotes.length > 0) {
     // Canal do "chefe" (modo treino): instruções de operador que o cliente não
     // vê e que a IA deve obedecer acima de tudo nesta conversa.
@@ -402,13 +264,11 @@ export async function runSupportAgent(
   let handoffId: string | null = null;
 
   // adaptive thinking + effort só existem em parte da família (Opus 4.6+/Sonnet
-  // 4.6+/Fable 5). No Haiku 4.5 esses parâmetros dão 400, então omitimos.
+  // 4.6/Fable 5). No Haiku 4.5 esses parâmetros dão 400, então omitimos.
   const ADAPTIVE_MODELS = new Set([
-    "claude-opus-5",
     "claude-opus-4-8",
     "claude-opus-4-7",
     "claude-opus-4-6",
-    "claude-sonnet-5",
     "claude-sonnet-4-6",
     "claude-fable-5",
   ]);
@@ -435,7 +295,7 @@ export async function runSupportAgent(
       for (const block of response.content) {
         if (block.type === "tool_use") {
           usedTools.push(block.name);
-          const out = await runTool(block.name, block.input, contact);
+          const out = await runTool(block.name, block.input);
           if (out.handoffId) handoffId = out.handoffId;
           toolResults.push({
             type: "tool_result",

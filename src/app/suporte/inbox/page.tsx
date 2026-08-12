@@ -2,7 +2,6 @@ import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { SupportInbox } from "@/components/SupportInbox";
 import { getWhatsappConfig } from "@/lib/whatsapp";
-import { resolveWaPhone } from "@/lib/support";
 
 export const dynamic = "force-dynamic";
 
@@ -12,17 +11,10 @@ export const dynamic = "force-dynamic";
 // antes da migração de propósito: o número só deve sair do aplicativo quando
 // já houver onde atender.
 
-export default async function InboxPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ fone?: string }>;
-}) {
-  const sp = await searchParams;
+export default async function InboxPage() {
   const cfg = await getWhatsappConfig();
   const pronto = Boolean(cfg.token && cfg.phoneNumberId);
   const autoReply = cfg.autoReply;
-  // ?fone= vem da fila de casos escalados: abre já na conversa daquele cliente.
-  const inicial = sp.fone ? await resolveWaPhone(sp.fone) : null;
 
   return (
     <div>
@@ -73,7 +65,7 @@ export default async function InboxPage({
         </div>
       )}
 
-      <SupportInbox inicial={inicial} />
+      <SupportInbox />
 
       <p className="mt-4 text-xs text-slate-400 dark:text-zinc-500">
         Atualiza a cada 10 segundos. Anexos (imagem, áudio, PDF) são baixados da Meta e guardados

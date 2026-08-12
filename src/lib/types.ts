@@ -61,8 +61,6 @@ export interface Sale {
   saleDate: string; // ISO date
   amount: number; // BRL
   sellerId: string;
-  /** lead do CRM que originou a venda (quando a conciliação achou o dono) */
-  leadId?: string | null;
   product: string;
   status: "paga" | "reembolsada";
   utm?: SaleUtm | null;
@@ -78,12 +76,8 @@ export type FinDirection = "in" | "out";
 
 export interface FinCategory {
   id: string;
-  groupName: "Receitas" | "Despesas" | "Fora do resultado";
+  groupName: "Receitas" | "Despesas";
   name: string;
-  /** Papel no resultado — é o que o DRE lê. Ver migração 0032. */
-  kind: "receita" | "tvc" | "oe" | "distribuicao" | "neutro";
-  /** Chave estável usada pelas regras de classificação. */
-  slug: string | null;
 }
 
 export interface FinTransaction {
@@ -94,8 +88,6 @@ export interface FinTransaction {
   description: string;
   counterparty: string | null;
   categoryId: string | null;
-  /** 'manual' = classificado na mão, imune às regras (migração 0032). */
-  categorySource?: "rule" | "manual";
 }
 
 export interface DashboardData {

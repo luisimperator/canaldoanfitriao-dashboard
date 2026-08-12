@@ -11,9 +11,7 @@ import { ProvisaoRows } from "@/components/ProvisaoRows";
 import { SaldoEduzzForm } from "@/components/SaldoEduzzForm";
 import { SaidasProgramadas } from "@/components/SaidasProgramadas";
 import { CardDistribuicao } from "@/components/CardDistribuicao";
-import { CardRaspagem } from "@/components/CardRaspagem";
 import { getDistribuicao } from "@/lib/distribuicao";
-import { getProximaDistribuicao } from "@/lib/politica-distribuicao";
 
 export const dynamic = "force-dynamic";
 
@@ -52,10 +50,6 @@ export default async function ProvisaoPage() {
         null,
       ];
   const politica = distrib?.politica ?? null;
-  // Prévia do ciclo seguinte (mesma régua, um mês pra frente).
-  const proximaDistrib = politica
-    ? await getProximaDistribuicao(politica.dataDistribuicao)
-    : null;
 
   if (!p) {
     return (
@@ -79,12 +73,7 @@ export default async function ProvisaoPage() {
       : p.saldoEduzzAncora != null
         ? p.saldoEduzzAncora.valor + p.liberadoDesdeAncora
         : null;
-  // Transferência entre contas próprias não muda o caixa total. Enquanto o
-  // saque não pinga no Inter ele continua sendo dinheiro nosso, então entra no
-  // disponível — não como entrada futura. Tratá-lo como saída hoje e entrada
-  // amanhã abria um buraco fictício justo no dia de olhar o número.
-  const disponivel =
-    p.saldoInter + (saldoEduzz ?? 0) + asaas.saldo + p.saquesTransitoTotal;
+  const disponivel = p.saldoInter + (saldoEduzz ?? 0) + asaas.saldo;
 
   // Eduzz + Asaas fundidos por dia (mesmo shape, mesmas séries do gráfico)
   const pagoAll = fundeDias(p.pagoPorDia, asaas.pagoPorDia);
@@ -174,12 +163,7 @@ export default async function ProvisaoPage() {
       </div>
       <DemoBanner show={data.isDemo} />
 
-      {politica && <CardDistribuicao p={politica} d={distrib} proxima={proximaDistrib} />}
-
-      {/* O saldo do Asaas acima não fica parado lá: a raspagem traz pro Inter. */}
-      <div className="mb-4">
-        <CardRaspagem />
-      </div>
+      {politica && <CardDistribuicao p={politica} d={distrib} />}
 
       {/* KPIs */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-2">
@@ -209,13 +193,6 @@ export default async function ProvisaoPage() {
             )}
             {asaas.ok && <> · Asaas {brl(asaas.saldo)}</>}
           </div>
-          {p.saquesTransito.length > 0 && (
-            <div className="mt-1.5 text-xs text-slate-400 dark:text-zinc-500">
-              Inclui {brl(p.saquesTransitoTotal)} em trânsito — saque da Eduzz de{" "}
-              {shortDate(p.saquesTransito[0].saiuEm)}, cai no Inter em{" "}
-              {shortDate(p.saquesTransito[0].chegaEm)}. Trocar de conta não muda o caixa.
-            </div>
-          )}
           {p.saldoEduzzExtrato == null && (
             <div className="mt-1.5">
               <SaldoEduzzForm atual={p.saldoEduzzAncora?.valor ?? null} />
@@ -277,9 +254,6 @@ export default async function ProvisaoPage() {
           hoje={p.hoje}
           disponivel={disponivel}
           entradas={[
-            // O saque em trânsito NÃO entra aqui: ele já está no disponível,
-            // porque trocar de conta não é receber dinheiro novo. Somar nos
-            // dois lugares contaria duas vezes.
             ...pagoAll.map((d) => ({
               dia: d.dia,
               valor: d.valor,

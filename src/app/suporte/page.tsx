@@ -2,8 +2,7 @@ import Link from "next/link";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { brl, num } from "@/lib/format";
 import { Card, KpiCard, PageHeader } from "@/components/ui";
-import { findCustomerSmart } from "@/lib/support";
-import { supportModelName } from "@/lib/support-ai";
+import { getCustomer360 } from "@/lib/support";
 import { HandoffsList, type HandoffRow } from "./HandoffsList";
 
 export const dynamic = "force-dynamic";
@@ -27,12 +26,11 @@ const STATUS_PT: Record<string, string> = {
 export default async function SuportePage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string; q?: string }>;
+  searchParams: Promise<{ email?: string }>;
 }) {
   const sp = await searchParams;
-  // `q` é o campo coringa; `email` continua aceito pra não quebrar link antigo.
-  const q = (sp.q ?? sp.email ?? "").trim();
-  const lookup = q ? await findCustomerSmart(q) : null;
+  const email = sp.email?.trim() ?? "";
+  const lookup = email ? await getCustomer360(email) : null;
 
   const admin = getSupabaseAdmin();
   let handoffs: HandoffRow[] = [];
@@ -61,13 +59,10 @@ export default async function SuportePage({
       />
 
       <div className="mb-6 rounded-lg border border-sky-200 bg-sky-50 dark:bg-sky-500/10 px-4 py-3 text-sm text-sky-800">
-        <strong>Tudo no ar:</strong> o número oficial já está ligado na Meta e a IA atende sozinha
-        no WhatsApp — as conversas ficam na{" "}
-        <Link href="/suporte/inbox" className="underline font-medium">caixa de entrada</Link>, os
-        casos que precisam de gente caem na fila aqui embaixo. Dá pra{" "}
-        <Link href="/suporte/simulador" className="underline font-medium">simular um atendimento</Link>{" "}
-        antes de soltar mudança, e corrigir a IA pelo “modo chefe” na conversa. Modelo em uso:{" "}
-        <code>{supportModelName()}</code>.
+        <strong>Fases 1 e 2 no ar:</strong> consulta do cliente, fila de handoff,
+        treinamento e o <Link href="/suporte/simulador" className="underline font-medium">cérebro
+        de IA</Link> (responde × escala). Falta a Fase 3: ligar no WhatsApp pela
+        Meta. A IA precisa da chave <code>ANTHROPIC_API_KEY</code> no servidor.
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 mb-6">
@@ -80,10 +75,10 @@ export default async function SuportePage({
       <Card title="Consultar cliente" className="mb-6">
         <form method="get" className="flex flex-col gap-2 sm:flex-row">
           <input
-            type="text"
-            name="q"
-            defaultValue={q}
-            placeholder="e-mail, CPF, CNPJ ou nome completo"
+            type="email"
+            name="email"
+            defaultValue={email}
+            placeholder="e-mail cadastrado na compra"
             className="w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none"
           />
           <button

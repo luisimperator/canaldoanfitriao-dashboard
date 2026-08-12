@@ -10,21 +10,19 @@ import {
   mqlPerSeller,
   paidSales,
   sum,
-  mqlMonthlySeries,
-  resultadoMensalSeries,
-  leadOrigem,
-  TICKET_CONVERSAO,
 } from "@/lib/metrics";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import {
-  LeadsMqlChart,
-  LeadsMqlMonthlyChart,
-  ResultadoMensalChart,
-  SourcePie,
-} from "@/components/charts";
+import { LeadsMqlChart, SourcePie } from "@/components/charts";
 
 export const dynamic = "force-dynamic";
+
+const SOURCE_LABELS: Record<string, string> = {
+  meta_ads: "Meta Ads",
+  google_ads: "Google Ads",
+  organico: "Orgânico",
+  outro: "Outro",
+};
 
 export default async function VisaoGeralPage() {
   const data = await getDashboardData();
@@ -53,7 +51,7 @@ export default async function VisaoGeralPage() {
   const cac = cap.sales30d > 0 ? spend30 / cap.sales30d : null;
 
   const leads30 = inRange(data.leads, (l) => l.createdAt, start30, today);
-  const stages = funnelStages(leads30, data.sales);
+  const stages = funnelStages(leads30);
 
   // MQL = contato que recebeu tag de qualificação (mql_at). MQL ⊆ leads.
   const mqlMonth = data.leads.filter(
@@ -63,21 +61,13 @@ export default async function VisaoGeralPage() {
   const taxaMql = leads30.length > 0 ? (mql30 / leads30.length) * 100 : null;
   const mqlPerDay = mql30 / 30;
   const mqlSeries = mqlDailySeries(data.leads, 60, today);
-  const mqlMensal = mqlMonthlySeries(data.leads, 6, today);
   const mqlCap = mqlPerSeller(data, 90, today);
-  const resultado = resultadoMensalSeries(data, 6, today);
-  const ultimoFechado = resultado.filter((r) => !r.parcial).at(-1) ?? null;
-  // A origem vem das tags do CRM (leadOrigem), não do campo `source` do banco:
-  // ele chega "outro" em ~100% dos leads e a rosca virava uma fatia só.
   const bySource = Object.entries(
     leads30.reduce<Record<string, number>>((acc, l) => {
-      const o = leadOrigem(l);
-      acc[o] = (acc[o] ?? 0) + 1;
+      acc[l.source] = (acc[l.source] ?? 0) + 1;
       return acc;
     }, {})
-  )
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
+  ).map(([source, value]) => ({ name: SOURCE_LABELS[source] ?? source, value }));
 
   const capTone =
     cap.verdict === "pode_contratar" ? "good" : cap.verdict === "quase" ? "warn" : "neutral";
@@ -163,34 +153,8 @@ export default async function VisaoGeralPage() {
             (média dos últimos 90 dias).
           </p>
         </Card>
-        <Card title="Leads e MQL por mês (6 meses)" className="lg:col-span-2">
-          <LeadsMqlMonthlyChart data={mqlMensal} />
-          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
-            Mesmo critério de MQL da série diária, agregado por mês. A linha âmbar é a taxa de
-            qualificação (MQL ÷ leads) no eixo da direita. A parte clara da última barra é a
-            <strong> projeção do mês</strong>: quanto fecha se o ritmo dos dias já corridos se
-            mantiver até o fim — mesma régua do gráfico de faturamento por vendedor.
-          </p>
-        </Card>
         <Card title="Origem dos leads (30 dias)">
           <SourcePie data={bySource} />
-        </Card>
-        <Card title="Resultado por mês (6 meses)" className="lg:col-span-3">
-          <ResultadoMensalChart data={resultado} />
-          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
-            Direto do extrato do Inter — o dinheiro que de fato entrou e saiu da conta.{" "}
-            <strong>Faturamento</strong> = entradas do mês (fora resgate de aplicação, aporte de
-            sócio e transferência entre as empresas). <strong>Custos</strong> = todas as saídas,
-            menos a distribuição. <strong>Distribuição</strong> = o que foi pro Rômulo e pra Heavy
-            Drops — é lucro saindo, não despesa, por isso fica fora da margem.{" "}
-            <strong>Margem líquida</strong> = (faturamento − custos) ÷ faturamento, na linha âmbar
-            do eixo da direita
-            {ultimoFechado?.margem !== null && ultimoFechado
-              ? ` (${num(ultimoFechado.margem!, 1)}% em ${ultimoFechado.label}, último mês fechado)`
-              : ""}
-            . A parte clara das barras do mês corrente é a projeção no ritmo dos dias já corridos; a
-            distribuição não é projetada porque sai de uma vez só, lá pelo dia 10.
-          </p>
         </Card>
         <Card title="Funil (últimos 30 dias)" className="lg:col-span-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
@@ -206,12 +170,6 @@ export default async function VisaoGeralPage() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-3">
-            &quot;Convertidos&quot; conta venda de verdade ligada ao lead — curso (A5E ou
-            Gigantes) ou qualquer produto acima de R$ {TICKET_CONVERSAO}. O status
-            &quot;convertido&quot; do CRM não serve de medida: ele é marcado quando o contato
-            compra qualquer coisa, inclusive ingresso de R$ 57, e inflava a conversão.
-          </p>
         </Card>
       </div>
     </div>

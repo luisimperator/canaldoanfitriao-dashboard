@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findCustomerSmart } from "@/lib/support";
+import { getCustomer360 } from "@/lib/support";
 import { getAccess } from "@/lib/supabase-server";
 
-// GET /api/support/customer?q=...  (aceita ?email= por compatibilidade)
-// Perfil 360 do cliente para o atendimento (humano ou IA). O `q` é coringa:
-// e-mail, CPF, CNPJ ou nome completo — a busca decide sozinha.
+// GET /api/support/customer?email=...
+// Perfil 360 do cliente para o atendimento (humano ou IA).
 //
 // Autenticação (uma das duas):
 //   - sessão logada no dashboard (uso interno pela própria tela de Suporte), ou
@@ -14,15 +13,9 @@ import { getAccess } from "@/lib/supabase-server";
 // Não é cacheado (Route Handlers não cacheiam por padrão).
 
 export async function GET(req: NextRequest) {
-  const q =
-    req.nextUrl.searchParams.get("q")?.trim() ||
-    req.nextUrl.searchParams.get("email")?.trim() ||
-    "";
-  if (!q) {
-    return NextResponse.json(
-      { error: "Informe 'q' (e-mail, CPF, CNPJ ou nome completo)." },
-      { status: 400 }
-    );
+  const email = req.nextUrl.searchParams.get("email")?.trim() ?? "";
+  if (!email) {
+    return NextResponse.json({ error: "Parâmetro 'email' é obrigatório." }, { status: 400 });
   }
 
   const token = process.env.SUPPORT_API_TOKEN;
@@ -36,7 +29,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const result = await findCustomerSmart(q);
+  const result = await getCustomer360(email);
   if ("error" in result) {
     return NextResponse.json(result, { status: 501 });
   }

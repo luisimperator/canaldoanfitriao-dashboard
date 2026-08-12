@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getAccess } from "@/lib/supabase-server";
-import { sendWhatsappText, sendWhatsappTemplate } from "@/lib/whatsapp";
-import { resolveWaPhone } from "@/lib/support";
+import { sendWhatsappText } from "@/lib/whatsapp";
 
 // Caixa de entrada do suporte.
 //
@@ -26,10 +25,7 @@ async function guard() {
 export async function GET(req: NextRequest) {
   const ctx = await guard();
   if (!ctx) return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
-  const pedido = req.nextUrl.searchParams.get("phone");
-  // A fila de handoff manda o telefone como o cliente escreveu ("11-97467-7033").
-  // Resolvemos pro wa_phone real antes de puxar a conversa.
-  const phone = pedido ? (await resolveWaPhone(pedido)) ?? pedido : null;
+  const phone = req.nextUrl.searchParams.get("phone");
 
   if (!phone) {
     const { data, error } = await ctx.admin
@@ -78,34 +74,6 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const phone = String(body?.phone ?? "").trim();
   const text = String(body?.text ?? "").trim();
-
-  // Retomada por template: é o único envio que a Meta entrega fora da janela
-  // de 24h. Vai antes da checagem de janela de propósito.
-  const template = String(body?.template ?? "").trim();
-  if (phone && template) {
-    const params = Array.isArray(body?.params) ? body.params.map(String) : [];
-    const idioma = String(body?.language ?? "pt_BR");
-    const sent = await sendWhatsappTemplate(phone, template, idioma, params);
-    if (!sent.ok) {
-      return NextResponse.json({ error: sent.error ?? "falha ao enviar" }, { status: 502 });
-    }
-    // Guarda o que a pessoa vai ver, não o nome técnico do template.
-    const visivel = params.length > 0 ? `[${template}] ${params.join(" · ")}` : `[${template}]`;
-    await ctx.admin.from("support_messages").insert({
-      wa_phone: phone,
-      direction: "out",
-      text: visivel,
-      tipo: "template",
-      autor: "humano",
-      wa_message_id: sent.id ?? null,
-    });
-    await ctx.admin
-      .from("support_conversas")
-      .update({ ia_ativa: false, atendente: ctx.access.email ?? "painel" })
-      .eq("wa_phone", phone);
-    return NextResponse.json({ ok: true, id: sent.id });
-  }
-
   if (!phone || !text) {
     return NextResponse.json({ error: "phone e text são obrigatórios." }, { status: 400 });
   }

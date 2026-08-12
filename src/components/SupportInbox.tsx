@@ -37,35 +37,6 @@ interface Mensagem {
   created_at: string;
 }
 
-// Perfil 360 devolvido por /api/support/customer (subset que a tela usa).
-interface ClienteLookup {
-  found: boolean;
-  email: string;
-  nome: string | null;
-  telefone: string | null;
-  documento: string | null;
-  isCliente: boolean;
-  inadimplente: boolean;
-  assinatura: { ativa: boolean; produto: string | null } | null;
-  compras: {
-    fonte: string;
-    produto: string | null;
-    valor: number | null;
-    data: string | null;
-    status: string | null;
-  }[];
-  resumo: string;
-}
-
-interface TemplateAprovado {
-  id: string;
-  name: string;
-  language: string;
-  status: string;
-  body: string;
-  params: number;
-}
-
 const POLL_MS = 10_000;
 
 function hora(iso: string): string {
@@ -101,11 +72,9 @@ function janelaRestante(ultimaEntrada: string | null): number | null {
   return resta > 0 ? Math.floor(resta / 3600_000) : null;
 }
 
-export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
+export function SupportInbox() {
   const [conversas, setConversas] = useState<Conversa[]>([]);
-  // `inicial` vem do link da fila de casos escalados (?fone=): abre direto na
-  // conversa daquele cliente em vez de na tela vazia.
-  const [ativa, setAtiva] = useState<string | null>(inicial);
+  const [ativa, setAtiva] = useState<string | null>(null);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [conversa, setConversa] = useState<Conversa | null>(null);
   const [texto, setTexto] = useState("");
@@ -113,24 +82,7 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
   const [corrigindo, setCorrigindo] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  // Retomada fora da janela de 24h: template aprovado + os valores das variáveis.
-  // Consultar cliente sem sair da conversa: campo coringa (e-mail/CPF/CNPJ/nome)
-  const [consultaAberta, setConsultaAberta] = useState(false);
-  const [consultaQ, setConsultaQ] = useState("");
-  const [consultando, setConsultando] = useState(false);
-  const [consultaErro, setConsultaErro] = useState<string | null>(null);
-  const [cliente, setCliente] = useState<ClienteLookup | null>(null);
-  const [aprovados, setAprovados] = useState<TemplateAprovado[]>([]);
-  const [templateEsc, setTemplateEsc] = useState("");
-  const [templateParams, setTemplateParams] = useState<string[]>([]);
-  const listaRef = useRef<HTMLDivElement>(null);
-  // conversa cuja carga inicial já rolou pro fim (troca de conversa reseta)
-  const roladaRef = useRef<string | null>(null);
-  // URL assinada por mensagem, presa entre polls. O poll re-assina as mídias a
-  // cada resposta; se o src do <audio> trocar, o browser reseta o player no
-  // meio da reprodução (era o áudio que "parava sozinho" depois de uns
-  // segundos). A URL vale 1h — segura a mesma por 50min e só então renova.
-  const midiaRef = useRef(new Map<string, { url: string; desde: number }>());
+  const fimRef = useRef<HTMLDivElement>(null);
 
   const carregarLista = useCallback(async () => {
     const res = await fetch("/api/support/inbox");
@@ -143,18 +95,7 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
     const res = await fetch(`/api/support/inbox?phone=${encodeURIComponent(phone)}`);
     if (!res.ok) return;
     const j = await res.json();
-    const agora = Date.now();
-    const MAX_IDADE_MS = 50 * 60_000;
-    const msgs: Mensagem[] = (j.mensagens ?? []).map((m: Mensagem) => {
-      if (!m.media_url) return m;
-      const presa = midiaRef.current.get(m.id);
-      if (presa && agora - presa.desde < MAX_IDADE_MS) {
-        return { ...m, media_url: presa.url };
-      }
-      midiaRef.current.set(m.id, { url: m.media_url, desde: agora });
-      return m;
-    });
-    setMensagens(msgs);
+    setMensagens(j.mensagens ?? []);
     setConversa(j.conversa ?? null);
   }, []);
 
@@ -181,21 +122,9 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
     };
   }, [ativa, carregarThread]);
 
-  // Acompanha o fim da conversa SEM scrollIntoView: ele rola todos os
-  // ancestrais roláveis — a página inteira pulava pra baixo "do nada" a cada
-  // poll de 10s. Aqui só o painel de mensagens rola, e só quando faz sentido:
-  // ao abrir a conversa, ou se o usuário já está perto do fim. Quem subiu pra
-  // ler mensagem antiga não é puxado de volta.
   useEffect(() => {
-    const el = listaRef.current;
-    if (!el || mensagens.length === 0) return;
-    const abriuAgora = roladaRef.current !== ativa;
-    const pertoDoFim = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-    if (abriuAgora || pertoDoFim) {
-      el.scrollTop = el.scrollHeight;
-      roladaRef.current = ativa;
-    }
-  }, [mensagens.length, ativa]);
+    fimRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensagens.length]);
 
   async function enviar() {
     if (!ativa || !texto.trim()) return;
@@ -219,26 +148,6 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
       setErro("Falha de rede");
     } finally {
       setEnviando(false);
-    }
-  }
-
-  async function consultarCliente() {
-    if (!consultaQ.trim()) return;
-    setConsultando(true);
-    setConsultaErro(null);
-    setCliente(null);
-    try {
-      const res = await fetch(`/api/support/customer?q=${encodeURIComponent(consultaQ.trim())}`);
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok || j.error) {
-        setConsultaErro(j.error ?? `Erro ${res.status}`);
-        return;
-      }
-      setCliente(j as ClienteLookup);
-    } catch {
-      setConsultaErro("Falha de rede");
-    } finally {
-      setConsultando(false);
     }
   }
 
@@ -269,55 +178,6 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
 
   const restante = janelaRestante(conversa?.ultima_entrada_em ?? null);
   const janelaFechada = conversa != null && restante === null;
-  const templateAtivo = aprovados.find((t) => t.name === templateEsc) ?? null;
-
-  // Só busca os templates quando a janela fecha — é uma ida à Meta e não faz
-  // sentido pagar isso em toda conversa aberta.
-  useEffect(() => {
-    if (!janelaFechada || aprovados.length > 0) return;
-    const t = setTimeout(async () => {
-      const res = await fetch("/api/support/templates");
-      if (!res.ok) return;
-      const j = await res.json();
-      const lista = (j.templates ?? []) as TemplateAprovado[];
-      setAprovados(lista.filter((x) => x.status === "APPROVED"));
-    }, 0);
-    return () => clearTimeout(t);
-  }, [janelaFechada, aprovados.length]);
-
-  async function enviarTemplate() {
-    if (!ativa || !templateAtivo) return;
-    setEnviando(true);
-    setErro(null);
-    try {
-      const res = await fetch("/api/support/inbox", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: ativa,
-          template: templateAtivo.name,
-          language: templateAtivo.language,
-          params: Array.from(
-            { length: templateAtivo.params },
-            (_, i) => templateParams[i] ?? ""
-          ),
-        }),
-      });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setErro(j.error ?? `Erro ${res.status}`);
-        return;
-      }
-      setTemplateEsc("");
-      setTemplateParams([]);
-      await carregarThread(ativa);
-      await carregarLista();
-    } catch {
-      setErro("Falha de rede");
-    } finally {
-      setEnviando(false);
-    }
-  }
 
   return (
     // Cada painel tem a própria altura e o próprio scroll: sem isso a página
@@ -398,16 +258,6 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setConsultaAberta((a) => !a)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                    consultaAberta
-                      ? "bg-sky-100 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300"
-                      : "border border-slate-300 dark:border-white/15 text-slate-600 dark:text-zinc-300"
-                  }`}
-                >
-                  🔍 Cliente
-                </button>
-                <button
                   onClick={alternarIA}
                   className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
                     conversa.ia_ativa
@@ -426,107 +276,7 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
               </div>
             </div>
 
-            {consultaAberta && (
-              <div className="max-h-72 overflow-y-auto border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] px-4 py-3">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    consultarCliente();
-                  }}
-                  className="flex gap-2"
-                >
-                  <input
-                    value={consultaQ}
-                    onChange={(e) => setConsultaQ(e.target.value)}
-                    placeholder="e-mail, CPF, CNPJ ou nome completo"
-                    className="w-full rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-1.5 text-sm text-slate-900 dark:text-zinc-100"
-                  />
-                  <button
-                    type="submit"
-                    disabled={consultando || !consultaQ.trim()}
-                    className="shrink-0 rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
-                  >
-                    {consultando ? "Buscando…" : "Consultar"}
-                  </button>
-                </form>
-                {consultaErro && (
-                  <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">{consultaErro}</p>
-                )}
-                {cliente && (
-                  <div className="mt-3">
-                    <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                          cliente.isCliente
-                            ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                            : "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400"
-                        }`}
-                      >
-                        {cliente.isCliente ? "Cliente" : "Não é cliente"}
-                      </span>
-                      {cliente.assinatura && (
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                            cliente.assinatura.ativa
-                              ? "bg-sky-100 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300"
-                              : "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400"
-                          }`}
-                        >
-                          Assinatura {cliente.assinatura.ativa ? "ativa" : "inativa"}
-                        </span>
-                      )}
-                      {cliente.inadimplente && (
-                        <span className="rounded-full bg-rose-100 dark:bg-rose-500/15 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
-                          ⚠️ Inadimplente
-                        </span>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-1 gap-x-4 gap-y-0.5 text-xs sm:grid-cols-2">
-                      <p className="text-slate-600 dark:text-zinc-400">
-                        <span className="text-slate-400 dark:text-zinc-500">Nome: </span>
-                        {cliente.nome ?? "—"}
-                      </p>
-                      <p className="break-all text-slate-600 dark:text-zinc-400">
-                        <span className="text-slate-400 dark:text-zinc-500">E-mail: </span>
-                        {cliente.email || "—"}
-                      </p>
-                      <p className="text-slate-600 dark:text-zinc-400">
-                        <span className="text-slate-400 dark:text-zinc-500">Telefone: </span>
-                        {cliente.telefone ?? "—"}
-                      </p>
-                      <p className="text-slate-600 dark:text-zinc-400">
-                        <span className="text-slate-400 dark:text-zinc-500">Documento: </span>
-                        {cliente.documento ?? "—"}
-                      </p>
-                    </div>
-                    <p className="mt-2 rounded-lg bg-white dark:bg-black/20 px-2.5 py-1.5 text-xs text-slate-700 dark:text-zinc-300">
-                      {cliente.resumo}
-                    </p>
-                    {cliente.compras.length > 0 && (
-                      <ul className="mt-2 space-y-0.5 text-xs text-slate-600 dark:text-zinc-400">
-                        {cliente.compras.slice(0, 6).map((c, i) => (
-                          <li key={i} className="truncate">
-                            · {c.produto ?? "—"}
-                            {c.valor != null &&
-                              ` — ${c.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}`}
-                            {c.status && ` · ${c.status}`}
-                            {c.data &&
-                              ` · ${new Date(c.data).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}`}
-                          </li>
-                        ))}
-                        {cliente.compras.length > 6 && (
-                          <li className="text-slate-400 dark:text-zinc-500">
-                            … e mais {cliente.compras.length - 6} — veja tudo em Tickets.
-                          </li>
-                        )}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div ref={listaRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
               {mensagens.map((m, i) => {
                 const meu = m.direction === "out";
                 // pergunta que originou a resposta da IA (pro modo chefe)
@@ -576,17 +326,13 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
                       </div>
                     </div>
 
-                    {/* Modo chefe: só faz sentido em cima do que a IA falou.
-                        Era um link de 10px em cinza-sobre-cinza e ninguém
-                        achava — se a correção não é vista, o erro da IA se
-                        repete pra sempre. */}
+                    {/* Modo chefe: só faz sentido em cima do que a IA falou */}
                     {m.autor === "ia" && corrigindo !== m.id && (
                       <button
                         onClick={() => setCorrigindo(m.id)}
-                        className="mt-1 inline-flex items-center gap-1 rounded-full border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20"
-                        title="Diga o que ela deveria ter respondido; virá uma regra permanente do treinamento"
+                        className="mt-0.5 text-[10px] text-slate-400 hover:text-amber-600 dark:text-zinc-600 dark:hover:text-amber-400"
                       >
-                        👔 Corrigir a IA → virar regra
+                        ✎ corrigir a IA
                       </button>
                     )}
                     {corrigindo === m.id && (
@@ -601,76 +347,15 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
                   </div>
                 );
               })}
+              <div ref={fimRef} />
             </div>
 
             <div className="border-t border-slate-200 dark:border-white/10 p-3">
               {janelaFechada ? (
-                <div className="rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2">
-                  <p className="text-xs text-amber-800 dark:text-amber-200">
-                    Janela de 24h fechada. O WhatsApp não entrega mensagem livre agora — só
-                    template aprovado. Assim que a pessoa responder, a janela reabre e você volta a
-                    escrever normalmente.
-                  </p>
-
-                  {aprovados.length === 0 ? (
-                    <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-300">
-                      Nenhum template aprovado ainda.{" "}
-                      <a href="/suporte/avisos" className="font-semibold underline">
-                        Criar um em Avisos e templates
-                      </a>
-                      .
-                    </p>
-                  ) : (
-                    <div className="mt-2 space-y-2">
-                      <select
-                        value={templateEsc}
-                        onChange={(e) => {
-                          setTemplateEsc(e.target.value);
-                          setTemplateParams([]);
-                        }}
-                        className="w-full rounded-lg border border-amber-300 dark:border-amber-500/40 bg-white dark:bg-white/5 px-2 py-1.5 text-xs text-slate-900 dark:text-zinc-100"
-                      >
-                        <option value="">Escolha um template aprovado…</option>
-                        {aprovados.map((t) => (
-                          <option key={t.id} value={t.name}>
-                            {t.name} ({t.params} {t.params === 1 ? "variável" : "variáveis"})
-                          </option>
-                        ))}
-                      </select>
-
-                      {templateAtivo && (
-                        <>
-                          <p className="whitespace-pre-wrap rounded bg-white/60 dark:bg-black/20 px-2 py-1.5 text-[11px] text-slate-600 dark:text-zinc-300">
-                            {templateAtivo.body}
-                          </p>
-                          {Array.from({ length: templateAtivo.params }, (_, i) => (
-                            <input
-                              key={i}
-                              value={templateParams[i] ?? ""}
-                              onChange={(e) => {
-                                const v = [...templateParams];
-                                v[i] = e.target.value;
-                                setTemplateParams(v);
-                              }}
-                              placeholder={`valor de {{${i + 1}}}`}
-                              className="w-full rounded-lg border border-amber-300 dark:border-amber-500/40 bg-white dark:bg-white/5 px-2 py-1.5 text-xs text-slate-900 dark:text-zinc-100"
-                            />
-                          ))}
-                          <button
-                            onClick={enviarTemplate}
-                            disabled={enviando}
-                            className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-500 disabled:opacity-50"
-                          >
-                            {enviando ? "Enviando..." : "Enviar template"}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  {erro && (
-                    <p className="mt-1.5 text-[11px] text-rose-600 dark:text-rose-400">{erro}</p>
-                  )}
-                </div>
+                <p className="rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+                  Janela de 24h fechada — o WhatsApp não entrega mensagem livre agora. Só com
+                  template aprovado, ou espere o cliente escrever de novo.
+                </p>
               ) : (
                 <>
                   <div className="flex items-end gap-2">

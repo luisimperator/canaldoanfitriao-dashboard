@@ -37,14 +37,12 @@ const SELLERS: Seller[] = [
 ];
 
 const FIN_CATEGORIES: FinCategory[] = [
-  { id: "c-vendas", groupName: "Receitas", name: "Vendas Eduzz", kind: "receita", slug: "vendas-eduzz" },
-  { id: "c-trafego", groupName: "Despesas", name: "Tráfego (Meta/Google Ads)", kind: "oe", slug: "midia" },
-  // comissão varia por venda: é custo totalmente variável, não despesa fixa
-  { id: "c-comissao", groupName: "Despesas", name: "Comissões de vendedores", kind: "tvc", slug: "comissao" },
-  { id: "c-ferramentas", groupName: "Despesas", name: "Ferramentas (Unnichat, Mailchimp...)", kind: "oe", slug: "ferramentas" },
-  { id: "c-impostos", groupName: "Despesas", name: "Impostos", kind: "oe", slug: "impostos" },
-  { id: "c-outros", groupName: "Despesas", name: "Outras despesas", kind: "oe", slug: "outras-despesas" },
-  { id: "c-distribuicao", groupName: "Fora do resultado", name: "Distribuição aos sócios", kind: "distribuicao", slug: "distribuicao" },
+  { id: "c-vendas", groupName: "Receitas", name: "Vendas Eduzz" },
+  { id: "c-trafego", groupName: "Despesas", name: "Tráfego (Meta/Google Ads)" },
+  { id: "c-comissao", groupName: "Despesas", name: "Comissões de vendedores" },
+  { id: "c-ferramentas", groupName: "Despesas", name: "Ferramentas (Unnichat, Mailchimp...)" },
+  { id: "c-impostos", groupName: "Despesas", name: "Impostos" },
+  { id: "c-outros", groupName: "Despesas", name: "Outras despesas" },
 ];
 
 export function generateDemoData(today = new Date()): DashboardData {
