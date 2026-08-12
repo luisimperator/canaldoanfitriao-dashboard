@@ -138,7 +138,7 @@ const TOOLS: Anthropic.Tool[] = [
   {
     name: "create_handoff",
     description:
-      "Abre um caso na fila de atendimento humano quando a conclusão exige ação interna (cancelamento de renovação, reembolso, divergência/cashback, brinde não recebido, transferência de ingresso, alteração de dados) ou para encaminhar um lead ao comercial. Colete o máximo de informação ANTES de escalar.",
+      "Abre um caso na fila de atendimento humano quando a conclusão exige ação interna (cancelamento de renovação, reembolso, divergência/cashback, brinde não recebido, transferência de ingresso, alteração de dados) ou para encaminhar um lead ao comercial. Colete o máximo de informação ANTES de escalar. Chame UMA vez por caso: se você já registrou este caso na conversa, não chame de novo — apenas confirme ao cliente que está registrado.",
     input_schema: {
       type: "object",
       properties: {
@@ -177,14 +177,51 @@ async function runTool(name: string, input: any): Promise<{ text: string; handof
     const motivo = HANDOFF_MOTIVOS.includes(String(input?.motivo))
       ? String(input.motivo)
       : "outro";
+    const email = input?.email ? String(input.email) : null;
+    const telefone = input?.telefone ? String(input.telefone) : null;
+
+    // Trava anti-duplicata. Cada mensagem do cliente roda o agente de novo, e
+    // um "ta bom"/"obrigado" depois da escalada fazia o modelo registrar o
+    // MESMO caso outra vez (o histórico que ele relê só tem os textos, não as
+    // chamadas de ferramenta). Caso não-resolvido recente, do mesmo motivo,
+    // pro mesmo contato = mesmo caso: devolve o existente em vez de criar.
+    const contato: string[] = [];
+    if (telefone) contato.push(`telefone.eq.${telefone}`);
+    if (email) contato.push(`email.eq.${email}`);
+    if (contato.length > 0) {
+      const desde = new Date(Date.now() - 14 * 86_400_000).toISOString();
+      const { data: aberto } = await admin
+        .from("support_handoffs")
+        .select("id")
+        .eq("motivo", motivo)
+        .neq("status", "resolvido")
+        .gte("created_at", desde)
+        .or(contato.join(","))
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (aberto) {
+        return {
+          text: JSON.stringify({
+            ok: true,
+            id: aberto.id,
+            ja_existia: true,
+            aviso:
+              "Este cliente já tem um caso aberto com esse motivo — não criei outro. Apenas confirme ao cliente que está registrado.",
+          }),
+          handoffId: aberto.id,
+        };
+      }
+    }
+
     const { data, error } = await admin
       .from("support_handoffs")
       .insert({
         motivo,
         resumo: input?.resumo ? String(input.resumo) : null,
-        email: input?.email ? String(input.email) : null,
+        email,
         nome: input?.nome ? String(input.nome) : null,
-        telefone: input?.telefone ? String(input.telefone) : null,
+        telefone,
         dados_coletados: input?.dados_coletados ?? null,
       })
       .select("id")
