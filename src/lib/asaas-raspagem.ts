@@ -21,6 +21,7 @@ import {
   fetchAsaasBalance,
   getAsaasConfig,
 } from "@/lib/integrations/asaas";
+import { registrarSaldoAsaas } from "@/lib/asaas-saldo";
 
 export const PIX_KEY_TYPES = ["CPF", "CNPJ", "EMAIL", "PHONE", "EVP"] as const;
 export type PixKeyType = (typeof PIX_KEY_TYPES)[number];
@@ -177,6 +178,7 @@ export async function runRaspagem(trigger: string): Promise<RaspagemResult> {
     const valor = Math.floor((saldo - colchao) * 100) / 100;
 
     if (valor < piso) {
+      await registrarSaldoAsaas(saldo, "raspagem (pulou)");
       const r: RaspagemResult = {
         ok: true,
         pulou: true,
@@ -196,6 +198,10 @@ export async function runRaspagem(trigger: string): Promise<RaspagemResult> {
       ...destino,
       description: `Raspagem pro Inter — colchão de R$ ${colchao.toFixed(2)} mantido no Asaas`,
     });
+
+    // Retrato já com o resíduo: o sync só passa aqui de hora em hora e, até
+    // lá, o número velho contaria de novo o dinheiro que acabou de sair.
+    await registrarSaldoAsaas(saldo - valor, "raspagem");
 
     const r: RaspagemResult = {
       ok: true,

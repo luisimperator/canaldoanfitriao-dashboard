@@ -126,6 +126,11 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
   const listaRef = useRef<HTMLDivElement>(null);
   // conversa cuja carga inicial já rolou pro fim (troca de conversa reseta)
   const roladaRef = useRef<string | null>(null);
+  // URL assinada por mensagem, presa entre polls. O poll re-assina as mídias a
+  // cada resposta; se o src do <audio> trocar, o browser reseta o player no
+  // meio da reprodução (era o áudio que "parava sozinho" depois de uns
+  // segundos). A URL vale 1h — segura a mesma por 50min e só então renova.
+  const midiaRef = useRef(new Map<string, { url: string; desde: number }>());
 
   const carregarLista = useCallback(async () => {
     const res = await fetch("/api/support/inbox");
@@ -138,7 +143,18 @@ export function SupportInbox({ inicial = null }: { inicial?: string | null }) {
     const res = await fetch(`/api/support/inbox?phone=${encodeURIComponent(phone)}`);
     if (!res.ok) return;
     const j = await res.json();
-    setMensagens(j.mensagens ?? []);
+    const agora = Date.now();
+    const MAX_IDADE_MS = 50 * 60_000;
+    const msgs: Mensagem[] = (j.mensagens ?? []).map((m: Mensagem) => {
+      if (!m.media_url) return m;
+      const presa = midiaRef.current.get(m.id);
+      if (presa && agora - presa.desde < MAX_IDADE_MS) {
+        return { ...m, media_url: presa.url };
+      }
+      midiaRef.current.set(m.id, { url: m.media_url, desde: agora });
+      return m;
+    });
+    setMensagens(msgs);
     setConversa(j.conversa ?? null);
   }, []);
 
