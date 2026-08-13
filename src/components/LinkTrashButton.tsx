@@ -19,7 +19,11 @@ export function LinkTrashButton({
   const run = async () => {
     setBusy(true);
     try {
-      const res = await fetch(`/api/links?slug=${encodeURIComponent(slug)}`, {
+      const qs =
+        mode === "delete"
+          ? `slug=${encodeURIComponent(slug)}`
+          : `slug=${encodeURIComponent(slug)}&action=restore`;
+      const res = await fetch(`/api/links?${qs}`, {
         method: mode === "delete" ? "DELETE" : "PATCH",
       });
       if (res.ok) router.refresh();

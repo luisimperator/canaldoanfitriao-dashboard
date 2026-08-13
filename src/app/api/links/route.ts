@@ -98,18 +98,62 @@ export async function DELETE(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// Restaurar da lixeira.
+// Editar (?slug=x) ou restaurar da lixeira (?slug=x&action=restore).
+//
+// O slug NUNCA muda aqui, de propósito: ele é o que está impresso no QR. Todo o
+// resto é editável — é essa a razão de existir do link intermediário. O QR nasce
+// antes do vídeo, então o campo do YouTube fica vazio no começo e é preenchido
+// depois; e o destino pode trocar sem reimprimir nada.
+const CAMPOS_EDITAVEIS = ["label", "product", "utm_campaign", "youtube_url"] as const;
+
 export async function PATCH(req: NextRequest) {
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
 
-  const slug = new URL(req.url).searchParams.get("slug")?.trim();
+  const url = new URL(req.url);
+  const slug = url.searchParams.get("slug")?.trim();
   if (!slug) return NextResponse.json({ error: "Informe o slug." }, { status: 400 });
 
-  const { error } = await supabase
-    .from("tracked_links")
-    .update({ deleted_at: null })
-    .eq("slug", slug);
+  if (url.searchParams.get("action") === "restore") {
+    const { error } = await supabase
+      .from("tracked_links")
+      .update({ deleted_at: null })
+      .eq("slug", slug);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
+  }
+
+  const patch: Record<string, string | null> = {};
+
+  if ("destination" in body) {
+    const destination = String(body.destination ?? "").trim();
+    if (!destination) {
+      return NextResponse.json({ error: "Informe o destino (LP)." }, { status: 400 });
+    }
+    try {
+      new URL(destination);
+    } catch {
+      return NextResponse.json({ error: "Destino não é uma URL válida." }, { status: 400 });
+    }
+    patch.destination = destination;
+  }
+
+  for (const campo of CAMPOS_EDITAVEIS) {
+    if (campo in body) patch[campo] = String(body[campo] ?? "").trim() || null;
+  }
+
+  if (Object.keys(patch).length === 0) {
+    return NextResponse.json({ error: "Nada para atualizar." }, { status: 400 });
+  }
+
+  const { error } = await supabase.from("tracked_links").update(patch).eq("slug", slug);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

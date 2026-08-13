@@ -7,6 +7,7 @@ import { CreateLinkForm } from "@/components/CreateLinkForm";
 import { CopyButton } from "@/components/CopyButton";
 import { QrCode } from "@/components/QrCode";
 import { LinkTrashButton } from "@/components/LinkTrashButton";
+import { EditLinkForm } from "@/components/EditLinkForm";
 import { shortLinkBase, shortLinkFor } from "@/lib/short-link";
 import Link from "next/link";
 
@@ -19,6 +20,7 @@ interface LinkRow {
   destination: string;
   utm_source: string | null;
   utm_medium: string | null;
+  utm_campaign: string | null;
   youtube_url: string | null;
   created_at: string;
 }
@@ -41,7 +43,9 @@ export default async function LinksPage() {
   if (supabase) {
     const { data: l } = await supabase
       .from("tracked_links")
-      .select("slug, label, product, destination, utm_source, utm_medium, youtube_url, created_at")
+      .select(
+        "slug, label, product, destination, utm_source, utm_medium, utm_campaign, youtube_url, created_at"
+      )
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
     links = (l as LinkRow[]) ?? [];
@@ -115,10 +119,29 @@ export default async function LinksPage() {
                         {lk.utm_source}
                       </span>
                     )}
+                    {/* O QR nasce antes do vídeo, então faltar a URL é o estado
+                        normal no começo — mas depois de publicado ninguém lembra
+                        de voltar aqui. O aviso é o lembrete. */}
+                    {!lk.youtube_url && (
+                      <span
+                        title="Cole a URL do vídeo em Editar quando ele for publicado"
+                        className="rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px] px-2 py-0.5"
+                      >
+                        ⚠ falta a URL do vídeo
+                      </span>
+                    )}
                   </div>
                   <div className="mt-1 flex items-center gap-2 flex-wrap">
                     <code className="text-xs text-slate-500 dark:text-zinc-400 break-all">{short}</code>
                     <CopyButton text={short} />
+                    <EditLinkForm
+                      slug={lk.slug}
+                      label={lk.label}
+                      product={lk.product}
+                      destination={lk.destination}
+                      utm_campaign={lk.utm_campaign}
+                      youtube_url={lk.youtube_url}
+                    />
                     <LinkTrashButton slug={lk.slug} />
                   </div>
                   <p className="mt-1 text-[11px] text-slate-400 dark:text-zinc-500 truncate">→ {lk.destination}</p>
