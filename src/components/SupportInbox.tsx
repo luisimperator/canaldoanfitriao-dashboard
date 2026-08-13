@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CorrigirIA } from "@/components/CorrigirIA";
 import { TemplatePicker } from "@/components/TemplatePicker";
+import { Lightbox } from "@/components/Lightbox";
 
 // Caixa de entrada do suporte: lista de conversas + thread + resposta.
 //
@@ -81,6 +82,7 @@ export function SupportInbox() {
   const [texto, setTexto] = useState("");
   // id da mensagem da IA que está sendo corrigida (modo chefe)
   const [corrigindo, setCorrigindo] = useState<string | null>(null);
+  const [ampliada, setAmpliada] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const fimRef = useRef<HTMLDivElement>(null);
@@ -184,6 +186,8 @@ export function SupportInbox() {
     // Cada painel tem a própria altura e o próprio scroll: sem isso a página
     // inteira crescia com a conversa e virava rolagem infinita no celular.
     <div className="grid gap-3 lg:h-[calc(100vh-230px)] lg:grid-cols-[320px_1fr]">
+      {ampliada && <Lightbox src={ampliada} onFechar={() => setAmpliada(null)} />}
+
       {/* Lista de conversas */}
       <div className="flex max-h-[38vh] flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] lg:max-h-none lg:h-full">
         <div className="border-b border-slate-200 dark:border-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
@@ -298,12 +302,18 @@ export function SupportInbox() {
                       }`}
                     >
                       {m.media_url && m.media_mime?.startsWith("image/") && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={m.media_url}
-                          alt="anexo"
-                          className="mb-1 max-h-64 rounded-lg"
-                        />
+                        <button
+                          onClick={() => setAmpliada(m.media_url ?? null)}
+                          title="Ver em tela cheia"
+                          className="mb-1 block cursor-zoom-in"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={m.media_url}
+                            alt="anexo"
+                            className="max-h-64 rounded-lg transition hover:opacity-90"
+                          />
+                        </button>
                       )}
                       {m.media_url && m.media_mime?.startsWith("audio/") && (
                         <audio controls src={m.media_url} className="mb-1 w-56" />
