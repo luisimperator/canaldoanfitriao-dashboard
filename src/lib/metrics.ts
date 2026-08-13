@@ -179,6 +179,56 @@ export function mqlDailySeries(leads: Lead[], days: number, today = isoToday()):
   return out;
 }
 
+export interface MqlMonthPoint {
+  month: string;      // YYYY-MM
+  label: string;      // "jul/26"
+  leads: number;
+  mql: number;
+  taxa: number | null; // % de qualificação do mês
+  parcial: boolean;    // mês corrente, ainda correndo
+}
+
+/**
+ * Leads e MQL por MÊS. A série diária mostra o pulso; a mensal mostra a
+ * tendência — 60 dias de linha não deixam ver se o mês está melhor ou pior
+ * que o anterior.
+ */
+export function mqlMonthlySeries(
+  leads: Lead[],
+  months: number,
+  today = isoToday()
+): MqlMonthPoint[] {
+  const mesAtual = today.slice(0, 7);
+  const byMonth = new Map<string, { leads: number; mql: number }>();
+  const bump = (d: string, k: "leads" | "mql") => {
+    const m = d.slice(0, 7);
+    const e = byMonth.get(m) ?? { leads: 0, mql: 0 };
+    e[k]++;
+    byMonth.set(m, e);
+  };
+  for (const l of leads) {
+    bump(l.createdAt.slice(0, 10), "leads");
+    if (l.mqlAt) bump(l.mqlAt.slice(0, 10), "mql");
+  }
+
+  const out: MqlMonthPoint[] = [];
+  const [y0, m0] = mesAtual.split("-").map(Number);
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(y0, m0 - 1 - i, 1));
+    const mk = d.toISOString().slice(0, 7);
+    const e = byMonth.get(mk) ?? { leads: 0, mql: 0 };
+    out.push({
+      month: mk,
+      label: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" }),
+      leads: e.leads,
+      mql: e.mql,
+      taxa: e.leads > 0 ? (e.mql / e.leads) * 100 : null,
+      parcial: mk === mesAtual,
+    });
+  }
+  return out;
+}
+
 export interface MqlSellerRow {
   sellerId: string;
   name: string;
