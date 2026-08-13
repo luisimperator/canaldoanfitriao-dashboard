@@ -5,14 +5,22 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // apelido; se colidir, ganha um sufixo aleatório. O destino e os UTMs ficam
 // guardados e são colados no redirect /r/<slug>.
 
+const MAX_SLUG = 60;
+
 function slugify(s: string): string {
-  return s
+  const full = s
     .toLowerCase()
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
+    .replace(/^-+|-+$/g, "");
+  if (full.length <= MAX_SLUG) return full;
+  // Corta na última palavra INTEIRA que cabe. Antes o .slice() vinha depois de
+  // limpar as pontas e podia parar em cima de um hífen — "…lista-de-espera"
+  // virava "…lista-de-", com hífen solto no fim da URL.
+  const cut = full.slice(0, MAX_SLUG);
+  const lastDash = cut.lastIndexOf("-");
+  return (lastDash > 0 ? cut.slice(0, lastDash) : cut).replace(/-+$/, "");
 }
 
 function rand(n: number): string {
@@ -69,4 +77,39 @@ export async function POST(req: NextRequest) {
     }
   }
   return NextResponse.json({ error: "Não consegui gerar um slug único." }, { status: 409 });
+}
+
+// Lixeira: some da lista, mas a linha fica. Um QR já impresso continua existindo
+// no mundo — apagar de vez faria o scan cair num 404 sem rastro de que o link
+// existiu. Não há delete definitivo exposto em lugar nenhum.
+export async function DELETE(req: NextRequest) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
+
+  const slug = new URL(req.url).searchParams.get("slug")?.trim();
+  if (!slug) return NextResponse.json({ error: "Informe o slug." }, { status: 400 });
+
+  const { error } = await supabase
+    .from("tracked_links")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("slug", slug)
+    .is("deleted_at", null);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
+// Restaurar da lixeira.
+export async function PATCH(req: NextRequest) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
+
+  const slug = new URL(req.url).searchParams.get("slug")?.trim();
+  if (!slug) return NextResponse.json({ error: "Informe o slug." }, { status: 400 });
+
+  const { error } = await supabase
+    .from("tracked_links")
+    .update({ deleted_at: null })
+    .eq("slug", slug);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }

@@ -6,14 +6,11 @@ import { Card, DemoBanner, PageHeader } from "@/components/ui";
 import { CreateLinkForm } from "@/components/CreateLinkForm";
 import { CopyButton } from "@/components/CopyButton";
 import { QrCode } from "@/components/QrCode";
+import { LinkTrashButton } from "@/components/LinkTrashButton";
+import { shortLinkBase, shortLinkFor } from "@/lib/short-link";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
-
-// Base do link curto. O subdomínio link.* serve o slug na raiz (sem /r/),
-// então o link público é base/<slug>. Trocável via NEXT_PUBLIC_SHORT_LINK_BASE.
-const SHORT_BASE = (
-  process.env.NEXT_PUBLIC_SHORT_LINK_BASE || "https://link.canaldoanfitriao.com.br"
-).replace(/\/+$/, "");
 
 interface LinkRow {
   slug: string;
@@ -36,14 +33,23 @@ export default async function LinksPage() {
   const supabase = getSupabaseAdmin();
   const data = await getDashboardData();
 
+  const SHORT_BASE = await shortLinkBase();
+
   let links: LinkRow[] = [];
+  let deletados = 0;
   const scansBySlug = new Map<string, number>();
   if (supabase) {
     const { data: l } = await supabase
       .from("tracked_links")
       .select("slug, label, product, destination, utm_source, utm_medium, youtube_url, created_at")
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
     links = (l as LinkRow[]) ?? [];
+    const { count } = await supabase
+      .from("tracked_links")
+      .select("slug", { count: "exact", head: true })
+      .not("deleted_at", "is", null);
+    deletados = count ?? 0;
     const { data: s } = await supabase.from("link_scans").select("slug");
     for (const r of (s as { slug: string }[]) ?? [])
       scansBySlug.set(r.slug, (scansBySlug.get(r.slug) ?? 0) + 1);
@@ -83,7 +89,7 @@ export default async function LinksPage() {
       ) : (
         <div className="space-y-3">
           {links.map((lk) => {
-            const short = `${SHORT_BASE}/${lk.slug}`;
+            const short = shortLinkFor(SHORT_BASE, lk.slug);
             const scans = scansBySlug.get(lk.slug) ?? 0;
             const lead = leadsBySlug.get(lk.slug) ?? { leads: 0, mql: 0 };
             const conv = scans > 0 ? (lead.leads / scans) * 100 : null;
@@ -113,6 +119,7 @@ export default async function LinksPage() {
                   <div className="mt-1 flex items-center gap-2 flex-wrap">
                     <code className="text-xs text-slate-500 dark:text-zinc-400 break-all">{short}</code>
                     <CopyButton text={short} />
+                    <LinkTrashButton slug={lk.slug} />
                   </div>
                   <p className="mt-1 text-[11px] text-slate-400 dark:text-zinc-500 truncate">→ {lk.destination}</p>
                   <div className="mt-2 flex gap-5 text-sm tabular-nums">
@@ -151,6 +158,15 @@ export default async function LinksPage() {
           })}
         </div>
       )}
+
+      <div className="mt-6">
+        <Link
+          href="/links/deletados"
+          className="text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 underline underline-offset-4"
+        >
+          Deletados{deletados > 0 ? ` (${deletados})` : ""}
+        </Link>
+      </div>
     </div>
   );
 }

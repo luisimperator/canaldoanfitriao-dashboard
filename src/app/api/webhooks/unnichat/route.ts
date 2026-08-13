@@ -194,6 +194,18 @@ export async function POST(req: NextRequest) {
   if (pipelineStage) row.pipeline_stage = String(pipelineStage);
   if (Object.keys(extra).length > 0) row.extra = extra;
 
+  // Antes de gravar: se essa pessoa já está na base pelo e-mail (entrou pelo
+  // Mailchimp), cola o contato do Unnichat NELA. Sem isso o upsert abaixo não
+  // acha por unnichat_id e cria uma segunda linha para a mesma pessoa — era o
+  // caminho normal de quem entra na lista de espera e depois fala no WhatsApp,
+  // e rendeu 873 duplicatas antes da 0046 fechar o buraco.
+  if (email) {
+    await supabase.rpc("claim_lead_for_unnichat", {
+      p_email: email,
+      p_unnichat_id: contactId,
+    });
+  }
+
   const { error: upErr } = await supabase
     .from("leads")
     .upsert(row, { onConflict: "unnichat_id" });
