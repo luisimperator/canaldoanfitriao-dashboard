@@ -141,6 +141,149 @@ export async function sendWhatsappText(to: string, body: string): Promise<SendRe
   }
 }
 
+// --- Templates aprovados pela Meta ---
+//
+// Fora da janela de 24h a Meta só entrega mensagem iniciada por template
+// aprovado. Sem isso, uma conversa que passou do prazo fica sem saída nenhuma
+// pelo painel — era o caso até aqui: o aviso dizia "use um template" e não
+// existia como usar.
+//
+// Listar exige o WABA id (não o phone number id). Se faltar, o erro diz isso em
+// vez de devolver lista vazia e parecer que não há template cadastrado.
+
+export interface TemplateVar {
+  /** Índice do {{n}} no corpo, começando em 1. */
+  indice: number;
+}
+
+export interface WhatsappTemplate {
+  name: string;
+  language: string;
+  category: string | null;
+  /** Texto do corpo, ainda com os {{n}}. */
+  body: string;
+  header: string | null;
+  footer: string | null;
+  /** Quantos {{n}} distintos o corpo tem. */
+  variaveis: number;
+}
+
+interface MetaComponent {
+  type?: string;
+  format?: string;
+  text?: string;
+}
+
+/** Quantos {{n}} distintos existem no texto. */
+export function contarVariaveis(texto: string): number {
+  const achados = new Set<number>();
+  for (const m of texto.matchAll(/\{\{(\d+)\}\}/g)) achados.add(Number(m[1]));
+  return achados.size;
+}
+
+/** Troca {{1}}, {{2}}… pelos valores, na ordem. */
+export function preencherTemplate(texto: string, valores: string[]): string {
+  return texto.replace(/\{\{(\d+)\}\}/g, (_, n) => valores[Number(n) - 1] ?? `{{${n}}}`);
+}
+
+export async function listWhatsappTemplates(): Promise<{
+  ok: boolean;
+  templates?: WhatsappTemplate[];
+  error?: string;
+}> {
+  const { token, wabaId } = await getWhatsappConfig();
+  if (!token) return { ok: false, error: "WhatsApp não configurado." };
+  if (!wabaId) {
+    return {
+      ok: false,
+      error:
+        "Falta o WABA id (WHATSAPP_WABA_ID ou waba_id no Vault) — é ele que lista os templates, não o phone number id.",
+    };
+  }
+
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/${GRAPH_VERSION}/${wabaId}/message_templates?limit=100&fields=name,language,status,category,components`,
+      { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
+    );
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: JSON.stringify(json).slice(0, 500) };
+
+    const templates: WhatsappTemplate[] = [];
+    for (const t of (json?.data ?? []) as Record<string, unknown>[]) {
+      if (String(t.status) !== "APPROVED") continue; // rejeitado/pendente não entrega
+      const comps = (t.components ?? []) as MetaComponent[];
+      const body = comps.find((c) => c.type === "BODY")?.text ?? "";
+      if (!body) continue;
+      const headerComp = comps.find((c) => c.type === "HEADER");
+      templates.push({
+        name: String(t.name),
+        language: String(t.language),
+        category: t.category ? String(t.category) : null,
+        body,
+        // Só header de texto dá pra pré-visualizar; imagem/vídeo exigem mídia.
+        header: headerComp?.format === "TEXT" ? (headerComp.text ?? null) : null,
+        footer: comps.find((c) => c.type === "FOOTER")?.text ?? null,
+        variaveis: contarVariaveis(body),
+      });
+    }
+    templates.sort((a, b) => a.name.localeCompare(b.name));
+    return { ok: true, templates };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "erro de rede" };
+  }
+}
+
+// Envia um template aprovado. Só preenche variáveis do BODY — header com mídia
+// e botões dinâmicos não passam por aqui.
+export async function sendWhatsappTemplate(
+  to: string,
+  name: string,
+  language: string,
+  valores: string[] = []
+): Promise<SendResult> {
+  const { token, phoneNumberId: phoneId } = await getWhatsappConfig();
+  if (!token || !phoneId) return { ok: false, error: "WhatsApp não configurado." };
+
+  const components =
+    valores.length > 0
+      ? [
+          {
+            type: "body",
+            parameters: valores.map((v) => ({ type: "text", text: v })),
+          },
+        ]
+      : [];
+
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/${GRAPH_VERSION}/${phoneId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to,
+          type: "template",
+          template: {
+            name,
+            language: { code: language },
+            ...(components.length > 0 ? { components } : {}),
+          },
+        }),
+      }
+    );
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: JSON.stringify(json).slice(0, 500) };
+    return { ok: true, id: json?.messages?.[0]?.id };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "erro de rede" };
+  }
+}
+
 // --- Mídia ---
 //
 // A Meta não manda o arquivo no webhook, só um id. Buscar é em dois passos:

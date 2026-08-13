@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getAccess } from "@/lib/supabase-server";
-import { sendWhatsappText } from "@/lib/whatsapp";
+import { sendWhatsappText, sendWhatsappTemplate } from "@/lib/whatsapp";
 
 // Caixa de entrada do suporte.
 //
@@ -74,6 +74,41 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const phone = String(body?.phone ?? "").trim();
   const text = String(body?.text ?? "").trim();
+
+  // Envio de template aprovado: é o ÚNICO caminho fora da janela de 24h, então
+  // não passa pela checagem abaixo — é justamente o que ela manda usar.
+  const template = body?.template as
+    | { name?: string; language?: string; variaveis?: string[] }
+    | undefined;
+  if (template?.name) {
+    const nome = String(template.name);
+    const lang = String(template.language ?? "pt_BR");
+    const valores = Array.isArray(template.variaveis) ? template.variaveis.map(String) : [];
+
+    const sent = await sendWhatsappTemplate(phone, nome, lang, valores);
+    if (!sent.ok) {
+      return NextResponse.json({ error: sent.error ?? "falha ao enviar" }, { status: 502 });
+    }
+
+    // Guarda o texto JÁ preenchido: quem abrir a conversa depois precisa ver o
+    // que o cliente recebeu, não o nome interno do template.
+    await ctx.admin.from("support_messages").insert({
+      wa_phone: phone,
+      direction: "out",
+      text: String(body?.preview ?? "").trim() || `[template: ${nome}]`,
+      tipo: "text",
+      autor: "humano",
+      wa_message_id: sent.id ?? null,
+    });
+
+    await ctx.admin
+      .from("support_conversas")
+      .update({ ia_ativa: false, atendente: ctx.access.email ?? "painel" })
+      .eq("wa_phone", phone);
+
+    return NextResponse.json({ ok: true, id: sent.id });
+  }
+
   if (!phone || !text) {
     return NextResponse.json({ error: "phone e text são obrigatórios." }, { status: 400 });
   }

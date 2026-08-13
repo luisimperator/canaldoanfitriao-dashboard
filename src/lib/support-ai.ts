@@ -235,10 +235,19 @@ async function runTool(name: string, input: any): Promise<{ text: string; handof
   return { text: JSON.stringify({ error: `ferramenta desconhecida: ${name}` }) };
 }
 
+/** Imagem que veio junto da mensagem do cliente (print de erro, comprovante…). */
+export interface AgentImage {
+  /** image/jpeg, image/png, image/webp ou image/gif — o que a API aceita. */
+  mime: string;
+  /** Conteúdo em base64, sem o prefixo data:. */
+  base64: string;
+}
+
 export async function runSupportAgent(
   message: string,
   history: AgentMessage[] = [],
-  supervisorNotes: string[] = []
+  supervisorNotes: string[] = [],
+  images: AgentImage[] = []
 ): Promise<AgentResult> {
   if (!aiConfigured()) {
     const off = "A IA de suporte ainda não está ligada (falta a ANTHROPIC_API_KEY no servidor).";
@@ -255,9 +264,25 @@ export async function runSupportAgent(
       supervisorNotes.map((n, i) => `${i + 1}. ${n}`).join("\n");
   }
 
+  // O cliente manda print o tempo todo (tela de erro da Eduzz, comprovante,
+  // cobrança que não reconhece). Antes qualquer anexo pulava a IA e ia direto
+  // pro humano; agora a imagem vai junto da mensagem e ela lê o que está ali.
+  const conteudoAtual: Anthropic.ContentBlockParam[] =
+    images.length > 0
+      ? [
+          ...images.map(
+            (img): Anthropic.ContentBlockParam => ({
+              type: "image",
+              source: { type: "base64", media_type: img.mime as "image/jpeg", data: img.base64 },
+            })
+          ),
+          { type: "text", text: message || "(o cliente mandou esta imagem sem escrever nada)" },
+        ]
+      : [{ type: "text", text: message }];
+
   const messages: Anthropic.MessageParam[] = [
     ...history.map((m) => ({ role: m.role, content: m.content })),
-    { role: "user" as const, content: message },
+    { role: "user" as const, content: conteudoAtual },
   ];
 
   const usedTools: string[] = [];

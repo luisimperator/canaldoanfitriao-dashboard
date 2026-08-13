@@ -20,14 +20,14 @@ export default async function InboxPage() {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader
-          title="Caixa de entrada"
+          title="WhatsApp"
           subtitle="Conversas do WhatsApp oficial do suporte"
         />
         <Link
           href="/suporte"
           className="shrink-0 rounded-lg border border-slate-300 dark:border-white/15 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5"
         >
-          ← Suporte
+          ← Tickets
         </Link>
       </div>
 

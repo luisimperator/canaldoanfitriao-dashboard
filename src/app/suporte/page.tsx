@@ -54,7 +54,7 @@ export default async function SuportePage({
   return (
     <div>
       <PageHeader
-        title="Suporte"
+        title="Tickets"
         subtitle="Atendimento pós-venda ao cliente. Consulte o cliente, acompanhe a fila de casos escalados e treine a IA."
       />
 
