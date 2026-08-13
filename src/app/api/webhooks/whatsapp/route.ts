@@ -7,7 +7,8 @@ import {
   sendWhatsappText,
   verifyWhatsappSignature,
 } from "@/lib/whatsapp";
-import { runSupportAgent, type AgentMessage } from "@/lib/support-ai";
+import { runSupportAgent, type AgentMessage, type AgentImage } from "@/lib/support-ai";
+import { transcreverAudio, transcricaoConfigurada } from "@/lib/transcribe";
 
 // Webhook do WhatsApp Cloud API (Meta) — Fase 3 do Suporte.
 //
@@ -30,6 +31,10 @@ const HISTORY_LIMIT = 40;
 
 // Tipos que viram anexo (o resto vira texto ou é ignorado).
 const MEDIA_TYPES = ["image", "audio", "video", "document", "sticker"] as const;
+
+// Formatos de imagem que a API da Claude aceita. WhatsApp manda jpeg quase
+// sempre; o resto entra por completude.
+const VISION_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 // Texto legível de uma mensagem, seja qual for o tipo. Áudio e imagem não têm
 // texto — mas legenda (caption) tem, e é o que o cliente escreveu junto.
@@ -165,6 +170,11 @@ export async function POST(req: NextRequest) {
         }
 
         // Baixa o anexo e guarda no Storage (a URL da Meta expira e exige token).
+        // O que baixou aqui também alimenta a IA logo abaixo — áudio vira texto
+        // por transcrição, imagem vai como imagem mesmo.
+        let textoParaIA = text;
+        const imagensParaIA: AgentImage[] = [];
+
         if (isMedia) {
           const mediaId = String(msg?.[tipo]?.id ?? "");
           if (mediaId) {
@@ -181,6 +191,36 @@ export async function POST(req: NextRequest) {
                   .update({ media_path: path, media_mime: mime })
                   .eq("id", rowId);
               }
+
+              // Áudio → texto. Metade dos clientes manda áudio; sem isso, todos
+              // caíam no humano mesmo quando a pergunta era trivial.
+              if (tipo === "audio" && transcricaoConfigurada()) {
+                const tr = await transcreverAudio(media.bytes, mime);
+                if (tr.ok && tr.texto) {
+                  textoParaIA = [text, tr.texto].filter(Boolean).join("\n");
+                  // Guarda junto da mensagem: quem abrir a conversa lê o áudio
+                  // sem precisar dar play.
+                  await supabase
+                    .from("support_messages")
+                    .update({ text: `🎙️ ${tr.texto}` })
+                    .eq("id", rowId);
+                } else {
+                  await supabase.from("webhook_log").insert({
+                    source: "whatsapp",
+                    note: "falha ao transcrever áudio",
+                    body: { waId, error: tr.error },
+                  });
+                }
+              }
+
+              // Imagem → vai para a IA como imagem. Print de erro e comprovante
+              // são metade do suporte.
+              if (tipo === "image" && VISION_MIMES.has(mime.split(";")[0].trim())) {
+                imagensParaIA.push({
+                  mime: mime.split(";")[0].trim(),
+                  base64: Buffer.from(media.bytes).toString("base64"),
+                });
+              }
             } else {
               await supabase.from("webhook_log").insert({
                 source: "whatsapp",
@@ -191,8 +231,12 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // A IA responde só texto — anexo sempre vai pro humano.
-        if (!autoReply || isMedia) continue; // modo observação: só guarda
+        if (!autoReply) continue; // modo observação: só guarda
+
+        // Anexo que a IA não consegue interpretar (vídeo, PDF, sticker, ou áudio
+        // sem transcrição configurada) continua indo direto pro humano.
+        const iaEntende = !isMedia || imagensParaIA.length > 0 || textoParaIA !== text;
+        if (!iaEntende) continue;
 
         // Conversa com a IA desligada na mão fica só com o humano.
         const { data: conversa } = await supabase
@@ -217,7 +261,7 @@ export async function POST(req: NextRequest) {
           }));
 
         try {
-          const result = await runSupportAgent(text, history);
+          const result = await runSupportAgent(textoParaIA, history, [], imagensParaIA);
           // Envia em mensagens separadas, como um atendente no WhatsApp.
           for (let i = 0; i < result.messages.length; i++) {
             const part = result.messages[i];

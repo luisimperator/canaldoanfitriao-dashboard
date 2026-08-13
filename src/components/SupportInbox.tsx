@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CorrigirIA } from "@/components/CorrigirIA";
+import { TemplatePicker } from "@/components/TemplatePicker";
 
 // Caixa de entrada do suporte: lista de conversas + thread + resposta.
 //
@@ -352,10 +353,13 @@ export function SupportInbox() {
 
             <div className="border-t border-slate-200 dark:border-white/10 p-3">
               {janelaFechada ? (
-                <p className="rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
-                  Janela de 24h fechada — o WhatsApp não entrega mensagem livre agora. Só com
-                  template aprovado, ou espere o cliente escrever de novo.
-                </p>
+                <TemplatePicker
+                  phone={ativa}
+                  onEnviado={() => {
+                    carregarThread(ativa);
+                    carregarLista();
+                  }}
+                />
               ) : (
                 <>
                   <div className="flex items-end gap-2">
