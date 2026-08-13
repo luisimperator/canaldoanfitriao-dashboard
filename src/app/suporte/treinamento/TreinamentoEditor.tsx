@@ -16,6 +16,43 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [nota, setNota] = useState("");
+  const [gerando, setGerando] = useState(false);
+
+  // Escrever regra de treinamento na mão é o gargalo: exige escolher o bloco
+  // certo, achar o tom imperativo e não esquecer o caso de borda. Aqui você
+  // explica com suas palavras e a IA monta — mas cai no formulário abaixo em vez
+  // de salvar direto, porque ela marca [PREENCHER] no que não pode inventar
+  // (preço, link, prazo) e isso precisa de olho humano antes de virar regra.
+  async function gerarComIA() {
+    if (!nota.trim()) return;
+    setGerando(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/support/suggest-rule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: nota }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Não consegui gerar a regra.");
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        id: "",
+        bloco: json.bloco ?? f.bloco,
+        titulo: json.titulo ?? "",
+        conteudo: json.conteudo ?? "",
+      }));
+      setNota("");
+    } catch {
+      setError("Falha de rede ao gerar a regra.");
+    } finally {
+      setGerando(false);
+    }
+  }
 
   async function copy(it: KbItem) {
     const text = it.titulo ? `${it.titulo}\n\n${it.conteudo}` : it.conteudo;
@@ -93,8 +130,37 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Editor */}
       <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-5 shadow-sm h-fit lg:sticky lg:top-6">
+        {!form.id && (
+          <div className="mb-5 rounded-lg border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.07] p-4">
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-zinc-300">
+              Escreva com suas palavras
+            </h2>
+            <p className="mt-0.5 mb-2 text-xs text-slate-500 dark:text-zinc-400">
+              Explique o que a IA deve fazer. Ela escolhe o bloco, escreve a regra no tom certo e
+              preenche o formulário abaixo pra você conferir antes de salvar.
+            </p>
+            <textarea
+              value={nota}
+              onChange={(e) => setNota(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) gerarComIA();
+              }}
+              rows={3}
+              placeholder="ex.: quando o cliente perguntar do reembolso, sempre confirmar o CPF antes e explicar que o prazo é contado a partir da aprovação, não da solicitação"
+              className="w-full resize-none rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-900 dark:text-zinc-100"
+            />
+            <button
+              onClick={gerarComIA}
+              disabled={gerando || !nota.trim()}
+              className="mt-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
+            >
+              {gerando ? "Escrevendo…" : "Criar regra com IA"}
+            </button>
+          </div>
+        )}
+
         <h2 className="text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-4">
-          {form.id ? "Editar item" : "Novo item de treinamento"}
+          {form.id ? "Editar item" : "Confira e salve"}
         </h2>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
