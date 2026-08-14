@@ -8,6 +8,7 @@ import { CopyButton } from "@/components/CopyButton";
 import { QrCode } from "@/components/QrCode";
 import { LinkTrashButton } from "@/components/LinkTrashButton";
 import { EditLinkForm } from "@/components/EditLinkForm";
+import { TestarCadeia } from "@/components/TestarCadeia";
 import { shortLinkBase, shortLinkFor } from "@/lib/short-link";
 import Link from "next/link";
 
@@ -142,6 +143,7 @@ export default async function LinksPage() {
                       utm_campaign={lk.utm_campaign}
                       youtube_url={lk.youtube_url}
                     />
+                    <TestarCadeia slug={lk.slug} />
                     <LinkTrashButton slug={lk.slug} />
                   </div>
                   <p className="mt-1 text-[11px] text-slate-400 dark:text-zinc-500 truncate">→ {lk.destination}</p>
