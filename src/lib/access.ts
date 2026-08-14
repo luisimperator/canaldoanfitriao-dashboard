@@ -27,6 +27,7 @@ export const TABS: TabDef[] = [
   { href: "/suporte/simulador", label: "Cérebro da IA", icon: "🧠", section: "Suporte" },
   { href: "/suporte/treinamento", label: "Treinamento da IA", icon: "📚", section: "Suporte" },
   { href: "/financeiro", label: "Financeiro", icon: "$", section: "Financeiro" },
+  { href: "/financeiro/extrato", label: "Extrato do banco", icon: "🏦", section: "Financeiro" },
   { href: "/financeiro/provisao", label: "Provisão de caixa", icon: "💧", section: "Financeiro" },
   { href: "/integracoes", label: "Integrações", icon: "⚙", section: "Configurações" },
 ];
