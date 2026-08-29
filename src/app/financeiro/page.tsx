@@ -6,6 +6,8 @@ import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { CashflowChart, SpendByCategoryChart } from "@/components/charts";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { ExtratoBanco } from "@/components/ExtratoBanco";
+import { ResultadoMensal } from "@/components/ResultadoMensal";
+import { getResultadoMensal } from "@/lib/resultado-mensal";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +31,7 @@ export default async function FinanceiroPage({
   searchParams: Promise<{ from?: string; to?: string; tipo?: string; q?: string }>;
 }) {
   const sp = await searchParams;
-  const data = await getDashboardData();
+  const [data, resultado] = await Promise.all([getDashboardData(), getResultadoMensal(13)]);
   const today = isoToday();
   const month = monthKey(today);
   const re = /^\d{4}-\d{2}(-\d{2})?$/;
@@ -62,7 +64,7 @@ export default async function FinanceiroPage({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader
           title="Financeiro"
-          subtitle="Saldo, fluxo e extrato da conta do Canal do Anfitrião (Banco Inter)"
+          subtitle="Faturamento, distribuição e margem por mês — e o caixa da conta do Banco Inter"
         />
         <Link
           href="/financeiro/provisao"
@@ -73,10 +75,12 @@ export default async function FinanceiroPage({
       </div>
       <DemoBanner show={data.isDemo} />
 
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="text-xs text-slate-500 dark:text-zinc-400">
-          Período (fluxo, despesas e extrato)
-        </span>
+      <ResultadoMensal linhas={resultado} />
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+          Caixa da conta (Banco Inter)
+        </h2>
         <DateRangePicker />
       </div>
 
