@@ -485,3 +485,56 @@ export function SpendByCategoryChart({
     </ResponsiveContainer>
   );
 }
+
+// Faturamento do mês (barra) contra a distribuição que ele bancou no mês
+// seguinte (barra) e a margem que sobrou disso (linha, eixo da direita).
+// Mês ainda em aberto entra sem ponto na linha — margem null, não zero.
+export function ReceitaDistribuicaoChart({
+  data,
+}: {
+  data: { month: string; faturamento: number; distribuicao: number; margem: number | null }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+        <XAxis dataKey="month" tick={{ fontSize: 11 }} minTickGap={16} />
+        <YAxis
+          yAxisId="money"
+          tick={{ fontSize: 11 }}
+          tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`}
+        />
+        <YAxis
+          yAxisId="margem"
+          orientation="right"
+          tick={{ fontSize: 11 }}
+          tickFormatter={(v) => `${Math.round(Number(v))}%`}
+        />
+        <Tooltip
+          formatter={(v, n) =>
+            n === "Margem" ? `${Number(v).toFixed(1)}%` : brlTooltip(v)
+          }
+        />
+        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Bar yAxisId="money" dataKey="faturamento" name="Faturamento" fill="#10b981" radius={[3, 3, 0, 0]} />
+        <Bar
+          yAxisId="money"
+          dataKey="distribuicao"
+          name="Distribuição (mês seguinte)"
+          fill="#8b5cf6"
+          radius={[3, 3, 0, 0]}
+        />
+        <Line
+          yAxisId="margem"
+          type="monotone"
+          dataKey="margem"
+          name="Margem"
+          stroke="#0f172a"
+          strokeWidth={2}
+          connectNulls={false}
+          dot={{ r: 3 }}
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
