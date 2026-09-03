@@ -53,6 +53,50 @@ export async function fetchAsaasBalance(cfg: AsaasConfig): Promise<number> {
   return typeof data.balance === "number" ? data.balance : 0;
 }
 
+export interface AsaasTransfer {
+  id: string;
+  status: string;
+  value?: number;
+  netValue?: number;
+  effectiveDate?: string | null;
+}
+
+/**
+ * Transferência de saída do Asaas (usada pela raspagem Asaas → Inter).
+ *
+ * Escrita, e escrita que MOVE DINHEIRO: se a chave de transferência estiver
+ * separada (ASAAS_TRANSFER_API_KEY), é ela que vale aqui — a chave de leitura
+ * do sync não precisa (nem deve) ter permissão de saque.
+ */
+export async function createAsaasTransfer(
+  cfg: AsaasConfig,
+  body: Record<string, unknown>
+): Promise<AsaasTransfer> {
+  const apiKey = process.env.ASAAS_TRANSFER_API_KEY || cfg.apiKey;
+  const res = await fetch(`${cfg.baseUrl}/transfers`, {
+    method: "POST",
+    headers: {
+      access_token: apiKey,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try {
+      const j = JSON.parse(text) as { errors?: { description?: string }[] };
+      if (j.errors?.[0]?.description) msg = j.errors[0].description;
+    } catch {
+      /* corpo não-JSON — mantém o HTTP status */
+    }
+    throw new AsaasApiError(`Asaas /transfers: ${msg}`);
+  }
+  return JSON.parse(text) as AsaasTransfer;
+}
+
 export interface AsaasPayment {
   id: string;
   status: string;
