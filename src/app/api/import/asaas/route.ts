@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
+  fetchAsaasBalance,
   fetchAsaasCustomers,
   fetchAsaasPaymentsByCreation,
   getAsaasConfig,
 } from "@/lib/integrations/asaas";
+import { registrarSaldoAsaas } from "@/lib/asaas-saldo";
 
 // Sync do Asaas → banco, e casamento com a venda de origem na Eduzz.
 //
@@ -39,10 +41,15 @@ export async function GET(req: NextRequest) {
   const de = new Date(Date.now() - dias * 86_400_000).toISOString().slice(0, 10);
 
   try {
-    const [clientes, cobrancas] = await Promise.all([
+    // O saldo vem junto: é a única batida de hora em hora que fala com o
+    // Asaas, e a política de distribuição (SQL) depende desse retrato pra
+    // contar o dinheiro que ainda está parado lá. Ver 0044.
+    const [clientes, cobrancas, saldo] = await Promise.all([
       fetchAsaasCustomers(cfg),
       fetchAsaasPaymentsByCreation(cfg, de, ate),
+      fetchAsaasBalance(cfg).catch(() => null),
     ]);
+    if (saldo != null) await registrarSaldoAsaas(saldo, "sync");
 
     if (clientes.length > 0) {
       const { error } = await admin.from("asaas_clientes").upsert(
@@ -93,6 +100,7 @@ export async function GET(req: NextRequest) {
       ok: true,
       clientes: clientes.length,
       cobrancas: cobrancas.length,
+      saldo,
       atribuidas: casados ?? [],
     });
   } catch (e) {
