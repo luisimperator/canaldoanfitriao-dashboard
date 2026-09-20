@@ -38,6 +38,13 @@ export function hasValidBearer(
   return safeEqual(bearerToken(req), expected);
 }
 
+// Requisição do cron da Vercel (vercel.json): ela manda
+// `Authorization: Bearer <CRON_SECRET>`. Sem CRON_SECRET no ambiente, nunca
+// é cron — o porteiro (src/proxy.ts) já devolve 503 nesse caso.
+export function isCronRequest(req: Pick<NextRequest, "headers">): boolean {
+  return hasValidBearer(req, process.env.CRON_SECRET);
+}
+
 // Chave de webhook/import: header `x-webhook-key` OU query `?key=`. O header é
 // o caminho preferido (não vai parar em log de acesso nem em histórico de
 // navegador); a query continua aceita porque os painéis externos (Unnichat,
