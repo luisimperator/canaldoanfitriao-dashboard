@@ -6,8 +6,8 @@
 -- pessoa. A venda é UMA só e o vendedor é o mesmo.
 --
 -- Casamento por CLIENTE, nesta ordem: e-mail -> documento -> nome normalizado.
--- (Caso real: Eduzz CPF 97108804034 x Asaas CNPJ 42996789000122, mesmo e-mail
---  pedagogoempresarial@gmail.com — o documento sozinho não resolveria.)
+-- (Caso real: Eduzz no CPF da pessoa x Asaas no CNPJ da empresa dela, mesmo
+--  e-mail nos dois — o documento sozinho não resolveria.)
 --
 -- DATA DA VENDA = data em que a fatura foi PAGA. O crédito (D+30 do cartão)
 -- só importa na provisão de caixa, não na atribuição do vendedor.
