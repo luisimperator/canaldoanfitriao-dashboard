@@ -79,18 +79,32 @@ export async function proxy(request: NextRequest) {
   }
   if (isReset) return response;
 
-  // Permissão por aba (só páginas; as rotas /api exigem apenas sessão).
-  if (!pathname.startsWith("/api") && tabForPath(pathname) !== null) {
+  // Permissão por aba (só páginas; as rotas /api checam a permissão dentro
+  // de cada handler, com getAccess() + canAccess()).
+  const isSemAcesso = pathname === "/sem-acesso";
+  if (!pathname.startsWith("/api") && (isSemAcesso || tabForPath(pathname) !== null)) {
     const { data } = await supabase
       .from("app_access")
       .select("is_admin, tabs")
       .eq("user_id", user.id)
       .maybeSingle();
-    const isAdmin = data?.is_admin ?? false;
-    // Sem linha em app_access = acesso total (não trava ninguém sem querer).
-    const tabs = data ? (isAdmin ? ALL_TAB_HREFS : ((data.tabs as string[]) ?? [])) : ALL_TAB_HREFS;
+    const isAdmin = data?.is_admin === true;
+    // Sem linha em app_access = NENHUMA aba (fail-closed). Uma conta que
+    // existe no Auth mas não foi liberada em /usuarios não entra em lugar
+    // nenhum — antes ganhava acesso total, o que transformava qualquer conta
+    // criada com credencial vazada em usuário pleno do painel.
+    const tabs = isAdmin ? ALL_TAB_HREFS : (((data?.tabs as string[] | null) ?? []));
+    const semAba = !isAdmin && tabs.length === 0;
+    if (semAba) {
+      // Logado mas sem nenhuma aba: cai na tela de "acesso não liberado".
+      return isSemAcesso ? response : NextResponse.redirect(new URL("/sem-acesso", request.url));
+    }
+    if (isSemAcesso) {
+      // Tem aba: a tela de sem-acesso não faz sentido — vai pra primeira aba.
+      return NextResponse.redirect(new URL(isAdmin ? "/" : tabs[0], request.url));
+    }
     if (!canAccess(pathname, { isAdmin, tabs })) {
-      const dest = tabs[0] ?? "/login";
+      const dest = tabs[0];
       if (tabForPath(dest) !== tabForPath(pathname)) {
         return NextResponse.redirect(new URL(dest, request.url));
       }
