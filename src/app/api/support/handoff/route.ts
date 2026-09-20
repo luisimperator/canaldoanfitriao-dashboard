@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getAccess } from "@/lib/supabase-server";
+import { hasValidBearer } from "@/lib/secure-compare";
 
 // Fila de atendimento humano (handoff).
 //
@@ -21,8 +22,8 @@ const MOTIVOS = [
 const STATUS = ["aberto", "em_andamento", "resolvido"];
 
 async function authOk(req: NextRequest): Promise<boolean> {
-  const token = process.env.SUPPORT_API_TOKEN;
-  if (token && req.headers.get("authorization") === `Bearer ${token}`) return true;
+  // Bearer comparado em tempo constante (falso se SUPPORT_API_TOKEN não existir).
+  if (hasValidBearer(req, process.env.SUPPORT_API_TOKEN)) return true;
   const access = await getAccess();
   return access.authed;
 }
