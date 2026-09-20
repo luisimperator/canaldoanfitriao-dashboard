@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getAccess } from "@/lib/supabase-server";
+import { canAccess } from "@/lib/access";
+
+// Exporta conversas do atendimento (nome, e-mail, WhatsApp, compras) em
+// markdown. Exige sessão E a aba Conversas — o porteiro só garante sessão.
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +38,10 @@ function msgLine(m: any): string {
 }
 
 export async function GET(req: NextRequest) {
+  const access = await getAccess();
+  if (!access.authed || !canAccess("/conversas", access)) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
   const admin = getSupabaseAdmin();
   if (!admin) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
 
