@@ -1,7 +1,10 @@
 // Camada de acesso a dados.
-// Com NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY definidos,
+// Com NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY definidos,
 // lê do Supabase (tabelas em supabase/migrations/0001_schema.sql).
 // Sem credenciais, cai no modo demo com dados gerados.
+//
+// Módulo só de servidor: carrega a service role, que nunca pode chegar ao
+// browser. Todos os consumidores são Server Components.
 
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
@@ -18,14 +21,33 @@ import type {
 
 export function supabaseConfigured(): boolean {
   return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 }
 
+// Lê com a service role, não com a chave anônima.
+//
+// Até 19/09/2026 esta camada criava o cliente com NEXT_PUBLIC_SUPABASE_ANON_KEY
+// e sem sessão — ou seja, batia no PostgREST como `anon`. As migrações do
+// incidente daquele dia (incident_revoke_anon_exec_secdef e
+// incident_leitura_anon_to_authenticated) passaram as policies "leitura anon"
+// de sales, sellers, leads, fin_categories, fin_source_files, fin_transactions,
+// ad_spend e analytics_snapshot para o papel `authenticated`. Como `anon`
+// deixou de casar com policy nenhuma, o RLS passou a devolver ZERO linha — sem
+// erro, por isso não apareceu nada nos logs — e Visão geral, Financeiro,
+// Provisão, Extrato, Vendas, Funil, CRM, CAC, Gargalo e Origem ficaram vazios.
+//
+// Devolver as policies para `anon` reabriria o buraco que o incidente fechou:
+// a chave anônima é pública (vai no bundle do browser), então qualquer um que
+// a copiasse leria todo o financeiro e os 45 mil leads direto do Supabase.
+// A leitura passa a usar a service role, que só existe no servidor. O controle
+// de acesso continua onde sempre esteve: o proxy exige login e a permissão por
+// aba (src/lib/access.ts).
 export function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
   );
 }
 
