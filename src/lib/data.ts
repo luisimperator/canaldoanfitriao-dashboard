@@ -22,11 +22,35 @@ export function supabaseConfigured(): boolean {
   );
 }
 
+// Lê com a SERVICE ROLE, não com a chave anônima.
+//
+// Este módulo só roda no servidor: quem o importa são server components
+// (início, vendas, CRM, funil, CAC, gargalo, origem, encontro, links,
+// financeiro/provisão) e `getSupabase` não escapa daqui. O recorte de acesso
+// dessas telas é o `proxy.ts` + `getAccess()`, não o RLS.
+//
+// Por que mudou (22/09/2026): as políticas de leitura de leads, sales,
+// sellers, ad_spend, fin_categories, fin_source_files, fin_transactions,
+// lista_espera_sync_log e analytics_snapshot passaram de `anon` para
+// `authenticated` no endurecimento pós-infostealer de 20/09. A chave anônima
+// viaja no bundle do navegador e vazou junto com o resto — com ela em `anon`,
+// qualquer um lia 49 mil leads, as vendas e o financeiro sem login.
+//
+// O cliente daqui era montado com a chave anônima e SEM sessão, então para o
+// banco ele era o papel `anon`. Depois da mudança as consultas passaram a
+// voltar **vazias, sem erro**, e o dashboard inteiro mostrou zero. Ler com a
+// service role corrige sem reabrir a porta: a política continua fechada para
+// `anon`, e quem entra continua passando pelo porteiro do app.
+//
+// Se a service role não estiver configurada, cai na anônima — é o caso do
+// desenvolvimento local e do modo demo, onde não há o que proteger.
 export function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (serviceRole) {
+    return createClient(url, serviceRole, { auth: { persistSession: false } });
+  }
+  return createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 }
 
 // Dia-calendário de São Paulo de um timestamptz. mql_at vem em UTC; fatiar a
