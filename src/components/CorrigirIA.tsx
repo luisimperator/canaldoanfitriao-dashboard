@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { KB_BLOCOS } from "@/lib/support";
+import { AlvoDaRegra } from "@/components/AlvoDaRegra";
 
 // Modo chefe: corrige a IA em cima de um atendimento REAL e transforma a
 // bronca numa regra permanente do treinamento.
@@ -12,9 +13,14 @@ import { KB_BLOCOS } from "@/lib/support";
 // porque a correção morre na conversa.
 
 interface Sugestao {
+  /** Presente = salvar atualiza essa regra em vez de criar outra. */
+  id?: string;
+  acao: "editar" | "nova";
   bloco: string;
   titulo: string;
   conteudo: string;
+  anterior?: { titulo: string; conteudo: string };
+  motivo?: string;
 }
 
 export function CorrigirIA({
@@ -51,7 +57,15 @@ export function CorrigirIA({
         setErro(j.error ?? `Erro ${res.status}`);
         return;
       }
-      setSugestao({ bloco: j.bloco, titulo: j.titulo, conteudo: j.conteudo });
+      setSugestao({
+        id: j.id,
+        acao: j.acao === "editar" && j.id ? "editar" : "nova",
+        bloco: j.bloco,
+        titulo: j.titulo,
+        conteudo: j.conteudo,
+        anterior: j.anterior,
+        motivo: j.motivo,
+      });
     } catch {
       setErro("Falha de rede");
     } finally {
@@ -67,7 +81,12 @@ export function CorrigirIA({
       const res = await fetch("/api/support/kb", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...sugestao, ativo: true }),
+        body: JSON.stringify({
+          ...(sugestao.id ? { id: sugestao.id } : { ativo: true }),
+          bloco: sugestao.bloco,
+          titulo: sugestao.titulo,
+          conteudo: sugestao.conteudo,
+        }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -89,7 +108,7 @@ export function CorrigirIA({
     return (
       <div className="mt-2 rounded-xl border border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-3 text-sm">
         <p className="font-semibold text-emerald-800 dark:text-emerald-200">
-          ✓ Regra salva no treinamento
+          ✓ Treinamento atualizado
         </p>
         <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-300">
           Vale a partir do próximo atendimento — inclusive nesta conversa. Dá pra editar
@@ -141,6 +160,14 @@ export function CorrigirIA({
         </>
       ) : (
         <div className="mt-2 space-y-2">
+          <AlvoDaRegra
+            acao={sugestao.acao}
+            anterior={sugestao.anterior}
+            motivo={sugestao.motivo}
+            onSalvarComoNova={() =>
+              setSugestao({ ...sugestao, id: undefined, acao: "nova", anterior: undefined, motivo: undefined })
+            }
+          />
           <div>
             <label className="text-[11px] font-medium text-amber-800 dark:text-amber-300">
               Bloco
@@ -179,8 +206,8 @@ export function CorrigirIA({
             />
           </div>
           <p className="text-[11px] text-amber-800/80 dark:text-amber-200/70">
-            Confira antes de salvar. Se aparecer <code>[PREENCHER]</code>, é porque faltou um
-            dado (prazo, link, valor) — complete você, a IA não inventa.
+            Confira antes de salvar. Quando falta um dado (prazo, link, valor), a regra manda
+            a IA passar pro time em vez de inventar.
           </p>
           <div className="flex gap-2">
             <button

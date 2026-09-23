@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { KB_BLOCOS } from "@/lib/support";
+import { AlvoDaRegra } from "@/components/AlvoDaRegra";
 
 type Kind = "cliente" | "ia" | "chefe";
 interface Msg {
@@ -16,6 +17,11 @@ interface RuleCard {
   note: string;
   customerMessage?: string;
   aiReply?: string;
+  /** Presente = salvar atualiza essa regra em vez de criar outra. */
+  id?: string;
+  acao: "editar" | "nova";
+  anterior?: { titulo: string; conteudo: string };
+  motivo?: string;
   bloco: string;
   titulo: string;
   conteudo: string;
@@ -132,6 +138,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
         note,
         customerMessage: lastCliente,
         aiReply: lastIa,
+        acao: "nova",
         bloco: "regras_ouro",
         titulo: "",
         conteudo: "",
@@ -147,7 +154,19 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
       const sug = await res.json();
       if (res.ok) {
         setRule((rc) =>
-          rc ? { ...rc, bloco: sug.bloco, titulo: sug.titulo, conteudo: sug.conteudo, loading: false } : rc
+          rc
+            ? {
+                ...rc,
+                id: sug.id,
+                acao: sug.acao === "editar" && sug.id ? "editar" : "nova",
+                anterior: sug.anterior,
+                motivo: sug.motivo,
+                bloco: sug.bloco,
+                titulo: sug.titulo,
+                conteudo: sug.conteudo,
+                loading: false,
+              }
+            : rc
         );
       } else {
         setRule((rc) => (rc ? { ...rc, loading: false, titulo: note, conteudo: note } : rc));
@@ -182,10 +201,10 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...(rule.id ? { id: rule.id } : { ativo: true }),
           bloco: rule.bloco,
           titulo: rule.titulo,
           conteudo: rule.conteudo,
-          ativo: true,
         }),
       });
       if (res.ok) setRule((rc) => (rc ? { ...rc, saving: false, saved: true } : rc));
@@ -270,7 +289,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
               <p className="text-sm text-sky-800">Gerando sugestão de regra…</p>
             ) : rule.saved ? (
               <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                ✅ Regra salva no treinamento — agora vale pra todos os atendimentos.{" "}
+                ✅ {rule.acao === "editar" ? "Regra atualizada" : "Regra salva"} no treinamento. Agora vale pra todos os atendimentos.{" "}
                 <button onClick={() => setRule(null)} className="underline text-emerald-700 dark:text-emerald-300">fechar</button>
               </p>
             ) : (
@@ -278,6 +297,14 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
                 <div className="text-xs font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
                   Salvar como regra permanente?
                 </div>
+                <AlvoDaRegra
+                  acao={rule.acao}
+                  anterior={rule.anterior}
+                  motivo={rule.motivo}
+                  onSalvarComoNova={() =>
+                    setRule({ ...rule, id: undefined, acao: "nova", anterior: undefined, motivo: undefined })
+                  }
+                />
                 <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-2">
                   <select
                     value={rule.bloco}
