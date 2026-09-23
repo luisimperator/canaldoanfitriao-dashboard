@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getWhatsappConfig } from "@/lib/whatsapp";
 
 // Saúde REAL de cada integração: não basta a credencial estar configurada,
 // olhamos se dado/evento de fato chegou ao banco. Isso evita o selo
@@ -8,6 +9,8 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 export interface IntegrationHealth {
   hasData: boolean;
   detail: string;
+  /** Falha ativa que precisa de gente (ex.: token recusado pela Meta). */
+  alert?: boolean;
 }
 
 export interface RecentEvent {
@@ -22,6 +25,65 @@ export interface IntegrationsHealth {
 }
 
 const fmt = (n: number) => n.toLocaleString("pt-BR");
+
+const GRAPH_VERSION = process.env.WHATSAPP_GRAPH_VERSION || "v21.0";
+
+// WhatsApp: credencial "configurada" não diz nada — o token morre e o webhook
+// continua recebendo normalmente; só o ENVIO falha. Então pergunta pra Meta
+// ao vivo (mesma chamada do cron whatsapp-health) e conta as falhas de envio
+// das últimas 24h, que é o sintoma que o cliente sente.
+async function whatsappHealth(
+  admin: NonNullable<ReturnType<typeof getSupabaseAdmin>>
+): Promise<IntegrationHealth> {
+  const cfg = await getWhatsappConfig();
+  if (!cfg.token || !cfg.phoneNumberId) {
+    return {
+      hasData: false,
+      alert: true,
+      detail: "credencial ausente no Vault (whatsapp_token / whatsapp_phone_number_id)",
+    };
+  }
+
+  const desde = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const { count: falhas } = await admin
+    .from("webhook_log")
+    .select("*", { count: "exact", head: true })
+    .eq("source", "whatsapp")
+    .eq("note", "falha ao enviar resposta")
+    .gte("created_at", desde);
+
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/${GRAPH_VERSION}/${cfg.phoneNumberId}?fields=display_phone_number,verified_name,quality_rating`,
+      { headers: { Authorization: `Bearer ${cfg.token}` }, cache: "no-store" }
+    );
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const code = json?.error?.code ?? res.status;
+      const msg = json?.error?.message ?? "sem detalhe";
+      return {
+        hasData: false,
+        alert: true,
+        detail: `Meta recusou o token (${code}: ${msg}) — a Lia não consegue responder. Gere um token de System User (expiração: nunca) e grave no Vault como whatsapp_token.`,
+      };
+    }
+    const base = `token ok · ${json?.display_phone_number ?? cfg.phoneNumberId} · qualidade ${json?.quality_rating ?? "?"}`;
+    if ((falhas ?? 0) > 0) {
+      return {
+        hasData: true,
+        alert: true,
+        detail: `${base} · ${fmt(falhas ?? 0)} envio(s) falharam nas últimas 24h — ver eventos abaixo`,
+      };
+    }
+    return { hasData: true, detail: base };
+  } catch (e) {
+    return {
+      hasData: false,
+      alert: true,
+      detail: `não consegui falar com a Meta: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
 
 export async function getIntegrationsHealth(): Promise<IntegrationsHealth | null> {
   const admin = getSupabaseAdmin();
@@ -38,7 +100,7 @@ export async function getIntegrationsHealth(): Promise<IntegrationsHealth | null
     return count ?? 0;
   };
 
-  const [mailchimp, unnichatLinked, unnichatEvents, eduzz, meta, inter, tmb, recent] =
+  const [mailchimp, unnichatLinked, unnichatEvents, eduzz, meta, inter, tmb, recent, whatsapp] =
     await Promise.all([
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       countOf("leads", (q: any) => q.not("mailchimp_id", "is", null)),
@@ -59,6 +121,7 @@ export async function getIntegrationsHealth(): Promise<IntegrationsHealth | null
         .select("source, note, created_at")
         .order("created_at", { ascending: false })
         .limit(8),
+      whatsappHealth(admin),
     ]);
 
   const byId: Record<string, IntegrationHealth> = {
@@ -92,6 +155,7 @@ export async function getIntegrationsHealth(): Promise<IntegrationsHealth | null
       hasData: tmb > 0,
       detail: tmb > 0 ? `${fmt(tmb)} eventos recebidos` : "nenhum evento recebido ainda",
     },
+    whatsapp,
   };
 
   return { byId, recentEvents: recent.data ?? [] };

@@ -73,6 +73,17 @@ export function listIntegrations(): IntegrationInfo[] {
         "Configure um webhook/automação no Unnichat apontando para /api/webhooks/unnichat quando o lead mudar de etiqueta/funil. O payload esperado está documentado na própria rota.",
     },
     {
+      id: "whatsapp",
+      name: "WhatsApp Cloud API (suporte)",
+      role: "Recebe e responde o WhatsApp do suporte (Lia)",
+      envVars: ["whatsapp_token", "whatsapp_phone_number_id", "whatsapp_app_secret", "whatsapp_verify_token"],
+      // As credenciais moram no Vault do Supabase (migração 0027), não na
+      // Vercel. O selo vem do check de saúde, que pinga a Meta de verdade.
+      configured: true,
+      howItWorks:
+        "Token permanente de System User da Meta gravado no Vault do Supabase (whatsapp_token). O webhook /api/webhooks/whatsapp recebe as mensagens e a Lia responde pela Graph API. A saúde é checada ao vivo nesta página e de hora em hora pelo cron whatsapp-health: se a Meta recusar o token (erro 190), o selo fica vermelho e o evento aparece na lista abaixo.",
+    },
+    {
       id: "inter",
       name: "Banco Inter (financeiro)",
       role: "Importa o extrato da conta PJ automaticamente",

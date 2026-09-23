@@ -33,7 +33,10 @@ export default async function IntegracoesPage() {
           // mesmo que a credencial não esteja no Vercel (ex.: sync nativo no
           // Supabase). Senão, cai pra Pendente/Configurada/Sem dados.
           let badge: { label: string; cls: string };
-          if (h?.hasData) {
+          if (h?.alert) {
+            // Falha ativa (ex.: Meta recusando o token): vermelho, na frente de tudo.
+            badge = { label: "Falhando", cls: "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30" };
+          } else if (h?.hasData) {
             badge = { label: "Recebendo dados", cls: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30" };
           } else if (!item.configured) {
             badge = { label: "Pendente", cls: "bg-slate-100 dark:bg-white/[0.07] text-slate-500 dark:text-zinc-400 border-slate-200 dark:border-white/10" };
@@ -59,7 +62,11 @@ export default async function IntegracoesPage() {
               {h && (
                 <p
                   className={`mt-2 text-xs font-medium ${
-                    h.hasData ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+                    h.alert
+                      ? "text-red-600 dark:text-red-400"
+                      : h.hasData
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-amber-600 dark:text-amber-400"
                   }`}
                 >
                   {h.detail}
