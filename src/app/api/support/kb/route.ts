@@ -46,13 +46,18 @@ export async function POST(req: NextRequest) {
     bloco: String(body.bloco ?? "outro"),
     titulo,
     conteudo: String(body.conteudo ?? ""),
-    ativo: body.ativo === undefined ? true : Boolean(body.ativo),
-    ordem: Number(body.ordem ?? 0) || 0,
-    // valido_ate: "YYYY-MM-DD" ou null (sem validade)
-    valido_ate: body.valido_ate ? String(body.valido_ate).slice(0, 10) : null,
     updated_at: new Date().toISOString(),
   };
-  if (body.id) row.id = String(body.id);
+  // Editando (tem id): só mexe no que veio. Salvar uma correção do modo treino
+  // manda só bloco/título/conteúdo, e antes isso zerava a ordem e a validade.
+  const editando = Boolean(body.id);
+  if (editando) row.id = String(body.id);
+  if (!editando || body.ativo !== undefined)
+    row.ativo = body.ativo === undefined ? true : Boolean(body.ativo);
+  if (!editando || body.ordem !== undefined) row.ordem = Number(body.ordem ?? 0) || 0;
+  // valido_ate: "YYYY-MM-DD" ou null (sem validade)
+  if (!editando || body.valido_ate !== undefined)
+    row.valido_ate = body.valido_ate ? String(body.valido_ate).slice(0, 10) : null;
 
   const { data, error } = await admin
     .from("support_kb")

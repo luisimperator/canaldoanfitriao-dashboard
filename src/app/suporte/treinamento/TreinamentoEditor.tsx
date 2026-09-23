@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { KB_BLOCOS, blocoLabel, type KbItem } from "@/lib/support";
+import { AlvoDaRegra } from "@/components/AlvoDaRegra";
 
 const EMPTY = { id: "", bloco: "ingressos", titulo: "", conteudo: "", ativo: true, ordem: 0, valido_ate: "" };
 
@@ -18,12 +19,18 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [nota, setNota] = useState("");
   const [gerando, setGerando] = useState(false);
+  // O que a IA decidiu na última sugestão (editar regra existente ou criar nova).
+  const [alvo, setAlvo] = useState<{
+    acao: "editar" | "nova";
+    anterior?: { titulo: string; conteudo: string };
+    motivo?: string;
+  } | null>(null);
 
   // Escrever regra de treinamento na mão é o gargalo: exige escolher o bloco
   // certo, achar o tom imperativo e não esquecer o caso de borda. Aqui você
   // explica com suas palavras e a IA monta — mas cai no formulário abaixo em vez
-  // de salvar direto, porque ela marca [PREENCHER] no que não pode inventar
-  // (preço, link, prazo) e isso precisa de olho humano antes de virar regra.
+  // de salvar direto: ela pode ter escolhido editar a regra errada, e mudança
+  // na base precisa de olho humano antes de valer pra todo atendimento.
   async function gerarComIA() {
     if (!nota.trim()) return;
     setGerando(true);
@@ -39,13 +46,18 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
         setError(json.error ?? "Não consegui gerar a regra.");
         return;
       }
+      const editar = json.acao === "editar" && json.id;
       setForm((f) => ({
         ...f,
-        id: "",
+        id: editar ? json.id : "",
         bloco: json.bloco ?? f.bloco,
         titulo: json.titulo ?? "",
         conteudo: json.conteudo ?? "",
+        ativo: true,
+        ordem: editar ? Number(json.ordem ?? 0) : 0,
+        valido_ate: editar ? (json.valido_ate ?? "") : "",
       }));
+      setAlvo({ acao: editar ? "editar" : "nova", anterior: json.anterior, motivo: json.motivo });
       setNota("");
     } catch {
       setError("Falha de rede ao gerar a regra.");
@@ -66,6 +78,7 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   }
 
   function edit(it: KbItem) {
+    setAlvo(null);
     setForm({
       id: it.id,
       bloco: it.bloco,
@@ -81,6 +94,7 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
 
   function reset() {
     setForm(EMPTY);
+    setAlvo(null);
     setError(null);
   }
 
@@ -154,7 +168,7 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
               disabled={gerando || !nota.trim()}
               className="mt-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
             >
-              {gerando ? "Escrevendo…" : "Criar regra com IA"}
+              {gerando ? "Escrevendo…" : "Montar regra com IA"}
             </button>
           </div>
         )}
@@ -162,6 +176,19 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
         <h2 className="text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-4">
           {form.id ? "Editar item" : "Confira e salve"}
         </h2>
+        {alvo && (
+          <div className="mb-3">
+            <AlvoDaRegra
+              acao={alvo.acao}
+              anterior={alvo.anterior}
+              motivo={alvo.motivo}
+              onSalvarComoNova={() => {
+                setForm((f) => ({ ...f, id: "", ordem: 0, valido_ate: "" }));
+                setAlvo({ acao: "nova" });
+              }}
+            />
+          </div>
+        )}
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <label className="block">

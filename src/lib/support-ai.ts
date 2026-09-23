@@ -403,43 +403,94 @@ export async function runSupportAgent(
 }
 
 export interface RuleSuggestion {
+  /** Preenchido quando a correção cabe numa regra que já existe: salvar atualiza ela. */
+  id?: string;
+  acao: "editar" | "nova";
   bloco: string;
   titulo: string;
   conteudo: string;
+  ordem?: number;
+  valido_ate?: string | null;
+  /** Texto atual da regra que será substituída (pra mostrar o antes/depois). */
+  anterior?: { titulo: string; conteudo: string };
+  /** Uma frase explicando por que editar essa regra ou criar uma nova. */
+  motivo?: string;
 }
 
-// Transforma uma correção do "chefe" (modo treino) numa regra permanente,
-// limpa e pronta pra salvar no treinamento. Devolve {bloco, titulo, conteudo}.
+// Transforma uma correção do "chefe" (modo treino) numa mudança no treinamento.
+//
+// Antes, toda correção virava uma regra NOVA sem olhar as existentes. Em três
+// meses a base chegou a 49 regras com três de tom se contradizendo, prazo de
+// reembolso em três versões e a mesma regra de CPF repetida cinco vezes, e a
+// IA resolvia os conflitos do jeito que dava na hora. Agora o modelo lê a
+// base ativa e prefere REESCREVER a regra que já cobre o assunto, incorporando
+// a correção e tirando o que ela contradiz. Regra nova só se o assunto não
+// existe em lugar nenhum.
 export async function suggestRule(
   note: string,
   context?: { customerMessage?: string; aiReply?: string }
 ): Promise<RuleSuggestion> {
   const fallback: RuleSuggestion = {
+    acao: "nova",
     bloco: "regras_ouro",
     titulo: note.slice(0, 80),
     conteudo: note,
   };
   if (!aiConfigured()) return fallback;
 
+  const admin = getSupabaseAdmin();
+  let regras: KbItem[] = [];
+  if (admin) {
+    const { data } = await admin
+      .from("support_kb")
+      .select("id,bloco,titulo,conteudo,ativo,ordem,updated_at,valido_ate")
+      .eq("ativo", true)
+      .order("bloco", { ascending: true })
+      .order("ordem", { ascending: true });
+    regras = (data ?? []) as KbItem[];
+  }
+  const porId = new Map(regras.map((r) => [r.id, r]));
+  const base = regras
+    .map((r) => `<regra id="${r.id}" bloco="${r.bloco}">\n# ${r.titulo}\n${r.conteudo}\n</regra>`)
+    .join("\n\n");
+
   const client = new Anthropic();
   const blocos = KB_BLOCOS.map((b) => `${b.key} (${b.label})`).join(", ");
-  const sys = `Você ajuda a transformar uma correção do supervisor (o "chefe" do atendente de IA) em UMA regra permanente para o treinamento do suporte. Responda SOMENTE com JSON: {"bloco":"...","titulo":"...","conteudo":"..."}.
-- bloco: escolha exatamente uma destas chaves: ${blocos}.
-- titulo: curto, descrevendo a situação a que a regra se aplica.
-- conteudo: a instrução pronta, no imperativo, clara e objetiva, que a IA seguirá em TODOS os atendimentos.
-- Não invente fatos (preços, links, prazos): se faltar, escreva [PREENCHER].`;
+  const sys = `Você mantém a base de treinamento do atendente de IA do suporte. O supervisor (o "chefe") corrigiu uma resposta, e você transforma essa correção numa mudança na base.
+
+A base é lida inteira pelo atendente em todo atendimento. Regras repetidas ou contraditórias fazem ele agir de forma inconsistente, então a base tem que continuar enxuta e coerente.
+
+Decida:
+- "editar": a correção é sobre um assunto que alguma regra já cobre (mesmo que de outro ângulo). Reescreva ESSA regra inteira incorporando a correção. Mantenha tudo que continua valendo, remova ou ajuste o que a correção contradiz, não duplique informação que já está em outra regra. É o caminho preferido.
+- "nova": nenhuma regra trata do assunto. Crie uma regra curta.
+
+Responda SOMENTE com JSON:
+{"acao":"editar"|"nova","id":"<id da regra, só se editar>","bloco":"...","titulo":"...","conteudo":"<texto completo da regra>","motivo":"<uma frase: por que editar essa regra, ou por que nenhuma cobria>"}
+
+Regras de escrita:
+- bloco: uma destas chaves: ${blocos}.
+- titulo: curto, descrevendo a situação.
+- conteudo: instrução no imperativo, clara e objetiva, que vale pra TODOS os atendimentos. Ao editar, devolva o texto COMPLETO da regra, não só o trecho novo.
+- Não invente fatos (preço, link, prazo, contato). Se a correção depende de um dado que não está na base, escreva a regra mandando o atendente escalar pro time (create_handoff) nesse caso. Nunca escreva [PREENCHER] nem variáveis entre chaves.
+- Não use travessão (—).`;
+
   const ctx = [
+    "<base_atual>",
+    base || "(base vazia)",
+    "</base_atual>",
+    "",
     context?.customerMessage ? `Mensagem do cliente: ${context.customerMessage}` : "",
     context?.aiReply ? `Resposta que a IA deu: ${context.aiReply}` : "",
     `Correção do chefe: ${note}`,
   ]
-    .filter(Boolean)
+    .filter((l) => l !== "")
     .join("\n");
 
   try {
     const res = await client.messages.create({
       model: MODEL,
-      max_tokens: 800,
+      // ao editar, a regra inteira volta reescrita (o mapa de materiais tem ~3k chars)
+      max_tokens: 8192,
       system: sys,
       messages: [{ role: "user", content: ctx }],
     });
@@ -451,10 +502,31 @@ export async function suggestRule(
     if (!match) return fallback;
     const json = JSON.parse(match[0]);
     const blocoOk = KB_BLOCOS.some((b) => b.key === json.bloco);
+    const conteudo = String(json.conteudo ?? note);
+    const titulo = String(json.titulo ?? note).slice(0, 200);
+    const motivo = json.motivo ? String(json.motivo) : undefined;
+
+    // Só edita se o id é de uma regra ativa de verdade; id inventado vira regra nova.
+    const alvo = json.acao === "editar" && json.id ? porId.get(String(json.id)) : undefined;
+    if (alvo) {
+      return {
+        acao: "editar",
+        id: alvo.id,
+        bloco: blocoOk ? json.bloco : alvo.bloco,
+        titulo,
+        conteudo,
+        ordem: alvo.ordem,
+        valido_ate: alvo.valido_ate ?? null,
+        anterior: { titulo: alvo.titulo, conteudo: alvo.conteudo },
+        motivo,
+      };
+    }
     return {
+      acao: "nova",
       bloco: blocoOk ? json.bloco : "regras_ouro",
-      titulo: String(json.titulo ?? note).slice(0, 200),
-      conteudo: String(json.conteudo ?? note),
+      titulo,
+      conteudo,
+      motivo,
     };
   } catch {
     return fallback;
