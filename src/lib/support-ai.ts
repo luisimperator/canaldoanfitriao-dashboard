@@ -14,9 +14,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { findCustomer, blocoLabel, KB_BLOCOS, type KbItem } from "@/lib/support";
 
-// Modelo padrão: Claude Opus 4.8. Configurável por env para trocar por
-// claude-haiku-4-5 / claude-sonnet-4-6 se quiser reduzir custo/latência.
-const MODEL = process.env.SUPPORT_AI_MODEL || "claude-opus-4-8";
+// Modelo padrão: Claude Opus 5.5 — mais novo e 20% mais barato que o 4.8
+// ($4/$20 por milhão contra $5/$25; leitura de cache $0,20 contra $0,50).
+// Configurável por env. Se a conta ainda não tiver o modelo liberado (404),
+// a chamada cai sozinha pro FALLBACK_MODEL e registra no webhook_log.
+const MODEL = process.env.SUPPORT_AI_MODEL || "claude-opus-5-5";
+const FALLBACK_MODEL = "claude-opus-4-8";
 const EFFORT = process.env.SUPPORT_AI_EFFORT || "medium";
 const SALES_CONTACT =
   process.env.SUPPORT_SALES_CONTACT || "+55 11 92507-2167";
@@ -236,6 +239,16 @@ async function runTool(name: string, input: any): Promise<{ text: string; handof
 }
 
 /** Imagem que veio junto da mensagem do cliente (print de erro, comprovante…). */
+async function registrarFallback(modelo: string, erro: string): Promise<void> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return;
+  await admin.from("webhook_log").insert({
+    source: "support_ai",
+    note: `ERRO: modelo ${modelo} indisponível — respondendo com ${FALLBACK_MODEL}`,
+    body: { erro: erro.slice(0, 500) },
+  });
+}
+
 export interface AgentImage {
   /** image/jpeg, image/png, image/webp ou image/gif — o que a API aceita. */
   mime: string;
@@ -289,30 +302,59 @@ export async function runSupportAgent(
   let handoffId: string | null = null;
 
   // adaptive thinking + effort só existem em parte da família (Opus 4.6+/Sonnet
-  // 4.6/Fable 5). No Haiku 4.5 esses parâmetros dão 400, então omitimos.
+  // 4.6/família 5). No Haiku 4.5 esses parâmetros dão 400, então omitimos.
+  // No Opus 5.5 o thinking nem desliga — adaptativo é o único modo.
   const ADAPTIVE_MODELS = new Set([
+    "claude-opus-5-5",
+    "claude-opus-5",
+    "claude-sonnet-5",
+    "claude-fable-5-1",
+    "claude-fable-5",
     "claude-opus-4-8",
     "claude-opus-4-7",
     "claude-opus-4-6",
     "claude-sonnet-4-6",
-    "claude-fable-5",
   ]);
-  const useAdaptive = ADAPTIVE_MODELS.has(MODEL);
 
+  // Cache de prompt: ferramentas + sistema (a base de conhecimento inteira,
+  // ~11k tokens) são idênticos em toda chamada. Com o breakpoint no fim do
+  // sistema, tudo até aqui é lido do cache a 5% do preço. TTL de 1h porque o
+  // cliente responde em minutos, não em segundos — com 5 min o cache expirava
+  // entre uma mensagem e outra e a gravação custava mais do que a leitura
+  // poupava. Sem isso a Lia pagava os 11k tokens cheios a cada mensagem.
+  const systemBlocks: Anthropic.TextBlockParam[] = [
+    { type: "text", text: system, cache_control: { type: "ephemeral", ttl: "1h" } },
+  ];
+
+  let model = MODEL;
   for (let turn = 0; turn < MAX_TURNS; turn++) {
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 4096,
-      system,
-      tools: TOOLS,
-      messages,
-      ...(useAdaptive
-        ? {
-            thinking: { type: "adaptive" as const },
-            output_config: { effort: EFFORT as "low" | "medium" | "high" },
-          }
-        : {}),
-    });
+    let response: Anthropic.Message;
+    try {
+      response = await client.messages.create({
+        model,
+        // o thinking conta dentro do max_tokens; 4096 apertava com ele ligado
+        max_tokens: 8192,
+        system: systemBlocks,
+        tools: TOOLS,
+        messages,
+        ...(ADAPTIVE_MODELS.has(model)
+          ? {
+              thinking: { type: "adaptive" as const },
+              output_config: { effort: EFFORT as "low" | "medium" | "high" },
+            }
+          : {}),
+      });
+    } catch (e) {
+      // Modelo ainda não liberado pra esta conta: cai pro anterior em vez de
+      // deixar o cliente sem resposta, e deixa registrado pra alguém ver.
+      if (e instanceof Anthropic.NotFoundError && model !== FALLBACK_MODEL) {
+        await registrarFallback(model, e.message);
+        model = FALLBACK_MODEL;
+        turn--;
+        continue;
+      }
+      throw e;
+    }
 
     if (response.stop_reason === "tool_use") {
       messages.push({ role: "assistant", content: response.content });
