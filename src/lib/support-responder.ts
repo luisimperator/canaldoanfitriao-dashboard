@@ -19,7 +19,8 @@ import {
 //   2. se chegou mensagem mais nova, sai: quem responde é o handler dela;
 //   3. pega a trava da conversa (support_ia_lock). Ocupada = outra resposta
 //      em andamento; espera ela terminar e responde o que sobrou;
-//   4. junta TUDO que o cliente mandou depois da última resposta nossa
+//   4. se um humano tinha assumido e está calado há 24h, a IA religa;
+//   5. junta TUDO que o cliente mandou depois da última resposta nossa
 //      (textos, áudios transcritos, imagens do Storage) num turno só.
 
 const ESPERA_RAJADA_MS = 7_000;
@@ -27,6 +28,9 @@ const ESPERA_TRAVA_MS = 3_000;
 // maxDuration do webhook é 300s: 7s de rajada + até 120s de fila + o agente.
 const ESPERA_TRAVA_MAX_MS = 120_000;
 const HISTORICO_MAX = 40;
+// Depois de um humano assumir, a IA volta sozinha se ele ficar esse tempo
+// sem falar na conversa e o cliente escrever de novo.
+const HUMANO_SILENCIO_MS = 24 * 3600_000;
 const IMAGENS_MAX = 4;
 const VISION_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
@@ -104,7 +108,26 @@ export async function responderConversa(phone: string, nome: string | null): Pro
       .select("ia_ativa")
       .eq("wa_phone", phone)
       .maybeSingle();
-    if (conversa && conversa.ia_ativa === false) return; // humano assumiu
+    if (conversa && conversa.ia_ativa === false) {
+      // Humano assumiu: a IA cala pra não atropelar o atendimento. Mas isso
+      // vale pra AQUELA conversa. Se o humano não fala nada há mais de
+      // HUMANO_SILENCIO_MS e o cliente volta, é assunto novo: a IA religa.
+      const { data: ultimoHumano } = await admin
+        .from("support_messages")
+        .select("created_at")
+        .eq("wa_phone", phone)
+        .eq("direction", "out")
+        .eq("autor", "humano")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const desde = ultimoHumano?.created_at ? Date.parse(ultimoHumano.created_at) : 0;
+      if (Date.now() - desde < HUMANO_SILENCIO_MS) return;
+      await admin
+        .from("support_conversas")
+        .update({ ia_ativa: true, atendente: null })
+        .eq("wa_phone", phone);
+    }
 
     const { data: linhas } = await admin
       .from("support_messages")
