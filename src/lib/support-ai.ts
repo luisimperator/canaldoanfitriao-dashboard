@@ -20,6 +20,8 @@ import { findCustomer, blocoLabel, KB_BLOCOS, type KbItem } from "@/lib/support"
 // a chamada cai sozinha pro FALLBACK_MODEL e registra no webhook_log.
 const MODEL = process.env.SUPPORT_AI_MODEL || "claude-opus-5-5";
 const FALLBACK_MODEL = "claude-opus-4-8";
+// Nome da atendente (Lia = L + IA). Configurável sem deploy via env.
+const NOME = process.env.SUPPORT_AI_NAME || "Lia";
 const EFFORT = process.env.SUPPORT_AI_EFFORT || "medium";
 const SALES_CONTACT =
   process.env.SUPPORT_SALES_CONTACT || "+55 11 92507-2167";
@@ -28,6 +30,54 @@ const MAX_TURNS = 6;
 export interface AgentMessage {
   role: "user" | "assistant";
   content: string;
+}
+
+/** Quem está do outro lado desta conversa, vindo do próprio WhatsApp. */
+export interface AgentContact {
+  /** wa_phone como a Meta manda (só dígitos, com DDI). */
+  phone?: string | null;
+  /** Nome do perfil do WhatsApp, quando a Meta manda. */
+  nome?: string | null;
+}
+
+/** 5511974677033 → +55 (11) 97467-7033 (mesmo formato da caixa de entrada). */
+function telefoneBonito(p: string): string {
+  const d = p.replace(/\D/g, "");
+  if (d.length === 13) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 9)}-${d.slice(9)}`;
+  if (d.length === 12) return `+${d.slice(0, 2)} (${d.slice(2, 4)}) ${d.slice(4, 8)}-${d.slice(8)}`;
+  return `+${d}`;
+}
+
+function semAcento(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+// Busca trechos no mapa de um curso (support_docs): devolve as linhas que
+// casam com todos os termos, com 2 linhas de contexto, em vez de despejar o
+// documento inteiro na conversa. Sem termo, devolve o cabeçalho (como funciona
+// o acesso + tabela de anexos).
+function buscarNoMapa(doc: string, busca: string): string {
+  const linhas = doc.split("\n");
+  if (!busca) return linhas.slice(0, 45).join("\n");
+  const termos = semAcento(busca).split(/\s+/).filter(Boolean);
+  const hits: number[] = [];
+  linhas.forEach((l, i) => {
+    const n = semAcento(l);
+    if (termos.every((t) => n.includes(t))) hits.push(i);
+  });
+  if (hits.length === 0) return "";
+  const blocos: string[] = [];
+  let total = 0;
+  for (const i of hits) {
+    const trecho = linhas.slice(Math.max(0, i - 2), i + 3).join("\n");
+    blocos.push(trecho);
+    total += trecho.length;
+    if (total > 5000) {
+      blocos.push(`… (+${hits.length - blocos.length} ocorrências, refine a busca)`);
+      break;
+    }
+  }
+  return blocos.join("\n···\n");
 }
 
 export interface AgentResult {
@@ -102,8 +152,23 @@ async function buildSystemPrompt(): Promise<string> {
       "\n(A base de conhecimento ainda está vazia. Responda com cautela e escale o que não souber.)\n";
   }
 
-  return `Você é o atendente de SUPORTE pós-venda do Canal do Anfitrião, no WhatsApp.
+  return `Você é ${NOME}, atendente de SUPORTE pós-venda do Canal do Anfitrião, no WhatsApp.
 Seu papel é resolver dúvidas de quem JÁ é cliente (comprou). Você NÃO faz vendas.
+Se perguntarem seu nome, diga que é ${NOME}, do suporte do Canal do Anfitrião. Se perguntarem se é IA, diga que sim, que é a assistente virtual do suporte, e que passa pra alguém do time se a pessoa preferir.
+
+# Missão (pense nisso antes de CADA resposta)
+Toda conversa tem dois objetivos ao mesmo tempo: RETER o cliente e ele sair EXTREMAMENTE bem atendido. Antes de responder, pense no todo, não só na última frase:
+- Leia TODAS as mensagens novas do cliente antes de responder. Ele costuma mandar várias seguidas (texto, print, áudio); responda ao conjunto, uma vez só, sem repetir o que já disse na conversa.
+- O que essa pessoa está tentando resolver DE VERDADE? A pergunta literal às vezes é sintoma ("como cancelo?" pode ser "não achei o conteúdo que me prometeram").
+- Resolver o problema pontual é o mínimo. O padrão é ela terminar a conversa mais confiante na compra do que quando começou.
+- Nunca troque a satisfação de agora por retenção: sem enrolar e sem dificultar. Reter é consequência de atender bem.
+
+# Fatos do caso saem completos
+Quando a resposta depende da situação da pessoa, traga os fatos DELA: "achei aqui: sua compra do Anfitrião 5 Estrelas foi em 12/03/2025, R$ 1.497,00 no cartão, tá ativa". Data com dia/mês/ANO, valor com centavos, produto por extenso. Num reembolso, confirme produto, data e valor exatos antes de encaminhar. Brevidade corta enrolação, nunca os fatos do caso.
+Não afirme nada que você não conferiu (ex.: "as outras aulas estão funcionando"): se não sabe, não diga.
+
+# Cursos (onde está cada aula e material)
+Os alunos acessam dois cursos em https://app.nutror.com: Anfitrião 5 Estrelas (A5E) e Gigantes da Temporada. Quando perguntarem onde fica uma aula, um tema ou um material (planilha, contrato, cartilha), use consultar_mapa_cursos e responda com o caminho exato (curso › módulo › aula). Passe o curso que o lookup mostra que a pessoa tem, pra não indicar caminho do curso errado. Se o material não aparece no mapa, ele não faz parte daquele curso: diga isso com clareza, e se ele pertencer a outro produto que a pessoa não comprou, explique qual.
 
 # Regras de ouro (inegociáveis)
 1. Entenda primeiro o que a pessoa quer. Quando precisar consultar, identifique com lookup_customer usando o que ela tiver (e-mail, CPF ou nome). Antes de reembolso, cancelamento, pausa ou alteração, confirme a identidade (detalhes na base, em "Localizar e confirmar o cliente"). Nunca invente dados.
@@ -140,6 +205,26 @@ const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "consultar_mapa_cursos",
+    description:
+      "Consulta o mapa oficial de aulas e anexos dos cursos (Anfitrião 5 Estrelas e Gigantes da Temporada): em qual módulo/aula está cada conteúdo e onde baixar cada material. Use quando o aluno perguntar onde encontra uma aula, um tema ou um arquivo (planilha, contrato, cartilha, checklist). Busque pelo termo mais específico possível (ex.: 'contrato de administração', 'imposto de renda', 'controle-repasse'). Passe 'curso' quando souber qual curso a pessoa tem. Os anexos ficam DENTRO da própria aula em app.nutror.com, não existe aba de downloads.",
+    input_schema: {
+      type: "object",
+      properties: {
+        busca: {
+          type: "string",
+          description:
+            "termo de busca (tema, nome da aula ou do arquivo); vazio devolve o resumo do curso com a tabela de anexos",
+        },
+        curso: {
+          type: "string",
+          enum: ["a5e", "gigantes"],
+          description: "limita a busca a um curso; omita para buscar nos dois",
+        },
+      },
+    },
+  },
+  {
     name: "create_handoff",
     description:
       "Abre um caso na fila de atendimento humano quando a conclusão exige ação interna (cancelamento de renovação, reembolso, divergência/cashback, brinde não recebido, transferência de ingresso, alteração de dados) ou para encaminhar um lead ao comercial. Colete o máximo de informação ANTES de escalar. Chame UMA vez por caso: se você já registrou este caso na conversa, não chame de novo — apenas confirme ao cliente que está registrado.",
@@ -154,7 +239,11 @@ const TOOLS: Anthropic.Tool[] = [
         },
         email: { type: "string" },
         nome: { type: "string" },
-        telefone: { type: "string" },
+        telefone: {
+          type: "string",
+          description:
+            "Deixe em branco: o telefone da conversa é preenchido automaticamente. Só informe se o cliente pedir contato em OUTRO número.",
+        },
         dados_coletados: {
           type: "object",
           description: "Dados estruturados coletados (ex.: endereço do brinde).",
@@ -165,8 +254,36 @@ const TOOLS: Anthropic.Tool[] = [
   },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function runTool(name: string, input: any): Promise<{ text: string; handoffId?: string }> {
+async function runTool(
+  name: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: any,
+  contact?: AgentContact
+): Promise<{ text: string; handoffId?: string }> {
+  if (name === "consultar_mapa_cursos") {
+    const admin = getSupabaseAdmin();
+    if (!admin) return { text: JSON.stringify({ error: "sem banco" }) };
+    const curso =
+      input?.curso === "a5e" || input?.curso === "gigantes" ? String(input.curso) : null;
+    const slugs = curso ? [`mapa-${curso}`] : ["mapa-a5e", "mapa-gigantes"];
+    const { data } = await admin.from("support_docs").select("slug,titulo,conteudo").in("slug", slugs);
+    const docs = data ?? [];
+    if (docs.length === 0) {
+      return { text: JSON.stringify({ error: "mapa de cursos não carregado no banco" }) };
+    }
+    const busca = input?.busca ? String(input.busca).trim() : "";
+    const partes: string[] = [];
+    for (const d of docs) {
+      const r = buscarNoMapa(String(d.conteudo), busca);
+      if (r) partes.push(`# ${d.titulo}\n${r}`);
+    }
+    if (partes.length === 0) {
+      return {
+        text: `Nada no mapa casa com "${busca}". Tente um termo mais curto ou outro nome (ex.: "contrato", "imposto", "repasse", "vistoria"). Se ainda assim não aparecer, o material não faz parte desse curso.`,
+      };
+    }
+    return { text: partes.join("\n\n") };
+  }
   if (name === "lookup_customer") {
     const result = await findCustomer({
       email: input?.email ? String(input.email) : undefined,
@@ -182,7 +299,9 @@ async function runTool(name: string, input: any): Promise<{ text: string; handof
       ? String(input.motivo)
       : "outro";
     const email = input?.email ? String(input.email) : null;
-    const telefone = input?.telefone ? String(input.telefone) : null;
+    // O telefone da conversa é a fonte da verdade: a IA não precisa (nem deve)
+    // perguntar. Só vale o que ela mandar se o cliente indicou outro número.
+    const telefone = input?.telefone ? String(input.telefone) : contact?.phone ?? null;
 
     // Trava anti-duplicata. Cada mensagem do cliente roda o agente de novo, e
     // um "ta bom"/"obrigado" depois da escalada fazia o modelo registrar o
@@ -224,7 +343,7 @@ async function runTool(name: string, input: any): Promise<{ text: string; handof
         motivo,
         resumo: input?.resumo ? String(input.resumo) : null,
         email,
-        nome: input?.nome ? String(input.nome) : null,
+        nome: input?.nome ? String(input.nome) : contact?.nome ?? null,
         telefone,
         dados_coletados: input?.dados_coletados ?? null,
       })
@@ -239,7 +358,6 @@ async function runTool(name: string, input: any): Promise<{ text: string; handof
   return { text: JSON.stringify({ error: `ferramenta desconhecida: ${name}` }) };
 }
 
-/** Imagem que veio junto da mensagem do cliente (print de erro, comprovante…). */
 async function registrarFallback(modelo: string, erro: string): Promise<void> {
   const admin = getSupabaseAdmin();
   if (!admin) return;
@@ -250,6 +368,7 @@ async function registrarFallback(modelo: string, erro: string): Promise<void> {
   });
 }
 
+/** Imagem que veio junto da mensagem do cliente (print de erro, comprovante…). */
 export interface AgentImage {
   /** image/jpeg, image/png, image/webp ou image/gif — o que a API aceita. */
   mime: string;
@@ -261,7 +380,8 @@ export async function runSupportAgent(
   message: string,
   history: AgentMessage[] = [],
   supervisorNotes: string[] = [],
-  images: AgentImage[] = []
+  images: AgentImage[] = [],
+  contact?: AgentContact
 ): Promise<AgentResult> {
   if (!aiConfigured()) {
     const off = "A IA de suporte ainda não está ligada (falta a ANTHROPIC_API_KEY no servidor).";
@@ -326,6 +446,17 @@ export async function runSupportAgent(
   const systemBlocks: Anthropic.TextBlockParam[] = [
     { type: "text", text: system, cache_control: { type: "ephemeral", ttl: "1h" } },
   ];
+  // A conversa acontece DENTRO do WhatsApp: o número já é conhecido. Sem isso
+  // a IA pedia "me confirma o melhor WhatsApp" pra quem estava justamente
+  // falando por WhatsApp. Vai depois do breakpoint porque muda por conversa.
+  if (contact?.phone) {
+    systemBlocks.push({
+      type: "text",
+      text: `# Contato desta conversa (você já tem)\n- WhatsApp: ${telefoneBonito(contact.phone)}${
+        contact.nome ? `\n- Nome no perfil: ${contact.nome}` : ""
+      }\nÉ por esse número que a conversa está acontecendo. NUNCA pergunte o WhatsApp da pessoa. Use-o em create_handoff sem perguntar; se fizer diferença, só confirme numa frase ("vou registrar com esse mesmo número") sem esperar resposta.`,
+    });
+  }
 
   let model = MODEL;
   for (let turn = 0; turn < MAX_TURNS; turn++) {
@@ -363,7 +494,7 @@ export async function runSupportAgent(
       for (const block of response.content) {
         if (block.type === "tool_use") {
           usedTools.push(block.name);
-          const out = await runTool(block.name, block.input);
+          const out = await runTool(block.name, block.input, contact);
           if (out.handoffId) handoffId = out.handoffId;
           toolResults.push({
             type: "tool_result",

@@ -1,13 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   extFromMime,
   fetchWhatsappMedia,
   getWhatsappConfig,
-  sendWhatsappText,
   verifyWhatsappSignature,
 } from "@/lib/whatsapp";
-import { runSupportAgent, type AgentMessage, type AgentImage } from "@/lib/support-ai";
+import { responderConversa } from "@/lib/support-responder";
 import { transcreverAudio, transcricaoConfigurada } from "@/lib/transcribe";
 
 // Webhook do WhatsApp Cloud API (Meta) — Fase 3 do Suporte.
@@ -27,14 +26,8 @@ import { transcreverAudio, transcricaoConfigurada } from "@/lib/transcribe";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // a IA pode levar alguns segundos (hobby da Vercel limita a 60)
 
-const HISTORY_LIMIT = 40;
-
 // Tipos que viram anexo (o resto vira texto ou é ignorado).
 const MEDIA_TYPES = ["image", "audio", "video", "document", "sticker"] as const;
-
-// Formatos de imagem que a API da Claude aceita. WhatsApp manda jpeg quase
-// sempre; o resto entra por completude.
-const VISION_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 // Texto legível de uma mensagem, seja qual for o tipo. Áudio e imagem não têm
 // texto — mas legenda (caption) tem, e é o que o cliente escreveu junto.
@@ -105,6 +98,7 @@ export async function POST(req: NextRequest) {
 
   const autoReply = (await getWhatsappConfig()).autoReply;
 
+  const conversasNovas = new Map<string, string | null>();
   const entries = Array.isArray(body?.entry) ? body.entry : [];
   for (const entry of entries) {
     const changes = Array.isArray(entry?.changes) ? entry.changes : [];
@@ -170,10 +164,8 @@ export async function POST(req: NextRequest) {
         }
 
         // Baixa o anexo e guarda no Storage (a URL da Meta expira e exige token).
-        // O que baixou aqui também alimenta a IA logo abaixo — áudio vira texto
-        // por transcrição, imagem vai como imagem mesmo.
-        let textoParaIA = text;
-        const imagensParaIA: AgentImage[] = [];
+        // Áudio vira texto por transcrição e fica gravado na própria mensagem;
+        // imagem a IA lê do Storage na hora de responder.
 
         if (isMedia) {
           const mediaId = String(msg?.[tipo]?.id ?? "");
@@ -197,7 +189,6 @@ export async function POST(req: NextRequest) {
               if (tipo === "audio" && transcricaoConfigurada()) {
                 const tr = await transcreverAudio(media.bytes, mime);
                 if (tr.ok && tr.texto) {
-                  textoParaIA = [text, tr.texto].filter(Boolean).join("\n");
                   // Guarda junto da mensagem: quem abrir a conversa lê o áudio
                   // sem precisar dar play.
                   await supabase
@@ -213,14 +204,6 @@ export async function POST(req: NextRequest) {
                 }
               }
 
-              // Imagem → vai para a IA como imagem. Print de erro e comprovante
-              // são metade do suporte.
-              if (tipo === "image" && VISION_MIMES.has(mime.split(";")[0].trim())) {
-                imagensParaIA.push({
-                  mime: mime.split(";")[0].trim(),
-                  base64: Buffer.from(media.bytes).toString("base64"),
-                });
-              }
             } else {
               await supabase.from("webhook_log").insert({
                 source: "whatsapp",
@@ -231,70 +214,21 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        if (!autoReply) continue; // modo observação: só guarda
-
-        // Anexo que a IA não consegue interpretar (vídeo, PDF, sticker, ou áudio
-        // sem transcrição configurada) continua indo direto pro humano.
-        const iaEntende = !isMedia || imagensParaIA.length > 0 || textoParaIA !== text;
-        if (!iaEntende) continue;
-
-        // Conversa com a IA desligada na mão fica só com o humano.
-        const { data: conversa } = await supabase
-          .from("support_conversas")
-          .select("ia_ativa")
-          .eq("wa_phone", from)
-          .maybeSingle();
-        if (conversa && conversa.ia_ativa === false) continue;
-
-        // Histórico da conversa (mensagens anteriores deste número).
-        const { data: prior } = await supabase
-          .from("support_messages")
-          .select("direction,text,wa_message_id,created_at")
-          .eq("wa_phone", from)
-          .order("created_at", { ascending: true })
-          .limit(HISTORY_LIMIT);
-        const history: AgentMessage[] = (prior ?? [])
-          .filter((m) => m.wa_message_id !== waId && m.text)
-          .map((m) => ({
-            role: m.direction === "in" ? "user" : "assistant",
-            content: String(m.text),
-          }));
-
-        try {
-          const result = await runSupportAgent(textoParaIA, history, [], imagensParaIA);
-          // Envia em mensagens separadas, como um atendente no WhatsApp.
-          for (let i = 0; i < result.messages.length; i++) {
-            const part = result.messages[i];
-            const sent = await sendWhatsappText(from, part);
-            await supabase.from("support_messages").insert({
-              wa_phone: from,
-              direction: "out",
-              text: part,
-              tipo: "text",
-              autor: "ia",
-              wa_message_id: sent.id ?? null,
-              // marca o caso só na última mensagem do turno
-              escalated: i === result.messages.length - 1 ? result.escalated : false,
-            });
-            if (!sent.ok) {
-              await supabase.from("webhook_log").insert({
-                source: "whatsapp",
-                note: "falha ao enviar resposta",
-                body: { to: from, error: sent.error },
-              });
-              break;
-            }
-            // pequeno intervalo entre mensagens (efeito humano)
-            if (i < result.messages.length - 1) await new Promise((r) => setTimeout(r, 600));
-          }
-        } catch (e) {
-          await supabase.from("webhook_log").insert({
-            source: "whatsapp",
-            note: "erro ao processar mensagem",
-            body: { to: from, error: e instanceof Error ? e.message : String(e) },
-          });
-        }
+        // Não responde aqui. Cliente manda "oi" + print + "tá dando isso" em
+        // segundos, e responder mensagem por mensagem disparava um agente por
+        // mensagem, em paralelo, cada um sem ver os outros. A resposta sai
+        // depois, uma vez por conversa, cobrindo a rajada inteira.
+        conversasNovas.set(from, nomeContato ?? conversasNovas.get(from) ?? null);
       }
+    }
+  }
+
+  // Modo observação (auto reply desligado): só guarda.
+  if (autoReply) {
+    for (const [phone, nome] of conversasNovas) {
+      // Responde 200 pra Meta já e trabalha depois (a Meta reenvia o evento se
+      // demorar, e a espera da rajada + o agente passam fácil de 20s).
+      after(() => responderConversa(phone, nome));
     }
   }
 
