@@ -27,7 +27,12 @@ export async function getServerSupabase(): Promise<SupabaseClient | null> {
 }
 
 // Permissões do usuário atual. Sem Supabase (modo demo) libera tudo.
-// Linha ausente em app_access = acesso total (não trava ninguém sem querer).
+//
+// Linha ausente em app_access = NENHUMA aba (fail-closed). Antes liberava
+// tudo "pra não travar ninguém sem querer" — mas isso fazia de qualquer conta
+// criada no Auth (inclusive uma criada por um invasor com credencial vazada)
+// um usuário com acesso total ao painel. Quem entrar sem linha vê a tela
+// /sem-acesso e um admin libera as abas em /usuarios.
 export async function getAccess(): Promise<Access> {
   const sb = await getServerSupabase();
   if (!sb) return { email: null, isAdmin: false, tabs: ALL_TAB_HREFS, authed: false };
@@ -40,7 +45,8 @@ export async function getAccess(): Promise<Access> {
     .select("is_admin, tabs")
     .eq("user_id", user.id)
     .maybeSingle();
-  if (!data) return { email: user.email ?? null, isAdmin: false, tabs: ALL_TAB_HREFS, authed: true };
-  const tabs = data.is_admin ? ALL_TAB_HREFS : ((data.tabs as string[]) ?? []);
-  return { email: user.email ?? null, isAdmin: data.is_admin, tabs, authed: true };
+  if (!data) return { email: user.email ?? null, isAdmin: false, tabs: [], authed: true };
+  const isAdmin = data.is_admin === true;
+  const tabs = isAdmin ? ALL_TAB_HREFS : ((data.tabs as string[]) ?? []);
+  return { email: user.email ?? null, isAdmin, tabs, authed: true };
 }

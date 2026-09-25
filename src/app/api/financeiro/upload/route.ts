@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseStatement } from "@/lib/statement-parser";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getAccess } from "@/lib/supabase-server";
+import { canAccess } from "@/lib/access";
 
 // Upload de extrato bancário (OFX ou CSV do Inter).
 // Com Supabase configurado, grava os lançamentos em fin_transactions
 // (deduplicados por FITID quando o arquivo é OFX). Sem Supabase, apenas
 // devolve a prévia do que foi lido — útil para validar o arquivo em modo demo.
+//
+// Escreve no extrato: exige sessão E a aba Extrato do banco — o porteiro só
+// garante sessão.
 
 export async function POST(req: NextRequest) {
+  const access = await getAccess();
+  if (!access.authed || !canAccess("/financeiro/extrato", access)) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
   const formData = await req.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {

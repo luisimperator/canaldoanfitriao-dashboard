@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runSupportAgent, type AgentMessage } from "@/lib/support-ai";
 import { getAccess } from "@/lib/supabase-server";
+import { hasValidBearer } from "@/lib/secure-compare";
 
 // POST /api/support/agent
 // Roda o cérebro de IA do suporte para uma mensagem do cliente.
@@ -12,9 +13,8 @@ import { getAccess } from "@/lib/supabase-server";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const token = process.env.SUPPORT_API_TOKEN;
-  const auth = req.headers.get("authorization");
-  const tokenOk = Boolean(token) && auth === `Bearer ${token}`;
+  // Bearer comparado em tempo constante (falso se SUPPORT_API_TOKEN não existir).
+  const tokenOk = hasValidBearer(req, process.env.SUPPORT_API_TOKEN);
   if (!tokenOk) {
     const access = await getAccess();
     if (!access.authed) {
