@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { hasValidWebhookKey } from "@/lib/secure-compare";
 
 // Webhook da TMB (pagamentos: pix / boleto parcelado).
 // Por enquanto é um "ouvido": registra TODO payload recebido em webhook_log
@@ -9,6 +10,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 //
 // Configure no painel da TMB:
 //   https://SEU_DOMINIO/api/webhooks/tmb?key=TMB_WEBHOOK_KEY
+// (a chave também é aceita no header x-webhook-key).
 
 export async function POST(req: NextRequest) {
   const expectedKey = process.env.TMB_WEBHOOK_KEY;
@@ -18,7 +20,7 @@ export async function POST(req: NextRequest) {
       { status: 501 }
     );
   }
-  if (req.nextUrl.searchParams.get("key") !== expectedKey) {
+  if (!hasValidWebhookKey(req, expectedKey)) {
     return NextResponse.json({ error: "chave inválida" }, { status: 401 });
   }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { safeEqual } from "@/lib/secure-compare";
 
 // Webhook do Asaas — validação de transferências (mecanismo de segurança).
 //
@@ -20,8 +21,10 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 //      pro Inter), ou
 //   2. CPF/CNPJ de destino presente em ASAAS_TRANSFER_ALLOWED_DOCS (lista
 //      separada por vírgula).
-// Sem nenhuma das duas envs configuradas, aprova tudo e registra aviso no
-// log — configure ao menos uma para travar retiradas a contas desconhecidas.
+// Sem nenhuma das duas envs configuradas, RECUSA tudo — o mecanismo existe
+// pra travar retirada a conta desconhecida, e "aprovar por padrão" fazia
+// dele um carimbo automático. Configure ao menos uma env antes de ligar o
+// mecanismo no Asaas.
 //
 // Toda decisão fica registrada em webhook_log (source='asaas').
 
@@ -43,14 +46,16 @@ interface AsaasTransferPayload {
 }
 
 export async function POST(req: NextRequest) {
+  // Sem o token configurado, 503: o Asaas cancela a transferência depois de
+  // 3 falhas, então "servidor mal configurado" continua sendo o lado seguro.
   const expectedToken = process.env.ASAAS_WEBHOOK_TOKEN;
   if (!expectedToken) {
     return NextResponse.json(
       { error: "ASAAS_WEBHOOK_TOKEN não configurada no servidor." },
-      { status: 501 }
+      { status: 503 }
     );
   }
-  if (req.headers.get("asaas-access-token") !== expectedToken) {
+  if (!safeEqual(req.headers.get("asaas-access-token"), expectedToken)) {
     return NextResponse.json({ error: "token inválido" }, { status: 401 });
   }
 
@@ -99,9 +104,11 @@ export async function POST(req: NextRequest) {
   let aprovada: boolean;
   let motivo: string;
   if (allowlist.length === 0 && !sweepKey) {
-    aprovada = true;
+    // Nenhum destino conhecido configurado = nada pode ser aprovado. Antes
+    // aprovava "por padrão", o que deixava qualquer transferência passar.
+    aprovada = false;
     motivo =
-      "aprovada por padrão — configure ASAAS_SWEEP_PIX_KEY ou ASAAS_TRANSFER_ALLOWED_DOCS para restringir destinos";
+      "recusada: nenhum destino autorizado configurado (defina ASAAS_SWEEP_PIX_KEY ou ASAAS_TRANSFER_ALLOWED_DOCS)";
   } else if (pixIgual) {
     aprovada = true;
     motivo = `destino é a chave Pix da varredura (${destinoNome})`;

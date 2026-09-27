@@ -74,23 +74,27 @@ export async function POST(req: NextRequest) {
 
   const supabase = getSupabaseAdmin();
 
-  // CAIXA-PRETA: registra toda requisição recebida.
+  // Assinatura inválida, ausente, ou impossível de verificar em produção (sem
+  // app secret) = não veio da Meta. Registra a tentativa SEM o corpo — não
+  // guardamos payload de quem não se autenticou.
+  if (sigOk === false) {
+    if (supabase) {
+      await supabase.from("webhook_log").insert({
+        source: "whatsapp",
+        note: "assinatura inválida ou não verificável — rejeitada",
+      });
+    }
+    return NextResponse.json({ error: "assinatura inválida" }, { status: 401 });
+  }
+
+  // CAIXA-PRETA: registra toda requisição aceita. sigOk === null só acontece
+  // fora de produção (sem app secret configurado).
   if (supabase) {
     await supabase.from("webhook_log").insert({
       source: "whatsapp",
-      note:
-        sigOk === false
-          ? "assinatura inválida"
-          : sigOk === null
-            ? "sem app secret (não verificado)"
-            : "evento",
+      note: sigOk === null ? "sem app secret (não verificado; só fora de produção)" : "evento",
       body: body ?? (raw ? { _raw: raw.slice(0, 2000) } : null),
     });
-  }
-
-  // Assinatura presente e inválida = não veio da Meta.
-  if (sigOk === false) {
-    return NextResponse.json({ error: "assinatura inválida" }, { status: 401 });
   }
   if (!supabase) {
     return NextResponse.json({ ok: true, note: "sem supabase" });
