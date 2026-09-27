@@ -15,6 +15,8 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { getD0ByLoad, getSpeedToLead } from "@/lib/speed";
 import { getMqlCohort, getMqlFlow } from "@/lib/mql-flow";
 import { getBuyerTempMonth, PERFIL_ORDER, type BuyerTempRow } from "@/lib/buyer-temp";
+import { getVendasPorDia } from "@/lib/vendas-dia";
+import { VendasDiaADia } from "@/components/VendasDiaADia";
 
 export const dynamic = "force-dynamic";
 
@@ -87,13 +89,14 @@ export default async function VendasPage({
 
   const stats = sellerStats(data, refDate);
 
-  const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load, cohort, buyerTemp] =
+  const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load, cohort, buyerTemp, vendasDia] =
     await Promise.all([
       getSpeedToLead(30),
       getMqlFlow(),
       getD0ByLoad(),
       getMqlCohort(),
       getBuyerTempMonth(`${selectedMonth}-01`, lastDayOf(selectedMonth)),
+      getVendasPorDia(periodFrom, periodTo),
     ]);
 
   // Compradores do mês × temperatura: visão geral + por vendedor.
@@ -281,6 +284,12 @@ export default async function VendasPage({
           hint="A5E + Gigantes"
         />
       </div>
+
+      {vendasDia && (
+        <Card title={`Vendas dia a dia (${periodLabel}) — Eduzz + TMB`} className="mb-4">
+          <VendasDiaADia dias={vendasDia} periodo={periodLabel} />
+        </Card>
+      )}
 
       {mqlFlow && mqlFlow.windows.length > 0 && (
         <Card title="Fluxo de MQL — tem lead pra mais vendedor?" className="mb-4">
