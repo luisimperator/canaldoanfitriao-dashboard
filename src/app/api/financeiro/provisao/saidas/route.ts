@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getAccess } from "@/lib/supabase-server";
+import { canAccess } from "@/lib/access";
 
 // CRUD das saídas programadas (pagamentos agendados) da Provisão de caixa.
 // POST cadastra {descricao, valor, data}; DELETE ?id= remove.
+//
+// Exige sessão E a aba de Provisão — o porteiro só garante sessão.
+
+async function autorizado(): Promise<boolean> {
+  const access = await getAccess();
+  return access.authed && canAccess("/financeiro/provisao", access);
+}
 
 export async function POST(req: NextRequest) {
+  if (!(await autorizado())) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
   const body = await req.json().catch(() => null);
   const descricao = String(body?.descricao ?? "").trim();
   const valor = Number(body?.valor);
@@ -36,6 +48,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!(await autorizado())) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Informe o id." }, { status: 400 });
 

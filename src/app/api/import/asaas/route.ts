@@ -7,12 +7,14 @@ import {
   getAsaasConfig,
 } from "@/lib/integrations/asaas";
 import { registrarSaldoAsaas } from "@/lib/asaas-saldo";
+import { hasValidWebhookKey } from "@/lib/secure-compare";
 
 // Sync do Asaas → banco, e casamento com a venda de origem na Eduzz.
 //
 // A chave do Asaas fica só na Vercel (ASAAS_API_KEY) — quem fala com eles é o
-// app. Esta rota é chamada pelo cron do Supabase com ?key=, comparada com o
-// segredo asaas_sync_key do Vault (mesmo padrão do sync do Inter).
+// app. Esta rota é chamada pelo cron do Supabase com ?key= (ou header
+// x-webhook-key), comparada em tempo constante com o segredo asaas_sync_key
+// do Vault (mesmo padrão do sync do Inter).
 //
 // GET /api/import/asaas?key=...&dias=120
 
@@ -26,8 +28,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { data: esperado } = await admin.rpc("asaas_sync_key");
-  const key = req.nextUrl.searchParams.get("key");
-  if (!esperado || key !== esperado) {
+  if (!hasValidWebhookKey(req, typeof esperado === "string" ? esperado : null)) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 

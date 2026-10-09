@@ -1,5 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getAccess } from "@/lib/supabase-server";
+import { canAccess } from "@/lib/access";
+import { isCronRequest } from "@/lib/secure-compare";
 
 // Importa o gasto diário dos últimos 90 dias da conta de anúncios do Meta.
 // Janela de 90 (e não 30) para o sync se auto-corrigir depois de um período
@@ -11,8 +14,21 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // e "CA2 - Canal do Anfitrião"; o gasto do dia é a SOMA das contas.
 // O cron da Vercel (vercel.json) chama por GET a cada 6h; o GET reusa o mesmo
 // handler. POST continua valendo para disparo manual.
+//
+// Quem pode disparar: o cron (bearer CRON_SECRET) ou uma sessão com a aba
+// Integrações. O porteiro (src/proxy.ts) só garante sessão; a permissão da
+// aba é conferida aqui.
 
-export async function POST() {
+async function autorizado(req: NextRequest): Promise<boolean> {
+  if (isCronRequest(req)) return true;
+  const access = await getAccess();
+  return access.authed && canAccess("/integracoes", access);
+}
+
+export async function POST(req: NextRequest) {
+  if (!(await autorizado(req))) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
@@ -112,6 +128,6 @@ export async function POST() {
 }
 
 // Cron da Vercel só faz GET.
-export async function GET() {
-  return POST();
+export async function GET(req: NextRequest) {
+  return POST(req);
 }

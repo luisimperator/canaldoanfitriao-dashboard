@@ -112,7 +112,7 @@ export function UsersManager({
   }
 
   async function resetPassword(u: UserRow) {
-    const senha = window.prompt(`Nova senha para ${u.email}:`);
+    const senha = window.prompt(`Nova senha para ${u.email} (mín. 12 caracteres):`);
     if (senha === null) return;
     await run({ action: "reset", userId: u.id, password: senha }, "Senha redefinida.");
   }
@@ -164,7 +164,7 @@ export function UsersManager({
               value={nPass}
               onChange={(e) => setNPass(e.target.value)}
               className="w-full rounded-lg border border-slate-300 dark:border-white/15 px-3 py-2 text-sm"
-              placeholder="mín. 4 caracteres"
+              placeholder="mín. 12 caracteres"
             />
           </div>
         </div>
