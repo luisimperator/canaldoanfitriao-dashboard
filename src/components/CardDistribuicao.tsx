@@ -85,7 +85,7 @@ export function CardDistribuicao({
               ) : (
                 <>
                   Ainda em aberto: recalcula sozinho até{" "}
-                  <strong>{shortDate(d.dataFechamento)}</strong> (dia útil anterior à
+                  <strong>{shortDate(d.dataFechamento)} às 20h50</strong> (dia útil anterior à
                   transferência). Tudo que entrar até lá aumenta o bolo.
                 </>
               )}
