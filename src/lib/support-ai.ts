@@ -5,6 +5,7 @@
 //   - responde com base na base de conhecimento (treinamento)
 //   - conduz procedimentos guiados e ESCALA pra fila humana quando precisa de
 //     ação financeira/de conta (ferramenta create_handoff)
+//   - fecha o caso quando o próprio contato traz a solução (fechar_caso)
 //   - encaminha leads (não clientes) pro comercial
 //
 // Usa o SDK oficial da Anthropic (Claude). Sem ANTHROPIC_API_KEY, fica
@@ -184,6 +185,8 @@ Os alunos acessam dois cursos em https://app.nutror.com: Anfitrião 5 Estrelas (
 
 # Até onde você resolve sozinho (modo autônomo)
 Você conduz procedimentos guiados passo a passo (ex.: orientar o cancelamento, coletar o endereço do brinde, explicar a renovação) e SÓ então escala — já com tudo coletado. Use create_handoff para abrir um caso na fila humana quando a conclusão exigir AÇÃO interna nossa: cancelamento de renovação, reembolso, divergência/cashback de pagamento, brinde não recebido (com endereço coletado), transferência de ingresso, ou qualquer alteração que dependa de um humano. Antes de escalar, colete e resuma tudo no campo "resumo" (cliente, e-mail, pedido, o que já foi coletado, ação necessária).
+Casos abertos: o bloco do contato lista os casos dele que ainda estão na fila do time. Um mesmo número pode ter vários casos ao mesmo tempo (ex.: o Foley repassa dúvidas de vários alunos). Assunto que não é nenhum dos casos abertos vira caso novo: chame create_handoff com assunto_diferente: true. Mesmo assunto de um caso aberto não abre outro: só diga que já está com o time.
+Fechar caso: quando a pessoa disser que um caso aberto foi resolvido, ou trouxer a resposta dele, feche com fechar_caso e escreva em "resolucao" a resposta em si (o que era, link, onde fica), não só "resolvido". Depois confirme numa frase. "Ok", "obrigado" ou "fico no aguardo" não fecham caso.
 Dúvidas de INFORMAÇÃO/consulta (valores, datas, acesso, validade, "estou inadimplente?", "minha renovação está ativa?") você responde sozinho usando o lookup e a base de conhecimento, sem escalar. Quando a compra no lookup já trouxer "dataReembolso", informe essa data diretamente ao cliente — só escale por causa da data do estorno se esse campo vier vazio.
 
 # Base de conhecimento (seu treinamento)
@@ -248,11 +251,49 @@ const TOOLS: Anthropic.Tool[] = [
           type: "object",
           description: "Dados estruturados coletados (ex.: endereço do brinde).",
         },
+        assunto_diferente: {
+          type: "boolean",
+          description:
+            "true quando o contato já tem caso aberto (lista no bloco do contato) e este é OUTRO assunto. Sem isso, um caso aberto do mesmo motivo bloqueia a abertura.",
+        },
       },
       required: ["motivo", "resumo"],
     },
   },
+  {
+    name: "fechar_caso",
+    description:
+      "Fecha um caso aberto DESTE contato (lista no bloco do contato) quando a pessoa diz que foi resolvido ou traz a resposta. Grava a resolução pro time e pra base aprender.",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "id do caso, como aparece na lista de casos abertos" },
+        resolucao: {
+          type: "string",
+          description:
+            "A resposta em si, completa (o que era, link, onde fica). Ex.: 'Não é aula do A5E: é o vídeo do Sweet Suites no YouTube, https://youtu.be/..., em 53:47.'",
+        },
+      },
+      required: ["id", "resolucao"],
+    },
+  },
 ];
+
+/** Casos deste contato que ainda estão na fila do time (mais recente primeiro). */
+async function casosAbertos(
+  phone: string
+): Promise<{ id: string; created_at: string; motivo: string; resumo: string | null }[]> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return [];
+  const { data } = await admin
+    .from("support_handoffs")
+    .select("id,created_at,motivo,resumo")
+    .eq("telefone", phone)
+    .neq("status", "resolvido")
+    .order("created_at", { ascending: false })
+    .limit(10);
+  return data ?? [];
+}
 
 async function runTool(
   name: string,
@@ -308,14 +349,17 @@ async function runTool(
     // MESMO caso outra vez (o histórico que ele relê só tem os textos, não as
     // chamadas de ferramenta). Caso não-resolvido recente, do mesmo motivo,
     // pro mesmo contato = mesmo caso: devolve o existente em vez de criar.
+    // Mas o mesmo número pode trazer dúvidas de pessoas diferentes (o Foley
+    // repassa as de vários alunos): com assunto_diferente a IA, que vê a lista
+    // de casos abertos no bloco do contato, abre outro caso mesmo assim.
     const contato: string[] = [];
     if (telefone) contato.push(`telefone.eq.${telefone}`);
     if (email) contato.push(`email.eq.${email}`);
-    if (contato.length > 0) {
+    if (contato.length > 0 && input?.assunto_diferente !== true) {
       const desde = new Date(Date.now() - 14 * 86_400_000).toISOString();
       const { data: aberto } = await admin
         .from("support_handoffs")
-        .select("id")
+        .select("id,resumo")
         .eq("motivo", motivo)
         .neq("status", "resolvido")
         .gte("created_at", desde)
@@ -329,8 +373,9 @@ async function runTool(
             ok: true,
             id: aberto.id,
             ja_existia: true,
+            resumo_do_caso_aberto: aberto.resumo,
             aviso:
-              "Este cliente já tem um caso aberto com esse motivo — não criei outro. Apenas confirme ao cliente que está registrado.",
+              "Este contato já tem um caso aberto com esse motivo, então não criei outro. Se for o MESMO assunto, só confirme que está registrado. Se for OUTRO assunto, chame create_handoff de novo com assunto_diferente: true.",
           }),
           handoffId: aberto.id,
         };
@@ -354,6 +399,44 @@ async function runTool(
       text: JSON.stringify({ ok: true, id: data?.id }),
       handoffId: data?.id,
     };
+  }
+  if (name === "fechar_caso") {
+    const admin = getSupabaseAdmin();
+    if (!admin) return { text: JSON.stringify({ error: "sem banco" }) };
+    if (!contact?.phone) {
+      return { text: JSON.stringify({ error: "Só dá pra fechar caso numa conversa de WhatsApp." }) };
+    }
+    const id = String(input?.id ?? "").trim().toLowerCase();
+    const resolucao = String(input?.resolucao ?? "").trim();
+    if (!id || !resolucao) {
+      return { text: JSON.stringify({ error: "id e resolucao são obrigatórios." }) };
+    }
+    // Só fecha caso aberto deste mesmo número: ninguém fecha o caso de outra
+    // pessoa pelo WhatsApp.
+    const alvo = (await casosAbertos(contact.phone)).filter((c) => c.id.startsWith(id));
+    if (alvo.length !== 1) {
+      return {
+        text: JSON.stringify({
+          error:
+            alvo.length === 0
+              ? "Esse caso não está aberto para este contato. Confira o id na lista de casos abertos."
+              : "id ambíguo: use o id completo da lista.",
+        }),
+      };
+    }
+    const agora = new Date().toISOString();
+    const { error } = await admin
+      .from("support_handoffs")
+      .update({
+        status: "resolvido",
+        resolved_at: agora,
+        updated_at: agora,
+        resolvido_por: `${contact.nome?.trim() || telefoneBonito(contact.phone)} pelo WhatsApp (${NOME})`,
+        resolucao,
+      })
+      .eq("id", alvo[0].id);
+    if (error) return { text: JSON.stringify({ error: error.message }) };
+    return { text: JSON.stringify({ ok: true, id: alvo[0].id, fechado: true }) };
   }
   return { text: JSON.stringify({ error: `ferramenta desconhecida: ${name}` }) };
 }
@@ -450,11 +533,23 @@ export async function runSupportAgent(
   // a IA pedia "me confirma o melhor WhatsApp" pra quem estava justamente
   // falando por WhatsApp. Vai depois do breakpoint porque muda por conversa.
   if (contact?.phone) {
+    // Casos do contato na fila: sem isso a IA não sabia que já tinha escalado
+    // (o histórico só guarda texto) nem tinha como fechar o caso certo.
+    const casos = await casosAbertos(contact.phone);
+    const listaCasos =
+      casos.length === 0
+        ? "Nenhum."
+        : casos
+            .map(
+              (c) =>
+                `- id ${c.id} · ${new Date(c.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} · ${c.motivo} · ${(c.resumo ?? "").replace(/\s+/g, " ").slice(0, 300)}`
+            )
+            .join("\n");
     systemBlocks.push({
       type: "text",
       text: `# Contato desta conversa (você já tem)\n- WhatsApp: ${telefoneBonito(contact.phone)}${
         contact.nome ? `\n- Nome no perfil: ${contact.nome}` : ""
-      }\nÉ por esse número que a conversa está acontecendo. NUNCA pergunte o WhatsApp da pessoa. Use-o em create_handoff sem perguntar; se fizer diferença, só confirme numa frase ("vou registrar com esse mesmo número") sem esperar resposta.`,
+      }\nÉ por esse número que a conversa está acontecendo. NUNCA pergunte o WhatsApp da pessoa. Use-o em create_handoff sem perguntar; se fizer diferença, só confirme numa frase ("vou registrar com esse mesmo número") sem esperar resposta.\n\n# Casos abertos deste contato na fila do time\n${listaCasos}`,
     });
   }
 
