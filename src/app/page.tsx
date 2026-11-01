@@ -7,8 +7,6 @@ import {
   isoToday,
   monthKey,
   mqlDailySeries,
-  mqlMonthlySeries,
-  mqlWeeklySeries,
   mqlPerSeller,
   paidSales,
   sum,
@@ -58,17 +56,11 @@ export default async function VisaoGeralPage() {
   const mqlPerDay = mql30 / 30;
   const mqlSeries = mqlDailySeries(data.leads, 60, today);
   const mqlCap = mqlPerSeller(data, 90, today);
-  const mqlDias = mqlDailySeries(data.leads, 90, today).map((p) => ({
-    label: `${p.date.slice(8, 10)}/${p.date.slice(5, 7)}`,
-    mql: p.mql,
-    parcial: p.date === today,
-  }));
-  const mqlSemanas = mqlWeeklySeries(data.leads, 24, today);
-  const mqlMeses = mqlMonthlySeries(data.leads, 12, today).map((p) => ({
-    label: p.label,
-    mql: p.mql,
-    parcial: p.parcial,
-  }));
+  // MQL por dia (data em que a tag chegou); o gráfico agrupa no cliente.
+  const mqlPorDia: Record<string, number> = {};
+  for (const l of data.leads) {
+    if (l.mqlAt) mqlPorDia[l.mqlAt] = (mqlPorDia[l.mqlAt] ?? 0) + 1;
+  }
 
   const capTone =
     cap.verdict === "pode_contratar" ? "good" : cap.verdict === "quase" ? "warn" : "neutral";
@@ -144,7 +136,7 @@ export default async function VisaoGeralPage() {
       </div>
 
       <Card title="MQLs" className="mb-4">
-        <MqlHistoryChart dias={mqlDias} semanas={mqlSemanas} meses={mqlMeses} />
+        <MqlHistoryChart porDia={mqlPorDia} hoje={today} />
       </Card>
 
       <div className="grid lg:grid-cols-3 gap-4">
