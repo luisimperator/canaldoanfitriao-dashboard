@@ -149,36 +149,6 @@ export function isMqlLead(l: Lead): boolean {
   return l.mqlAt != null;
 }
 
-export interface MqlDayPoint {
-  date: string;
-  leads: number;
-  mql: number;
-}
-
-// leads contados pela data de captação; MQLs pela data em que viraram MQL
-// (recebimento da tag) — por isso as duas linhas do gráfico têm datas próprias.
-export function mqlDailySeries(leads: Lead[], days: number, today = isoToday()): MqlDayPoint[] {
-  const start = daysAgo(days - 1, new Date(today));
-  const byDay = new Map<string, { leads: number; mql: number }>();
-  const bump = (d: string, k: "leads" | "mql") => {
-    if (d < start || d > today) return;
-    const e = byDay.get(d) ?? { leads: 0, mql: 0 };
-    e[k]++;
-    byDay.set(d, e);
-  };
-  for (const l of leads) {
-    bump(l.createdAt.slice(0, 10), "leads");
-    if (l.mqlAt) bump(l.mqlAt.slice(0, 10), "mql");
-  }
-  const out: MqlDayPoint[] = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = daysAgo(i, new Date(today));
-    const e = byDay.get(d) ?? { leads: 0, mql: 0 };
-    out.push({ date: d, leads: e.leads, mql: e.mql });
-  }
-  return out;
-}
-
 export interface MqlMonthPoint {
   month: string;      // YYYY-MM
   label: string;      // "jul/26"
