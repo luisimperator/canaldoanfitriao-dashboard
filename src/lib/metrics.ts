@@ -229,6 +229,39 @@ export function mqlMonthlySeries(
   return out;
 }
 
+export interface MqlPeriodPoint {
+  label: string;
+  mql: number;
+  parcial: boolean; // período corrente, ainda correndo
+}
+
+// Segunda-feira (YYYY-MM-DD) da semana de um dia-calendário.
+function weekStart(isoDate: string): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() - ((dt.getUTCDay() + 6) % 7));
+  return dt.toISOString().slice(0, 10);
+}
+
+/** MQL por semana (segunda a domingo), pela data em que viraram MQL. */
+export function mqlWeeklySeries(leads: Lead[], weeks: number, today = isoToday()): MqlPeriodPoint[] {
+  const byWeek = new Map<string, number>();
+  for (const l of leads) {
+    if (!l.mqlAt) continue;
+    const w = weekStart(l.mqlAt.slice(0, 10));
+    byWeek.set(w, (byWeek.get(w) ?? 0) + 1);
+  }
+  const atual = weekStart(today);
+  const [y, m, d] = atual.split("-").map(Number);
+  const out: MqlPeriodPoint[] = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const dt = new Date(Date.UTC(y, m - 1, d - 7 * i));
+    const w = dt.toISOString().slice(0, 10);
+    out.push({ label: `${w.slice(8, 10)}/${w.slice(5, 7)}`, mql: byWeek.get(w) ?? 0, parcial: i === 0 });
+  }
+  return out;
+}
+
 export interface MqlSellerRow {
   sellerId: string;
   name: string;

@@ -7,13 +7,15 @@ import {
   isoToday,
   monthKey,
   mqlDailySeries,
+  mqlMonthlySeries,
+  mqlWeeklySeries,
   mqlPerSeller,
   paidSales,
   sum,
 } from "@/lib/metrics";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import { LeadsMqlChart, SourcePie } from "@/components/charts";
+import { LeadsMqlChart, MqlHistoryChart, SourcePie } from "@/components/charts";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +64,17 @@ export default async function VisaoGeralPage() {
   const mqlPerDay = mql30 / 30;
   const mqlSeries = mqlDailySeries(data.leads, 60, today);
   const mqlCap = mqlPerSeller(data, 90, today);
+  const mqlDias = mqlDailySeries(data.leads, 90, today).map((p) => ({
+    label: `${p.date.slice(8, 10)}/${p.date.slice(5, 7)}`,
+    mql: p.mql,
+    parcial: p.date === today,
+  }));
+  const mqlSemanas = mqlWeeklySeries(data.leads, 24, today);
+  const mqlMeses = mqlMonthlySeries(data.leads, 12, today).map((p) => ({
+    label: p.label,
+    mql: p.mql,
+    parcial: p.parcial,
+  }));
   const bySource = Object.entries(
     leads30.reduce<Record<string, number>>((acc, l) => {
       acc[l.source] = (acc[l.source] ?? 0) + 1;
@@ -141,6 +154,10 @@ export default async function VisaoGeralPage() {
         />
         <KpiCard label="Contratação" value={capLabel} tone={capTone} />
       </div>
+
+      <Card title="MQLs" className="mb-4">
+        <MqlHistoryChart dias={mqlDias} semanas={mqlSemanas} meses={mqlMeses} />
+      </Card>
 
       <div className="grid lg:grid-cols-3 gap-4">
         <Card title="Leads e MQL por dia (últimos 60 dias)" className="lg:col-span-2">

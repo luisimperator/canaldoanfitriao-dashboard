@@ -2,7 +2,7 @@
 
 // Gráficos do dashboard (recharts roda no cliente).
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -536,5 +536,76 @@ export function ReceitaDistribuicaoChart({
         />
       </ComposedChart>
     </ResponsiveContainer>
+  );
+}
+
+// MQL por dia / semana / mês, com seletor. O período corrente aparece mais
+// claro porque ainda está correndo.
+type MqlBar = { label: string; mql: number; parcial: boolean };
+const MQL_VIEWS = [
+  { key: "dias", label: "90 dias" },
+  { key: "semanas", label: "24 semanas" },
+  { key: "meses", label: "12 meses" },
+] as const;
+
+export function MqlHistoryChart({
+  dias,
+  semanas,
+  meses,
+}: {
+  dias: MqlBar[];
+  semanas: MqlBar[];
+  meses: MqlBar[];
+}) {
+  const [view, setView] = useState<(typeof MQL_VIEWS)[number]["key"]>("semanas");
+  const data = { dias, semanas, meses }[view];
+  const fechados = data.filter((d) => !d.parcial);
+  const media = fechados.length ? fechados.reduce((a, d) => a + d.mql, 0) / fechados.length : 0;
+  const unidade = view === "dias" ? "dia" : view === "semanas" ? "semana" : "mês";
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-0.5">
+          {MQL_VIEWS.map((o) => (
+            <button
+              key={o.key}
+              type="button"
+              onClick={() => setView(o.key)}
+              aria-pressed={view === o.key}
+              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                view === o.key
+                  ? "bg-slate-900 dark:bg-violet-600 text-white"
+                  : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-slate-500 dark:text-zinc-400">
+          média {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MQL/{unidade}
+        </span>
+      </div>
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -16 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
+          <XAxis dataKey="label" tick={{ fontSize: 11 }} minTickGap={view === "dias" ? 24 : 8} />
+          <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+          <Tooltip
+            cursor={{ fill: "var(--chart-grid)", fillOpacity: 0.4 }}
+            formatter={(v) => [v, "MQL"]}
+            labelFormatter={(l, p) =>
+              p?.[0]?.payload?.parcial ? `${l} (em andamento)` : String(l)
+            }
+          />
+          <ReferenceLine y={media} stroke="#94a3b8" strokeDasharray="4 4" />
+          <Bar dataKey="mql" name="MQL" fill="#e11d48" radius={[3, 3, 0, 0]}>
+            {data.map((d) => (
+              <Cell key={d.label} fillOpacity={d.parcial ? 0.45 : 1} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
