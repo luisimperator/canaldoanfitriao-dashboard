@@ -6,6 +6,7 @@
 
 export type Channel =
   | "Tráfego pago (Meta)"
+  | "Tráfego pago (Google)"
   | "YouTube / vídeo"
   | "Vendedores"
   | "Instagram orgânico"
@@ -17,6 +18,7 @@ export type Channel =
 
 export const CHANNEL_ORDER: Channel[] = [
   "Tráfego pago (Meta)",
+  "Tráfego pago (Google)",
   "YouTube / vídeo",
   "Vendedores",
   "Instagram orgânico",
@@ -29,6 +31,7 @@ export const CHANNEL_ORDER: Channel[] = [
 
 export const CHANNEL_COLOR: Record<Channel, string> = {
   "Tráfego pago (Meta)": "#e11d48",
+  "Tráfego pago (Google)": "#2563eb",
   "YouTube / vídeo": "#ef4444",
   Vendedores: "#0ea5e9",
   "Instagram orgânico": "#8b5cf6",
@@ -66,12 +69,23 @@ export function classifyChannel(utm: Utm | null | undefined): Channel {
   // lead com vidorigem nasceu de conteúdo, não de anúncio.
   if (vid || /youtube|\byt_|^yt$|\byt\b/.test(blob)) return "YouTube / vídeo";
 
-  // 1. Tráfego pago (Meta): sinais de campanha paga no medium ou na fonte.
+  // 1a. Google Ads: google + mídia paga (cpc/ppc/paid/ads) — o rastreador das
+  // LPs grava google/cpc quando a URL traz gclid. Vem antes da Meta porque
+  // "paid" sozinho cairia lá. google/organic segue para "Orgânico / Direto".
   if (
-    /\bfb_|advantage|lookalike|interesses?|\brmkt\b|\[lf\]|\[launch\]|\bcbo\b|\bllk\b|placement|seguidores|tr[aá]fego|\bpaid\b/.test(
+    /google.?ads|adwords|gclid/.test(blob) ||
+    (/^google$/.test(s) && /^(cpc|ppc|paid|ads|sem)/.test(m))
+  ) {
+    return "Tráfego pago (Google)";
+  }
+
+  // 1b. Tráfego pago (Meta): sinais de campanha paga no medium ou na fonte.
+  // Inclui o padrão novo do dicionário de origens (meta / paid_social).
+  if (
+    /\bfb_|advantage|lookalike|interesses?|\brmkt\b|\[lf\]|\[launch\]|\bcbo\b|\bllk\b|placement|seguidores|tr[aá]fego|\bpaid\b|paid_?social/.test(
       blob
     ) ||
-    /^gig-|fb_facebook/.test(s)
+    /^gig-|fb_facebook|^meta$/.test(s)
   ) {
     return "Tráfego pago (Meta)";
   }

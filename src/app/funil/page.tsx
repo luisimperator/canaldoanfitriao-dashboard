@@ -10,7 +10,8 @@ import {
 import { num } from "@/lib/format";
 import { leadSalesTeamBucket } from "@/lib/leads";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import { LeadsTrendChart, SourcePie } from "@/components/charts";
+import { LeadsTrendChart } from "@/components/charts";
+import { OrigemLeadsCard } from "@/components/OrigemLeadsCard";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
@@ -34,13 +35,6 @@ interface SurveyDist {
   valor: string;
   n: number;
 }
-
-const SOURCE_LABELS: Record<string, string> = {
-  meta_ads: "Meta Ads",
-  google_ads: "Google Ads",
-  organico: "Orgânico",
-  outro: "Outro",
-};
 
 const STATUS_LABELS: Record<string, string> = {
   frio: "Frio",
@@ -111,13 +105,6 @@ export default async function FunilPage({
 
   const leads30 = inRange(data.leads, (l) => l.createdAt, start30, today);
   const stages = funnelStages(leads30);
-
-  const bySource = Object.entries(
-    leads30.reduce<Record<string, number>>((acc, l) => {
-      acc[l.source] = (acc[l.source] ?? 0) + 1;
-      return acc;
-    }, {})
-  ).map(([source, value]) => ({ name: SOURCE_LABELS[source] ?? source, value }));
 
   const byStatus = Object.entries(
     leads30.reduce<Record<string, number>>((acc, l) => {
@@ -369,9 +356,7 @@ export default async function FunilPage({
           </div>
         </Card>
 
-        <Card title="Origem dos leads (30 dias)">
-          <SourcePie data={bySource} />
-        </Card>
+        <OrigemLeadsCard leads={leads30} title="Origem dos leads (30 dias)" />
 
         {waitingTotal > 0 && (
           <Card
