@@ -15,16 +15,10 @@ import {
 } from "@/lib/metrics";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import { LeadsMqlChart, MqlHistoryChart, SourcePie } from "@/components/charts";
+import { LeadsMqlChart, MqlHistoryChart } from "@/components/charts";
+import { OrigemLeadsCard } from "@/components/OrigemLeadsCard";
 
 export const dynamic = "force-dynamic";
-
-const SOURCE_LABELS: Record<string, string> = {
-  meta_ads: "Meta Ads",
-  google_ads: "Google Ads",
-  organico: "Orgânico",
-  outro: "Outro",
-};
 
 export default async function VisaoGeralPage() {
   const data = await getDashboardData();
@@ -75,12 +69,6 @@ export default async function VisaoGeralPage() {
     mql: p.mql,
     parcial: p.parcial,
   }));
-  const bySource = Object.entries(
-    leads30.reduce<Record<string, number>>((acc, l) => {
-      acc[l.source] = (acc[l.source] ?? 0) + 1;
-      return acc;
-    }, {})
-  ).map(([source, value]) => ({ name: SOURCE_LABELS[source] ?? source, value }));
 
   const capTone =
     cap.verdict === "pode_contratar" ? "good" : cap.verdict === "quase" ? "warn" : "neutral";
@@ -170,9 +158,7 @@ export default async function VisaoGeralPage() {
             (média dos últimos 90 dias).
           </p>
         </Card>
-        <Card title="Origem dos leads (30 dias)">
-          <SourcePie data={bySource} />
-        </Card>
+        <OrigemLeadsCard leads={leads30} title="Origem dos leads (30 dias)" />
         <Card title="Funil (últimos 30 dias)" className="lg:col-span-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
             {stages.map((stage, i) => (

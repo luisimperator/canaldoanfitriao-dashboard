@@ -445,7 +445,11 @@ export function BarsChart({
   );
 }
 
-export function SourcePie({ data }: { data: { name: string; value: number }[] }) {
+export function SourcePie({
+  data,
+}: {
+  data: { name: string; value: number; color?: string }[];
+}) {
   return (
     <ResponsiveContainer width="100%" height={240}>
       <PieChart>
@@ -457,8 +461,8 @@ export function SourcePie({ data }: { data: { name: string; value: number }[] })
           outerRadius={85}
           paddingAngle={2}
         >
-          {data.map((_, i) => (
-            <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          {data.map((d, i) => (
+            <Cell key={i} fill={d.color ?? COLORS[i % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip />
