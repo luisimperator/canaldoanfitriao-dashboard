@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { normUtm } from "@/lib/origens";
 
 // Cria um link curto rastreável (QR aponta pra cá). O slug é gerado a partir do
 // apelido; se colidir, ganha um sufixo aleatório. O destino e os UTMs ficam
@@ -56,9 +57,9 @@ export async function POST(req: NextRequest) {
     label: label || null,
     product: (String(body.product ?? "").trim() || null) as string | null,
     destination,
-    utm_source: String(body.utm_source ?? "youtube").trim() || "youtube",
-    utm_medium: String(body.utm_medium ?? "qr").trim() || "qr",
-    utm_campaign: (String(body.utm_campaign ?? "").trim() || null) as string | null,
+    utm_source: normUtm(String(body.utm_source ?? "")) || "youtube",
+    utm_medium: normUtm(String(body.utm_medium ?? "")) || "qr",
+    utm_campaign: (normUtm(String(body.utm_campaign ?? "")) || null) as string | null,
     youtube_url: (String(body.youtube_url ?? "").trim() || null) as string | null,
   };
 

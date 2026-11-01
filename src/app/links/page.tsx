@@ -10,6 +10,7 @@ import { LinkTrashButton } from "@/components/LinkTrashButton";
 import { EditLinkForm } from "@/components/EditLinkForm";
 import { TestarCadeia } from "@/components/TestarCadeia";
 import { shortLinkBase, shortLinkFor } from "@/lib/short-link";
+import { ehFonteDeVideo, portaDe } from "@/lib/origens";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -99,6 +100,7 @@ export default async function LinksPage() {
             const lead = leadsBySlug.get(lk.slug) ?? { leads: 0, mql: 0 };
             const conv = scans > 0 ? (lead.leads / scans) * 100 : null;
             const yid = ytId(lk.youtube_url);
+            const porta = portaDe(lk.utm_source, lk.utm_medium);
             return (
               <div
                 key={lk.slug}
@@ -116,14 +118,17 @@ export default async function LinksPage() {
                       </span>
                     )}
                     {lk.utm_source && (
-                      <span className="rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] px-2 py-0.5">
-                        {lk.utm_source}
+                      <span
+                        title={`${lk.utm_source} / ${lk.utm_medium ?? ""}`}
+                        className="rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[11px] px-2 py-0.5"
+                      >
+                        {porta ? `${porta.grupo} · ${porta.label}` : `${lk.utm_source} / ${lk.utm_medium ?? "?"}`}
                       </span>
                     )}
                     {/* O QR nasce antes do vídeo, então faltar a URL é o estado
                         normal no começo — mas depois de publicado ninguém lembra
                         de voltar aqui. O aviso é o lembrete. */}
-                    {!lk.youtube_url && (
+                    {!lk.youtube_url && ehFonteDeVideo(lk.utm_source) && (
                       <span
                         title="Cole a URL do vídeo em Editar quando ele for publicado"
                         className="rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px] px-2 py-0.5"

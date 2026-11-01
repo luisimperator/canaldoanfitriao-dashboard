@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { ehFonteDeVideo } from "@/lib/origens";
 import { getAccess } from "@/lib/supabase-server";
 
 // GET /api/links/trace?slug=...
@@ -61,7 +62,10 @@ export async function GET(req: NextRequest) {
   set("utm_medium", link.utm_medium);
   set("utm_campaign", link.utm_campaign);
   set("utm_content", link.slug);
-  set("vidorigem", link.slug);
+  // igual ao /r/<slug>: vidorigem só vai em link de vídeo
+  const video = ehFonteDeVideo(link.utm_source);
+  if (video) set("vidorigem", link.slug);
+  const esperados = video ? PARAMS : PARAMS.filter((p) => p !== "vidorigem");
 
   const presentes = (u: string): string[] => {
     try {
@@ -117,7 +121,7 @@ export async function GET(req: NextRequest) {
   }
 
   const finais = saltos.length > 0 ? saltos[saltos.length - 1].params : [];
-  const perdidos = PARAMS.filter((p) => !finais.includes(p));
+  const perdidos = esperados.filter((p) => !finais.includes(p));
 
   return NextResponse.json({
     slug,
@@ -125,8 +129,9 @@ export async function GET(req: NextRequest) {
     url_final: saltos.length > 0 ? saltos[saltos.length - 1].url : null,
     params_sobreviveram: finais,
     params_perdidos: perdidos,
-    // vidorigem é o que a página de Origem e a de Links leem para casar o lead
-    // com o link. Sem ele, o lead entra órfão mesmo com os utm_* intactos.
-    rastreio_ok: finais.includes("vidorigem"),
+    // Links & QR casa o lead com o link pelo vidorigem ou pelo utm_content (o
+    // slug). Em link de vídeo o vidorigem também precisa chegar, porque é ele que
+    // põe o lead no canal YouTube.
+    rastreio_ok: finais.includes("utm_content") && (!video || finais.includes("vidorigem")),
   });
 }
