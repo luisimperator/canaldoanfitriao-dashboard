@@ -106,9 +106,11 @@ export default async function GargaloPage() {
         Como funciona: cada fator recebe uma pontuação de 0 a 100 conforme o
         quanto está freando o crescimento; o maior vira o gargalo. Para não ser
         enganado por lançamento, usa MEDIANA (ritmo diário de leads e meses
-        fechados) em vez de somas cruas de 30 dias. Critérios: queda na entrada
-        de leads, queda na conversão, leads excedendo a capacidade do time e alta
-        no custo de anúncio por venda.
+        fechados) em vez de somas cruas de 30 dias. Entrada e conversão contam
+        só MQL (lead com tag de qualificação), porque muitos leads nunca passam
+        por vendedor; conversão = vendas de curso ÷ MQL. Critérios: queda na
+        entrada de MQL, queda na conversão, leads excedendo a capacidade do time
+        e alta no custo de anúncio por venda.
       </p>
     </div>
   );

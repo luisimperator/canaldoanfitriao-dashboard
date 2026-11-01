@@ -686,15 +686,21 @@ export function bottleneckAnalysis(
   const salesCur = inRange(paidSales(data.sales), (s) => s.saleDate, curStart, today).length;
   const salesPrev = inRange(paidSales(data.sales), (s) => s.saleDate, prevStart, prevEnd).length;
 
-  // ROBUSTO a lançamento: tendência de leads pela MEDIANA diária (ignora os
-  // poucos dias de pico) e conversão pela mediana de meses fechados.
-  const medLeadsCur = median(dailyCounts(data.leads, (l) => l.createdAt, curStart, today)) ?? 0;
-  const medLeadsPrev = median(dailyCounts(data.leads, (l) => l.createdAt, prevStart, prevEnd)) ?? 0;
+  // Só MQL (lead que recebeu tag de qualificação, isMqlLead): muitos leads nunca
+  // passam por vendedor, então o total de leads mistura quem o time nem vê.
+  // ROBUSTO a lançamento: tendência pela MEDIANA diária de MQL (data em que a
+  // tag chegou) e conversão pela mediana de meses fechados.
+  const mqls = data.leads.filter(isMqlLead);
+  const mqlDay = (l: Lead) => l.mqlAt as string;
+  const medLeadsCur = median(dailyCounts(mqls, mqlDay, curStart, today)) ?? 0;
+  const medLeadsPrev = median(dailyCounts(mqls, mqlDay, prevStart, prevEnd)) ?? 0;
   const leadsTrend = medLeadsPrev > 0 ? (medLeadsCur - medLeadsPrev) / medLeadsPrev : null;
 
+  // Conversão = vendas de CURSO ÷ MQL do mês (ingresso de evento não passa por
+  // vendedor, então não entra).
   const closedB = lastClosedMonths(today, 6);
-  const leadsByB = countByMonth(data.leads, (l) => l.createdAt);
-  const salesByB = countByMonth(paidSales(data.sales), (s) => s.saleDate);
+  const leadsByB = countByMonth(mqls, mqlDay);
+  const salesByB = countByMonth(paidSales(data.sales).filter(isCourseSale), (s) => s.saleDate);
   const convPerMonth = closedB.map((m) => {
     const lm = leadsByB.get(m) ?? 0;
     const sm = salesByB.get(m) ?? 0;
@@ -731,19 +737,19 @@ export function bottleneckAnalysis(
     const r1 = (x: number) => x.toFixed(1).replace(".", ",");
     const trendTxt =
       leadsTrend === null
-        ? `Ritmo de ${r1(medLeadsCur)} leads/dia (mediana), sem base anterior para comparar`
-        : `Ritmo típico de ${r1(medLeadsCur)} leads/dia agora contra ${r1(medLeadsPrev)}/dia nos 30 dias anteriores (${leadsTrend < 0 ? "queda" : "alta"} de ${fmtPct(leadsTrend)}) — mediana diária, sem distorção de pico de lançamento`;
+        ? `Ritmo de ${r1(medLeadsCur)} MQL/dia (mediana), sem base anterior para comparar`
+        : `Ritmo típico de ${r1(medLeadsCur)} MQL/dia agora contra ${r1(medLeadsPrev)}/dia nos 30 dias anteriores (${leadsTrend < 0 ? "queda" : "alta"} de ${fmtPct(leadsTrend)}) — mediana diária, sem distorção de pico de lançamento`;
     signals.push({
       kind: "leads",
-      label: "Geração de leads",
+      label: "Geração de MQL",
       score,
       status: statusFor(score),
       headline:
         score >= 70
-          ? "Está entrando menos lead que antes"
+          ? "Está entrando menos MQL que antes"
           : score >= 40
-            ? "Entrada de leads desacelerando"
-            : "Entrada de leads saudável",
+            ? "Entrada de MQL desacelerando"
+            : "Entrada de MQL saudável",
       detail: trendTxt + ".",
       action:
         score >= 40
@@ -760,8 +766,8 @@ export function bottleneckAnalysis(
     else if (drop >= 0.1) score = 60;
     const convTxt =
       convCur !== null && convPrev !== null
-        ? `A cada 100 leads, ${(convCur * 100).toFixed(1).replace(".", ",")} viram venda agora, contra ${(convPrev * 100).toFixed(1).replace(".", ",")} no período anterior`
-        : "Ainda não há vendas e leads suficientes para medir a conversão";
+        ? `A cada 100 MQL, ${(convCur * 100).toFixed(1).replace(".", ",")} viram venda de curso agora, contra ${(convPrev * 100).toFixed(1).replace(".", ",")} no período anterior`
+        : "Ainda não há vendas e MQL suficientes para medir a conversão";
     signals.push({
       kind: "conversao",
       label: "Conversão em venda",
@@ -778,7 +784,7 @@ export function bottleneckAnalysis(
       action:
         score >= 40
           ? "Não adianta encher o funil: revise o roteiro com o time, ouça atendimentos e ataque as objeções mais comuns."
-          : "Aproveitamento dos leads está dentro do esperado.",
+          : "Aproveitamento dos MQL está dentro do esperado.",
     });
   }
 
