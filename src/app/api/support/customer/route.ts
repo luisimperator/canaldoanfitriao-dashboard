@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCustomer360 } from "@/lib/support";
 import { getAccess } from "@/lib/supabase-server";
+import { hasValidBearer } from "@/lib/secure-compare";
 
 // GET /api/support/customer?email=...
 // Perfil 360 do cliente para o atendimento (humano ou IA).
@@ -18,9 +19,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Parâmetro 'email' é obrigatório." }, { status: 400 });
   }
 
-  const token = process.env.SUPPORT_API_TOKEN;
-  const auth = req.headers.get("authorization");
-  const tokenOk = Boolean(token) && auth === `Bearer ${token}`;
+  // Bearer comparado em tempo constante (falso se SUPPORT_API_TOKEN não existir).
+  const tokenOk = hasValidBearer(req, process.env.SUPPORT_API_TOKEN);
 
   if (!tokenOk) {
     const access = await getAccess();

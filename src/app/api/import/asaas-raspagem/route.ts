@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { runRaspagem } from "@/lib/asaas-raspagem";
+import { hasValidWebhookKey } from "@/lib/secure-compare";
 
 // Raspagem do caixa: manda via Pix o saldo do Asaas pra conta do Inter,
 // deixando o colchão (default R$ 100) pra tarifas. Roda 1× ao dia pelo cron do
@@ -14,7 +15,7 @@ import { runRaspagem } from "@/lib/asaas-raspagem";
 // Chave PRÓPRIA (asaas_raspagem_key no Vault), separada da chave do sync: quem
 // só lê cobrança não deveria conseguir disparar saída de dinheiro.
 //
-// GET /api/import/asaas-raspagem?key=...
+// GET /api/import/asaas-raspagem?key=...   (ou header x-webhook-key)
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -26,8 +27,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { data: esperado } = await admin.rpc("asaas_raspagem_key");
-  const key = req.nextUrl.searchParams.get("key");
-  if (!esperado || key !== esperado) {
+  if (!hasValidWebhookKey(req, typeof esperado === "string" ? esperado : null)) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 

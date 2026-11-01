@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { isSalesTeamTag } from "@/lib/leads";
 import { extractUtm } from "@/lib/mailchimp-utm";
+import { getAccess } from "@/lib/supabase-server";
+import { canAccess } from "@/lib/access";
+import { isCronRequest } from "@/lib/secure-compare";
+
+// Quem pode disparar: o cron da Vercel (bearer CRON_SECRET) ou uma sessão com
+// a aba Integrações. O porteiro (src/proxy.ts) só garante sessão; a permissão
+// da aba é conferida aqui.
+async function sessaoAutorizada(): Promise<boolean> {
+  const access = await getAccess();
+  return access.authed && canAccess("/integracoes", access);
+}
 
 // 300s: a varredura completa dos 44 mil membros leva vários minutos (com 60s
 // o cron era cortado na 7ª de 45 páginas). O cron nem precisa dela — roda o
@@ -31,14 +42,18 @@ function spDay(iso: string): string | null {
 // Cada tag vem marcada se a regra atual já a trata como time de vendas.
 //
 // EXCEÇÃO: o cron da Vercel (vercel.json, a cada 2h) só sabe fazer GET — a
-// requisição dele (user-agent vercel-cron) roda o SYNC de verdade, não a
-// descoberta.
+// requisição dele (bearer CRON_SECRET) roda o SYNC de verdade, não a
+// descoberta. Antes o cron era reconhecido pelo user-agent "vercel-cron",
+// que qualquer um pode forjar.
 export async function GET(req: NextRequest) {
-  if ((req.headers.get("user-agent") ?? "").toLowerCase().includes("vercel-cron")) {
+  if (isCronRequest(req)) {
     // INCREMENTAL: só membros alterados nas últimas ~26h (folga pra tick
     // perdido). Varrer a base inteira não cabe no tempo de função e é
     // desnecessário a cada 2h; a varredura completa fica no POST manual.
     return runSync(new Date(Date.now() - 26 * 3600_000).toISOString());
+  }
+  if (!(await sessaoAutorizada())) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
   }
   const apiKey = process.env.MAILCHIMP_API_KEY;
   const listId = process.env.MAILCHIMP_LIST_ID;
@@ -145,7 +160,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ ok: true, members, tags, mergeFields });
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  if (!isCronRequest(req) && !(await sessaoAutorizada())) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
   return runSync(null);
 }
 

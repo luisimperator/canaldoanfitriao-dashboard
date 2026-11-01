@@ -5,6 +5,10 @@ import { ALL_TAB_HREFS } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
+// Mínimo de 12 caracteres: senha de 4 cai em força bruta em segundos, e o
+// painel expõe dados de clientes e movimenta dinheiro (raspagem Asaas → Inter).
+const MIN_SENHA = 12;
+
 function cleanTabs(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
   return [...new Set(input.filter((t): t is string => typeof t === "string" && ALL_TAB_HREFS.includes(t)))];
@@ -29,7 +33,7 @@ export async function POST(req: NextRequest) {
       const isAdmin = !!body.isAdmin;
       const tabs = cleanTabs(body.tabs);
       if (!email || !email.includes("@")) return NextResponse.json({ error: "E-mail inválido." }, { status: 400 });
-      if (password.length < 4) return NextResponse.json({ error: "Senha muito curta (mín. 4)." }, { status: 400 });
+      if (password.length < MIN_SENHA) return NextResponse.json({ error: `Senha muito curta (mín. ${MIN_SENHA} caracteres).` }, { status: 400 });
       if (!isAdmin && tabs.length === 0) return NextResponse.json({ error: "Escolha ao menos uma aba." }, { status: 400 });
 
       const { data, error } = await admin.auth.admin.createUser({
@@ -55,7 +59,7 @@ export async function POST(req: NextRequest) {
       const userId = String(body.userId ?? "");
       const password = String(body.password ?? "");
       if (!userId) return NextResponse.json({ error: "Usuário inválido." }, { status: 400 });
-      if (password.length < 4) return NextResponse.json({ error: "Senha muito curta (mín. 4)." }, { status: 400 });
+      if (password.length < MIN_SENHA) return NextResponse.json({ error: `Senha muito curta (mín. ${MIN_SENHA} caracteres).` }, { status: 400 });
       const { error } = await admin.auth.admin.updateUserById(userId, { password });
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
       return NextResponse.json({ ok: true });
@@ -67,11 +71,20 @@ export async function POST(req: NextRequest) {
       const tabs = cleanTabs(body.tabs);
       if (!userId) return NextResponse.json({ error: "Usuário inválido." }, { status: 400 });
       if (!isAdmin && tabs.length === 0) return NextResponse.json({ error: "Escolha ao menos uma aba." }, { status: 400 });
-      const { error } = await admin.from("app_access").update({
+      // upsert (e não update): com o acesso fail-closed, uma conta do Auth sem
+      // linha em app_access não entra em nada — e o único jeito de liberá-la é
+      // o admin salvar as abas aqui. `update` em linha inexistente não cria nada.
+      const { data: found, error: userErr } = await admin.auth.admin.getUserById(userId);
+      if (userErr || !found.user) {
+        return NextResponse.json({ error: userErr?.message ?? "Usuário não encontrado." }, { status: 404 });
+      }
+      const { error } = await admin.from("app_access").upsert({
+        user_id: userId,
+        email: found.user.email ?? null,
         is_admin: isAdmin,
         tabs: isAdmin ? ALL_TAB_HREFS : tabs,
         updated_at: new Date().toISOString(),
-      }).eq("user_id", userId);
+      });
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
       return NextResponse.json({ ok: true });
     }

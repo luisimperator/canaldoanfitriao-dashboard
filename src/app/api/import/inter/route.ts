@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runInterSync } from "@/lib/integrations/inter-sync";
 import { fetchInterPagamentosBruto, getInterCreds } from "@/lib/integrations/inter";
+import { hasValidWebhookKey } from "@/lib/secure-compare";
 
 // Entrada de sincronização automática do extrato do Banco Inter, chamada por um
 // cron (pg_cron no Supabase). Fica sob o prefixo /api/import, que o middleware
 // (src/proxy.ts) libera sem login — por isso validamos a própria chave aqui,
-// como os webhooks fazem. Defina INTER_SYNC_KEY no ambiente e chame:
+// como os webhooks fazem (header x-webhook-key ou ?key=, em tempo constante).
+// Defina INTER_SYNC_KEY no ambiente e chame:
 //   POST /api/import/inter?key=INTER_SYNC_KEY
 // Aceita também ?dataInicio/?dataFim (padrão: últimos 30 dias).
 
@@ -16,9 +18,7 @@ export const dynamic = "force-dynamic";
 // conferir se boletos do DDA aparecem por lá (e com que status/data).
 //   GET /api/import/inter?key=INTER_SYNC_KEY&dias=60&filtrarDataPor=VENCIMENTO
 export async function GET(req: NextRequest) {
-  const expected = process.env.INTER_SYNC_KEY;
-  const provided = req.nextUrl.searchParams.get("key");
-  if (!expected || provided !== expected) {
+  if (!hasValidWebhookKey(req, process.env.INTER_SYNC_KEY)) {
     return NextResponse.json({ error: "não autorizado" }, { status: 401 });
   }
   const creds = getInterCreds();
@@ -41,9 +41,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const expected = process.env.INTER_SYNC_KEY;
-  const provided = req.nextUrl.searchParams.get("key");
-  if (!expected || provided !== expected) {
+  if (!hasValidWebhookKey(req, process.env.INTER_SYNC_KEY)) {
     return NextResponse.json({ error: "não autorizado" }, { status: 401 });
   }
 

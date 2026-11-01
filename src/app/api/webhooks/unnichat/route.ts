@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { isSalesTeamTag } from "@/lib/leads";
 import { utmFromFields } from "@/lib/mailchimp-utm";
+import { hasValidWebhookKey } from "@/lib/secure-compare";
 
 // Webhook do Unnichat (CRM/atendimento).
 // As automações do Unnichat (Requisição HTTP) chamam:
 //   https://SEU_DOMINIO/api/webhooks/unnichat?key=UNNICHAT_WEBHOOK_KEY
+// (ou, preferível, header x-webhook-key: UNNICHAT_WEBHOOK_KEY)
 // nos eventos: contato criado, mudança de etapa do pipeline, ganho/perdido.
 //
 // Formato REAL enviado pelo Unnichat (os dados vêm aninhados em "contact"):
@@ -57,7 +59,25 @@ function stageToStatus(stage: string): string {
 export async function POST(req: NextRequest) {
   const supabase = getSupabaseAdmin();
   const expectedKey = process.env.UNNICHAT_WEBHOOK_KEY;
-  const gotKey = req.nextUrl.searchParams.get("key");
+
+  if (!expectedKey) {
+    return NextResponse.json(
+      { error: "UNNICHAT_WEBHOOK_KEY não configurada no servidor." },
+      { status: 501 }
+    );
+  }
+  // Chave por header (x-webhook-key) ou query (?key=), em tempo constante.
+  // Tentativa com chave errada vira só uma nota no log, SEM o corpo: não
+  // guardamos payload de quem não se autenticou.
+  if (!hasValidWebhookKey(req, expectedKey)) {
+    if (supabase) {
+      await supabase.from("webhook_log").insert({
+        source: "unnichat",
+        note: "chave inválida ou ausente — rejeitada",
+      });
+    }
+    return NextResponse.json({ error: "chave inválida" }, { status: 401 });
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let body: any = null;
@@ -72,33 +92,17 @@ export async function POST(req: NextRequest) {
   // O contato vem aninhado em "contact"; toleramos formato plano (legado).
   const contact = body?.contact && typeof body.contact === "object" ? body.contact : body;
   const contactId = contact ? String(contact.id ?? contact.contact_id ?? "") : "";
-  const keyOk = Boolean(expectedKey) && gotKey === expectedKey;
 
-  // CAIXA-PRETA: registra TODA requisição recebida — inclusive com chave
-  // inválida/ausente — para diagnosticar a conexão com o Unnichat.
+  // CAIXA-PRETA: registra toda requisição AUTENTICADA — inclusive pings sem
+  // contact_id — para diagnosticar a conexão com o Unnichat.
   if (supabase) {
     await supabase.from("webhook_log").insert({
       source: "unnichat",
-      note: !expectedKey
-        ? "server sem UNNICHAT_WEBHOOK_KEY"
-        : !keyOk
-          ? "chave inválida ou ausente"
-          : contactId
-            ? "evento"
-            : "ping / sem contact_id",
+      note: contactId ? "evento" : "ping / sem contact_id",
       body: body ?? (rawText ? { _raw: rawText.slice(0, 2000) } : null),
     });
   }
 
-  if (!expectedKey) {
-    return NextResponse.json(
-      { error: "UNNICHAT_WEBHOOK_KEY não configurada no servidor." },
-      { status: 501 }
-    );
-  }
-  if (!keyOk) {
-    return NextResponse.json({ error: "chave inválida" }, { status: 401 });
-  }
   if (!supabase) {
     return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
   }

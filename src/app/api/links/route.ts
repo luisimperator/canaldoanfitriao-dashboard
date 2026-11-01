@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { getAccess } from "@/lib/supabase-server";
+import { canAccess } from "@/lib/access";
 
 // Cria um link curto rastreável (QR aponta pra cá). O slug é gerado a partir do
 // apelido; se colidir, ganha um sufixo aleatório. O destino e os UTMs ficam
 // guardados e são colados no redirect /r/<slug>.
+//
+// Todos os métodos exigem sessão E a aba Links & QR — o porteiro só garante
+// sessão. Um link é um redirect público impresso em QR: quem consegue criar
+// ou editar o destino consegue mandar quem escaneia pra qualquer lugar.
 
 const MAX_SLUG = 60;
+
+async function autorizado(): Promise<boolean> {
+  const access = await getAccess();
+  return access.authed && canAccess("/links", access);
+}
 
 function slugify(s: string): string {
   const full = s
@@ -31,6 +42,9 @@ function rand(n: number): string {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await autorizado())) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
 
@@ -83,6 +97,9 @@ export async function POST(req: NextRequest) {
 // no mundo — apagar de vez faria o scan cair num 404 sem rastro de que o link
 // existiu. Não há delete definitivo exposto em lugar nenhum.
 export async function DELETE(req: NextRequest) {
+  if (!(await autorizado())) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
 
@@ -107,6 +124,9 @@ export async function DELETE(req: NextRequest) {
 const CAMPOS_EDITAVEIS = ["label", "product", "utm_campaign", "youtube_url"] as const;
 
 export async function PATCH(req: NextRequest) {
+  if (!(await autorizado())) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
 

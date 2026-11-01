@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { ALL_TAB_HREFS, canAccess, tabForPath } from "@/lib/access";
+import { hasValidBearer } from "@/lib/secure-compare";
 
 // Porteiro do dashboard: sem login, redireciona tudo para /login.
 // Webhooks e syncs ficam de fora (são chamados por serviços externos e
@@ -26,21 +27,31 @@ export async function proxy(request: NextRequest) {
   if (!url || !key) return NextResponse.next();
 
   const { pathname } = request.nextUrl;
-  // Webhooks e a rota de import validam as próprias chaves; demais syncs
-  // exigem sessão (disparados pelo botão da página Integrações, já logado).
-  if (pathname.startsWith("/api/webhooks") || pathname.startsWith("/api/import")) {
+  // Webhooks validam as próprias chaves (Eduzz, Unnichat, TMB, Asaas, Meta).
+  if (pathname.startsWith("/api/webhooks")) {
     return NextResponse.next();
   }
-  // Cron da Vercel (vercel.json) chamando os syncs: chega por GET, SEM cookie
-  // de sessão — sem esta exceção o porteiro redirecionava o cron pra /login e
-  // o sync nunca rodava. Com CRON_SECRET definido na Vercel, exige o header
-  // Authorization que ela envia; sem o secret, aceita pelo user-agent do cron.
-  if (pathname.startsWith("/api/sync")) {
+  // Rotas chamadas por cron, SEM cookie de sessão:
+  //  - /api/sync/*   → cron da Vercel (vercel.json), que manda
+  //                    `Authorization: Bearer CRON_SECRET`;
+  //  - /api/import/* → crons do Supabase, que validam a própria chave dentro
+  //                    de cada handler (header x-webhook-key ou ?key=).
+  // Sem CRON_SECRET configurado, as duas famílias respondem 503: antes, sem o
+  // secret, qualquer requisição com "vercel-cron" no user-agent passava pelo
+  // porteiro — user-agent é escolhido por quem chama, então era porta aberta.
+  if (pathname.startsWith("/api/sync") || pathname.startsWith("/api/import")) {
     const secret = process.env.CRON_SECRET;
-    const auth = request.headers.get("authorization") ?? "";
-    const ua = (request.headers.get("user-agent") ?? "").toLowerCase();
-    const fromCron = secret ? auth === `Bearer ${secret}` : ua.includes("vercel-cron");
-    if (fromCron) return NextResponse.next();
+    if (!secret) {
+      return NextResponse.json(
+        { error: "CRON_SECRET não configurado no servidor." },
+        { status: 503 }
+      );
+    }
+    if (pathname.startsWith("/api/import")) return NextResponse.next();
+    // Bearer do cron bate? Passa. Senão, cai na exigência de sessão abaixo
+    // (botão "Sincronizar agora" da página Integrações, já logado) — e o
+    // handler ainda confere a permissão da aba.
+    if (hasValidBearer(request, secret)) return NextResponse.next();
   }
   // Redirect curto dos QR codes/links: público (é escaneado por qualquer um,
   // antes de virar lead). Valida o slug por conta própria.
@@ -79,18 +90,32 @@ export async function proxy(request: NextRequest) {
   }
   if (isReset) return response;
 
-  // Permissão por aba (só páginas; as rotas /api exigem apenas sessão).
-  if (!pathname.startsWith("/api") && tabForPath(pathname) !== null) {
+  // Permissão por aba (só páginas; as rotas /api checam a permissão dentro
+  // de cada handler, com getAccess() + canAccess()).
+  const isSemAcesso = pathname === "/sem-acesso";
+  if (!pathname.startsWith("/api") && (isSemAcesso || tabForPath(pathname) !== null)) {
     const { data } = await supabase
       .from("app_access")
       .select("is_admin, tabs")
       .eq("user_id", user.id)
       .maybeSingle();
-    const isAdmin = data?.is_admin ?? false;
-    // Sem linha em app_access = acesso total (não trava ninguém sem querer).
-    const tabs = data ? (isAdmin ? ALL_TAB_HREFS : ((data.tabs as string[]) ?? [])) : ALL_TAB_HREFS;
+    const isAdmin = data?.is_admin === true;
+    // Sem linha em app_access = NENHUMA aba (fail-closed). Uma conta que
+    // existe no Auth mas não foi liberada em /usuarios não entra em lugar
+    // nenhum — antes ganhava acesso total, o que transformava qualquer conta
+    // criada com credencial vazada em usuário pleno do painel.
+    const tabs = isAdmin ? ALL_TAB_HREFS : (((data?.tabs as string[] | null) ?? []));
+    const semAba = !isAdmin && tabs.length === 0;
+    if (semAba) {
+      // Logado mas sem nenhuma aba: cai na tela de "acesso não liberado".
+      return isSemAcesso ? response : NextResponse.redirect(new URL("/sem-acesso", request.url));
+    }
+    if (isSemAcesso) {
+      // Tem aba: a tela de sem-acesso não faz sentido — vai pra primeira aba.
+      return NextResponse.redirect(new URL(isAdmin ? "/" : tabs[0], request.url));
+    }
     if (!canAccess(pathname, { isAdmin, tabs })) {
-      const dest = tabs[0] ?? "/login";
+      const dest = tabs[0];
       if (tabForPath(dest) !== tabForPath(pathname)) {
         return NextResponse.redirect(new URL(dest, request.url));
       }

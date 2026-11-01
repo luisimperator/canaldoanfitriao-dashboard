@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { hasValidWebhookKey } from "@/lib/secure-compare";
 
 // Webhook da Eduzz.
-// Cadastre https://SEU_DOMINIO/api/webhooks/eduzz?key=EDUZZ_WEBHOOK_KEY no painel.
+// Cadastre https://SEU_DOMINIO/api/webhooks/eduzz?key=EDUZZ_WEBHOOK_KEY no painel
+// (a chave também é aceita no header x-webhook-key).
 //
 // Comportamento:
 //  - CAIXA-PRETA: registra TODO evento recebido em webhook_log (source='eduzz'),
@@ -45,7 +47,7 @@ export async function POST(req: NextRequest) {
       { status: 501 }
     );
   }
-  if (req.nextUrl.searchParams.get("key") !== expectedKey) {
+  if (!hasValidWebhookKey(req, expectedKey)) {
     return NextResponse.json({ error: "chave inválida" }, { status: 401 });
   }
 

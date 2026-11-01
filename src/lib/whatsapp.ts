@@ -76,14 +76,19 @@ export async function whatsappConfigured(): Promise<boolean> {
 }
 
 // Verifica a assinatura X-Hub-Signature-256 (HMAC-SHA256 do corpo cru com o app
-// secret). Sem WHATSAPP_APP_SECRET configurado, não dá pra verificar — devolve
-// null (quem chama decide; em produção, configure o app secret).
+// secret).
+//
+// Sem app secret (nem no ambiente, nem no Vault) não dá pra verificar. Em
+// produção isso conta como INVÁLIDA (false): sem verificação, qualquer um que
+// descubra a URL injeta mensagens "do cliente" e faz a IA responder pelo
+// WhatsApp da empresa. Só fora de produção devolve null ("não verificado"),
+// pra dar pra testar o fluxo local sem o secret.
 export async function verifyWhatsappSignature(
   rawBody: string,
   signature: string | null
 ): Promise<boolean | null> {
   const secret = (await getWhatsappConfig()).appSecret;
-  if (!secret) return null;
+  if (!secret) return process.env.NODE_ENV === "production" ? false : null;
   if (!signature) return false;
   const expected =
     "sha256=" + crypto.createHmac("sha256", secret).update(rawBody, "utf8").digest("hex");
