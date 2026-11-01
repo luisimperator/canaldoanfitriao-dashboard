@@ -2,7 +2,7 @@
 
 // Gráficos do dashboard (recharts roda no cliente).
 
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -20,6 +20,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { agrupar, type Bucket, type Granularidade } from "@/lib/period-buckets";
 
 const COLORS = ["#e11d48", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#64748b"];
 
@@ -543,69 +544,109 @@ export function ReceitaDistribuicaoChart({
   );
 }
 
-// MQL por dia / semana / mês, com seletor. O período corrente aparece mais
-// claro porque ainda está correndo.
-type MqlBar = { label: string; mql: number; parcial: boolean };
-const MQL_VIEWS = [
-  { key: "dias", label: "90 dias" },
-  { key: "semanas", label: "24 semanas" },
-  { key: "meses", label: "12 meses" },
-] as const;
+// MQL por dia / semana / mês / ano, com seletor de granularidade e de janela
+// (últimos N períodos). O agrupamento roda aqui no cliente a partir da contagem
+// diária, então trocar o botão não recarrega a página. O período corrente
+// aparece mais claro porque ainda está correndo.
+const MQL_JANELAS: Record<Granularidade, { opcoes: number[]; padrao: number; unidade: string; plural: string }> = {
+  dia: { opcoes: [7, 14, 30, 90, 180, 365], padrao: 90, unidade: "dia", plural: "dias" },
+  semana: { opcoes: [4, 8, 12, 24, 52, 104], padrao: 24, unidade: "semana", plural: "semanas" },
+  mes: { opcoes: [3, 6, 12, 24, 36], padrao: 12, unidade: "mês", plural: "meses" },
+  ano: { opcoes: [2, 3, 5], padrao: 3, unidade: "ano", plural: "anos" },
+};
+const MQL_GRANS: { key: Granularidade; label: string }[] = [
+  { key: "dia", label: "Dia" },
+  { key: "semana", label: "Semana" },
+  { key: "mes", label: "Mês" },
+  { key: "ano", label: "Ano" },
+];
+
+function Segmentos<T extends string | number>({
+  opcoes,
+  atual,
+  onChange,
+}: {
+  opcoes: { key: T; label: string }[];
+  atual: T;
+  onChange: (k: T) => void;
+}) {
+  return (
+    <div className="inline-flex flex-wrap rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-0.5">
+      {opcoes.map((o) => (
+        <button
+          key={o.key}
+          type="button"
+          onClick={() => onChange(o.key)}
+          aria-pressed={atual === o.key}
+          className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+            atual === o.key
+              ? "bg-slate-900 dark:bg-violet-600 text-white"
+              : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function MqlHistoryChart({
-  dias,
-  semanas,
-  meses,
+  porDia,
+  hoje,
 }: {
-  dias: MqlBar[];
-  semanas: MqlBar[];
-  meses: MqlBar[];
+  porDia: Record<string, number>;
+  hoje: string;
 }) {
-  const [view, setView] = useState<(typeof MQL_VIEWS)[number]["key"]>("semanas");
-  const data = { dias, semanas, meses }[view];
+  const [gran, setGran] = useState<Granularidade>("semana");
+  const [janelas, setJanelas] = useState<Record<Granularidade, number>>({
+    dia: MQL_JANELAS.dia.padrao,
+    semana: MQL_JANELAS.semana.padrao,
+    mes: MQL_JANELAS.mes.padrao,
+    ano: MQL_JANELAS.ano.padrao,
+  });
+  const cfg = MQL_JANELAS[gran];
+  const n = janelas[gran];
+  const data = useMemo(() => agrupar(porDia, hoje, gran, n), [porDia, hoje, gran, n]);
   const fechados = data.filter((d) => !d.parcial);
-  const media = fechados.length ? fechados.reduce((a, d) => a + d.mql, 0) / fechados.length : 0;
-  const unidade = view === "dias" ? "dia" : view === "semanas" ? "semana" : "mês";
+  const media = fechados.length ? fechados.reduce((a, d) => a + d.valor, 0) / fechados.length : 0;
+  const total = data.reduce((a, d) => a + d.valor, 0);
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-0.5">
-          {MQL_VIEWS.map((o) => (
-            <button
-              key={o.key}
-              type="button"
-              onClick={() => setView(o.key)}
-              aria-pressed={view === o.key}
-              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
-                view === o.key
-                  ? "bg-slate-900 dark:bg-violet-600 text-white"
-                  : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
-              }`}
-            >
-              {o.label}
-            </button>
-          ))}
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <Segmentos opcoes={MQL_GRANS} atual={gran} onChange={setGran} />
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-slate-500 dark:text-zinc-400">últimos</span>
+          <Segmentos
+            opcoes={cfg.opcoes.map((o) => ({ key: o, label: String(o) }))}
+            atual={n}
+            onChange={(v) => setJanelas((j) => ({ ...j, [gran]: v }))}
+          />
+          <span className="text-xs text-slate-500 dark:text-zinc-400">{cfg.plural}</span>
         </div>
-        <span className="text-xs text-slate-500 dark:text-zinc-400">
-          média {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MQL/{unidade}
-        </span>
       </div>
+      <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
+        {total.toLocaleString("pt-BR")} MQL no período · média{" "}
+        {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MQL/{cfg.unidade}
+      </p>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -16 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
-          <XAxis dataKey="label" tick={{ fontSize: 11 }} minTickGap={view === "dias" ? 24 : 8} />
+          <XAxis dataKey="label" tick={{ fontSize: 11 }} minTickGap={gran === "dia" || n > 30 ? 24 : 8} />
           <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
           <Tooltip
             cursor={{ fill: "var(--chart-grid)", fillOpacity: 0.4 }}
             formatter={(v) => [v, "MQL"]}
-            labelFormatter={(l, p) =>
-              p?.[0]?.payload?.parcial ? `${l} (em andamento)` : String(l)
-            }
+            labelFormatter={(_, p) => {
+              const b = p?.[0]?.payload as Bucket | undefined;
+              if (!b) return "";
+              return b.parcial ? `${b.titulo} (em andamento)` : b.titulo;
+            }}
           />
           <ReferenceLine y={media} stroke="#94a3b8" strokeDasharray="4 4" />
-          <Bar dataKey="mql" name="MQL" fill="#e11d48" radius={[3, 3, 0, 0]}>
-            {data.map((d) => (
-              <Cell key={d.label} fillOpacity={d.parcial ? 0.45 : 1} />
+          <Bar dataKey="valor" name="MQL" fill="#e11d48" radius={[3, 3, 0, 0]}>
+            {data.map((d, i) => (
+              <Cell key={i} fillOpacity={d.parcial ? 0.45 : 1} />
             ))}
           </Bar>
         </BarChart>
