@@ -67,7 +67,7 @@ export function classifyChannel(utm: Utm | null | undefined): Channel {
   // é o sinal mais forte de que a pessoa veio de um vídeo orgânico — é o canal
   // que a equipe mais precisa medir contra o Instagram. Vem antes do pago: um
   // lead com vidorigem nasceu de conteúdo, não de anúncio.
-  if (vid || /youtube|\byt_|^yt$|\byt\b/.test(blob)) return "YouTube / vídeo";
+  if (vid || /youtube|\byt_|^yt$|\byt\b|podcast/.test(blob)) return "YouTube / vídeo";
 
   // 1a. Google Ads: google + mídia paga (cpc/ppc/paid/ads) — o rastreador das
   // LPs grava google/cpc quando a URL traz gclid. Vem antes da Meta porque
@@ -91,7 +91,8 @@ export function classifyChannel(utm: Utm | null | undefined): Channel {
   }
 
   // 2. Vendedores (links individuais; sempre sem medium).
-  if (SELLER_SOURCES.some((n) => s === n || s.startsWith(n + " ") || s.startsWith(n + "_"))) {
+  // "vendedor" é a fonte do dicionário de origens (lib/origens).
+  if (s === "vendedor" || SELLER_SOURCES.some((n) => s === n || s.startsWith(n + " ") || s.startsWith(n + "_"))) {
     return "Vendedores";
   }
 

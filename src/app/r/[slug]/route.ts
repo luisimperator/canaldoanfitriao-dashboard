@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { ehFonteDeVideo } from "@/lib/origens";
 
 // Redirect curto dos QR codes / links rastreáveis.
 //   canaldoanfitriao.com.br/r/<slug>  ->  LP de destino + UTMs colados
@@ -53,10 +54,12 @@ export async function GET(
   set("utm_source", link.utm_source);
   set("utm_medium", link.utm_medium);
   set("utm_campaign", link.utm_campaign);
-  // o slug é a identidade do "momento/vídeo" — vai como content e vidorigem,
-  // que é o que a página de Origem lê.
+  // o slug é a identidade do "momento" — vai sempre como utm_content (é por ele
+  // que Links & QR conta leads por link). Como vidorigem, só quando a fonte é
+  // vídeo: o classificador de canal trata vidorigem como sinal de YouTube, e um
+  // link de bio do Instagram não pode virar "YouTube".
   set("utm_content", link.slug);
-  set("vidorigem", link.slug);
+  if (ehFonteDeVideo(link.utm_source)) set("vidorigem", link.slug);
 
   return NextResponse.redirect(dest.toString(), 302);
 }
