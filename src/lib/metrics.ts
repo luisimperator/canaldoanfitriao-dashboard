@@ -708,6 +708,23 @@ export function bottleneckAnalysis(
   });
   const convCur = median(convPerMonth.slice(0, 3).filter((x): x is number => x !== null));
   const convPrev = median(convPerMonth.slice(3, 6).filter((x): x is number => x !== null));
+  // Meses que de fato entraram em cada lado (com MQL), ex.: "ago, set e out/26".
+  const monthsLabel = (from: number, to: number) => {
+    const ms = closedB
+      .slice(from, to)
+      .filter((_, i) => convPerMonth[from + i] !== null)
+      .reverse();
+    if (ms.length === 0) return "";
+    const nome = (m: string) =>
+      new Date(`${m}-15T12:00:00Z`)
+        .toLocaleDateString("pt-BR", { month: "short", timeZone: "UTC" })
+        .replace(".", "");
+    const nomes = ms.map(nome);
+    const lista = nomes.length > 1 ? `${nomes.slice(0, -1).join(", ")} e ${nomes.at(-1)}` : nomes[0];
+    return `${lista}/${ms.at(-1)!.slice(2, 4)}`;
+  };
+  const convCurMonths = monthsLabel(0, 3);
+  const convPrevMonths = monthsLabel(3, 6);
   const convTrend =
     convCur !== null && convPrev !== null && convPrev > 0
       ? (convCur - convPrev) / convPrev
@@ -766,7 +783,7 @@ export function bottleneckAnalysis(
     else if (drop >= 0.1) score = 60;
     const convTxt =
       convCur !== null && convPrev !== null
-        ? `A cada 100 MQL, ${(convCur * 100).toFixed(1).replace(".", ",")} viram venda de curso agora, contra ${(convPrev * 100).toFixed(1).replace(".", ",")} no período anterior`
+        ? `A cada 100 MQL (mediana mensal), ${(convCur * 100).toFixed(1).replace(".", ",")} viram venda de curso em ${convCurMonths}, contra ${(convPrev * 100).toFixed(1).replace(".", ",")} em ${convPrevMonths}`
         : "Ainda não há vendas e MQL suficientes para medir a conversão";
     signals.push({
       kind: "conversao",
