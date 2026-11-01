@@ -1,19 +1,17 @@
 import { getDashboardData } from "@/lib/data";
 import {
   capacityAnalysis,
-  daysAgo,
   funnelStages,
   inRange,
   isoToday,
   monthKey,
-  mqlDailySeries,
   mqlPerSeller,
   paidSales,
   sum,
 } from "@/lib/metrics";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import { LeadsMqlChart, MqlHistoryChart } from "@/components/charts";
+import { MqlHistoryChart } from "@/components/charts";
 import { OrigemLeadsCard } from "@/components/OrigemLeadsCard";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import Link from "next/link";
@@ -40,7 +38,6 @@ export default async function VisaoGeralPage({
   const data = await getDashboardData();
   const today = isoToday();
   const month = monthKey(today);
-  const start30 = daysAgo(29);
 
   // Período dos cards (?from&to do seletor). Padrão: este mês até hoje. Os
   // cards de "hoje", MQL por vendedor e capacidade do time não seguem o
@@ -86,7 +83,6 @@ export default async function VisaoGeralPage({
   const cac = salesP.length > 0 && spendP > 0 ? spendP / salesP.length : null;
   const leadsPorVenda = salesP.length > 0 ? leadsP.length / salesP.length : null;
 
-  const leads30 = inRange(data.leads, (l) => l.createdAt, start30, today);
   const stages = funnelStages(leadsP);
 
   // MQL = contato que recebeu tag de qualificação (mql_at), contado no dia em
@@ -97,15 +93,17 @@ export default async function VisaoGeralPage({
   const mqlSemVendedor = mqlsP.filter((l) => !l.sellerId).length;
   const taxaMqlP = leadsP.length > 0 ? (mqlsP.length / leadsP.length) * 100 : null;
   const mqlPerDay = mqlsP.length / diasPeriodo;
-  // Texto do gráfico de 60 dias segue a janela fixa de 30 dias.
-  const mql30 = data.leads.filter((l) => l.mqlAt && l.mqlAt >= start30 && l.mqlAt <= today).length;
-  const taxaMql = leads30.length > 0 ? (mql30 / leads30.length) * 100 : null;
-  const mqlSeries = mqlDailySeries(data.leads, 60, today);
   const mqlCap = mqlPerSeller(data, 90, today);
   // MQL por dia (data em que a tag chegou); o gráfico agrupa no cliente.
   const mqlPorDia: Record<string, number> = {};
   for (const l of data.leads) {
     if (l.mqlAt) mqlPorDia[l.mqlAt] = (mqlPorDia[l.mqlAt] ?? 0) + 1;
+  }
+  // Faturamento gerado pelo time (vendas pagas com vendedor), por dia — a
+  // sobreposição opcional do gráfico de MQLs.
+  const fatTimePorDia: Record<string, number> = {};
+  for (const s of sales) {
+    if (s.sellerId) fatTimePorDia[s.saleDate] = (fatTimePorDia[s.saleDate] ?? 0) + s.amount;
   }
 
   const capTone =
@@ -219,22 +217,18 @@ export default async function VisaoGeralPage({
       </div>
 
       <Card title="MQLs" className="mb-4">
-        <MqlHistoryChart porDia={mqlPorDia} hoje={today} />
+        <MqlHistoryChart porDia={mqlPorDia} hoje={today} faturamentoPorDia={fatTimePorDia} />
+        <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
+          MQL = contato que respondeu a pesquisa e recebeu tag de qualificação (lead-a5e,
+          lead-gigantes, lead-quente, lead-muito-quente ou lead-frio — muito-frio fica fora), contado
+          no dia em que a tag chegou. Cada vendedor processa ~{num(mqlCap.avgPerMonth)} MQL/mês
+          (média dos últimos 90 dias).
+        </p>
       </Card>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card title="Leads e MQL por dia (últimos 60 dias)" className="lg:col-span-2">
-          <LeadsMqlChart data={mqlSeries} />
-          <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
-            MQL = contato que recebeu tag de qualificação (lead-a5e, lead-gigantes, lead-quente ou
-            lead-muito-quente ou lead-frio — muito-frio fica fora), contado no dia em que a tag chegou. Taxa de qualificação nos últimos 30 dias:{" "}
-            <strong>{taxaMql !== null ? `${num(taxaMql, 1)}%` : "—"}</strong> ({num(mql30)} MQL de{" "}
-            {num(leads30.length)} leads). Cada vendedor processa ~{num(mqlCap.avgPerMonth)} MQL/mês
-            (média dos últimos 90 dias).
-          </p>
-        </Card>
         <OrigemLeadsCard leads={leadsP} title={`Origem dos leads ${sufixo}`} />
-        <Card title={`Funil ${sufixo}`} className="lg:col-span-3">
+        <Card title={`Funil ${sufixo}`} className="lg:col-span-2">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
             {stages.map((stage, i) => (
               <div key={stage.label} className="rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 p-4">

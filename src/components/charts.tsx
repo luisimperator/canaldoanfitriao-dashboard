@@ -143,40 +143,6 @@ export function LeadsMqlMonthlyChart({
   );
 }
 
-export function LeadsMqlChart({
-  data,
-}: {
-  data: { date: string; leads: number; mql: number }[];
-}) {
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
-        <XAxis dataKey="date" tick={{ fontSize: 11 }} minTickGap={32} />
-        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-        <Tooltip />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Line
-          type="monotone"
-          dataKey="leads"
-          name="Leads/dia"
-          stroke="#94a3b8"
-          strokeWidth={1.5}
-          dot={false}
-        />
-        <Line
-          type="monotone"
-          dataKey="mql"
-          name="MQL/dia (com vendedor)"
-          stroke="#e11d48"
-          strokeWidth={2.5}
-          dot={false}
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  );
-}
-
 export function LeadsTrendChart({
   data,
 }: {
@@ -594,9 +560,12 @@ function Segmentos<T extends string | number>({
 export function MqlHistoryChart({
   porDia,
   hoje,
+  faturamentoPorDia,
 }: {
   porDia: Record<string, number>;
   hoje: string;
+  /** faturamento das vendas com vendedor, por dia — sobreposição opcional */
+  faturamentoPorDia?: Record<string, number>;
 }) {
   const [gran, setGran] = useState<Granularidade>("semana");
   const [janelas, setJanelas] = useState<Record<Granularidade, number>>({
@@ -605,12 +574,20 @@ export function MqlHistoryChart({
     mes: MQL_JANELAS.mes.padrao,
     ano: MQL_JANELAS.ano.padrao,
   });
+  const [comFaturamento, setComFaturamento] = useState(false);
   const cfg = MQL_JANELAS[gran];
   const n = janelas[gran];
-  const data = useMemo(() => agrupar(porDia, hoje, gran, n), [porDia, hoje, gran, n]);
+  const data = useMemo(() => {
+    const mql = agrupar(porDia, hoje, gran, n);
+    // mesmos períodos, mesma ordem: casa por índice
+    const fat = faturamentoPorDia ? agrupar(faturamentoPorDia, hoje, gran, n) : null;
+    return mql.map((b, i) => ({ ...b, faturamento: fat ? fat[i].valor : 0 }));
+  }, [porDia, faturamentoPorDia, hoje, gran, n]);
   const fechados = data.filter((d) => !d.parcial);
   const media = fechados.length ? fechados.reduce((a, d) => a + d.valor, 0) / fechados.length : 0;
   const total = data.reduce((a, d) => a + d.valor, 0);
+  const totalFat = data.reduce((a, d) => a + d.faturamento, 0);
+  const verFat = comFaturamento && Boolean(faturamentoPorDia);
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -624,32 +601,86 @@ export function MqlHistoryChart({
           />
           <span className="text-xs text-slate-500 dark:text-zinc-400">{cfg.plural}</span>
         </div>
+        {faturamentoPorDia && (
+          <button
+            type="button"
+            onClick={() => setComFaturamento((v) => !v)}
+            aria-pressed={comFaturamento}
+            className={`ml-auto inline-flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
+              comFaturamento
+                ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                : "border-slate-200 dark:border-white/10 text-slate-500 dark:text-zinc-400 hover:text-slate-800"
+            }`}
+          >
+            <span
+              className={`relative h-3.5 w-6 rounded-full transition-colors ${
+                comFaturamento ? "bg-emerald-500" : "bg-slate-300 dark:bg-zinc-600"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-2.5 w-2.5 rounded-full bg-white transition-all ${
+                  comFaturamento ? "left-3" : "left-0.5"
+                }`}
+              />
+            </span>
+            Faturamento do time
+          </button>
+        )}
       </div>
       <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
         {total.toLocaleString("pt-BR")} MQL no período · média{" "}
         {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MQL/{cfg.unidade}
+        {verFat && (
+          <>
+            {" "}
+            · <span className="text-emerald-600 dark:text-emerald-400">{brlTooltip(totalFat)}</span> em
+            vendas com vendedor
+          </>
+        )}
       </p>
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -16 }}>
+        <ComposedChart data={data} margin={{ top: 8, right: verFat ? 0 : 4, bottom: 0, left: -16 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 11 }} minTickGap={gran === "dia" || n > 30 ? 24 : 8} />
-          <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+          <YAxis yAxisId="mql" tick={{ fontSize: 11 }} allowDecimals={false} />
+          {verFat && (
+            <YAxis
+              yAxisId="fat"
+              orientation="right"
+              tick={{ fontSize: 11 }}
+              width={52}
+              tickFormatter={(v) =>
+                Number(v) >= 1000 ? `${Math.round(Number(v) / 1000)}k` : String(Math.round(Number(v)))
+              }
+            />
+          )}
           <Tooltip
             cursor={{ fill: "var(--chart-grid)", fillOpacity: 0.4 }}
-            formatter={(v) => [v, "MQL"]}
+            formatter={(v, name) => (name === "Faturamento do time" ? [brlTooltip(v), name] : [v, "MQL"])}
             labelFormatter={(_, p) => {
               const b = p?.[0]?.payload as Bucket | undefined;
               if (!b) return "";
               return b.parcial ? `${b.titulo} (em andamento)` : b.titulo;
             }}
           />
-          <ReferenceLine y={media} stroke="#94a3b8" strokeDasharray="4 4" />
-          <Bar dataKey="valor" name="MQL" fill="#e11d48" radius={[3, 3, 0, 0]}>
+          <ReferenceLine yAxisId="mql" y={media} stroke="#94a3b8" strokeDasharray="4 4" />
+          <Bar yAxisId="mql" dataKey="valor" name="MQL" fill="#e11d48" radius={[3, 3, 0, 0]}>
             {data.map((d, i) => (
               <Cell key={i} fillOpacity={d.parcial ? 0.45 : 1} />
             ))}
           </Bar>
-        </BarChart>
+          {verFat && (
+            <Line
+              yAxisId="fat"
+              type="monotone"
+              dataKey="faturamento"
+              name="Faturamento do time"
+              stroke="#10b981"
+              strokeWidth={2}
+              dot={n <= 30 ? { r: 2.5 } : false}
+            />
+          )}
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );
