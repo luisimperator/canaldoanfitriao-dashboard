@@ -47,11 +47,14 @@ export default async function VisaoGeralPage() {
   const leads30 = inRange(data.leads, (l) => l.createdAt, start30, today);
   const stages = funnelStages(leads30);
 
-  // MQL = contato que recebeu tag de qualificação (mql_at). MQL ⊆ leads.
-  const mqlMonth = data.leads.filter(
-    (l) => monthKey(l.createdAt) === month && l.sellerId
-  ).length;
-  const mql30 = leads30.filter((l) => l.sellerId).length;
+  // MQL = contato que recebeu tag de qualificação (mql_at), contado no dia em
+  // que a tag chegou — a mesma regra do gráfico e do gargalo. Não conta por
+  // vendedor: muita gente ganha vendedor sem tag (lista de espera, broadcast,
+  // muito-frio). Quem tem tag e ficou sem vendedor vira alerta no card.
+  const mqlsMonth = data.leads.filter((l) => l.mqlAt && monthKey(l.mqlAt) === month);
+  const mqlMonth = mqlsMonth.length;
+  const mqlSemVendedor = mqlsMonth.filter((l) => !l.sellerId).length;
+  const mql30 = data.leads.filter((l) => l.mqlAt && l.mqlAt >= start30 && l.mqlAt <= today).length;
   const taxaMql = leads30.length > 0 ? (mql30 / leads30.length) * 100 : null;
   const mqlPerDay = mql30 / 30;
   const mqlSeries = mqlDailySeries(data.leads, 60, today);
@@ -100,8 +103,13 @@ export default async function VisaoGeralPage() {
           label="MQL no mês"
           value={num(mqlMonth)}
           hint={
-            taxaMql !== null ? `${num(taxaMql, 1)}% dos leads viram MQL` : "recebeu tag de qualificação"
+            mqlSemVendedor > 0
+              ? `⚠ ${num(mqlSemVendedor)} sem vendedor`
+              : taxaMql !== null
+                ? `${num(taxaMql, 1)}% dos leads viram MQL`
+                : "recebeu tag de qualificação"
           }
+          tone={mqlSemVendedor > 0 ? "warn" : "neutral"}
         />
         <KpiCard
           label="MQL/dia (méd. 30d)"
