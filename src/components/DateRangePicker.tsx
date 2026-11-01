@@ -100,6 +100,11 @@ export function DateRangePicker({
     { label: "Últimos 7 dias", f: addDays(now, -6), t: now },
     { label: "Últimos 30 dias", f: addDays(now, -29), t: now },
     { label: "Este mês", f: new Date(now.getFullYear(), now.getMonth(), 1), t: now },
+    {
+      label: "Mês passado",
+      f: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+      t: new Date(now.getFullYear(), now.getMonth(), 0),
+    },
     { label: "Últimos 3 meses", f: addMonths(now, -3), t: now },
     { label: "Últimos 6 meses", f: addMonths(now, -6), t: now },
     { label: "Últimos 12 meses", f: addMonths(now, -12), t: now },

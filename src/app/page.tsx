@@ -15,48 +15,91 @@ import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { LeadsMqlChart, MqlHistoryChart } from "@/components/charts";
 import { OrigemLeadsCard } from "@/components/OrigemLeadsCard";
+import { DateRangePicker } from "@/components/DateRangePicker";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default async function VisaoGeralPage() {
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+const reYMD = /^\d{4}-\d{2}-\d{2}$/;
+
+function ultimoDiaDoMes(ym: string): string {
+  const [y, m] = ym.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+}
+
+function diasEntre(de: string, ate: string): number {
+  return Math.round((Date.parse(ate) - Date.parse(de)) / 86400000) + 1;
+}
+
+export default async function VisaoGeralPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
   const data = await getDashboardData();
   const today = isoToday();
   const month = monthKey(today);
   const start30 = daysAgo(29);
 
+  // Período dos cards (?from&to do seletor). Padrão: este mês até hoje. Os
+  // cards de "hoje", MQL por vendedor e capacidade do time não seguem o
+  // período: são retrato do momento.
+  const sp = await searchParams;
+  const inicioMes = `${month}-01`;
+  const temPeriodo = Boolean(sp.from && sp.to && reYMD.test(sp.from) && reYMD.test(sp.to) && sp.from <= sp.to);
+  const de = temPeriodo ? sp.from! : inicioMes;
+  const ate = temPeriodo ? sp.to! : today;
+  const ateEfetivo = ate < today ? ate : today;
+  const diasPeriodo = Math.max(1, diasEntre(de, ateEfetivo));
+  const [py, pm] = month.split("-").map(Number);
+  const mesPassado = new Date(Date.UTC(py, pm - 2, 1)).toISOString().slice(0, 7);
+  const ehMesAtual = de === inicioMes && ate >= today && ate <= ultimoDiaDoMes(month);
+  const ehMesInteiro = de.endsWith("-01") && ate === ultimoDiaDoMes(de.slice(0, 7));
+  const ehMesPassado = de === `${mesPassado}-01` && ate === ultimoDiaDoMes(mesPassado);
+  // "no mês", "em out/26", "em 15/10" ou "no período" — vai no rótulo dos cards.
+  const sufixo = ehMesAtual
+    ? "no mês"
+    : ehMesInteiro
+      ? `em ${MESES[Number(de.slice(5, 7)) - 1]}/${de.slice(2, 4)}`
+      : de === ate
+        ? `em ${de.slice(8, 10)}/${de.slice(5, 7)}`
+        : "no período";
+  const noPeriodo = <T,>(items: T[], getDate: (t: T) => string) => inRange(items, getDate, de, ate);
+
   const sales = paidSales(data.sales);
   const salesToday = sales.filter((s) => s.saleDate === today);
   const revenueToday = sum(salesToday.map((s) => s.amount));
-  const salesMonth = sales.filter((s) => monthKey(s.saleDate) === month);
-  const revenueMonth = sum(salesMonth.map((s) => s.amount));
-  // Projeção do mês pelo ritmo atual (run rate): faturado ÷ dias corridos × dias do mês.
+  const salesP = noPeriodo(sales, (s) => s.saleDate);
+  const revenueP = sum(salesP.map((s) => s.amount));
+  // Projeção do mês pelo ritmo atual (run rate) — só quando o período é o mês corrente.
   const dayOfMonth = Number(today.slice(8, 10));
-  const daysInMonth = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).getDate();
+  const daysInMonth = Number(ultimoDiaDoMes(month).slice(8, 10));
   const projectedMonth =
-    dayOfMonth > 0 ? Math.round((revenueMonth / dayOfMonth) * daysInMonth) : revenueMonth;
+    dayOfMonth > 0 ? Math.round((revenueP / dayOfMonth) * daysInMonth) : revenueP;
 
   const leadsToday = data.leads.filter((l) => l.createdAt === today).length;
-  const leadsMonth = data.leads.filter((l) => monthKey(l.createdAt) === month).length;
+  const leadsP = noPeriodo(data.leads, (l) => l.createdAt);
 
   const cap = capacityAnalysis(data);
-  const spend30 = sum(
-    inRange(data.adSpend, (a) => a.date, start30, today).map((a) => a.amount)
-  );
-  const cac = cap.sales30d > 0 ? spend30 / cap.sales30d : null;
+  const spendP = sum(noPeriodo(data.adSpend, (a) => a.date).map((a) => a.amount));
+  const cac = salesP.length > 0 && spendP > 0 ? spendP / salesP.length : null;
+  const leadsPorVenda = salesP.length > 0 ? leadsP.length / salesP.length : null;
 
   const leads30 = inRange(data.leads, (l) => l.createdAt, start30, today);
-  const stages = funnelStages(leads30);
+  const stages = funnelStages(leadsP);
 
   // MQL = contato que recebeu tag de qualificação (mql_at), contado no dia em
   // que a tag chegou — a mesma regra do gráfico e do gargalo. Não conta por
   // vendedor: muita gente ganha vendedor sem tag (lista de espera, broadcast,
   // muito-frio). Quem tem tag e ficou sem vendedor vira alerta no card.
-  const mqlsMonth = data.leads.filter((l) => l.mqlAt && monthKey(l.mqlAt) === month);
-  const mqlMonth = mqlsMonth.length;
-  const mqlSemVendedor = mqlsMonth.filter((l) => !l.sellerId).length;
+  const mqlsP = data.leads.filter((l) => l.mqlAt && l.mqlAt >= de && l.mqlAt <= ate);
+  const mqlSemVendedor = mqlsP.filter((l) => !l.sellerId).length;
+  const taxaMqlP = leadsP.length > 0 ? (mqlsP.length / leadsP.length) * 100 : null;
+  const mqlPerDay = mqlsP.length / diasPeriodo;
+  // Texto do gráfico de 60 dias segue a janela fixa de 30 dias.
   const mql30 = data.leads.filter((l) => l.mqlAt && l.mqlAt >= start30 && l.mqlAt <= today).length;
   const taxaMql = leads30.length > 0 ? (mql30 / leads30.length) * 100 : null;
-  const mqlPerDay = mql30 / 30;
   const mqlSeries = mqlDailySeries(data.leads, 60, today);
   const mqlCap = mqlPerSeller(data, 90, today);
   // MQL por dia (data em que a tag chegou); o gráfico agrupa no cliente.
@@ -84,6 +127,36 @@ export default async function VisaoGeralPage() {
       />
       <DemoBanner show={data.isDemo} />
 
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500 dark:text-zinc-400">Período</span>
+          <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-0.5">
+            {[
+              { label: "Este mês", href: "/", ativo: !temPeriodo || ehMesAtual },
+              {
+                label: "Mês passado",
+                href: `/?from=${mesPassado}-01&to=${ultimoDiaDoMes(mesPassado)}`,
+                ativo: ehMesPassado,
+              },
+            ].map((o) => (
+              <Link
+                key={o.label}
+                href={o.href}
+                scroll={false}
+                className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  o.ativo
+                    ? "bg-slate-900 dark:bg-violet-600 text-white"
+                    : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
+                }`}
+              >
+                {o.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <DateRangePicker placeholder="Este mês" minYear={2024} />
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <KpiCard
           label="Faturamento hoje"
@@ -92,29 +165,31 @@ export default async function VisaoGeralPage() {
           hint={`${num(salesToday.length)} venda${salesToday.length === 1 ? "" : "s"}`}
         />
         <KpiCard
-          label="Faturamento no mês"
-          value={brl(revenueMonth)}
+          label={`Faturamento ${sufixo}`}
+          value={brl(revenueP)}
           tone="good"
-          hint={`${num(salesMonth.length)} vendas · projeção ${brl(projectedMonth)}`}
+          hint={`${num(salesP.length)} venda${salesP.length === 1 ? "" : "s"}${
+            ehMesAtual ? ` · projeção ${brl(projectedMonth)}` : ""
+          }`}
         />
         <KpiCard label="Leads hoje" value={num(leadsToday)} />
-        <KpiCard label="Leads no mês" value={num(leadsMonth)} />
+        <KpiCard label={`Leads ${sufixo}`} value={num(leadsP.length)} />
         <KpiCard
-          label="MQL no mês"
-          value={num(mqlMonth)}
+          label={`MQL ${sufixo}`}
+          value={num(mqlsP.length)}
           hint={
             mqlSemVendedor > 0
               ? `⚠ ${num(mqlSemVendedor)} sem vendedor`
-              : taxaMql !== null
-                ? `${num(taxaMql, 1)}% dos leads viram MQL`
+              : taxaMqlP !== null
+                ? `${num(taxaMqlP, 1)}% dos leads viram MQL`
                 : "recebeu tag de qualificação"
           }
           tone={mqlSemVendedor > 0 ? "warn" : "neutral"}
         />
         <KpiCard
-          label="MQL/dia (méd. 30d)"
+          label={`MQL/dia ${sufixo}`}
           value={num(mqlPerDay, 1)}
-          hint={`${num(mql30)} MQL em 30 dias`}
+          hint={`${num(mqlsP.length)} MQL em ${num(diasPeriodo)} dia${diasPeriodo === 1 ? "" : "s"}`}
         />
         <KpiCard
           label="MQL por vendedor"
@@ -122,14 +197,14 @@ export default async function VisaoGeralPage() {
           hint="média histórica (90d)"
         />
         <KpiCard
-          label="Leads por venda (30d)"
-          value={cap.leadsPerSale ? num(cap.leadsPerSale, 1) : "—"}
-          hint={`${num(cap.leads30d)} leads · ${num(cap.sales30d)} vendas`}
+          label={`Leads por venda ${sufixo}`}
+          value={leadsPorVenda ? num(leadsPorVenda, 1) : "—"}
+          hint={`${num(leadsP.length)} leads · ${num(salesP.length)} vendas`}
         />
         <KpiCard
-          label="Custo por venda (30d)"
+          label={`Custo por venda ${sufixo}`}
           value={cac ? brl(cac) : "—"}
-          hint={`${brl(spend30)} em tráfego`}
+          hint={`${brl(spendP)} em tráfego`}
         />
         <KpiCard
           label="Time de vendas"
@@ -158,8 +233,8 @@ export default async function VisaoGeralPage() {
             (média dos últimos 90 dias).
           </p>
         </Card>
-        <OrigemLeadsCard leads={leads30} title="Origem dos leads (30 dias)" />
-        <Card title="Funil (últimos 30 dias)" className="lg:col-span-3">
+        <OrigemLeadsCard leads={leadsP} title={`Origem dos leads ${sufixo}`} />
+        <Card title={`Funil ${sufixo}`} className="lg:col-span-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
             {stages.map((stage, i) => (
               <div key={stage.label} className="rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 p-4">
