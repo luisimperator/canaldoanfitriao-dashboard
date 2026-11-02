@@ -169,38 +169,49 @@ function especialistaDaConversa(msgs: MsgUnnichat[], cfg: Config): string | null
   return dono;
 }
 
-// Conversão de cada vendedor nos últimos 30 dias: vendas pagas ÷ leads
-// atribuídos (a conta de "leads por venda" do painel, invertida). Quem não tem
-// dado fica com a média do time.
+// Conversão de cada vendedor nos últimos 90 dias: vendas pagas ÷ leads
+// atribuídos (a conta de "leads por venda" do painel, invertida). 90 dias pra
+// um mês ruim (ou um mês com poucos leads novos, como outubro de 2026) não
+// virar a ordem. Contagem no banco (head + count): 90 dias de leads passam do
+// limite de 1.000 linhas por consulta. Quem não tem dado fica com a média do
+// time.
+const JANELA_CONVERSAO_DIAS = 90;
+
 async function taxasDeConversao(
   supabase: SupabaseClient,
   nomes: string[]
 ): Promise<Map<string, number>> {
-  const desde = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
-  const [{ data: sellers }, { data: vendas }, { data: leads }] = await Promise.all([
-    supabase.from("sellers").select("id, name").in("name", nomes),
-    supabase.from("sales").select("seller_id").eq("status", "paga").gte("sale_date", desde).not("seller_id", "is", null),
-    supabase.from("leads").select("seller_id").gte("created_at", desde).not("seller_id", "is", null),
-  ]);
-  const conta = (rows: { seller_id: string }[] | null, id: string) =>
-    (rows ?? []).filter((r) => r.seller_id === id).length;
-  const brutas = new Map<string, number | null>();
-  for (const nome of nomes) {
-    const id = (sellers ?? []).find((s) => s.name === nome)?.id;
-    const l = id ? conta(leads, id) : 0;
-    brutas.set(nome, id && l > 0 ? conta(vendas, id) / l : null);
-  }
+  const desde = new Date(Date.now() - JANELA_CONVERSAO_DIAS * 86400_000).toISOString().slice(0, 10);
+  const { data: sellers } = await supabase.from("sellers").select("id, name").in("name", nomes);
+  const brutas = new Map<string, number | null>(
+    await Promise.all(
+      nomes.map(async (nome): Promise<[string, number | null]> => {
+        const id = (sellers ?? []).find((s) => s.name === nome)?.id;
+        if (!id) return [nome, null];
+        const [v, l] = await Promise.all([
+          supabase
+            .from("sales")
+            .select("id", { count: "exact", head: true })
+            .eq("seller_id", id)
+            .eq("status", "paga")
+            .gte("sale_date", desde),
+          supabase.from("leads").select("id", { count: "exact", head: true }).eq("seller_id", id).gte("created_at", desde),
+        ]);
+        return [nome, v.count != null && l.count ? v.count / l.count : null];
+      })
+    )
+  );
   const conhecidas = [...brutas.values()].filter((t): t is number => t !== null);
   const media = conhecidas.length ? conhecidas.reduce((a, b) => a + b, 0) / conhecidas.length : 1;
-  // Piso pequeno: quem não vendeu nada no mês ainda pega call quando os outros
-  // estão ocupados, e a conta da distribuição não divide por zero.
+  // Piso pequeno: quem não vendeu nada no período ainda pega call quando os
+  // outros estão ocupados, e a conta da distribuição não divide por zero.
   return new Map(nomes.map((n) => [n, Math.max(brutas.get(n) ?? media, 0.001)]));
 }
 
 // Quem pega a próxima call do dia: as calls do dia são divididas na proporção
-// da conversão do último mês. Vai quem tem a menor (calls no dia + 1) ÷
-// conversão; empate fica com quem converte mais. Ex.: conversões 24%, 13% e
-// 8% num dia de 5 calls dão 3, 1 e 1.
+// da conversão. Vai quem tem a menor (calls no dia + 1) ÷ conversão; empate
+// fica com quem converte mais. Ex.: conversões 8,0%, 6,5% e 4,6% num dia de 5
+// calls dão 2, 2 e 1.
 function ordemDoDia(livres: string[], cargaNoDia: (v: string) => number, taxa: Map<string, number>): string[] {
   const t = (v: string) => taxa.get(v) ?? 0.001;
   return [...livres].sort((a, b) => (cargaNoDia(a) + 1) / t(a) - (cargaNoDia(b) + 1) / t(b) || t(b) - t(a));
