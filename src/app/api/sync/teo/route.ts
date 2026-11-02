@@ -46,6 +46,7 @@ interface Config {
   auto_inscrever_ate: string | null;
   contexto: string;
   precos: string | null;
+  instrucoes_extras: string | null;
   max_respostas: number;
   atendente_id: string | null;
   template_abertura_id: string | null;
@@ -331,6 +332,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       lead,
       contexto: cfg.contexto,
       precos: cfg.precos ?? "",
+      extras: cfg.instrucoes_extras ?? "",
       ficha: c.ficha,
       abrir,
       horariosLivres: (await horariosLivres(supabase, cfg)).map(
