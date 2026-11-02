@@ -90,11 +90,15 @@ async function log(supabase: SupabaseClient, note: string, body: Record<string, 
 // respondeu a pesquisa entra na hora; quem não respondeu, depois de 15 min.
 async function autoInscrever(supabase: SupabaseClient, cfg: Config): Promise<number> {
   if (!cfg.auto_inscrever_ate || new Date(cfg.auto_inscrever_ate) < new Date()) return 0;
-  const hojeSP = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  // Desde ontem (horário de Brasília): quem entrou às 23h50 e ainda não
+  // respondeu a pesquisa não pode sumir quando vira o dia.
+  const ontemSP = new Date(Date.now() - 24 * 3600_000).toLocaleDateString("en-CA", {
+    timeZone: "America/Sao_Paulo",
+  });
   const { data: leads } = await supabase
     .from("leads")
     .select("unnichat_id, name, phone, extra")
-    .gte("created_at", hojeSP)
+    .gte("created_at", ontemSP)
     .not("unnichat_id", "is", null);
   const candidatos = (leads ?? []).filter((l) => {
     const tags = (Array.isArray(l.extra?.tags) ? l.extra.tags : []).map((t: unknown) => String(t).toLowerCase());
