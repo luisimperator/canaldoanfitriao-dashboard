@@ -41,6 +41,7 @@ interface Conversa {
 interface Config {
   ligado: boolean;
   horarios: string[] | null;
+  vendedores: { nome: string; email: string; atendente_id: string }[] | null;
   auto_inscrever_ate: string | null;
   contexto: string;
   max_respostas: number;
@@ -139,17 +140,40 @@ function local(iso: string): string {
     .replace(" ", "T");
 }
 
-// Horários da config que ainda estão livres (sem call marcada) e daqui a 1h+.
-async function horariosLivres(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
-  const todos = (cfg.horarios ?? []).filter((h) => new Date(h).getTime() > Date.now() + 3600_000);
-  if (todos.length === 0) return [];
-  const { data: ocupados } = await supabase
+// Horários da config daqui a 1h+ em que algum vendedor está livre. Os três
+// atendem em paralelo (cada um no seu computador): o mesmo horário aceita uma
+// call por vendedor. Rodízio pela carga: em cada horário vai o vendedor livre
+// com menos calls marcadas no dia.
+async function horariosLivres(
+  supabase: SupabaseClient,
+  cfg: Config
+): Promise<{ horario: string; vendedor: string }[]> {
+  const vendedores = (cfg.vendedores ?? []).map((v) => v.nome);
+  const todos = (cfg.horarios ?? []).filter(
+    (h) => typeof h === "string" && new Date(h).getTime() > Date.now() + 3600_000
+  );
+  if (todos.length === 0 || vendedores.length === 0) return [];
+  const { data: marcadas } = await supabase
     .from("teo_calls")
-    .select("inicio")
+    .select("inicio, vendedor")
     .neq("status", "cancelada")
-    .gte("inicio", new Date().toISOString());
-  const ocup = new Set((ocupados ?? []).map((o) => new Date(o.inicio).getTime()));
-  return todos.filter((h) => !ocup.has(new Date(h).getTime())).map(local);
+    .gte("inicio", new Date(Date.now() - 12 * 3600_000).toISOString());
+  const ocupado = new Set((marcadas ?? []).map((m) => `${new Date(m.inicio).getTime()}|${m.vendedor}`));
+  const carga = new Map<string, number>(vendedores.map((v) => [v, 0]));
+  for (const m of marcadas ?? []) if (m.vendedor) carga.set(m.vendedor, (carga.get(m.vendedor) ?? 0) + 1);
+  const out: { horario: string; vendedor: string }[] = [];
+  for (const h of todos) {
+    const ts = new Date(h).getTime();
+    const livres = vendedores.filter((v) => !ocupado.has(`${ts}|${v}`));
+    if (livres.length === 0) continue;
+    livres.sort((a, b) => (carga.get(a) ?? 0) - (carga.get(b) ?? 0));
+    out.push({ horario: local(h), vendedor: livres[0] });
+  }
+  return out;
+}
+
+function primeiroNomeVendedor(nome: string): string {
+  return nome.split(" ")[0];
 }
 
 async function marcarCall(
@@ -160,8 +184,11 @@ async function marcarCall(
 ): Promise<string> {
   const livres = await horariosLivres(supabase, cfg);
   const horario = args.horario.trim().slice(0, 16);
-  if (!livres.includes(horario)) {
-    return `Esse horário não está livre. Livres agora: ${livres.slice(0, 8).join(", ") || "nenhum"}.`;
+  const slot = livres.find((l) => l.horario === horario);
+  const lista = (ls: typeof livres) =>
+    ls.slice(0, 8).map((l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`).join(", ") || "nenhum";
+  if (!slot) {
+    return `Esse horário não está livre. Livres agora: ${lista(livres)}.`;
   }
   const email = args.email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "E-mail inválido: peça o e-mail de novo.";
@@ -171,17 +198,22 @@ async function marcarCall(
     inicio: `${horario}:00-03:00`,
     email,
     resumo: args.resumo,
+    vendedor: slot.vendedor,
   });
   if (error) {
     return /duplicate|unique/i.test(error.message)
-      ? `Esse horário acabou de ser ocupado. Livres agora: ${(await horariosLivres(supabase, cfg)).slice(0, 8).join(", ")}.`
+      ? `Esse horário acabou de ser ocupado. Livres agora: ${lista(await horariosLivres(supabase, cfg))}.`
       : `Não consegui marcar (${error.message}). Diga que vai confirmar o horário e chame passar_para_humano.`;
   }
   const [dia, hora] = horario.split("T");
   const quando = `${dia.slice(8, 10)}/${dia.slice(5, 7)} às ${hora}`;
-  await anotar(supabase, c.contact_id, `📅 Call marcada pelo Téo: ${quando} — ${email}\n${args.resumo}`);
-  await log(supabase, "call marcada", { contact_id: c.contact_id, nome: c.nome, horario, email });
-  return `Marcado: ${quando} (horário de Brasília), convite vai pro e-mail ${email}.`;
+  await anotar(
+    supabase,
+    c.contact_id,
+    `📅 Call marcada pelo Téo: ${quando} com ${slot.vendedor} — ${email}\n${args.resumo}`
+  );
+  await log(supabase, "call marcada", { contact_id: c.contact_id, nome: c.nome, horario, email, vendedor: slot.vendedor });
+  return `Marcado: ${quando} (horário de Brasília) com ${primeiroNomeVendedor(slot.vendedor)}. O convite vai pro e-mail ${email}.`;
 }
 
 function primeiroNome(nome: string | null): string {
@@ -250,7 +282,9 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       contexto: cfg.contexto,
       ficha: c.ficha,
       abrir,
-      horariosLivres: await horariosLivres(supabase, cfg),
+      horariosLivres: (await horariosLivres(supabase, cfg)).map(
+        (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`
+      ),
       marcarCall: (args) => marcarCall(supabase, c, cfg, args),
     });
 
@@ -309,6 +343,66 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
   }
 }
 
+// Antes de cada call: lembrete pelo WhatsApp (~90 min antes, com o link do
+// Meet, se a janela de 24h ainda estiver aberta) e, 10 min antes, a conversa
+// passa pro vendedor no Unnichat, com a ficha. O follow-up pós-call é dele.
+async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
+  const feitos: string[] = [];
+  const agora = Date.now();
+  const { data: calls } = await supabase
+    .from("teo_calls")
+    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, resumo, email")
+    .in("status", ["marcada", "convite_enviado"])
+    .gte("inicio", new Date(agora - 2 * 3600_000).toISOString());
+  for (const k of calls ?? []) {
+    const t = new Date(k.inicio).getTime();
+    const { data: conv } = await supabase
+      .from("teo_conversas")
+      .select("telefone, nome, ficha")
+      .eq("contact_id", k.contact_id)
+      .maybeSingle();
+    const hora = local(k.inicio).slice(11, 16);
+    const vend = k.vendedor ? primeiroNomeVendedor(k.vendedor) : "o especialista";
+    try {
+      if (!k.lembrete_em && k.meet_url && conv?.telefone && agora >= t - 90 * 60_000 && agora < t - 5 * 60_000) {
+        const msgs = await historico(supabase, k.contact_id);
+        const doLead = msgs.filter((m) => m.senderBy === "contact");
+        const ult = doLead[doLead.length - 1];
+        const aberta = ult && agora - new Date(ult.date).getTime() < JANELA_MS;
+        if (aberta) {
+          await enviarTexto(
+            supabase,
+            conv.telefone,
+            `Oi, ${primeiroNome(k.nome ?? conv.nome)}! Passando pra lembrar: hoje às ${hora} é o seu papo de 20 min com ${vend}. É só entrar por este link na hora: ${k.meet_url}`
+          );
+        }
+        await supabase.from("teo_calls").update({ lembrete_em: new Date().toISOString() }).eq("id", k.id);
+        await log(supabase, aberta ? "lembrete enviado" : "lembrete sem janela", { contact_id: k.contact_id, nome: k.nome, hora });
+        feitos.push(`lembrete ${k.nome}`);
+      }
+      if (!k.passou_vendedor_em && agora >= t - 10 * 60_000) {
+        const v = (cfg.vendedores ?? []).find((x) => x.nome === k.vendedor);
+        if (v) await unnichat(supabase, "POST", `/contact/${k.contact_id}/assign`, { attendantId: v.atendente_id });
+        await anotar(
+          supabase,
+          k.contact_id,
+          `📞 Call agora às ${hora} com ${k.vendedor ?? "o especialista"} (marcada pelo Téo). Depois da call, o follow-up é seu: proposta e link logo em seguida.\n${k.resumo ?? ""}${conv?.ficha ? `\n\nFicha:\n${conv.ficha}` : ""}`
+        );
+        await supabase
+          .from("teo_conversas")
+          .update({ estado: "humano", motivo_humano: "call", atualizado_em: new Date().toISOString() })
+          .eq("contact_id", k.contact_id);
+        await supabase.from("teo_calls").update({ passou_vendedor_em: new Date().toISOString() }).eq("id", k.id);
+        await log(supabase, "passou pro vendedor", { contact_id: k.contact_id, nome: k.nome, vendedor: k.vendedor, hora });
+        feitos.push(`vendedor ${k.nome}`);
+      }
+    } catch (e) {
+      await log(supabase, "erro na call", { contact_id: k.contact_id, erro: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  return feitos;
+}
+
 async function rodar() {
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
@@ -318,6 +412,7 @@ async function rodar() {
   if (!cfg?.ligado) return NextResponse.json({ ok: true, ligado: false });
 
   const inicio = Date.now();
+  const calls = await cuidarDasCalls(supabase, cfg as Config);
   const inscritos = await autoInscrever(supabase, cfg as Config);
 
   const { data: conversas } = await supabase
@@ -336,7 +431,7 @@ async function rodar() {
   }
   await Promise.all(Array.from({ length: PARALELO }, () => pista()));
 
-  return NextResponse.json({ ok: true, inscritos, resultado, ms: Date.now() - inicio });
+  return NextResponse.json({ ok: true, calls, inscritos, resultado, ms: Date.now() - inicio });
 }
 
 // GET: cron da Vercel (vercel.json). POST: disparo manual, já logado.
