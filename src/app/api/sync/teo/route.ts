@@ -40,6 +40,7 @@ interface Conversa {
 
 interface Config {
   ligado: boolean;
+  horarios: string[] | null;
   auto_inscrever_ate: string | null;
   contexto: string;
   max_respostas: number;
@@ -130,6 +131,59 @@ async function autoInscrever(supabase: SupabaseClient, cfg: Config): Promise<num
   return n;
 }
 
+// "2026-11-03T10:00:00-03:00" -> "2026-11-03T10:00" (horário de Brasília)
+function local(iso: string): string {
+  return new Date(iso)
+    .toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" })
+    .slice(0, 16)
+    .replace(" ", "T");
+}
+
+// Horários da config que ainda estão livres (sem call marcada) e daqui a 1h+.
+async function horariosLivres(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
+  const todos = (cfg.horarios ?? []).filter((h) => new Date(h).getTime() > Date.now() + 3600_000);
+  if (todos.length === 0) return [];
+  const { data: ocupados } = await supabase
+    .from("teo_calls")
+    .select("inicio")
+    .neq("status", "cancelada")
+    .gte("inicio", new Date().toISOString());
+  const ocup = new Set((ocupados ?? []).map((o) => new Date(o.inicio).getTime()));
+  return todos.filter((h) => !ocup.has(new Date(h).getTime())).map(local);
+}
+
+async function marcarCall(
+  supabase: SupabaseClient,
+  c: Conversa,
+  cfg: Config,
+  args: { horario: string; email: string; resumo: string }
+): Promise<string> {
+  const livres = await horariosLivres(supabase, cfg);
+  const horario = args.horario.trim().slice(0, 16);
+  if (!livres.includes(horario)) {
+    return `Esse horário não está livre. Livres agora: ${livres.slice(0, 8).join(", ") || "nenhum"}.`;
+  }
+  const email = args.email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "E-mail inválido: peça o e-mail de novo.";
+  const { error } = await supabase.from("teo_calls").insert({
+    contact_id: c.contact_id,
+    nome: c.nome,
+    inicio: `${horario}:00-03:00`,
+    email,
+    resumo: args.resumo,
+  });
+  if (error) {
+    return /duplicate|unique/i.test(error.message)
+      ? `Esse horário acabou de ser ocupado. Livres agora: ${(await horariosLivres(supabase, cfg)).slice(0, 8).join(", ")}.`
+      : `Não consegui marcar (${error.message}). Diga que vai confirmar o horário e chame passar_para_humano.`;
+  }
+  const [dia, hora] = horario.split("T");
+  const quando = `${dia.slice(8, 10)}/${dia.slice(5, 7)} às ${hora}`;
+  await anotar(supabase, c.contact_id, `📅 Call marcada pelo Téo: ${quando} — ${email}\n${args.resumo}`);
+  await log(supabase, "call marcada", { contact_id: c.contact_id, nome: c.nome, horario, email });
+  return `Marcado: ${quando} (horário de Brasília), convite vai pro e-mail ${email}.`;
+}
+
 function primeiroNome(nome: string | null): string {
   return (nome ?? "").trim().split(/\s+/)[0] || "tudo bem";
 }
@@ -190,7 +244,15 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
 
     const lead = await carregarLead(supabase, c.contact_id);
     if (!lead.nome) lead.nome = c.nome;
-    const res = await rodarTeo({ msgs, lead, contexto: cfg.contexto, ficha: c.ficha, abrir });
+    const res = await rodarTeo({
+      msgs,
+      lead,
+      contexto: cfg.contexto,
+      ficha: c.ficha,
+      abrir,
+      horariosLivres: await horariosLivres(supabase, cfg),
+      marcarCall: (args) => marcarCall(supabase, c, cfg, args),
+    });
 
     for (const [i, texto] of res.mensagens.entries()) {
       if (i > 0) await new Promise((r) => setTimeout(r, 1500));
