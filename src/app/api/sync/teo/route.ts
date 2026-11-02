@@ -36,6 +36,7 @@ interface Conversa {
   respostas: number;
   ficha: string | null;
   template_em: string | null;
+  criado_em: string;
 }
 
 interface Config {
@@ -108,22 +109,14 @@ async function autoInscrever(supabase: SupabaseClient, cfg: Config): Promise<num
   const ids = candidatos.map((l) => l.unnichat_id as string);
   const { data: ja } = await supabase.from("teo_conversas").select("contact_id").in("contact_id", ids);
   const jaSet = new Set((ja ?? []).map((r) => r.contact_id));
-  const { data: eventos } = await supabase
-    .from("lead_events")
-    .select("unnichat_id, event_at")
-    .in("unnichat_id", ids)
-    .order("event_at", { ascending: true });
-  const primeiro = new Map<string, string>();
-  for (const e of eventos ?? []) if (!primeiro.has(e.unnichat_id)) primeiro.set(e.unnichat_id, e.event_at);
   let n = 0;
   for (const l of candidatos) {
     const id = l.unnichat_id as string;
     if (jaSet.has(id)) continue;
+    // Chega junto em todo mundo: inscreve na hora. Se a janela de 24h ainda
+    // não abriu, quem segura é o tratar() (espera ~10 min antes do template).
     const tags = (Array.isArray(l.extra?.tags) ? l.extra.tags : []).map((t: unknown) => String(t).toLowerCase());
     const respondeu = tags.includes("respondeu-pesquisa");
-    const entrou = primeiro.get(id);
-    const passou15 = entrou ? Date.now() - new Date(entrou).getTime() > 15 * 60_000 : false;
-    if (!respondeu && !passou15) continue;
     const { error } = await supabase
       .from("teo_conversas")
       .insert({ contact_id: id, nome: l.name, telefone: l.phone, estado: "novo" });
@@ -293,6 +286,9 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     if (c.estado === "novo") {
       if (!janelaAberta) {
         if (c.template_em) return "aguardando resposta do template";
+        // Acabou de entrar: a automação do Unnichat está mandando a confirmação.
+        // Dá ~10 min pro lead abrir a janela antes de mandar o template.
+        if (Date.now() - new Date(c.criado_em).getTime() < 10 * 60_000) return "esperando a janela abrir";
         if (!cfg.template_abertura_id) return "sem template";
         const r = await unnichat(supabase, "POST", "/meta/templates", {
           phone: telefone,
@@ -479,7 +475,7 @@ async function rodar() {
 
   const { data: conversas } = await supabase
     .from("teo_conversas")
-    .select("contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em")
+    .select("contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em")
     .eq("ativo", true)
     .in("estado", ["novo", "em_conversa"]);
   const fila = [...((conversas ?? []) as Conversa[])];
