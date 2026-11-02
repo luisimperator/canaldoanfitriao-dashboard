@@ -1,7 +1,7 @@
 // Ponte do Téo com a agenda do Google (Apps Script).
 //
-// O script cria (uma vez) a agenda "Calls Canal do Anfitrião (Téo)" na conta
-// e coloca lá cada call marcada pelo Téo, com Meet, convidando o lead e o
+// O script cria (uma vez) a agenda "Calls Canal do Anfitrião" na conta e
+// coloca lá cada call marcada pelo Téo, com Meet, convidando o lead e o
 // vendedor.
 //
 // Como instalar (na conta Google onde a agenda vai ficar):
@@ -18,7 +18,7 @@
 //    select vault.create_secret('O_MESMO_TOKEN', 'teo_agenda_token');
 
 const TOKEN = 'TROQUE_POR_UMA_SENHA_LONGA';
-const NOME_AGENDA = 'Calls Canal do Anfitrião (Téo)';
+const NOME_AGENDA = 'Calls Canal do Anfitrião';
 
 function agenda_() {
   const props = PropertiesService.getScriptProperties();
