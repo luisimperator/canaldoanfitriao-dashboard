@@ -167,8 +167,10 @@ Entender a situação da pessoa em poucas perguntas e, se fizer sentido, marcar 
 # Caminhos
 - Já opera imóveis: entenda o que trava (ocupação, preço, tempo, avaliações, crescer). Muitos imóveis ou gestão de terceiros: o caminho é o Gigantes; poucos imóveis: o Anfitrião 5 Estrelas (A5E). Mas quem explica e recomenda é o especialista na call.
 - Ainda não tem imóvel: descubra se tem um imóvel a caminho (na planta, em reforma, da família) ou um plano concreto sem imóvel próprio (gestão de terceiros, coanfitrião, sublocação). Se tiver, a call faz muito sentido: "dá pra aprender antes de pegar as chaves e não errar no começo". Se não tiver plano nem data, diga que existe um caminho pra começar do zero e passe pro time com motivo "airbnb_do_zero".
-- Para propor a call: um motivo ligado ao caso dela + baixo compromisso. Ex.: "Pelo que você me contou, vale um papo de 20 min com um dos nossos especialistas pra montar o plano pro seu caso. Qual período fica melhor pra você: manhã, tarde ou noite?"
-- Quando a pessoa topar a call: pergunte o melhor período e o e-mail pro convite. Com isso em mãos, chame passar_para_humano (motivo "call") e diga que vai confirmar o horário com o especialista e manda a confirmação por aqui. NÃO confirme horário você mesmo.
+- Para propor a call: um motivo ligado ao caso dela + baixo compromisso, com DOIS horários concretos da lista "Horários livres pra call". Ex.: "Pelo que você me contou, vale um papo de 20 min com um dos nossos especialistas pra montar o plano pro seu caso. Amanhã às 10h ou às 15h, qual fica melhor?"
+- Quando a pessoa escolher um horário da lista: peça o e-mail pro convite (se ainda não tiver). Com horário + e-mail, chame marcar_call. Se der certo, confirme em uma mensagem: dia, hora, que é uma chamada de vídeo de 20 min com um especialista e que o convite com o link chega no e-mail dela. Depois siga disponível pra dúvidas (não passe pro time só por ter marcado).
+- Se nenhum horário da lista servir, pergunte qual dia e período funcionam e chame passar_para_humano (motivo "call") com a preferência dela. Nunca invente horário fora da lista.
+- Se marcar_call disser que o horário foi ocupado, ofereça outros dois da lista.
 
 # Nunca
 - Nunca fale preço, parcela, desconto, cupom ou condição, e nunca mande link de pagamento. Se perguntarem: "quem monta a melhor condição é o especialista, na call" e ofereça a call. Se insistirem em comprar já, passe pro time (motivo "comprar").
@@ -180,7 +182,7 @@ Entender a situação da pessoa em poucas perguntas e, se fizer sentido, marcar 
 Acolha ("faz todo sentido desconfiar"). Diga que ela pode conferir no Instagram do Rômulo Villela: o link de WhatsApp da bio cai neste mesmo número. Não pressione.
 
 # Passar pro time (ferramenta passar_para_humano)
-Use quando: a pessoa topar a call (já com período e e-mail); pedir preço/condição e não quiser call; quiser comprar agora; já for aluna e tiver dúvida de acesso/suporte; reclamar; pedir pra falar com uma pessoa; ou o assunto fugir do seu objetivo. Depois de chamar, mande uma última mensagem curta dizendo o próximo passo.
+Use quando: a pessoa quiser call mas nenhum horário da lista servir; pedir preço/condição e não quiser call; quiser comprar agora; já for aluna e tiver dúvida de acesso/suporte; reclamar; pedir pra falar com uma pessoa; ou o assunto fugir do seu objetivo. Depois de chamar, mande uma última mensagem curta dizendo o próximo passo.
 
 # Ficha (ferramenta anotar_ficha)
 Quando souber algo importante (imóveis, situação, dor, objetivo, prazo, objeção), anote em uma linha. É o que o especialista lê antes da call.
@@ -190,9 +192,29 @@ Responda só com o texto que vai pro WhatsApp. Se precisar de duas mensagens seg
 
 const TOOLS: Anthropic.Tool[] = [
   {
+    name: "marcar_call",
+    description:
+      "Marca a call de 20 min com um especialista num horário da lista de horários livres. Precisa do horário escolhido pelo lead e do e-mail dele.",
+    input_schema: {
+      type: "object",
+      properties: {
+        horario: {
+          type: "string",
+          description: "Exatamente um dos horários da lista 'Horários livres pra call' (formato AAAA-MM-DDTHH:MM).",
+        },
+        email: { type: "string" },
+        resumo: {
+          type: "string",
+          description: "Ficha pro especialista em 2 a 4 linhas: situação, imóveis, dor, objetivo e prazo.",
+        },
+      },
+      required: ["horario", "email", "resumo"],
+    },
+  },
+  {
     name: "passar_para_humano",
     description:
-      "Passa a conversa pro time humano (o Téo para de responder). Use quando o lead topar a call, pedir preço/condição, quiser comprar, for aluno com dúvida de suporte, reclamar, pedir uma pessoa, ou não tiver plano nenhum (airbnb_do_zero).",
+      "Passa a conversa pro time humano (o Téo para de responder). Use quando o lead quiser call mas nenhum horário servir, pedir preço/condição, quiser comprar, for aluno com dúvida de suporte, reclamar, pedir uma pessoa, ou não tiver plano nenhum (airbnb_do_zero).",
     input_schema: {
       type: "object",
       properties: {
@@ -252,6 +274,9 @@ export async function rodarTeo(opts: {
   contexto: string;
   ficha: string | null;
   abrir: boolean;
+  /** horários livres pra call, já em horário de Brasília (AAAA-MM-DDTHH:MM) */
+  horariosLivres: string[];
+  marcarCall: (args: { horario: string; email: string; resumo: string }) => Promise<string>;
 }): Promise<ResultadoTeo> {
   const client = new Anthropic();
   const system: Anthropic.TextBlockParam[] = [
@@ -261,6 +286,9 @@ export async function rodarTeo(opts: {
       text: [
         `# Agora\n${agoraSP()} (horário de Brasília).`,
         opts.contexto ? `# Aviso do dia\n${opts.contexto}` : null,
+        `# Horários livres pra call (horário de Brasília)\n${
+          opts.horariosLivres.length ? opts.horariosLivres.join(", ") : "nenhum no momento: pergunte dia e período e passe pro time"
+        }`,
         blocoLead(opts.lead),
         opts.ficha ? `# Ficha até agora\n${opts.ficha}` : null,
       ]
@@ -313,6 +341,13 @@ export async function rodarTeo(opts: {
             tool_use_id: b.id,
             content: "Registrado: o time humano assume. Agora escreva a última mensagem curta pro lead, dizendo o próximo passo.",
           });
+        } else if (b.name === "marcar_call") {
+          const out = await opts.marcarCall({
+            horario: input.horario ?? "",
+            email: input.email ?? "",
+            resumo: input.resumo ?? "",
+          });
+          results.push({ type: "tool_result", tool_use_id: b.id, content: out });
         } else if (b.name === "anotar_ficha") {
           if (input.nota) notas.push(input.nota);
           results.push({ type: "tool_result", tool_use_id: b.id, content: "Anotado." });
