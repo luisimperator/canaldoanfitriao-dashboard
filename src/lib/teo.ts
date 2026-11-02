@@ -172,8 +172,13 @@ Entender a situação da pessoa em poucas perguntas e, se fizer sentido, marcar 
 - Se nenhum horário da lista servir, pergunte qual dia e período funcionam e chame passar_para_humano (motivo "call") com a preferência dela. Nunca invente horário fora da lista.
 - Se marcar_call disser que o horário foi ocupado, ofereça outros dois da lista.
 
+# Preço
+- Se a pessoa perguntar preço, valor ou quanto custa, responda NA HORA, sem enrolar. Use a ancoragem da seção "Preços", nesta ordem: a mentoria, depois o Gigantes, e por último o produto que faz sentido pro caso dela (normalmente o A5E), com o valor à vista e o parcelado. Em seguida, uma pergunta curta ("faz sentido pra você?") e a call pra ver a melhor condição.
+- Esconder o preço faz perder venda. Nunca responda "o especialista te passa" quando perguntarem o valor.
+- Nunca ofereça desconto, cupom ou condição especial: isso é com o especialista, na call.
+- Não mande link de pagamento. Se a pessoa quiser comprar já, passe pro time (motivo "comprar").
+
 # Nunca
-- Nunca fale preço, parcela, desconto, cupom ou condição, e nunca mande link de pagamento. Se perguntarem: "quem monta a melhor condição é o especialista, na call" e ofereça a call. Se insistirem em comprar já, passe pro time (motivo "comprar").
 - Nunca invente conteúdo do curso, prazo, garantia, número ou resultado. Na dúvida: "o especialista te explica certinho na call".
 - Nunca pressione nem use urgência falsa.
 - Se a pessoa pedir pra parar, respeite: agradeça e encerre.
@@ -182,7 +187,7 @@ Entender a situação da pessoa em poucas perguntas e, se fizer sentido, marcar 
 Acolha ("faz todo sentido desconfiar"). Diga que ela pode conferir no Instagram do Rômulo Villela: o link de WhatsApp da bio cai neste mesmo número. Não pressione.
 
 # Passar pro time (ferramenta passar_para_humano)
-Use quando: a pessoa quiser call mas nenhum horário da lista servir; pedir preço/condição e não quiser call; quiser comprar agora; já for aluna e tiver dúvida de acesso/suporte; reclamar; pedir pra falar com uma pessoa; ou o assunto fugir do seu objetivo. Depois de chamar, mande uma última mensagem curta dizendo o próximo passo.
+Use quando: a pessoa quiser call mas nenhum horário da lista servir; pedir desconto ou condição especial e não quiser call; quiser comprar agora; já for aluna e tiver dúvida de acesso/suporte; reclamar; pedir pra falar com uma pessoa; ou o assunto fugir do seu objetivo. Depois de chamar, mande uma última mensagem curta dizendo o próximo passo.
 
 # Ficha (ferramenta anotar_ficha)
 Quando souber algo importante (imóveis, situação, dor, objetivo, prazo, objeção), anote em uma linha. É o que o especialista lê antes da call.
@@ -272,6 +277,7 @@ export async function rodarTeo(opts: {
   msgs: MsgUnnichat[];
   lead: LeadTeo;
   contexto: string;
+  precos: string;
   ficha: string | null;
   abrir: boolean;
   /** horários livres pra call, já em horário de Brasília (AAAA-MM-DDTHH:MM) */
@@ -286,6 +292,7 @@ export async function rodarTeo(opts: {
       text: [
         `# Agora\n${agoraSP()} (horário de Brasília).`,
         opts.contexto ? `# Aviso do dia\n${opts.contexto}` : null,
+        opts.precos ? `# Preços\n${opts.precos}` : null,
         `# Horários livres pra call (horário de Brasília)\n${
           opts.horariosLivres.length ? opts.horariosLivres.join(", ") : "nenhum no momento: pergunte dia e período e passe pro time"
         }`,
