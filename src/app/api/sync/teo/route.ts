@@ -169,11 +169,59 @@ function especialistaDaConversa(msgs: MsgUnnichat[], cfg: Config): string | null
   return dono;
 }
 
+// Conversão de cada vendedor nos últimos 90 dias: vendas pagas ÷ leads
+// atribuídos (a conta de "leads por venda" do painel, invertida). 90 dias pra
+// um mês ruim (ou um mês com poucos leads novos, como outubro de 2026) não
+// virar a ordem. Contagem no banco (head + count): 90 dias de leads passam do
+// limite de 1.000 linhas por consulta. Quem não tem dado fica com a média do
+// time.
+const JANELA_CONVERSAO_DIAS = 90;
+
+async function taxasDeConversao(
+  supabase: SupabaseClient,
+  nomes: string[]
+): Promise<Map<string, number>> {
+  const desde = new Date(Date.now() - JANELA_CONVERSAO_DIAS * 86400_000).toISOString().slice(0, 10);
+  const { data: sellers } = await supabase.from("sellers").select("id, name").in("name", nomes);
+  const brutas = new Map<string, number | null>(
+    await Promise.all(
+      nomes.map(async (nome): Promise<[string, number | null]> => {
+        const id = (sellers ?? []).find((s) => s.name === nome)?.id;
+        if (!id) return [nome, null];
+        const [v, l] = await Promise.all([
+          supabase
+            .from("sales")
+            .select("id", { count: "exact", head: true })
+            .eq("seller_id", id)
+            .eq("status", "paga")
+            .gte("sale_date", desde),
+          supabase.from("leads").select("id", { count: "exact", head: true }).eq("seller_id", id).gte("created_at", desde),
+        ]);
+        return [nome, v.count != null && l.count ? v.count / l.count : null];
+      })
+    )
+  );
+  const conhecidas = [...brutas.values()].filter((t): t is number => t !== null);
+  const media = conhecidas.length ? conhecidas.reduce((a, b) => a + b, 0) / conhecidas.length : 1;
+  // Piso pequeno: quem não vendeu nada no período ainda pega call quando os
+  // outros estão ocupados, e a conta da distribuição não divide por zero.
+  return new Map(nomes.map((n) => [n, Math.max(brutas.get(n) ?? media, 0.001)]));
+}
+
+// Quem pega a próxima call do dia: as calls do dia são divididas na proporção
+// da conversão. Vai quem tem a menor (calls no dia + 1) ÷ conversão; empate
+// fica com quem converte mais. Ex.: conversões 8,0%, 6,5% e 4,6% num dia de 5
+// calls dão 2, 2 e 1.
+function ordemDoDia(livres: string[], cargaNoDia: (v: string) => number, taxa: Map<string, number>): string[] {
+  const t = (v: string) => taxa.get(v) ?? 0.001;
+  return [...livres].sort((a, b) => (cargaNoDia(a) + 1) / t(a) - (cargaNoDia(b) + 1) / t(b) || t(b) - t(a));
+}
+
 // Horários da config daqui a 1h+ em que algum vendedor está livre. Os três
 // atendem em paralelo (cada um no seu computador): o mesmo horário aceita uma
-// call por vendedor. Rodízio pela carga: em cada horário vai o vendedor livre
-// com menos calls marcadas no dia. Se alguém do time já conversou com o lead,
-// só os horários dessa pessoa.
+// call por vendedor. Em cada horário vai o vendedor livre que ordemDoDia()
+// escolhe. Se alguém do time já conversou com o lead, só os horários dessa
+// pessoa.
 async function horariosLivres(
   supabase: SupabaseClient,
   cfg: Config,
@@ -185,21 +233,27 @@ async function horariosLivres(
     (h) => typeof h === "string" && new Date(h).getTime() > Date.now() + 3600_000
   );
   if (todos.length === 0 || vendedores.length === 0) return [];
-  const { data: marcadas } = await supabase
-    .from("teo_calls")
-    .select("inicio, vendedor")
-    .neq("status", "cancelada")
-    .gte("inicio", new Date(Date.now() - 12 * 3600_000).toISOString());
+  const [{ data: marcadas }, taxa] = await Promise.all([
+    supabase
+      .from("teo_calls")
+      .select("inicio, vendedor")
+      .neq("status", "cancelada")
+      .gte("inicio", new Date(Date.now() - 12 * 3600_000).toISOString()),
+    taxasDeConversao(supabase, time),
+  ]);
   const ocupado = new Set((marcadas ?? []).map((m) => `${new Date(m.inicio).getTime()}|${m.vendedor}`));
-  const carga = new Map<string, number>(vendedores.map((v) => [v, 0]));
-  for (const m of marcadas ?? []) if (m.vendedor) carga.set(m.vendedor, (carga.get(m.vendedor) ?? 0) + 1);
+  const dia = (iso: string) => local(iso).slice(0, 10);
+  const carga = new Map<string, number>();
+  for (const m of marcadas ?? []) {
+    if (m.vendedor) carga.set(`${dia(m.inicio)}|${m.vendedor}`, (carga.get(`${dia(m.inicio)}|${m.vendedor}`) ?? 0) + 1);
+  }
   const out: { horario: string; vendedor: string }[] = [];
   for (const h of todos) {
     const ts = new Date(h).getTime();
     const livres = vendedores.filter((v) => !ocupado.has(`${ts}|${v}`));
     if (livres.length === 0) continue;
-    livres.sort((a, b) => (carga.get(a) ?? 0) - (carga.get(b) ?? 0));
-    out.push({ horario: local(h), vendedor: livres[0] });
+    const [escolhido] = ordemDoDia(livres, (v) => carga.get(`${dia(h)}|${v}`) ?? 0, taxa);
+    out.push({ horario: local(h), vendedor: escolhido });
   }
   return out;
 }
