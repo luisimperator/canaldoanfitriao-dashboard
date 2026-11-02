@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/sync/mailchimp", "schedule": "15 */2 * * *" },
-    { "path": "/api/sync/unnichat-fila", "schedule": "* * * * *" }
+    { "path": "/api/sync/unnichat-fila", "schedule": "* * * * *" },
+    { "path": "/api/sync/teo", "schedule": "* * * * *" }
   ]
 }
