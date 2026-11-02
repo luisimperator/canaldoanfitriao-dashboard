@@ -50,6 +50,7 @@ interface Config {
   max_respostas: number;
   atendente_id: string | null;
   template_abertura_id: string | null;
+  tag_teo_id: string | null;
 }
 
 const CAMPOS_PESQUISA: Record<string, string> = {
@@ -126,6 +127,31 @@ async function autoInscrever(supabase: SupabaseClient, cfg: Config): Promise<num
       await unnichat(supabase, "POST", `/contact/${id}/assign`, { attendantId: cfg.atendente_id });
     }
     await log(supabase, "inscrito", { contact_id: id, nome: l.name, respondeu_pesquisa: respondeu });
+    n++;
+  }
+  return n;
+}
+
+// Tag "teo" no Unnichat em todo lead que o Téo assume. A automação "Lista de
+// Espera 2.0" usa a tag pra parar as tentativas de contato e não tirar o lead
+// do Téo. Pega também quem foi inscrito à mão e repete se a API falhar.
+async function marcarTag(supabase: SupabaseClient, cfg: Config): Promise<number> {
+  if (!cfg.tag_teo_id) return 0;
+  const { data } = await supabase
+    .from("teo_conversas")
+    .select("contact_id, nome")
+    .eq("ativo", true)
+    .is("tag_em", null)
+    .limit(20);
+  let n = 0;
+  for (const c of data ?? []) {
+    const r = await unnichat(supabase, "POST", `/contact/${c.contact_id}/tags`, { tag_id: cfg.tag_teo_id });
+    const ok = r.status >= 200 && r.status < 300 && (r.body as { success?: boolean } | null)?.success !== false;
+    if (!ok) {
+      await log(supabase, "tag falhou", { contact_id: c.contact_id, nome: c.nome, status: r.status });
+      continue;
+    }
+    await supabase.from("teo_conversas").update({ tag_em: new Date().toISOString() }).eq("contact_id", c.contact_id);
     n++;
   }
   return n;
@@ -564,6 +590,7 @@ async function rodar() {
   const inicio = Date.now();
   const calls = await cuidarDasCalls(supabase, cfg as Config);
   const inscritos = await autoInscrever(supabase, cfg as Config);
+  const tags = await marcarTag(supabase, cfg as Config);
 
   const { data: conversas } = await supabase
     .from("teo_conversas")
@@ -581,7 +608,7 @@ async function rodar() {
   }
   await Promise.all(Array.from({ length: PARALELO }, () => pista()));
 
-  return NextResponse.json({ ok: true, calls, inscritos, resultado, ms: Date.now() - inicio });
+  return NextResponse.json({ ok: true, calls, inscritos, tags, resultado, ms: Date.now() - inicio });
 }
 
 // GET: cron da Vercel (vercel.json). POST: disparo manual, já logado.
