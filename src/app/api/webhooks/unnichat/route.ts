@@ -206,20 +206,60 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const { error: upErr } = await supabase
+  // A mesma pessoa pode ter DOIS contatos no Unnichat (ex.: WhatsApp e
+  // Instagram) com o mesmo e-mail. Como leads.email é único, gravar o segundo
+  // contato batia no índice leads_email_unico: a rota devolvia 500, o Unnichat
+  // contava como falha (29% na "Requisição1") e o evento se perdia — 1.874
+  // eventos de ago a nov/26. Agora:
+  //  - contato que já tem lead: atualiza o lead dele, sem trocar o e-mail por
+  //    um que já é de outro lead;
+  //  - contato sem lead, com e-mail de um lead existente: atualiza esse lead e
+  //    grava o evento nele (o id original do contato fica no raw do evento).
+  const emailNorm = email ? String(email).trim().toLowerCase() : null;
+  const { data: proprio } = await supabase
     .from("leads")
-    .upsert(row, { onConflict: "unnichat_id" });
-  if (upErr) {
-    return NextResponse.json({ error: upErr.message }, { status: 500 });
+    .select("id")
+    .eq("unnichat_id", contactId)
+    .maybeSingle();
+  const { data: donoDoEmail } = emailNorm
+    ? await supabase
+        .from("leads")
+        .select("id, unnichat_id, name, phone, extra")
+        .eq("email", emailNorm)
+        .maybeSingle()
+    : { data: null };
+
+  let eventKey = contactId;
+  let writeErr: string | null = null;
+  if (!proprio && donoDoEmail) {
+    const upd: Record<string, unknown> = { ...row };
+    delete upd.unnichat_id;
+    delete upd.email;
+    if (donoDoEmail.unnichat_id) eventKey = donoDoEmail.unnichat_id;
+    else upd.unnichat_id = contactId;
+    // Nome, telefone e campos do lead que já existe não são apagados pelo
+    // segundo contato: só completa o que falta.
+    if (donoDoEmail.name) delete upd.name;
+    if (donoDoEmail.phone) delete upd.phone;
+    if (upd.extra) {
+      upd.extra = { ...((donoDoEmail.extra as Record<string, unknown> | null) ?? {}), ...extra };
+    }
+    const { error } = await supabase.from("leads").update(upd).eq("id", donoDoEmail.id);
+    if (error) writeErr = error.message;
+  } else {
+    if (proprio && donoDoEmail && donoDoEmail.id !== proprio.id) delete row.email;
+    const { error } = await supabase.from("leads").upsert(row, { onConflict: "unnichat_id" });
+    if (error) writeErr = error.message;
   }
 
   // 2) HISTÓRICO IMUTÁVEL: uma linha por evento, com o payload bruto completo.
-  // É isso que permite medir conversão entre etapas e tempo-de-etapa.
+  // É isso que permite medir conversão entre etapas e tempo-de-etapa. Grava
+  // mesmo se a escrita do lead falhou: o evento nunca deve se perder.
   const eventAt = body.event_date
     ? new Date(Number(body.event_date) * 1000).toISOString()
     : new Date().toISOString();
   await supabase.from("lead_events").insert({
-    unnichat_id: contactId,
+    unnichat_id: eventKey,
     name,
     stage,
     status: newStatus,
@@ -229,5 +269,8 @@ export async function POST(req: NextRequest) {
     raw: body,
   });
 
+  if (writeErr) {
+    return NextResponse.json({ error: writeErr }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }
