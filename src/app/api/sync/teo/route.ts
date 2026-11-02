@@ -172,6 +172,50 @@ async function horariosLivres(
   return out;
 }
 
+// Cria o evento com Meet na agenda (Apps Script em teo_agenda_url) e manda o
+// convite pro lead e pro vendedor. Sem a ponte configurada, a call fica
+// "marcada" e é tentada de novo na próxima rodada.
+async function criarConvite(
+  supabase: SupabaseClient,
+  cfg: Config,
+  k: { id: string; nome: string | null; inicio: string; email: string | null; vendedor: string | null; resumo: string | null }
+): Promise<boolean> {
+  const { data: ag } = await supabase.rpc("teo_agenda_config");
+  const url = (ag as { url?: string } | null)?.url;
+  const token = (ag as { token?: string } | null)?.token;
+  if (!url || !token) return false;
+  const v = (cfg.vendedores ?? []).find((x) => x.nome === k.vendedor);
+  const convidados = [k.email, v?.email].filter(Boolean);
+  const inicio = local(k.inicio);
+  const fim = local(new Date(new Date(k.inicio).getTime() + 30 * 60_000).toISOString());
+  const res = await fetch(url, {
+    method: "POST",
+    redirect: "follow",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      token,
+      titulo: `Canal do Anfitrião: ${k.nome ?? "lead"} e ${k.vendedor ? primeiroNomeVendedor(k.vendedor) : "especialista"}`,
+      // O lead também vê a descrição: só o texto neutro. A ficha vai pro
+      // vendedor na nota do Unnichat.
+      descricao: `Papo de 20 min com ${k.vendedor ?? "um especialista"}, do Canal do Anfitrião, pra entender o seu caso e montar o plano. É só entrar pelo link do Google Meet no horário.`,
+      inicio: `${inicio}:00`,
+      fim: `${fim}:00`,
+      convidados,
+    }),
+  });
+  const out = (await res.json().catch(() => null)) as { ok?: boolean; id?: string; meet?: string; erro?: string } | null;
+  if (!out?.ok) {
+    await log(supabase, "convite falhou", { call_id: k.id, nome: k.nome, status: res.status, erro: out?.erro ?? null });
+    return false;
+  }
+  await supabase
+    .from("teo_calls")
+    .update({ status: "convite_enviado", evento_id: out.id ?? null, meet_url: out.meet ?? null })
+    .eq("id", k.id);
+  await log(supabase, "convite enviado", { call_id: k.id, nome: k.nome, convidados, meet: out.meet ?? null });
+  return true;
+}
+
 function primeiroNomeVendedor(nome: string): string {
   return nome.split(" ")[0];
 }
@@ -192,14 +236,18 @@ async function marcarCall(
   }
   const email = args.email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "E-mail inválido: peça o e-mail de novo.";
-  const { error } = await supabase.from("teo_calls").insert({
-    contact_id: c.contact_id,
-    nome: c.nome,
-    inicio: `${horario}:00-03:00`,
-    email,
-    resumo: args.resumo,
-    vendedor: slot.vendedor,
-  });
+  const { data: nova, error } = await supabase
+    .from("teo_calls")
+    .insert({
+      contact_id: c.contact_id,
+      nome: c.nome,
+      inicio: `${horario}:00-03:00`,
+      email,
+      resumo: args.resumo,
+      vendedor: slot.vendedor,
+    })
+    .select("id, nome, inicio, email, vendedor, resumo")
+    .single();
   if (error) {
     return /duplicate|unique/i.test(error.message)
       ? `Esse horário acabou de ser ocupado. Livres agora: ${lista(await horariosLivres(supabase, cfg))}.`
@@ -213,6 +261,7 @@ async function marcarCall(
     `📅 Call marcada pelo Téo: ${quando} com ${slot.vendedor} — ${email}\n${args.resumo}`
   );
   await log(supabase, "call marcada", { contact_id: c.contact_id, nome: c.nome, horario, email, vendedor: slot.vendedor });
+  if (nova) await criarConvite(supabase, cfg, nova).catch(() => false);
   return `Marcado: ${quando} (horário de Brasília) com ${primeiroNomeVendedor(slot.vendedor)}. O convite vai pro e-mail ${email}.`;
 }
 
@@ -351,11 +400,18 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
   const agora = Date.now();
   const { data: calls } = await supabase
     .from("teo_calls")
-    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, resumo, email")
+    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, resumo, email, status")
     .in("status", ["marcada", "convite_enviado"])
     .gte("inicio", new Date(agora - 2 * 3600_000).toISOString());
   for (const k of calls ?? []) {
     const t = new Date(k.inicio).getTime();
+    if (k.status === "marcada" && t > agora) {
+      const ok = await criarConvite(supabase, cfg, k).catch(() => false);
+      if (ok) {
+        feitos.push(`convite ${k.nome}`);
+        continue; // o lembrete pega o link na próxima rodada
+      }
+    }
     const { data: conv } = await supabase
       .from("teo_conversas")
       .select("telefone, nome, ficha")
