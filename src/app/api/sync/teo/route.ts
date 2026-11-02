@@ -139,15 +139,48 @@ function local(iso: string): string {
     .replace(" ", "T");
 }
 
+function semAcento(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+// Quem do time já conversou com o lead (mensagem digitada no Unnichat nos
+// últimos 30 dias). Se tem alguém, a call é com essa pessoa. A API não diz
+// quem mandou cada mensagem: vale quem estava com a conversa naquela hora,
+// pelos avisos "Conversa atribuída … ao Fulano" (o Unnichat também atribui a
+// quem manda mensagem numa conversa sem dono).
+function especialistaDaConversa(msgs: MsgUnnichat[], cfg: Config): string | null {
+  const vendedores = (cfg.vendedores ?? []).map((v) => v.nome);
+  const desde = Date.now() - 30 * 86400_000;
+  let atual: string | null = null;
+  let dono: string | null = null;
+  for (const m of msgs) {
+    const txt = m.message ?? "";
+    if (m.senderBy === "platform") {
+      if (/desatribu/i.test(txt)) atual = null;
+      else if (/atribu[ií]da/i.test(txt)) atual = vendedores.find((v) => semAcento(txt).includes(semAcento(v))) ?? null;
+      continue;
+    }
+    // Só mensagem digitada por gente: sem automação, API (o Téo), nota ou
+    // template de campanha.
+    if (m.senderBy !== "user" || m.origin || ["note", "template", "info", "flow"].includes(m.type)) continue;
+    if (/\bt[eé]o\b/i.test(txt)) continue; // abertura do Téo mandada à mão
+    if (atual && new Date(m.date).getTime() >= desde) dono = atual;
+  }
+  return dono;
+}
+
 // Horários da config daqui a 1h+ em que algum vendedor está livre. Os três
 // atendem em paralelo (cada um no seu computador): o mesmo horário aceita uma
 // call por vendedor. Rodízio pela carga: em cada horário vai o vendedor livre
-// com menos calls marcadas no dia.
+// com menos calls marcadas no dia. Se alguém do time já conversou com o lead,
+// só os horários dessa pessoa.
 async function horariosLivres(
   supabase: SupabaseClient,
-  cfg: Config
+  cfg: Config,
+  especialista: string | null = null
 ): Promise<{ horario: string; vendedor: string }[]> {
-  const vendedores = (cfg.vendedores ?? []).map((v) => v.nome);
+  const time = (cfg.vendedores ?? []).map((v) => v.nome);
+  const vendedores = especialista && time.includes(especialista) ? [especialista] : time;
   const todos = (cfg.horarios ?? []).filter(
     (h) => typeof h === "string" && new Date(h).getTime() > Date.now() + 3600_000
   );
@@ -223,9 +256,10 @@ async function marcarCall(
   supabase: SupabaseClient,
   c: Conversa,
   cfg: Config,
+  especialista: string | null,
   args: { horario: string; email: string; resumo: string }
 ): Promise<string> {
-  const livres = await horariosLivres(supabase, cfg);
+  const livres = await horariosLivres(supabase, cfg, especialista);
   const horario = args.horario.trim().slice(0, 16);
   const slot = livres.find((l) => l.horario === horario);
   const lista = (ls: typeof livres) =>
@@ -249,7 +283,7 @@ async function marcarCall(
     .single();
   if (error) {
     return /duplicate|unique/i.test(error.message)
-      ? `Esse horário acabou de ser ocupado. Livres agora: ${lista(await horariosLivres(supabase, cfg))}.`
+      ? `Esse horário acabou de ser ocupado. Livres agora: ${lista(await horariosLivres(supabase, cfg, especialista))}.`
       : `Não consegui marcar (${error.message}). Diga que vai confirmar o horário e chame passar_para_humano.`;
   }
   const [dia, hora] = horario.split("T");
@@ -327,6 +361,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
 
     const lead = await carregarLead(supabase, c.contact_id);
     if (!lead.nome) lead.nome = c.nome;
+    const especialista = especialistaDaConversa(msgs, cfg);
     const res = await rodarTeo({
       msgs,
       lead,
@@ -335,10 +370,11 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       extras: cfg.instrucoes_extras ?? "",
       ficha: c.ficha,
       abrir,
-      horariosLivres: (await horariosLivres(supabase, cfg)).map(
+      especialista: especialista ? primeiroNomeVendedor(especialista) : null,
+      horariosLivres: (await horariosLivres(supabase, cfg, especialista)).map(
         (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`
       ),
-      marcarCall: (args) => marcarCall(supabase, c, cfg, args),
+      marcarCall: (args) => marcarCall(supabase, c, cfg, especialista, args),
     });
 
     for (const [i, texto] of res.mensagens.entries()) {

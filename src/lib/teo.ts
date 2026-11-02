@@ -290,6 +290,8 @@ export async function rodarTeo(opts: {
   extras: string;
   ficha: string | null;
   abrir: boolean;
+  /** primeiro nome de quem do time já conversou com o lead: a call é com essa pessoa */
+  especialista?: string | null;
   /** horários livres pra call, já em horário de Brasília (AAAA-MM-DDTHH:MM) */
   horariosLivres: string[];
   marcarCall: (args: { horario: string; email: string; resumo: string }) => Promise<string>;
@@ -304,6 +306,10 @@ export async function rodarTeo(opts: {
         opts.contexto ? `# Aviso do dia\n${opts.contexto}` : null,
         opts.precos ? `# Preços\n${opts.precos}` : null,
         `# Horários livres pra call (horário de Brasília)\n${
+          opts.especialista
+            ? `${opts.especialista} já conversou com este lead, então a call é com ${opts.especialista}: os horários abaixo já são só os dessa pessoa. Pode dizer que é com quem já falou com o lead.\n`
+            : ""
+        }${
           opts.horariosLivres.length ? opts.horariosLivres.join(", ") : "nenhum no momento: pergunte dia e período e passe pro time"
         }`,
         blocoLead(opts.lead),
