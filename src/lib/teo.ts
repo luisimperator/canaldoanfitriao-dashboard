@@ -201,7 +201,8 @@ Use quando: a pessoa quiser call mas nenhum horário da lista servir; pedir desc
 Quando souber algo importante (imóveis, situação, dor, objetivo, prazo, objeção), anote em uma linha. É o que o especialista lê antes da call.
 
 # Formato da resposta
-Responda só com o texto que vai pro WhatsApp. Se precisar de duas mensagens seguidas, separe com uma linha contendo só [BREAK] (no máximo 2 mensagens).`;
+Responda só com o texto que vai pro WhatsApp. Se precisar de duas mensagens seguidas, separe com uma linha contendo só [BREAK] (no máximo 2 mensagens).
+Quando a última mensagem do lead só fecha a conversa ("ok", "obrigado", "igualmente", "até amanhã", um emoji) e você já se despediu, não precisa ter a última palavra: responda só [SEM_RESPOSTA] e nada vai pro lead.`;
 
 const TOOLS: Anthropic.Tool[] = [
   {
@@ -276,7 +277,7 @@ function dividir(reply: string): string[] {
   const partes = reply
     .split(/\n*\[BREAK\]\n*/i)
     .map((s) => s.trim())
-    .filter(Boolean)
+    .filter((s) => s && !/^\[?SEM[_ ]RESPOSTA\]?$/i.test(s))
     .slice(0, 3);
   return partes.map((p) => (p.length > 900 ? `${p.slice(0, 900)}…` : p));
 }
