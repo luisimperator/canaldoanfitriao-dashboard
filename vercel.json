@@ -1,6 +1,5 @@
 {
   "crons": [
-    { "path": "/api/sync/mailchimp", "schedule": "15 */2 * * *" },
-    { "path": "/api/sync/meta-ads", "schedule": "10 */6 * * *" }
+    { "path": "/api/sync/mailchimp", "schedule": "15 */2 * * *" }
   ]
 }

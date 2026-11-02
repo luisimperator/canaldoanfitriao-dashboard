@@ -9,8 +9,10 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // META_ADS_ACCOUNT_ID (ex.: act_1234567890). Aceita VÁRIAS contas separadas
 // por vírgula (ex.: act_111,act_222) — o negócio roda com "Canal do Anfitrião"
 // e "CA2 - Canal do Anfitrião"; o gasto do dia é a SOMA das contas.
-// O cron da Vercel (vercel.json) chama por GET a cada 6h; o GET reusa o mesmo
-// handler. POST continua valendo para disparo manual.
+// Quem importa o gasto de verdade é a função public.sync_meta_ads() no
+// Supabase (pg_cron a cada 3h, token no Vault). Esta rota ficou como disparo
+// manual de reserva e não está mais agendada na Vercel: sem as variáveis acima
+// ela só registrava erro a cada 6h.
 
 export async function POST() {
   const supabase = getSupabaseAdmin();
