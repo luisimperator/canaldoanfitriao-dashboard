@@ -47,10 +47,18 @@ function label(from: string, to: string): string {
 export function DateRangePicker({
   minYear = 2021,
   placeholder = "Últimos 12 meses",
+  value,
+  onChange,
 }: {
   minYear?: number;
   /** rótulo exibido quando não há from/to na URL (o padrão da página) */
   placeholder?: string;
+  /**
+   * Modo controlado (ex.: dentro de um gráfico): o período vem daqui e a
+   * escolha vai para onChange, sem mexer na URL da página.
+   */
+  value?: { from: string; to: string } | null;
+  onChange?: (from: string, to: string) => void;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -58,9 +66,10 @@ export function DateRangePicker({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
+  const controlado = Boolean(onChange);
   const now = new Date();
-  const from = sp.get("from");
-  const to = sp.get("to");
+  const from = controlado ? (value?.from ?? null) : sp.get("from");
+  const to = controlado ? (value?.to ?? null) : sp.get("to");
   const current = from && to ? label(from, to) : placeholder;
 
   const [mode, setMode] = useState<"dia" | "semana" | "mes">("dia");
@@ -77,6 +86,11 @@ export function DateRangePicker({
   }, []);
 
   function apply(f: string, t: string) {
+    if (onChange) {
+      onChange(f, t);
+      setOpen(false);
+      return;
+    }
     const p = new URLSearchParams(sp.toString());
     p.set("from", f);
     p.set("to", t);
@@ -141,7 +155,14 @@ export function DateRangePicker({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5"
+        aria-pressed={controlado ? Boolean(value) : undefined}
+        className={`inline-flex items-center gap-2 rounded-lg border bg-white dark:bg-[#15121f] font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5 ${
+          controlado ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm"
+        } ${
+          controlado && value
+            ? "border-slate-900 dark:border-violet-500"
+            : "border-slate-200 dark:border-white/10"
+        }`}
       >
         <span className="text-slate-400 dark:text-zinc-500">📅</span>
         {current}

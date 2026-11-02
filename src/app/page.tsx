@@ -11,8 +11,9 @@ import {
 } from "@/lib/metrics";
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
-import { MqlHistoryChart } from "@/components/charts";
-import { OrigemLeadsCard } from "@/components/OrigemLeadsCard";
+import { PainelMqlOrigem } from "@/components/PainelMqlOrigem";
+import { classifyChannel } from "@/lib/channels";
+import { hasUtm } from "@/lib/origin";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import Link from "next/link";
 
@@ -104,6 +105,18 @@ export default async function VisaoGeralPage({
   const fatTimePorDia: Record<string, number> = {};
   for (const s of sales) {
     if (s.sellerId) fatTimePorDia[s.saleDate] = (fatTimePorDia[s.saleDate] ?? 0) + s.amount;
+  }
+
+  // Leads criados por dia, por canal (UTM) — a origem dos leads segue a janela
+  // escolhida no gráfico de MQLs, então vai tudo por dia e o recorte é no cliente.
+  const origemPorDia: Record<string, Record<string, number>> = {};
+  const rastreadosPorDia: Record<string, number> = {};
+  for (const l of data.leads) {
+    if (!l.createdAt) continue;
+    const ch = classifyChannel(l.utm);
+    const dia = (origemPorDia[l.createdAt] ??= {});
+    dia[ch] = (dia[ch] ?? 0) + 1;
+    if (hasUtm(l)) rastreadosPorDia[l.createdAt] = (rastreadosPorDia[l.createdAt] ?? 0) + 1;
   }
 
   const capTone =
@@ -216,34 +229,38 @@ export default async function VisaoGeralPage({
         <KpiCard label="Contratação" value={capLabel} tone={capTone} />
       </div>
 
-      <Card title="MQLs" className="mb-4">
-        <MqlHistoryChart porDia={mqlPorDia} hoje={today} faturamentoPorDia={fatTimePorDia} />
-        <p className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
-          MQL = contato que respondeu a pesquisa e recebeu tag de qualificação (lead-a5e,
-          lead-gigantes, lead-quente, lead-muito-quente ou lead-frio — muito-frio fica fora), contado
-          no dia em que a tag chegou. Cada vendedor processa ~{num(mqlCap.avgPerMonth)} MQL/mês
-          (média dos últimos 90 dias).
-        </p>
-      </Card>
-
-      <div className="grid lg:grid-cols-3 gap-4">
-        <OrigemLeadsCard leads={leadsP} title={`Origem dos leads ${sufixo}`} />
-        <Card title={`Funil ${sufixo}`} className="lg:col-span-2">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
-            {stages.map((stage, i) => (
-              <div key={stage.label} className="rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 p-4">
-                <div className="text-xs text-slate-500 dark:text-zinc-400">{stage.label}</div>
-                <div className="text-xl font-bold text-slate-900 dark:text-zinc-100 mt-1">{num(stage.count)}</div>
-                {i > 0 && stages[0].count > 0 && (
-                  <div className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">
-                    {num((stage.count / stages[0].count) * 100, 1)}% dos captados
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+      <PainelMqlOrigem
+        hoje={today}
+        mqlPorDia={mqlPorDia}
+        faturamentoPorDia={fatTimePorDia}
+        origemPorDia={origemPorDia}
+        rastreadosPorDia={rastreadosPorDia}
+        legendaMql={
+          <p key="legenda-mql" className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
+            MQL = contato que respondeu a pesquisa e recebeu tag de qualificação (lead-a5e,
+            lead-gigantes, lead-quente, lead-muito-quente ou lead-frio — muito-frio fica fora), contado
+            no dia em que a tag chegou. Cada vendedor processa ~{num(mqlCap.avgPerMonth)} MQL/mês
+            (média dos últimos 90 dias).
+          </p>
+        }
+        funil={
+          <Card key="funil" title={`Funil ${sufixo}`} className="lg:col-span-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
+              {stages.map((stage, i) => (
+                <div key={stage.label} className="rounded-lg bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 p-4">
+                  <div className="text-xs text-slate-500 dark:text-zinc-400">{stage.label}</div>
+                  <div className="text-xl font-bold text-slate-900 dark:text-zinc-100 mt-1">{num(stage.count)}</div>
+                  {i > 0 && stages[0].count > 0 && (
+                    <div className="text-xs text-slate-400 dark:text-zinc-500 mt-0.5">
+                      {num((stage.count / stages[0].count) * 100, 1)}% dos captados
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        }
+      />
     </div>
   );
 }
