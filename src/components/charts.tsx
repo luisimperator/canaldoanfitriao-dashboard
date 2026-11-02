@@ -20,7 +20,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { agrupar, type Bucket, type Granularidade } from "@/lib/period-buckets";
+import {
+  agrupar,
+  agruparIntervalo,
+  intervaloDaJanela,
+  type Bucket,
+  type Granularidade,
+} from "@/lib/period-buckets";
+import { DateRangePicker } from "@/components/DateRangePicker";
 
 const COLORS = ["#e11d48", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#64748b"];
 
@@ -510,12 +517,13 @@ export function ReceitaDistribuicaoChart({
   );
 }
 
-// MQL por dia / semana / mês / ano, com seletor de granularidade e de janela
-// (últimos N períodos). O agrupamento roda aqui no cliente a partir da contagem
-// diária, então trocar o botão não recarrega a página. O período corrente
-// aparece mais claro porque ainda está correndo.
+// MQL por dia / semana / mês / ano, com seletor de granularidade, de janela
+// (últimos N períodos) e de datas exatas. O agrupamento roda aqui no cliente a
+// partir da contagem diária, então trocar o botão não recarrega a página. O
+// período corrente (ou cortado pelas datas) aparece mais claro. A janela vem de
+// fora (PainelMqlOrigem), para a origem dos leads acompanhar o mesmo período.
 const MQL_JANELAS: Record<Granularidade, { opcoes: number[]; padrao: number; unidade: string; plural: string }> = {
-  dia: { opcoes: [7, 14, 30, 90, 180, 365], padrao: 90, unidade: "dia", plural: "dias" },
+  dia: { opcoes: [1, 7, 14, 30, 90, 180, 365], padrao: 90, unidade: "dia", plural: "dias" },
   semana: { opcoes: [4, 8, 12, 24, 52, 104], padrao: 24, unidade: "semana", plural: "semanas" },
   mes: { opcoes: [3, 6, 12, 24, 36], padrao: 12, unidade: "mês", plural: "meses" },
   ano: { opcoes: [2, 3, 5], padrao: 3, unidade: "ano", plural: "anos" },
@@ -527,13 +535,37 @@ const MQL_GRANS: { key: Granularidade; label: string }[] = [
   { key: "ano", label: "Ano" },
 ];
 
+export interface JanelaMql {
+  gran: Granularidade;
+  /** últimos N, guardado por granularidade */
+  janelas: Record<Granularidade, number>;
+  /** datas exatas escolhidas no calendário (sobrepõe os "últimos N") */
+  datas: { from: string; to: string } | null;
+}
+
+export const JANELA_MQL_PADRAO: JanelaMql = {
+  gran: "semana",
+  janelas: {
+    dia: MQL_JANELAS.dia.padrao,
+    semana: MQL_JANELAS.semana.padrao,
+    mes: MQL_JANELAS.mes.padrao,
+    ano: MQL_JANELAS.ano.padrao,
+  },
+  datas: null,
+};
+
+/** Datas que a janela cobre: as escolhidas no calendário ou os últimos N períodos. */
+export function intervaloDaJanelaMql(j: JanelaMql, hoje: string): { de: string; ate: string } {
+  return j.datas ? { de: j.datas.from, ate: j.datas.to } : intervaloDaJanela(hoje, j.gran, j.janelas[j.gran]);
+}
+
 function Segmentos<T extends string | number>({
   opcoes,
   atual,
   onChange,
 }: {
   opcoes: { key: T; label: string }[];
-  atual: T;
+  atual: T | null;
   onChange: (k: T) => void;
 }) {
   return (
@@ -561,28 +593,29 @@ export function MqlHistoryChart({
   porDia,
   hoje,
   faturamentoPorDia,
+  janela,
+  onJanela,
 }: {
   porDia: Record<string, number>;
   hoje: string;
   /** faturamento das vendas com vendedor, por dia — sobreposição opcional */
   faturamentoPorDia?: Record<string, number>;
+  janela: JanelaMql;
+  onJanela: (j: JanelaMql) => void;
 }) {
-  const [gran, setGran] = useState<Granularidade>("semana");
-  const [janelas, setJanelas] = useState<Record<Granularidade, number>>({
-    dia: MQL_JANELAS.dia.padrao,
-    semana: MQL_JANELAS.semana.padrao,
-    mes: MQL_JANELAS.mes.padrao,
-    ano: MQL_JANELAS.ano.padrao,
-  });
   const [comFaturamento, setComFaturamento] = useState(false);
+  const gran = janela.gran;
   const cfg = MQL_JANELAS[gran];
-  const n = janelas[gran];
+  const n = janela.janelas[gran];
+  const datas = janela.datas;
   const data = useMemo(() => {
-    const mql = agrupar(porDia, hoje, gran, n);
+    const agrupa = (m: Record<string, number>) =>
+      datas ? agruparIntervalo(m, datas.from, datas.to, gran, hoje) : agrupar(m, hoje, gran, n);
+    const mql = agrupa(porDia);
     // mesmos períodos, mesma ordem: casa por índice
-    const fat = faturamentoPorDia ? agrupar(faturamentoPorDia, hoje, gran, n) : null;
+    const fat = faturamentoPorDia ? agrupa(faturamentoPorDia) : null;
     return mql.map((b, i) => ({ ...b, faturamento: fat ? fat[i].valor : 0 }));
-  }, [porDia, faturamentoPorDia, hoje, gran, n]);
+  }, [porDia, faturamentoPorDia, hoje, gran, n, datas]);
   const fechados = data.filter((d) => !d.parcial);
   const media = fechados.length ? fechados.reduce((a, d) => a + d.valor, 0) / fechados.length : 0;
   const total = data.reduce((a, d) => a + d.valor, 0);
@@ -591,16 +624,33 @@ export function MqlHistoryChart({
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2 mb-2">
-        <Segmentos opcoes={MQL_GRANS} atual={gran} onChange={setGran} />
+        <Segmentos opcoes={MQL_GRANS} atual={gran} onChange={(g) => onJanela({ ...janela, gran: g })} />
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-slate-500 dark:text-zinc-400">últimos</span>
           <Segmentos
             opcoes={cfg.opcoes.map((o) => ({ key: o, label: String(o) }))}
-            atual={n}
-            onChange={(v) => setJanelas((j) => ({ ...j, [gran]: v }))}
+            atual={datas ? null : n}
+            onChange={(v) => onJanela({ ...janela, janelas: { ...janela.janelas, [gran]: v }, datas: null })}
           />
-          <span className="text-xs text-slate-500 dark:text-zinc-400">{cfg.plural}</span>
+          <span className="text-xs text-slate-500 dark:text-zinc-400">
+            {!datas && n === 1 ? cfg.unidade : cfg.plural}
+          </span>
         </div>
+        <DateRangePicker
+          placeholder="Datas"
+          minYear={2024}
+          value={datas}
+          onChange={(from, to) => onJanela({ ...janela, datas: { from, to } })}
+        />
+        {datas && (
+          <button
+            type="button"
+            onClick={() => onJanela({ ...janela, datas: null })}
+            className="text-xs text-slate-400 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-300 underline"
+          >
+            limpar datas
+          </button>
+        )}
         {faturamentoPorDia && (
           <button
             type="button"
@@ -628,8 +678,13 @@ export function MqlHistoryChart({
         )}
       </div>
       <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
-        {total.toLocaleString("pt-BR")} MQL no período · média{" "}
-        {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MQL/{cfg.unidade}
+        {total.toLocaleString("pt-BR")} MQL no período
+        {fechados.length > 0 && (
+          <>
+            {" "}
+            · média {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MQL/{cfg.unidade}
+          </>
+        )}
         {verFat && (
           <>
             {" "}

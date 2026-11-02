@@ -58,6 +58,67 @@ function rotulos(k: string, g: Granularidade): { label: string; titulo: string }
     : { label: curto, titulo: completo };
 }
 
+// Primeiro e último dia (YYYY-MM-DD) do período de uma chave.
+function inicioDaChave(k: string, g: Granularidade): string {
+  if (g === "mes") return `${k}-01`;
+  if (g === "ano") return `${k}-01-01`;
+  return k; // dia, ou a segunda-feira da semana
+}
+function fimDaChave(k: string, g: Granularidade): string {
+  if (g === "dia") return k;
+  if (g === "ano") return `${k}-12-31`;
+  if (g === "semana") return voltar(k, "dia", -6);
+  const [y, m] = k.split("-").map(Number);
+  return iso(new Date(Date.UTC(y, m, 0)));
+}
+
+/** Datas que a janela "últimos N períodos até hoje" cobre (início do 1º período → hoje). */
+export function intervaloDaJanela(
+  hoje: string,
+  g: Granularidade,
+  n: number
+): { de: string; ate: string } {
+  return { de: inicioDaChave(voltar(chave(hoje, g), g, Math.max(1, n) - 1), g), ate: hoje };
+}
+
+/**
+ * Agrupa só os dias dentro de [de, ate]. Os períodos das pontas que ficam
+ * cortados pelo intervalo (ou que ainda estão correndo) saem como parciais.
+ */
+export function agruparIntervalo(
+  porDia: Record<string, number>,
+  de: string,
+  ate: string,
+  g: Granularidade,
+  hoje: string
+): Bucket[] {
+  const soma = new Map<string, number>();
+  for (const [d, v] of Object.entries(porDia)) {
+    if (d < de || d > ate) continue;
+    const k = chave(d, g);
+    soma.set(k, (soma.get(k) ?? 0) + v);
+  }
+  const atual = chave(hoje, g);
+  const fim = chave(ate, g);
+  const out: Bucket[] = [];
+  // teto de segurança: ~10 anos de dias
+  for (let k = chave(de, g), i = 0; k <= fim && i < 4000; k = voltar(k, g, -1), i++) {
+    out.push({
+      ...rotulos(k, g),
+      valor: soma.get(k) ?? 0,
+      parcial: k === atual || inicioDaChave(k, g) < de || fimDaChave(k, g) > ate,
+    });
+  }
+  return out;
+}
+
+/** Soma os dias dentro de [de, ate]. */
+export function somarIntervalo(porDia: Record<string, number>, de: string, ate: string): number {
+  let t = 0;
+  for (const [d, v] of Object.entries(porDia)) if (d >= de && d <= ate) t += v;
+  return t;
+}
+
 export function agrupar(
   porDia: Record<string, number>,
   hoje: string,
