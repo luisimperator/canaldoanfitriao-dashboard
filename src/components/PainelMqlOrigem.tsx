@@ -14,7 +14,7 @@ import { FiltroTags } from "@/components/FiltroTags";
 import { CHANNEL_COLOR, CHANNEL_ORDER } from "@/lib/channels";
 import { num } from "@/lib/format";
 import { gravar, useGuardado } from "@/lib/guardado";
-import { contarTags, somarPorDia, type PorTags } from "@/lib/tag-groups";
+import { contarTags, somarOrigem, somarPorDia, type PorTags } from "@/lib/tag-groups";
 
 // Tags tiradas ficam salvas neste navegador (ex.: quem sempre olha sem a Black).
 const CHAVE_TAGS = "grafico-mql-tags-fora";
@@ -35,19 +35,13 @@ export function PainelMqlOrigem({
   hoje,
   porTags,
   faturamentoPorDia,
-  origemPorDia,
-  rastreadosPorDia,
   legendaMql,
   funil,
 }: {
   hoje: string;
-  /** leads e MQLs por dia, agrupados pelo conjunto de tags */
+  /** leads, MQLs e origem por dia, agrupados pelo conjunto de tags */
   porTags: PorTags;
   faturamentoPorDia?: Record<string, number>;
-  /** leads criados por dia, por canal (classificação das UTMs) */
-  origemPorDia: Record<string, Record<string, number>>;
-  /** leads criados por dia com alguma UTM */
-  rastreadosPorDia: Record<string, number>;
   legendaMql?: ReactNode;
   /** card que fica ao lado da origem (segue o período da página) */
   funil?: ReactNode;
@@ -73,25 +67,16 @@ export function PainelMqlOrigem({
   const contagem = useMemo(() => contarTags(porTags, modo, de, ate), [porTags, modo, de, ate]);
   const rotulo = modo === "mqls" ? "MQL" : "lead";
 
+  // A origem segue a mesma janela e as mesmas tags tiradas do gráfico.
   const origem = useMemo(() => {
-    const porCanal = new Map<string, number>();
-    let total = 0;
-    for (const [d, canais] of Object.entries(origemPorDia)) {
-      if (d < de || d > ate) continue;
-      for (const [ch, v] of Object.entries(canais)) {
-        porCanal.set(ch, (porCanal.get(ch) ?? 0) + v);
-        total += v;
-      }
-    }
-    let rastreados = 0;
-    for (const [d, v] of Object.entries(rastreadosPorDia)) if (d >= de && d <= ate) rastreados += v;
+    const { porCanal, total, rastreados } = somarOrigem(porTags, tiradas, de, ate);
     const data = CHANNEL_ORDER.filter((ch) => porCanal.has(ch)).map((ch) => ({
       name: ch,
       value: porCanal.get(ch) ?? 0,
       color: CHANNEL_COLOR[ch],
     }));
     return { data, total, rastreados };
-  }, [origemPorDia, rastreadosPorDia, de, ate]);
+  }, [porTags, tiradas, de, ate]);
 
   const cobertura = origem.total > 0 ? (origem.rastreados / origem.total) * 100 : null;
   const baixa = cobertura !== null && cobertura < COBERTURA_MINIMA;
@@ -152,7 +137,8 @@ export function PainelMqlOrigem({
         <Card title="Origem dos leads">
           <p className="text-xs text-slate-500 dark:text-zinc-400 mb-2">
             {num(origem.total)} lead{origem.total === 1 ? "" : "s"}{" "}
-            {de === ate ? `em ${br(de)}` : `de ${br(de)} a ${br(ate)}`}, no mesmo período do gráfico de MQLs
+            {de === ate ? `em ${br(de)}` : `de ${br(de)} a ${br(ate)}`}, no mesmo período
+            {tiradas.size > 0 ? " e sem as mesmas tags" : ""} do gráfico acima
           </p>
           {origem.total > 0 ? (
             <SourcePie data={origem.data} />
