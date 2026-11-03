@@ -409,16 +409,46 @@ async function criarTeams(
       transactionId: k.id,
     }),
   });
-  const ev = (await res.json().catch(() => null)) as
-    | { id?: string; onlineMeeting?: { joinUrl?: string }; error?: { message?: string } }
-    | null;
+  type Evento = {
+    id?: string;
+    isOnlineMeeting?: boolean;
+    onlineMeetingProvider?: string;
+    onlineMeeting?: { joinUrl?: string } | null;
+    error?: { message?: string };
+  };
+  const ev = (await res.json().catch(() => null)) as Evento | null;
   if (!res.ok || !ev?.id) {
     return { ok: false, erro: `evento ${res.status}: ${(ev?.error?.message ?? "").slice(0, 200)}` };
   }
-  const link = ev.onlineMeeting?.joinUrl;
+  // O link do Teams às vezes só aparece uns segundos depois de criar o evento:
+  // relê algumas vezes antes de desistir.
+  let link = ev.onlineMeeting?.joinUrl;
+  let visto: Evento = ev;
+  for (let i = 0; !link && i < 4; i++) {
+    await new Promise((r) => setTimeout(r, 2500));
+    const r = await fetch(`${base}/${ev.id}?$select=isOnlineMeeting,onlineMeetingProvider,onlineMeeting`, {
+      headers: auth,
+    }).catch(() => null);
+    const e = (await r?.json().catch(() => null)) as Evento | null;
+    if (e) visto = e;
+    link = e?.onlineMeeting?.joinUrl;
+  }
   if (!link) {
     await fetch(`${base}/${ev.id}`, { method: "DELETE", headers: auth }).catch(() => null);
-    return { ok: false, erro: "reunião criada sem link do Teams (Teams da conta organizadora ainda não ativo?)" };
+    // Diagnóstico: o que o calendário do organizador aceita de reunião online.
+    const cal = await fetch(
+      `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(cfg.teams_organizador)}/calendar?$select=allowedOnlineMeetingProviders,defaultOnlineMeetingProvider`,
+      { headers: auth }
+    ).catch(() => null);
+    const c = (await cal?.json().catch(() => null)) as
+      | { allowedOnlineMeetingProviders?: string[]; defaultOnlineMeetingProvider?: string; error?: { message?: string } }
+      | null;
+    return {
+      ok: false,
+      erro:
+        `reunião criada sem link do Teams (isOnlineMeeting=${visto.isOnlineMeeting}, provider=${visto.onlineMeetingProvider}; ` +
+        `calendário aceita=${JSON.stringify(c?.allowedOnlineMeetingProviders ?? c?.error?.message ?? null)}, padrão=${c?.defaultOnlineMeetingProvider})`,
+    };
   }
   // 2) Com o link garantido, convida o lead e o vendedor (a Graph manda o convite).
   const conv = await fetch(`${base}/${ev.id}`, {
