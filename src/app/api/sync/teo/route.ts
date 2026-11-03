@@ -60,6 +60,9 @@ interface Config {
   tag_teo_id: string | null;
   followup_horas: number[] | null;
   followup_templates: string[] | null;
+  teams_tenant_id: string | null;
+  teams_client_id: string | null;
+  teams_organizador: string | null;
 }
 
 const CAMPOS_PESQUISA: Record<string, string> = {
@@ -354,36 +357,107 @@ async function horariosLivres(
   return out;
 }
 
-// Cria o evento com Meet na agenda (Apps Script em teo_agenda_url) e manda o
-// convite pro lead e pro vendedor. Sem a ponte configurada, a call fica
-// "marcada" e é tentada de novo na próxima rodada.
-async function criarConvite(
+type CallConvite = {
+  id: string;
+  nome: string | null;
+  inicio: string;
+  email: string | null;
+  vendedor: string | null;
+  resumo: string | null;
+};
+
+// Reunião do Teams pela Microsoft Graph, na agenda do organizador
+// ("Canal do Anfitrião"), com o lead e o vendedor convidados. A Graph manda o
+// convite por e-mail a cada um. Devolve null se o Teams não está configurado.
+async function criarTeams(
   supabase: SupabaseClient,
   cfg: Config,
-  k: { id: string; nome: string | null; inicio: string; email: string | null; vendedor: string | null; resumo: string | null }
-): Promise<boolean> {
+  k: CallConvite,
+  dados: { titulo: string; descricao: string; inicio: string; fim: string; convidados: string[] }
+): Promise<{ ok: true; id: string; link: string } | { ok: false; erro: string } | null> {
+  if (!cfg.teams_tenant_id || !cfg.teams_client_id || !cfg.teams_organizador) return null;
+  const { data: segredo } = await supabase.rpc("teo_teams_segredo");
+  if (!segredo) return null;
+  const tok = await fetch(`https://login.microsoftonline.com/${cfg.teams_tenant_id}/oauth2/v2.0/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: cfg.teams_client_id,
+      client_secret: String(segredo),
+      scope: "https://graph.microsoft.com/.default",
+      grant_type: "client_credentials",
+    }),
+  });
+  const t = (await tok.json().catch(() => null)) as { access_token?: string; error_description?: string } | null;
+  if (!t?.access_token) return { ok: false, erro: `token ${tok.status}: ${(t?.error_description ?? "").slice(0, 200)}` };
+  const res = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(cfg.teams_organizador)}/events`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${t.access_token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      subject: dados.titulo,
+      body: { contentType: "text", content: dados.descricao },
+      start: { dateTime: dados.inicio, timeZone: "America/Sao_Paulo" },
+      end: { dateTime: dados.fim, timeZone: "America/Sao_Paulo" },
+      attendees: dados.convidados.map((e) => ({ emailAddress: { address: e }, type: "required" })),
+      isOnlineMeeting: true,
+      onlineMeetingProvider: "teamsForBusiness",
+      allowNewTimeProposals: false,
+      transactionId: k.id,
+    }),
+  });
+  const ev = (await res.json().catch(() => null)) as
+    | { id?: string; onlineMeeting?: { joinUrl?: string }; error?: { message?: string } }
+    | null;
+  const link = ev?.onlineMeeting?.joinUrl;
+  if (!res.ok || !ev?.id || !link) {
+    return { ok: false, erro: `evento ${res.status}: ${(ev?.error?.message ?? "sem link do Teams").slice(0, 200)}` };
+  }
+  return { ok: true, id: ev.id, link };
+}
+
+// Cria a reunião e manda o convite pro lead e pro vendedor: primeiro pelo
+// Teams; se não estiver configurado ou falhar, pelo Google Meet (Apps Script
+// em teo_agenda_url). Sem nenhum dos dois, a call fica "marcada" e é tentada
+// de novo na próxima rodada.
+async function criarConvite(supabase: SupabaseClient, cfg: Config, k: CallConvite): Promise<boolean> {
+  const v = (cfg.vendedores ?? []).find((x) => x.nome === k.vendedor);
+  const convidados = [k.email, v?.email].filter((e): e is string => Boolean(e));
+  const inicio = `${local(k.inicio)}:00`;
+  const fim = `${local(new Date(new Date(k.inicio).getTime() + 30 * 60_000).toISOString())}:00`;
+  const titulo = `Canal do Anfitrião: ${k.nome ?? "lead"} e ${k.vendedor ? primeiroNomeVendedor(k.vendedor) : "especialista"}`;
+  // O lead também vê a descrição: só o texto neutro. A ficha vai pro vendedor
+  // na nota do Unnichat.
+  const descricao = (sala: string) =>
+    `Papo de 20 min com ${k.vendedor ?? "um especialista"}, do Canal do Anfitrião, pra entender o seu cenário e te mostrar como o curso funciona e se faz sentido pro seu momento. É só entrar pelo link do ${sala} no horário.`;
+
+  const teams = await criarTeams(supabase, cfg, k, {
+    titulo,
+    descricao: descricao("Teams"),
+    inicio,
+    fim,
+    convidados,
+  }).catch((e) => ({ ok: false as const, erro: e instanceof Error ? e.message : String(e) }));
+  if (teams?.ok) {
+    await supabase
+      .from("teo_calls")
+      .update({ status: "convite_enviado", evento_id: teams.id, meet_url: teams.link })
+      .eq("id", k.id);
+    await log(supabase, "convite enviado", { call_id: k.id, nome: k.nome, convidados, sala: "teams", link: teams.link });
+    return true;
+  }
+  if (teams && !teams.ok) {
+    await log(supabase, "teams falhou", { call_id: k.id, nome: k.nome, erro: teams.erro });
+  }
+
   const { data: ag } = await supabase.rpc("teo_agenda_config");
   const url = (ag as { url?: string } | null)?.url;
   const token = (ag as { token?: string } | null)?.token;
   if (!url || !token) return false;
-  const v = (cfg.vendedores ?? []).find((x) => x.nome === k.vendedor);
-  const convidados = [k.email, v?.email].filter(Boolean);
-  const inicio = local(k.inicio);
-  const fim = local(new Date(new Date(k.inicio).getTime() + 30 * 60_000).toISOString());
   const res = await fetch(url, {
     method: "POST",
     redirect: "follow",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      token,
-      titulo: `Canal do Anfitrião: ${k.nome ?? "lead"} e ${k.vendedor ? primeiroNomeVendedor(k.vendedor) : "especialista"}`,
-      // O lead também vê a descrição: só o texto neutro. A ficha vai pro
-      // vendedor na nota do Unnichat.
-      descricao: `Papo de 20 min com ${k.vendedor ?? "um especialista"}, do Canal do Anfitrião, pra entender o seu cenário e te mostrar como o curso funciona e se faz sentido pro seu momento. É só entrar pelo link do Google Meet no horário.`,
-      inicio: `${inicio}:00`,
-      fim: `${fim}:00`,
-      convidados,
-    }),
+    body: JSON.stringify({ token, titulo, descricao: descricao("Google Meet"), inicio, fim, convidados }),
   });
   const out = (await res.json().catch(() => null)) as { ok?: boolean; id?: string; meet?: string; erro?: string } | null;
   if (!out?.ok) {
@@ -394,7 +468,7 @@ async function criarConvite(
     .from("teo_calls")
     .update({ status: "convite_enviado", evento_id: out.id ?? null, meet_url: out.meet ?? null })
     .eq("id", k.id);
-  await log(supabase, "convite enviado", { call_id: k.id, nome: k.nome, convidados, meet: out.meet ?? null });
+  await log(supabase, "convite enviado", { call_id: k.id, nome: k.nome, convidados, sala: "meet", meet: out.meet ?? null });
   return true;
 }
 
