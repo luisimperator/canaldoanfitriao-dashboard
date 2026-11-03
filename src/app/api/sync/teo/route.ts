@@ -145,7 +145,14 @@ async function carregarLead(supabase: SupabaseClient, c: Conversa): Promise<Lead
   }
   const tags = Array.isArray(extra.tags) ? (extra.tags as unknown[]).map(String) : [];
   const formulario = await formularioDaConversa(supabase, c, data?.email ?? null);
-  return { nome: data?.name ?? null, criadoEm: data?.created_at ?? null, respostas, tags, formulario };
+  return {
+    nome: data?.name ?? null,
+    criadoEm: data?.created_at ?? null,
+    respostas,
+    tags,
+    formulario,
+    email: data?.email ?? null,
+  };
 }
 
 async function log(supabase: SupabaseClient, note: string, body: Record<string, unknown>) {
