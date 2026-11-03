@@ -447,12 +447,14 @@ async function criarConvite(supabase: SupabaseClient, cfg: Config, k: CallConvit
   const titulo = `Canal do Anfitrião: ${k.nome ?? "lead"} e ${k.vendedor ? primeiroNomeVendedor(k.vendedor) : "especialista"}`;
   // O lead também vê a descrição: só o texto neutro. A ficha vai pro vendedor
   // na nota do Unnichat.
-  const descricao = (sala: string) =>
-    `Papo de 20 min com ${k.vendedor ?? "um especialista"}, do Canal do Anfitrião, pra entender o seu cenário e te mostrar como o curso funciona e se faz sentido pro seu momento. É só entrar pelo link do ${sala} no horário.`;
+  // No Teams a reunião grava sozinha (política "Calls Canal do Anfitrião" do
+  // organizador); no Meet, não. Só avisa quando grava de verdade.
+  const descricao = (sala: string, gravada: boolean) =>
+    `Papo de 20 min com ${k.vendedor ?? "um especialista"}, do Canal do Anfitrião, pra entender o seu cenário e te mostrar como o curso funciona e se faz sentido pro seu momento. É só entrar pelo link do ${sala} no horário.${gravada ? " A conversa é gravada." : ""}`;
 
   const teams = await criarTeams(supabase, cfg, k, {
     titulo,
-    descricao: descricao("Teams"),
+    descricao: descricao("Teams", true),
     inicio,
     fim,
     convidados,
@@ -477,7 +479,7 @@ async function criarConvite(supabase: SupabaseClient, cfg: Config, k: CallConvit
     method: "POST",
     redirect: "follow",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, titulo, descricao: descricao("Google Meet"), inicio, fim, convidados }),
+    body: JSON.stringify({ token, titulo, descricao: descricao("Google Meet", false), inicio, fim, convidados }),
   });
   const out = (await res.json().catch(() => null)) as { ok?: boolean; id?: string; meet?: string; erro?: string } | null;
   if (!out?.ok) {
