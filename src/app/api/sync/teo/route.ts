@@ -701,20 +701,39 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         return "esperando a pesquisa";
       }
       abrir = ultima?.senderBy !== "contact";
-    } else if (!ultima || ultima.senderBy !== "contact") {
-      // O lead parou de responder: é hora de acompanhar?
-      const a = await acompanhar(supabase, c, cfg, telefone, ultima, janelaAberta);
-      if (!a.retomar) return a.status;
-      retomar = a.retomar;
     } else {
-      if (ultima.id === c.ultima_msg_tratada) {
-        await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
-        return "já tratada";
-      }
-      if (Date.now() - new Date(ultima.date).getTime() < ESPERA_MS) return "esperando o lead terminar";
-      if (!janelaAberta) {
-        await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
-        return "janela fechada";
+      // O lead escreveu depois da última mensagem do Téo? Conta mesmo que uma
+      // automação do Unnichat tenha mandado algo depois (ex.: o lead clica em
+      // "Confirmar" e a automação manda a pesquisa por cima).
+      const ultimaDoTeo = [...reais].reverse().find((m) => m.senderBy === "user" && m.origin !== "automation");
+      const pendente =
+        Boolean(ultimaDoLead) &&
+        ultimaDoLead!.id !== c.ultima_msg_tratada &&
+        (!ultimaDoTeo || new Date(ultimaDoLead!.date).getTime() > new Date(ultimaDoTeo.date).getTime());
+      if (!pendente) {
+        if (ultima?.senderBy === "contact") {
+          await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
+          return "já tratada";
+        }
+        // O lead parou de responder: é hora de acompanhar?
+        const a = await acompanhar(supabase, c, cfg, telefone, ultima, janelaAberta);
+        if (!a.retomar) return a.status;
+        retomar = a.retomar;
+      } else {
+        if (
+          ultima?.type === "flow" &&
+          ultima.senderBy === "user" &&
+          Date.now() - new Date(ultima.date).getTime() < 15 * 60_000
+        ) {
+          return "esperando a pesquisa";
+        }
+        if (ultima?.senderBy === "contact" && Date.now() - new Date(ultima.date).getTime() < ESPERA_MS) {
+          return "esperando o lead terminar";
+        }
+        if (!janelaAberta) {
+          await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
+          return "janela fechada";
+        }
       }
     }
 
