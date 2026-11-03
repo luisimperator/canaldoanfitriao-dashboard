@@ -2,7 +2,7 @@
 
 // Gráficos do dashboard (recharts roda no cliente).
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -595,6 +595,8 @@ export function MqlHistoryChart({
   faturamentoPorDia,
   janela,
   onJanela,
+  rotulo = "MQL",
+  controles,
 }: {
   porDia: Record<string, number>;
   hoje: string;
@@ -602,6 +604,10 @@ export function MqlHistoryChart({
   faturamentoPorDia?: Record<string, number>;
   janela: JanelaMql;
   onJanela: (j: JanelaMql) => void;
+  /** o que as barras contam ("MQL", "lead"): texto do resumo e do tooltip */
+  rotulo?: string;
+  /** controles extras na linha de cima (ex.: MQLs ↔ Leads, filtro de tags) */
+  controles?: ReactNode;
 }) {
   const [comFaturamento, setComFaturamento] = useState(false);
   const gran = janela.gran;
@@ -651,6 +657,7 @@ export function MqlHistoryChart({
             limpar datas
           </button>
         )}
+        {controles}
         {faturamentoPorDia && (
           <button
             type="button"
@@ -678,11 +685,12 @@ export function MqlHistoryChart({
         )}
       </div>
       <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
-        {total.toLocaleString("pt-BR")} MQL no período
+        {total.toLocaleString("pt-BR")} {rotulo}
+        {total === 1 || rotulo === "MQL" ? "" : "s"} no período
         {fechados.length > 0 && (
           <>
             {" "}
-            · média {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} MQL/{cfg.unidade}
+            · média {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} {rotulo}/{cfg.unidade}
           </>
         )}
         {verFat && (
@@ -711,7 +719,7 @@ export function MqlHistoryChart({
           )}
           <Tooltip
             cursor={{ fill: "var(--chart-grid)", fillOpacity: 0.4 }}
-            formatter={(v, name) => (name === "Faturamento do time" ? [brlTooltip(v), name] : [v, "MQL"])}
+            formatter={(v, name) => (name === "Faturamento do time" ? [brlTooltip(v), name] : [v, rotulo])}
             labelFormatter={(_, p) => {
               const b = p?.[0]?.payload as Bucket | undefined;
               if (!b) return "";
@@ -719,7 +727,7 @@ export function MqlHistoryChart({
             }}
           />
           <ReferenceLine yAxisId="mql" y={media} stroke="#94a3b8" strokeDasharray="4 4" />
-          <Bar yAxisId="mql" dataKey="valor" name="MQL" fill="#e11d48" radius={[3, 3, 0, 0]}>
+          <Bar yAxisId="mql" dataKey="valor" name={rotulo} fill="#e11d48" radius={[3, 3, 0, 0]}>
             {data.map((d, i) => (
               <Cell key={i} fillOpacity={d.parcial ? 0.45 : 1} />
             ))}

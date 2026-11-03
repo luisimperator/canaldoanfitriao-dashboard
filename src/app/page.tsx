@@ -12,6 +12,7 @@ import {
 import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { PainelMqlOrigem } from "@/components/PainelMqlOrigem";
+import { agruparPorTags } from "@/lib/tag-groups";
 import { classifyChannel } from "@/lib/channels";
 import { hasUtm } from "@/lib/origin";
 import { DateRangePicker } from "@/components/DateRangePicker";
@@ -95,11 +96,10 @@ export default async function VisaoGeralPage({
   const taxaMqlP = leadsP.length > 0 ? (mqlsP.length / leadsP.length) * 100 : null;
   const mqlPerDay = mqlsP.length / diasPeriodo;
   const mqlCap = mqlPerSeller(data, 90, today);
-  // MQL por dia (data em que a tag chegou); o gráfico agrupa no cliente.
-  const mqlPorDia: Record<string, number> = {};
-  for (const l of data.leads) {
-    if (l.mqlAt) mqlPorDia[l.mqlAt] = (mqlPorDia[l.mqlAt] ?? 0) + 1;
-  }
+  // MQLs (dia em que a tag de qualificação chegou) e leads (dia em que entraram)
+  // por dia, agrupados pelo conjunto de tags: o gráfico troca MQLs ↔ Leads e
+  // tira tags no cliente.
+  const porTags = agruparPorTags(data.leads);
   // Faturamento gerado pelo time (vendas pagas com vendedor), por dia — a
   // sobreposição opcional do gráfico de MQLs.
   const fatTimePorDia: Record<string, number> = {};
@@ -231,7 +231,7 @@ export default async function VisaoGeralPage({
 
       <PainelMqlOrigem
         hoje={today}
-        mqlPorDia={mqlPorDia}
+        porTags={porTags}
         faturamentoPorDia={fatTimePorDia}
         origemPorDia={origemPorDia}
         rastreadosPorDia={rastreadosPorDia}
