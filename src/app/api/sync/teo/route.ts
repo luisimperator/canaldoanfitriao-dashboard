@@ -653,16 +653,20 @@ async function acompanhar(
   const agora = Date.now();
   const ocioso = ultima ? agora - new Date(ultima.date).getTime() : Infinity;
 
-  // Quem tem call marcada espera a call: o lembrete e o vendedor cuidam.
+  // Quem tem call marcada espera a call: o lembrete e o vendedor cuidam. Mas é
+  // justamente perto da call que a pessoa escreve pra remarcar ou desmarcar:
+  // com a call nas próximas 24h, a conversa é lida a cada minuto.
   const { data: call } = await supabase
     .from("teo_calls")
-    .select("id")
+    .select("id, inicio")
     .eq("contact_id", c.contact_id)
     .neq("status", "cancelada")
     .gte("inicio", new Date(agora - 2 * 3600_000).toISOString())
+    .order("inicio", { ascending: true })
     .limit(1);
   if (call?.length) {
-    await adiar(supabase, c.contact_id, 30 * 60_000);
+    const falta = new Date(call[0].inicio as string).getTime() - agora;
+    await adiar(supabase, c.contact_id, falta < 24 * 3600_000 ? 60_000 : Math.min(intervaloDeChecagem(ocioso), 10 * 60_000));
     return { status: "call marcada" };
   }
 
