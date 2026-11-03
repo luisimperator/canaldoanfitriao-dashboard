@@ -378,6 +378,14 @@ async function marcarCall(
   return `Marcado: ${quando} (horário de Brasília) com ${primeiroNomeVendedor(slot.vendedor)}. O convite vai pro e-mail ${email}.`;
 }
 
+async function garantirTeo(supabase: SupabaseClient, c: Conversa, atendenteId: string): Promise<void> {
+  const r = await unnichat(supabase, "GET", `/contact/${c.contact_id}/assign`);
+  const atual = (r.body as { data?: { id?: string; name?: string } | null } | null)?.data ?? null;
+  if (r.status !== 200 || atual?.id === atendenteId) return;
+  await unnichat(supabase, "POST", `/contact/${c.contact_id}/assign`, { attendantId: atendenteId });
+  await log(supabase, "reatribuído ao Téo", { contact_id: c.contact_id, nome: c.nome, estava_com: atual?.name ?? null });
+}
+
 function primeiroNome(nome: string | null): string {
   return (nome ?? "").trim().split(/\s+/)[0] || "tudo bem";
 }
@@ -431,6 +439,16 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       if (ultima?.senderBy === "contact" && Date.now() - new Date(ultima.date).getTime() < ESPERA_MS) {
         return "esperando o lead terminar";
       }
+      // A automação do Unnichat acabou de mandar a pesquisa (flow): espera até
+      // 15 min a pessoa responder, em vez de abrir com as mesmas perguntas por
+      // cima. Respondida a pesquisa, a última mensagem passa a ser do lead.
+      if (
+        ultima?.type === "flow" &&
+        ultima.senderBy === "user" &&
+        Date.now() - new Date(ultima.date).getTime() < 15 * 60_000
+      ) {
+        return "esperando a pesquisa";
+      }
       abrir = ultima?.senderBy !== "contact";
     } else {
       if (!ultima || ultima.senderBy !== "contact") return "nada novo";
@@ -442,6 +460,10 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     const lead = await carregarLead(supabase, c.contact_id);
     if (!lead.nome) lead.nome = c.nome;
     const especialista = especialistaDaConversa(msgs, cfg);
+    // A automação "Lista de Espera 2.0" tira o atendente e sorteia um vendedor
+    // quando o lead clica nos botões dela. Enquanto o Téo responde, a conversa
+    // é dele, a não ser que alguém do time já tenha conversado com o lead.
+    if (!especialista && cfg.atendente_id) await garantirTeo(supabase, c, cfg.atendente_id);
     const res = await rodarTeo({
       msgs,
       lead,
