@@ -390,15 +390,19 @@ async function criarTeams(
   });
   const t = (await tok.json().catch(() => null)) as { access_token?: string; error_description?: string } | null;
   if (!t?.access_token) return { ok: false, erro: `token ${tok.status}: ${(t?.error_description ?? "").slice(0, 200)}` };
-  const res = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(cfg.teams_organizador)}/events`, {
+  const base = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(cfg.teams_organizador)}/events`;
+  const auth = { Authorization: `Bearer ${t.access_token}`, "Content-Type": "application/json" };
+  // 1) Cria a reunião SEM convidados (ninguém recebe nada ainda) e confere se
+  // veio o link do Teams. Conta nova pode levar horas pra ter o Teams ativo:
+  // sem link, apaga em silêncio e quem chamou usa o Meet.
+  const res = await fetch(base, {
     method: "POST",
-    headers: { Authorization: `Bearer ${t.access_token}`, "Content-Type": "application/json" },
+    headers: auth,
     body: JSON.stringify({
       subject: dados.titulo,
       body: { contentType: "text", content: dados.descricao },
       start: { dateTime: dados.inicio, timeZone: "America/Sao_Paulo" },
       end: { dateTime: dados.fim, timeZone: "America/Sao_Paulo" },
-      attendees: dados.convidados.map((e) => ({ emailAddress: { address: e }, type: "required" })),
       isOnlineMeeting: true,
       onlineMeetingProvider: "teamsForBusiness",
       allowNewTimeProposals: false,
@@ -408,9 +412,25 @@ async function criarTeams(
   const ev = (await res.json().catch(() => null)) as
     | { id?: string; onlineMeeting?: { joinUrl?: string }; error?: { message?: string } }
     | null;
-  const link = ev?.onlineMeeting?.joinUrl;
-  if (!res.ok || !ev?.id || !link) {
-    return { ok: false, erro: `evento ${res.status}: ${(ev?.error?.message ?? "sem link do Teams").slice(0, 200)}` };
+  if (!res.ok || !ev?.id) {
+    return { ok: false, erro: `evento ${res.status}: ${(ev?.error?.message ?? "").slice(0, 200)}` };
+  }
+  const link = ev.onlineMeeting?.joinUrl;
+  if (!link) {
+    await fetch(`${base}/${ev.id}`, { method: "DELETE", headers: auth }).catch(() => null);
+    return { ok: false, erro: "reunião criada sem link do Teams (Teams da conta organizadora ainda não ativo?)" };
+  }
+  // 2) Com o link garantido, convida o lead e o vendedor (a Graph manda o convite).
+  const conv = await fetch(`${base}/${ev.id}`, {
+    method: "PATCH",
+    headers: auth,
+    body: JSON.stringify({
+      attendees: dados.convidados.map((e) => ({ emailAddress: { address: e }, type: "required" })),
+    }),
+  });
+  if (!conv.ok) {
+    await fetch(`${base}/${ev.id}`, { method: "DELETE", headers: auth }).catch(() => null);
+    return { ok: false, erro: `convidados ${conv.status}` };
   }
   return { ok: true, id: ev.id, link };
 }
