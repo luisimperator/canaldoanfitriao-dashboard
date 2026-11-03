@@ -298,6 +298,8 @@ export async function rodarTeo(opts: {
   extras: string;
   ficha: string | null;
   abrir: boolean;
+  /** acompanhamento: instrução pro Téo retomar a conversa com quem parou de responder */
+  retomar?: string;
   /** primeiro nome de quem do time já conversou com o lead: a call é com essa pessoa */
   especialista?: string | null;
   /** horários livres pra call, já em horário de Brasília (AAAA-MM-DDTHH:MM) */
@@ -332,7 +334,7 @@ export async function rodarTeo(opts: {
     opts.msgs,
     opts.abrir
       ? "[Instrução interna, o lead não vê: abra a conversa agora. Apresente-se, use UMA informação da pesquisa como gancho (se houver) e termine com uma pergunta sobre a situação dele.]"
-      : undefined
+      : opts.retomar
   );
 
   let humano: ResultadoTeo["humano"] = null;
