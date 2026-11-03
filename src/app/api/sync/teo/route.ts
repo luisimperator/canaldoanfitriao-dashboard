@@ -40,6 +40,10 @@ interface Conversa {
   criado_em: string;
   formulario: Record<string, string> | null;
   formulario_em: string | null;
+  motivo_humano: string | null;
+  followup_etapa: number;
+  silencio_desde: string | null;
+  followup_em: string | null;
 }
 
 interface Config {
@@ -54,6 +58,8 @@ interface Config {
   atendente_id: string | null;
   template_abertura_id: string | null;
   tag_teo_id: string | null;
+  followup_horas: number[] | null;
+  followup_templates: string[] | null;
 }
 
 const CAMPOS_PESQUISA: Record<string, string> = {
@@ -443,6 +449,180 @@ async function garantirTeo(supabase: SupabaseClient, c: Conversa, atendenteId: s
   await log(supabase, "reatribuído ao Téo", { contact_id: c.contact_id, nome: c.nome, estava_com: atual?.name ?? null });
 }
 
+// ---------- iniciativa, acompanhamento e checagem espaçada ----------
+
+// Acompanhamento de quem parou de responder: horas desde o começo do silêncio
+// (mesmo dia, D+1, D+3, D+7, D+21). Depois do último, mais 2 dias e a conversa
+// fica "encerrado" (sem_resposta); se a pessoa voltar a escrever, o Téo retoma.
+const FOLLOWUP_HORAS_PADRAO = [3, 24, 72, 168, 504];
+const ENCERRAR_DEPOIS_MS = 48 * 3600_000;
+// Entre um acompanhamento e o próximo, no mínimo isto (pra quem já estava
+// parado há muito tempo não receber várias etapas em sequência).
+const INTERVALO_MINIMO_MS = 20 * 3600_000;
+
+// Brasília não tem horário de verão: UTC-3 fixo.
+function horaSP(): number {
+  return new Date(Date.now() - 3 * 3600_000).getUTCHours();
+}
+
+// Chamar alguém por iniciativa (template, acompanhamento) só das 8h às 21h.
+// Responder a quem escreveu vale a qualquer hora.
+function podeChamar(): boolean {
+  const h = horaSP();
+  return h >= 8 && h < 21;
+}
+
+function proximas8hSP(): Date {
+  const dia = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
+  const alvo = new Date(`${dia}T08:00:00-03:00`);
+  return alvo.getTime() > Date.now() ? alvo : new Date(alvo.getTime() + 86400_000);
+}
+
+// Conversa parada não precisa ser lida a cada minuto: quanto mais tempo sem
+// mensagem, mais espaçada a checagem.
+function intervaloDeChecagem(ociosoMs: number): number {
+  if (ociosoMs < 2 * 3600_000) return 60_000;
+  if (ociosoMs < 24 * 3600_000) return 3 * 60_000;
+  if (ociosoMs < 72 * 3600_000) return 10 * 60_000;
+  return 30 * 60_000;
+}
+
+async function adiar(supabase: SupabaseClient, contactId: string, ms: number): Promise<void> {
+  await supabase
+    .from("teo_conversas")
+    .update({ proxima_checagem: new Date(Date.now() + Math.max(ms, 60_000)).toISOString() })
+    .eq("contact_id", contactId);
+}
+
+function quando(iso: string): string {
+  return new Date(iso).toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// O lead parou de responder (a última mensagem é do Téo ou de automação).
+// Decide se é hora do próximo acompanhamento. Com a janela de 24h aberta,
+// devolve a instrução pro Téo escrever a mensagem; com ela fechada, manda o
+// template da etapa aqui mesmo.
+async function acompanhar(
+  supabase: SupabaseClient,
+  c: Conversa,
+  cfg: Config,
+  telefone: string,
+  ultima: MsgUnnichat | undefined,
+  janelaAberta: boolean
+): Promise<{ status: string; retomar?: string }> {
+  const agora = Date.now();
+  const ocioso = ultima ? agora - new Date(ultima.date).getTime() : Infinity;
+
+  // Quem tem call marcada espera a call: o lembrete e o vendedor cuidam.
+  const { data: call } = await supabase
+    .from("teo_calls")
+    .select("id")
+    .eq("contact_id", c.contact_id)
+    .neq("status", "cancelada")
+    .gte("inicio", new Date(agora - 2 * 3600_000).toISOString())
+    .limit(1);
+  if (call?.length) {
+    await adiar(supabase, c.contact_id, 30 * 60_000);
+    return { status: "call marcada" };
+  }
+
+  const horas = cfg.followup_horas?.length ? cfg.followup_horas : FOLLOWUP_HORAS_PADRAO;
+  let desde = c.silencio_desde ? new Date(c.silencio_desde).getTime() : NaN;
+  if (Number.isNaN(desde)) {
+    desde = ultima ? new Date(ultima.date).getTime() : agora;
+    await supabase
+      .from("teo_conversas")
+      .update({ silencio_desde: new Date(desde).toISOString() })
+      .eq("contact_id", c.contact_id);
+  }
+  const etapa = c.followup_etapa ?? 0;
+  const ultimoAcomp = c.followup_em ? new Date(c.followup_em).getTime() : null;
+
+  if (etapa >= horas.length) {
+    const desdeUltimo = ultimoAcomp ?? desde;
+    if (agora - desdeUltimo >= ENCERRAR_DEPOIS_MS) {
+      await supabase
+        .from("teo_conversas")
+        .update({
+          estado: "encerrado",
+          motivo_humano: "sem_resposta",
+          proxima_checagem: new Date(agora + 2 * 3600_000).toISOString(),
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq("contact_id", c.contact_id);
+      await log(supabase, "encerrado sem resposta", { contact_id: c.contact_id, nome: c.nome });
+      return { status: "encerrado sem resposta" };
+    }
+    await adiar(supabase, c.contact_id, Math.min(intervaloDeChecagem(ocioso), desdeUltimo + ENCERRAR_DEPOIS_MS - agora));
+    return { status: "último acompanhamento enviado" };
+  }
+
+  const vence = Math.max(desde + horas[etapa] * 3600_000, ultimoAcomp ? ultimoAcomp + INTERVALO_MINIMO_MS : 0);
+  if (agora < vence) {
+    await adiar(supabase, c.contact_id, Math.min(intervaloDeChecagem(ocioso), vence - agora));
+    return { status: `acompanhamento ${etapa + 1} em ${Math.round((vence - agora) / 60_000)} min` };
+  }
+  if (!podeChamar()) {
+    await adiar(supabase, c.contact_id, proximas8hSP().getTime() - agora);
+    return { status: "silêncio (acompanhamento às 8h)" };
+  }
+
+  if (janelaAberta) {
+    return {
+      status: "retomar",
+      retomar:
+        `[Instrução interna, o lead não vê: o lead não responde desde ${quando(new Date(desde).toISOString())}. ` +
+        `Este é o acompanhamento ${etapa + 1} de ${horas.length}. Mande UMA mensagem curta retomando de onde a conversa parou: ` +
+        `se você tinha oferecido horários de call, ofereça de novo (pode trocar por outros da lista "Horários livres"); ` +
+        `se tinha feito uma pergunta, retome por outro ângulo. Nada de cobrar, de "passando pra saber" nem de repetir a mensagem anterior. ` +
+        `Se a pessoa disse claramente que não tem interesse ou pediu pra não ser chamada, responda só [SEM_RESPOSTA].]`,
+    };
+  }
+
+  // Janela fechada: só template aprovado.
+  const tpl = (cfg.followup_templates ?? [])[etapa];
+  if (!tpl) {
+    await supabase
+      .from("teo_conversas")
+      .update({ followup_etapa: etapa + 1, followup_em: new Date().toISOString() })
+      .eq("contact_id", c.contact_id);
+    return { status: `acompanhamento ${etapa + 1} sem template` };
+  }
+  const r = await unnichat(supabase, "POST", "/meta/templates", {
+    phone: telefone,
+    templateId: tpl,
+    bodyParameters: [{ type: "text", text: primeiroNome(c.nome) }],
+  });
+  const ok = r.status >= 200 && r.status < 300;
+  if (ok) {
+    await supabase
+      .from("teo_conversas")
+      .update({
+        followup_etapa: etapa + 1,
+        followup_em: new Date().toISOString(),
+        proxima_checagem: null,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq("contact_id", c.contact_id);
+  } else {
+    await adiar(supabase, c.contact_id, 30 * 60_000);
+  }
+  await log(supabase, ok ? `acompanhamento ${etapa + 1} (template)` : "acompanhamento falhou", {
+    contact_id: c.contact_id,
+    nome: c.nome,
+    template: tpl,
+    status: r.status,
+  });
+  return { status: ok ? `acompanhamento ${etapa + 1} (template)` : "acompanhamento falhou" };
+}
+
 function primeiroNome(nome: string | null): string {
   return (nome ?? "").trim().split(/\s+/)[0] || "tudo bem";
 }
@@ -463,12 +643,26 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     if (!telefone) return "sem telefone";
 
     let abrir = false;
+    let retomar: string | undefined;
+    const ocioso = ultima ? Date.now() - new Date(ultima.date).getTime() : Infinity;
+    if (c.estado === "encerrado") {
+      // Encerrado por falta de resposta: só volta se a pessoa escrever.
+      const voltou = ultima?.senderBy === "contact" && ultima.id !== c.ultima_msg_tratada;
+      if (c.motivo_humano !== "sem_resposta" || !voltou) {
+        await adiar(supabase, c.contact_id, c.motivo_humano === "sem_resposta" ? 2 * 3600_000 : 24 * 3600_000);
+        return "encerrado";
+      }
+    }
     if (c.estado === "novo") {
       if (!janelaAberta) {
         if (c.template_em) return "aguardando resposta do template";
         // Acabou de entrar: a automação do Unnichat está mandando a confirmação.
         // Dá ~10 min pro lead abrir a janela antes de mandar o template.
         if (Date.now() - new Date(c.criado_em).getTime() < 10 * 60_000) return "esperando a janela abrir";
+        if (!podeChamar()) {
+          await adiar(supabase, c.contact_id, proximas8hSP().getTime() - Date.now());
+          return "silêncio (template às 8h)";
+        }
         if (!cfg.template_abertura_id) return "sem template";
         const r = await unnichat(supabase, "POST", "/meta/templates", {
           phone: telefone,
@@ -507,11 +701,21 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         return "esperando a pesquisa";
       }
       abrir = ultima?.senderBy !== "contact";
+    } else if (!ultima || ultima.senderBy !== "contact") {
+      // O lead parou de responder: é hora de acompanhar?
+      const a = await acompanhar(supabase, c, cfg, telefone, ultima, janelaAberta);
+      if (!a.retomar) return a.status;
+      retomar = a.retomar;
     } else {
-      if (!ultima || ultima.senderBy !== "contact") return "nada novo";
-      if (ultima.id === c.ultima_msg_tratada) return "já tratada";
+      if (ultima.id === c.ultima_msg_tratada) {
+        await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
+        return "já tratada";
+      }
       if (Date.now() - new Date(ultima.date).getTime() < ESPERA_MS) return "esperando o lead terminar";
-      if (!janelaAberta) return "janela fechada";
+      if (!janelaAberta) {
+        await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
+        return "janela fechada";
+      }
     }
 
     const lead = await carregarLead(supabase, c);
@@ -529,6 +733,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       extras: cfg.instrucoes_extras ?? "",
       ficha: c.ficha,
       abrir,
+      retomar,
       especialista: especialista ? primeiroNomeVendedor(especialista) : null,
       horariosLivres: (await horariosLivres(supabase, cfg, especialista)).map(
         (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`
@@ -558,6 +763,11 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         ficha,
         erro: null,
         atualizado_em: new Date().toISOString(),
+        proxima_checagem: null,
+        // Acompanhamento conta a etapa; resposta a quem escreveu zera o silêncio.
+        ...(retomar
+          ? { followup_etapa: (c.followup_etapa ?? 0) + 1, followup_em: new Date().toISOString() }
+          : { followup_etapa: 0, silencio_desde: null, followup_em: null }),
       })
       .eq("contact_id", c.contact_id);
 
@@ -570,14 +780,23 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     } else if (res.ficha) {
       await anotar(supabase, c.contact_id, `🤖 Ficha do Téo: ${res.ficha}`);
     }
-    await log(supabase, humano ? "passou pro time" : abrir ? "abriu conversa" : "respondeu", {
+    const nota = humano
+      ? "passou pro time"
+      : abrir
+        ? "abriu conversa"
+        : retomar
+          ? res.mensagens.length
+            ? `acompanhamento ${(c.followup_etapa ?? 0) + 1} (texto)`
+            : `acompanhamento ${(c.followup_etapa ?? 0) + 1} pulado`
+          : "respondeu";
+    await log(supabase, nota, {
       contact_id: c.contact_id,
       nome: c.nome,
       recebida: ultimaDoLead?.message ?? null,
       enviadas: res.mensagens,
       humano,
     });
-    return humano ? `humano (${humano.motivo})` : abrir ? "abriu" : "respondeu";
+    return humano ? `humano (${humano.motivo})` : nota;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await supabase
@@ -671,13 +890,24 @@ async function rodar() {
   const inscritos = await autoInscrever(supabase, cfg as Config);
   const tags = await marcarTag(supabase, cfg as Config);
 
-  const { data: conversas } = await supabase
+  const campos =
+    "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em";
+  // Só as conversas cuja próxima checagem já chegou (as paradas são lidas
+  // de forma espaçada). Se o filtro falhar, lê todas, como antes.
+  const consulta = await supabase
     .from("teo_conversas")
-    .select(
-      "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em"
-    )
+    .select(campos)
     .eq("ativo", true)
-    .in("estado", ["novo", "em_conversa"]);
+    .in("estado", ["novo", "em_conversa", "encerrado"])
+    .or(`proxima_checagem.is.null,proxima_checagem.lte.${new Date().toISOString()}`)
+    .order("proxima_checagem", { ascending: true, nullsFirst: true });
+  let conversas = consulta.data;
+  if (consulta.error) {
+    await log(supabase, "erro", { erro: `fila: ${consulta.error.message}` });
+    conversas = (
+      await supabase.from("teo_conversas").select(campos).eq("ativo", true).in("estado", ["novo", "em_conversa"])
+    ).data;
+  }
   const fila = [...((conversas ?? []) as Conversa[])];
   const resultado: Record<string, string> = {};
 
