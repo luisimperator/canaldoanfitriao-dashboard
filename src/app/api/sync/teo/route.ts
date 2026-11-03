@@ -372,7 +372,7 @@ async function criarConvite(
       titulo: `Canal do Anfitrião: ${k.nome ?? "lead"} e ${k.vendedor ? primeiroNomeVendedor(k.vendedor) : "especialista"}`,
       // O lead também vê a descrição: só o texto neutro. A ficha vai pro
       // vendedor na nota do Unnichat.
-      descricao: `Papo de 20 min com ${k.vendedor ?? "um especialista"}, do Canal do Anfitrião, pra entender o seu caso e montar o plano. É só entrar pelo link do Google Meet no horário.`,
+      descricao: `Papo de 20 min com ${k.vendedor ?? "um especialista"}, do Canal do Anfitrião, pra entender o seu cenário e te mostrar como o curso funciona e se faz sentido pro seu momento. É só entrar pelo link do Google Meet no horário.`,
       inicio: `${inicio}:00`,
       fim: `${fim}:00`,
       convidados,
