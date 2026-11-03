@@ -35,6 +35,8 @@ export interface LeadTeo {
   tags: string[];
   /** respostas do formulário de inscrição do site (Mailchimp): imóveis, faturamento */
   formulario?: Record<string, string>;
+  /** e-mail do cadastro (pra confirmar no convite da call em vez de pedir de novo) */
+  email?: string | null;
 }
 
 export interface ResultadoTeo {
@@ -274,6 +276,9 @@ function blocoLead(lead: LeadTeo): string {
       ? `- Formulário de inscrição (site): ${Object.entries(lead.formulario)
           .map(([k, v]) => `${k}: ${v}`)
           .join(" · ")}`
+      : null,
+    lead.email
+      ? `- E-mail do cadastro: ${lead.email} (pro convite da call, confirme este em vez de pedir: "mando o convite pro ${lead.email}?")`
       : null,
     lead.tags.length ? `- Tags: ${lead.tags.join(", ")}` : null,
   ].filter(Boolean);
