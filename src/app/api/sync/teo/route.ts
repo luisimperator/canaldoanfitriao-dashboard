@@ -578,6 +578,18 @@ async function garantirTeo(supabase: SupabaseClient, c: Conversa, atendenteId: s
   const r = await unnichat(supabase, "GET", `/contact/${c.contact_id}/assign`);
   const atual = (r.body as { data?: { id?: string; name?: string } | null } | null)?.data ?? null;
   if (r.status !== 200 || atual?.id === atendenteId) return;
+  // Quem tem call marcada fica com o vendedor da call (o sistema atribui na
+  // marcação): não puxa de volta pro Téo.
+  if (atual) {
+    const { data: call } = await supabase
+      .from("teo_calls")
+      .select("id")
+      .eq("contact_id", c.contact_id)
+      .neq("status", "cancelada")
+      .gte("inicio", new Date(Date.now() - 2 * 3600_000).toISOString())
+      .limit(1);
+    if (call?.length) return;
+  }
   await unnichat(supabase, "POST", `/contact/${c.contact_id}/assign`, { attendantId: atendenteId });
   await log(supabase, "reatribuído ao Téo", { contact_id: c.contact_id, nome: c.nome, estava_com: atual?.name ?? null });
 }
