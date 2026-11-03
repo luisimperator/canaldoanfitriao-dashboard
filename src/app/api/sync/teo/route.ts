@@ -57,6 +57,7 @@ interface Config {
   max_respostas: number;
   atendente_id: string | null;
   template_abertura_id: string | null;
+  template_lembrete_id?: string | null;
   tag_teo_id: string | null;
   followup_horas: number[] | null;
   followup_templates: string[] | null;
@@ -978,15 +979,47 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
   }
 }
 
-// Antes de cada call: lembrete pelo WhatsApp (~90 min antes, com o link do
-// Meet, se a janela de 24h ainda estiver aberta) e, 10 min antes, a conversa
-// passa pro vendedor no Unnichat, com a ficha. O follow-up pós-call é dele.
+const DIAS_SEMANA = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+
+// Aviso da call pro lead: texto livre com a janela de 24h aberta; fechada, o
+// template de utilidade "lembrete_call" ({{1}} nome, {{2}} vendedor, {{3}}
+// quando). Sem template configurado, não manda nada.
+async function avisarDaCall(
+  supabase: SupabaseClient,
+  cfg: Config,
+  telefone: string,
+  aberta: boolean,
+  texto: string,
+  params: [string, string, string]
+): Promise<"texto" | "template" | "sem janela"> {
+  if (aberta) {
+    await enviarTexto(supabase, telefone, texto);
+    return "texto";
+  }
+  if (!cfg.template_lembrete_id) return "sem janela";
+  const r = await unnichat(supabase, "POST", "/meta/templates", {
+    phone: telefone,
+    templateId: cfg.template_lembrete_id,
+    bodyParameters: params.map((text) => ({ type: "text", text })),
+  });
+  return r.status >= 200 && r.status < 300 ? "template" : "sem janela";
+}
+
+// Antes de cada call:
+// * véspera, das 18h às 21h: "amanhã às 15h com o Flávio, tá de pé?" (se a
+//   pessoa responder, a janela de 24h reabre pro lembrete do dia);
+// * ~90 min antes: lembrete com o link;
+// * 10 min antes: a conversa passa pro vendedor no Unnichat, com a ficha;
+// * 3 min depois do horário: "o Flávio já está na sala te esperando", com o
+//   link, a menos que o lead tenha escrito perto da hora.
+// Com a janela fechada, os avisos saem pelo template "lembrete_call". O
+// follow-up pós-call é do vendedor.
 async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
   const feitos: string[] = [];
   const agora = Date.now();
   const { data: calls } = await supabase
     .from("teo_calls")
-    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, resumo, email, status")
+    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status")
     .in("status", ["marcada", "convite_enviado"])
     .gte("inicio", new Date(agora - 2 * 3600_000).toISOString());
   for (const k of calls ?? []) {
@@ -1005,22 +1038,79 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
       .maybeSingle();
     const hora = local(k.inicio).slice(11, 16);
     const vend = k.vendedor ? primeiroNomeVendedor(k.vendedor) : "o especialista";
+    const nome = primeiroNome(k.nome ?? conv?.nome ?? null);
+    const horaFala = hora.endsWith(":00") ? `${Number(hora.slice(0, 2))}h` : hora.replace(":", "h");
+    // Lido uma vez por rodada e só quando algum aviso está pra sair.
+    let msgsCache: MsgUnnichat[] | null = null;
+    const msgs = async () => (msgsCache ??= await historico(supabase, k.contact_id));
+    const janela = async () => {
+      const doLead = (await msgs()).filter((m) => m.senderBy === "contact");
+      const ult = doLead[doLead.length - 1];
+      return Boolean(ult && agora - new Date(ult.date).getTime() < JANELA_MS);
+    };
     try {
+      // Véspera: a call é amanhã (horário de Brasília) e são 18h–21h. Se a
+      // conversa teve mensagem nas últimas 3h (acabou de marcar ou de falar),
+      // não precisa: só registra.
+      const diaCall = local(k.inicio).slice(0, 10);
+      const amanha = local(new Date(agora + 86400_000).toISOString()).slice(0, 10);
+      const h = horaSP();
+      if (!k.vespera_em && conv?.telefone && diaCall === amanha && h >= 18 && h < 21) {
+        const reais = (await msgs()).filter((m) => m.senderBy !== "platform");
+        const ultima = reais[reais.length - 1];
+        const recente = ultima && agora - new Date(ultima.date).getTime() < 3 * 3600_000;
+        const dia = DIAS_SEMANA[new Date(`${diaCall}T12:00:00-03:00`).getUTCDay()];
+        const r = recente
+          ? "recente"
+          : await avisarDaCall(
+              supabase,
+              cfg,
+              conv.telefone,
+              await janela(),
+              `Oi, ${nome}! Amanhã (${dia}) às ${horaFala} é o seu papo de 20 min com ${vend}. Tá de pé?`,
+              [nome, vend, `amanhã (${dia}) às ${horaFala}`]
+            );
+        await supabase.from("teo_calls").update({ vespera_em: new Date().toISOString() }).eq("id", k.id);
+        await log(supabase, `véspera ${r}`, { contact_id: k.contact_id, nome: k.nome, hora });
+        if (r !== "recente") feitos.push(`véspera ${k.nome}`);
+      }
       if (!k.lembrete_em && k.meet_url && conv?.telefone && agora >= t - 90 * 60_000 && agora < t - 5 * 60_000) {
-        const msgs = await historico(supabase, k.contact_id);
-        const doLead = msgs.filter((m) => m.senderBy === "contact");
-        const ult = doLead[doLead.length - 1];
-        const aberta = ult && agora - new Date(ult.date).getTime() < JANELA_MS;
-        if (aberta) {
-          await enviarTexto(
-            supabase,
-            conv.telefone,
-            `Oi, ${primeiroNome(k.nome ?? conv.nome)}! Passando pra lembrar: hoje às ${hora} é o seu papo de 20 min com ${vend}. É só entrar por este link na hora: ${k.meet_url}`
-          );
-        }
+        const r = await avisarDaCall(
+          supabase,
+          cfg,
+          conv.telefone,
+          await janela(),
+          `Oi, ${nome}! Passando pra lembrar: hoje às ${hora} é o seu papo de 20 min com ${vend}. É só entrar por este link na hora: ${k.meet_url}`,
+          [nome, vend, `hoje às ${horaFala}`]
+        );
         await supabase.from("teo_calls").update({ lembrete_em: new Date().toISOString() }).eq("id", k.id);
-        await log(supabase, aberta ? "lembrete enviado" : "lembrete sem janela", { contact_id: k.contact_id, nome: k.nome, hora });
+        await log(supabase, r === "sem janela" ? "lembrete sem janela" : `lembrete enviado (${r})`, {
+          contact_id: k.contact_id,
+          nome: k.nome,
+          hora,
+        });
         feitos.push(`lembrete ${k.nome}`);
+      }
+      // 3 min depois do horário (até 15 min): "já está na sala te esperando".
+      // Se o lead escreveu desde 10 min antes da call, ele está por perto e o
+      // vendedor já está falando com ele: não manda.
+      if (!k.esperando_em && k.meet_url && conv?.telefone && agora >= t + 3 * 60_000 && agora < t + 15 * 60_000) {
+        const escreveu = (await msgs()).some(
+          (m) => m.senderBy === "contact" && new Date(m.date).getTime() >= t - 10 * 60_000
+        );
+        const r = escreveu
+          ? "lead por perto"
+          : await avisarDaCall(
+              supabase,
+              cfg,
+              conv.telefone,
+              await janela(),
+              `Oi, ${nome}! O ${vend} já está na sala te esperando. Se ainda não conseguiu entrar, é por este link: ${k.meet_url}`,
+              [nome, vend, `começou agora e ${vend} já está na sala te esperando`]
+            );
+        await supabase.from("teo_calls").update({ esperando_em: new Date().toISOString() }).eq("id", k.id);
+        await log(supabase, `te esperando ${r}`, { contact_id: k.contact_id, nome: k.nome, hora });
+        if (r !== "lead por perto") feitos.push(`te esperando ${k.nome}`);
       }
       if (!k.passou_vendedor_em && agora >= t - 10 * 60_000) {
         const v = (cfg.vendedores ?? []).find((x) => x.nome === k.vendedor);
