@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
@@ -37,6 +38,8 @@ interface Conversa {
   ficha: string | null;
   template_em: string | null;
   criado_em: string;
+  formulario: Record<string, string> | null;
+  formulario_em: string | null;
 }
 
 interface Config {
@@ -69,11 +72,64 @@ function limpa(v: unknown): string {
     .trim();
 }
 
-async function carregarLead(supabase: SupabaseClient, contactId: string): Promise<LeadTeo> {
+// Campos do formulário de inscrição do site (merge fields do Mailchimp) que o
+// Téo usa pra não perguntar de novo.
+const CAMPOS_FORMULARIO: Record<string, string> = {
+  NIMOVEIS: "imóveis",
+  MMERGE16: "faturamento mensal",
+};
+
+async function buscarFormulario(email: string): Promise<Record<string, string> | null> {
+  const key = process.env.MAILCHIMP_API_KEY;
+  const lista = process.env.MAILCHIMP_LIST_ID;
+  const dc = key?.split("-")[1];
+  if (!key || !lista || !dc) return null;
+  const hash = createHash("md5").update(email.trim().toLowerCase()).digest("hex");
+  const res = await fetch(
+    `https://${dc}.api.mailchimp.com/3.0/lists/${lista}/members/${hash}?fields=merge_fields`,
+    { headers: { Authorization: `Basic ${Buffer.from(`x:${key}`).toString("base64")}` } }
+  );
+  if (res.status === 404) return {};
+  if (!res.ok) return null;
+  const j = (await res.json().catch(() => null)) as { merge_fields?: Record<string, unknown> } | null;
+  const out: Record<string, string> = {};
+  for (const [tag, rot] of Object.entries(CAMPOS_FORMULARIO)) {
+    const v = String(j?.merge_fields?.[tag] ?? "").trim();
+    if (v) out[rot] = v;
+  }
+  return out;
+}
+
+// Respostas do formulário, guardadas na conversa. Busca uma vez; se veio vazio
+// logo que o lead entrou (o Mailchimp pode atrasar), tenta de novo depois de
+// 10 min, até 2h depois da inscrição.
+async function formularioDaConversa(
+  supabase: SupabaseClient,
+  c: Conversa,
+  email: string | null
+): Promise<Record<string, string>> {
+  const atual = c.formulario;
+  const vazio = !atual || Object.keys(atual).length === 0;
+  const tentarDeNovo =
+    vazio &&
+    (!c.formulario_em ||
+      (Date.now() - new Date(c.formulario_em).getTime() > 10 * 60_000 &&
+        Date.now() - new Date(c.criado_em).getTime() < 2 * 3600_000));
+  if (!email || !tentarDeNovo) return atual ?? {};
+  const novo = await buscarFormulario(email).catch(() => null);
+  if (novo === null) return atual ?? {};
+  await supabase
+    .from("teo_conversas")
+    .update({ formulario: novo, formulario_em: new Date().toISOString() })
+    .eq("contact_id", c.contact_id);
+  return novo;
+}
+
+async function carregarLead(supabase: SupabaseClient, c: Conversa): Promise<LeadTeo> {
   const { data } = await supabase
     .from("leads")
-    .select("name, created_at, extra")
-    .eq("unnichat_id", contactId)
+    .select("name, created_at, extra, email")
+    .eq("unnichat_id", c.contact_id)
     .maybeSingle();
   const extra = (data?.extra ?? {}) as Record<string, unknown>;
   const respostas: Record<string, string> = {};
@@ -82,7 +138,8 @@ async function carregarLead(supabase: SupabaseClient, contactId: string): Promis
     if (v) respostas[rot] = v;
   }
   const tags = Array.isArray(extra.tags) ? (extra.tags as unknown[]).map(String) : [];
-  return { nome: data?.name ?? null, criadoEm: data?.created_at ?? null, respostas, tags };
+  const formulario = await formularioDaConversa(supabase, c, data?.email ?? null);
+  return { nome: data?.name ?? null, criadoEm: data?.created_at ?? null, respostas, tags, formulario };
 }
 
 async function log(supabase: SupabaseClient, note: string, body: Record<string, unknown>) {
@@ -457,7 +514,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       if (!janelaAberta) return "janela fechada";
     }
 
-    const lead = await carregarLead(supabase, c.contact_id);
+    const lead = await carregarLead(supabase, c);
     if (!lead.nome) lead.nome = c.nome;
     const especialista = especialistaDaConversa(msgs, cfg);
     // A automação "Lista de Espera 2.0" tira o atendente e sorteia um vendedor
@@ -616,7 +673,9 @@ async function rodar() {
 
   const { data: conversas } = await supabase
     .from("teo_conversas")
-    .select("contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em")
+    .select(
+      "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em"
+    )
     .eq("ativo", true)
     .in("estado", ["novo", "em_conversa"]);
   const fila = [...((conversas ?? []) as Conversa[])];

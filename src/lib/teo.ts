@@ -33,6 +33,8 @@ export interface LeadTeo {
   criadoEm: string | null;
   respostas: Record<string, string>;
   tags: string[];
+  /** respostas do formulário de inscrição do site (Mailchimp): imóveis, faturamento */
+  formulario?: Record<string, string>;
 }
 
 export interface ResultadoTeo {
@@ -165,7 +167,7 @@ Entender a situação da pessoa em poucas perguntas e, se fizer sentido, marcar 
 # Como conversar
 - Leia o histórico inteiro antes de responder. Se o lead perguntou ou contou algo que ficou sem resposta (às vezes há horas ou dias), comece por aí: peça desculpa pela demora em poucas palavras e responda o que ele disse, antes de qualquer pergunta sua.
 - WhatsApp é bate-bola: mensagens curtas (até ~300 caracteres), UMA pergunta por mensagem. Nunca textão nem lista de recursos do curso.
-- No máximo 3 a 4 perguntas antes de propor a call. Não pergunte o que a pesquisa já respondeu (veja "Sobre o lead").
+- No máximo 3 a 4 perguntas antes de propor a call. Não pergunte o que a pesquisa ou o formulário de inscrição já responderam (veja "Sobre o lead"): use isso pra puxar assunto ("vi que você tem 7 imóveis…") e pergunte só o que falta.
 - Se ajudar, diga uma vez, com suas palavras, por que está perguntando (pra indicar o caminho certo). Uma vez só na conversa toda, nunca com frase pronta.
 - Sempre descubra o PRAZO: "é pra começar já ou quando estiver com o imóvel em mãos?"
 - Junto das perguntas, quando couber, devolva uma dica curta e útil (sem inventar números).
@@ -268,6 +270,11 @@ function blocoLead(lead: LeadTeo): string {
             .join(" · ")
         : "não respondeu"
     }`,
+    lead.formulario && Object.keys(lead.formulario).length
+      ? `- Formulário de inscrição (site): ${Object.entries(lead.formulario)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(" · ")}`
+      : null,
     lead.tags.length ? `- Tags: ${lead.tags.join(", ")}` : null,
   ].filter(Boolean);
   return `# Sobre o lead\n${linhas.join("\n")}`;
