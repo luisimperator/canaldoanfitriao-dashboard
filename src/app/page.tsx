@@ -99,24 +99,14 @@ export default async function VisaoGeralPage({
   // MQLs (dia em que a tag de qualificação chegou) e leads (dia em que entraram)
   // por dia, agrupados pelo conjunto de tags: o gráfico troca MQLs ↔ Leads e
   // tira tags no cliente.
-  const porTags = agruparPorTags(data.leads);
+  // A origem (canal das UTMs) vai junto, para a origem dos leads seguir a mesma
+  // janela e as mesmas tags tiradas do gráfico.
+  const porTags = agruparPorTags(data.leads, (l) => ({ canal: classifyChannel(l.utm), rastreado: hasUtm(l) }));
   // Faturamento gerado pelo time (vendas pagas com vendedor), por dia — a
   // sobreposição opcional do gráfico de MQLs.
   const fatTimePorDia: Record<string, number> = {};
   for (const s of sales) {
     if (s.sellerId) fatTimePorDia[s.saleDate] = (fatTimePorDia[s.saleDate] ?? 0) + s.amount;
-  }
-
-  // Leads criados por dia, por canal (UTM) — a origem dos leads segue a janela
-  // escolhida no gráfico de MQLs, então vai tudo por dia e o recorte é no cliente.
-  const origemPorDia: Record<string, Record<string, number>> = {};
-  const rastreadosPorDia: Record<string, number> = {};
-  for (const l of data.leads) {
-    if (!l.createdAt) continue;
-    const ch = classifyChannel(l.utm);
-    const dia = (origemPorDia[l.createdAt] ??= {});
-    dia[ch] = (dia[ch] ?? 0) + 1;
-    if (hasUtm(l)) rastreadosPorDia[l.createdAt] = (rastreadosPorDia[l.createdAt] ?? 0) + 1;
   }
 
   const capTone =
@@ -233,8 +223,6 @@ export default async function VisaoGeralPage({
         hoje={today}
         porTags={porTags}
         faturamentoPorDia={fatTimePorDia}
-        origemPorDia={origemPorDia}
-        rastreadosPorDia={rastreadosPorDia}
         legendaMql={
           <p key="legenda-mql" className="text-xs text-slate-400 dark:text-zinc-500 mt-2">
             MQL = contato que respondeu a pesquisa e recebeu tag de qualificação (lead-a5e,
