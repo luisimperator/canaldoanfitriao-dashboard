@@ -325,6 +325,10 @@ export async function rodarTeo(opts: {
             ? `${opts.especialista} já conversou com este lead, então a call é com ${opts.especialista}: os horários abaixo já são só os dessa pessoa. Pode dizer que é com quem já falou com o lead.\n`
             : ""
         }${
+          opts.horariosLivres.some((h) => h.endsWith(" *"))
+            ? "Horário com * já tem outra call no mesmo horário, com outro especialista. Ofereça os sem *; um com * só se o lead pedir exatamente esse horário.\n"
+            : ""
+        }${
           opts.horariosLivres.length ? opts.horariosLivres.join(", ") : "nenhum no momento: pergunte dia e período e passe pro time"
         }`,
         blocoLead(opts.lead),
