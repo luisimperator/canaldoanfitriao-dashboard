@@ -64,6 +64,8 @@ interface Config {
   teams_tenant_id: string | null;
   teams_client_id: string | null;
   teams_organizador: string | null;
+  /** id (objeto do Entra) do organizador; a API de reuniões online pede o id */
+  teams_organizador_id?: string | null;
 }
 
 const CAMPOS_PESQUISA: Record<string, string> = {
@@ -401,11 +403,51 @@ async function graph(
 // Convite com a sala fixa do vendedor (link de uma sala que ele mesmo hospeda):
 // evento na agenda do organizador, sem reunião online, com o link no local e
 // na descrição. A Graph manda o convite pros convidados.
+// Reunião do Teams criada direto pela API de reuniões online, em nome do
+// organizador (anfitriao@): não depende do calendário aceitar Teams. Lobby
+// liberado pra todos, gravação automática e o vendedor como apresentador. Pede a
+// permissão de aplicativo OnlineMeetings.ReadWrite.All e a política de acesso
+// do Teams (Grant-CsApplicationAccessPolicy) pro anfitriao@; sem elas, a Graph
+// responde 403 e quem chamou segue pra sala fixa.
+async function criarReuniaoOnline(
+  supabase: SupabaseClient,
+  cfg: Config,
+  k: CallConvite,
+  dados: { titulo: string; vendedorEmail?: string | null }
+): Promise<{ ok: true; link: string } | { ok: false; erro: string } | null> {
+  if (!cfg.teams_organizador_id) return null;
+  const g = await graph(supabase, cfg);
+  if (!g) return null;
+  if (!g.ok) return { ok: false, erro: g.erro };
+  const inicio = new Date(k.inicio);
+  const fim = new Date(inicio.getTime() + 30 * 60_000);
+  const res = await fetch(`https://graph.microsoft.com/v1.0/users/${cfg.teams_organizador_id}/onlineMeetings`, {
+    method: "POST",
+    headers: g.auth,
+    body: JSON.stringify({
+      subject: dados.titulo,
+      startDateTime: inicio.toISOString(),
+      endDateTime: fim.toISOString(),
+      lobbyBypassSettings: { scope: "everyone", isDialInBypassEnabled: true },
+      recordAutomatically: true,
+      allowedPresenters: dados.vendedorEmail ? "roleIsPresenter" : "organization",
+      participants: dados.vendedorEmail
+        ? { attendees: [{ upn: dados.vendedorEmail, role: "presenter" }] }
+        : undefined,
+    }),
+  });
+  const m = (await res.json().catch(() => null)) as { joinWebUrl?: string; error?: { message?: string } } | null;
+  if (!res.ok || !m?.joinWebUrl) {
+    return { ok: false, erro: `reunião online ${res.status}: ${(m?.error?.message ?? "").slice(0, 200)}` };
+  }
+  return { ok: true, link: m.joinWebUrl };
+}
+
 async function criarComSala(
   supabase: SupabaseClient,
   cfg: Config,
   k: CallConvite,
-  dados: { titulo: string; descricao: string; inicio: string; fim: string; convidados: string[]; sala: string }
+  dados: { titulo: string; descricao: string; inicio: string; fim: string; convidados: string[]; sala: string; tag?: string }
 ): Promise<{ ok: true; id: string } | { ok: false; erro: string } | null> {
   const g = await graph(supabase, cfg);
   if (!g) return null;
@@ -421,7 +463,7 @@ async function criarComSala(
       location: { displayName: dados.sala, locationUri: dados.sala },
       attendees: dados.convidados.map((e) => ({ emailAddress: { address: e }, type: "required" })),
       allowNewTimeProposals: false,
-      transactionId: `${k.id}-sala`,
+      transactionId: `${k.id}-${dados.tag ?? "sala"}`,
     }),
   });
   const ev = (await res.json().catch(() => null)) as { id?: string; error?: { message?: string } } | null;
@@ -546,6 +588,35 @@ async function criarConvite(supabase: SupabaseClient, cfg: Config, k: CallConvit
   }
   if (teams && !teams.ok) {
     await log(supabase, "teams falhou", { call_id: k.id, nome: k.nome, erro: teams.erro });
+  }
+
+  // Sem link do calendário: reunião do Teams pela API de reuniões online (grava
+  // sozinha) e o convite como evento comum com o link.
+  const online = await criarReuniaoOnline(supabase, cfg, k, { titulo, vendedorEmail: v?.email }).catch((e) => ({
+    ok: false as const,
+    erro: e instanceof Error ? e.message : String(e),
+  }));
+  if (online?.ok) {
+    const r = await criarComSala(supabase, cfg, k, {
+      titulo,
+      descricao: descricao(`É só entrar por este link do Teams no horário: ${online.link}`, true),
+      inicio,
+      fim,
+      convidados,
+      sala: online.link,
+      tag: "online",
+    }).catch((e) => ({ ok: false as const, erro: e instanceof Error ? e.message : String(e) }));
+    if (r?.ok) {
+      await supabase
+        .from("teo_calls")
+        .update({ status: "convite_enviado", evento_id: r.id, meet_url: online.link })
+        .eq("id", k.id);
+      await log(supabase, "convite enviado", { call_id: k.id, nome: k.nome, convidados, sala: "teams-api", link: online.link });
+      return true;
+    }
+    if (r && !r.ok) await log(supabase, "convite teams-api falhou", { call_id: k.id, nome: k.nome, erro: r.erro });
+  } else if (online && !online.ok) {
+    await log(supabase, "reunião online falhou", { call_id: k.id, nome: k.nome, erro: online.erro });
   }
 
   // Sem Teams: a sala fixa do vendedor, se ele tiver uma (teo_config.vendedores[].sala).
