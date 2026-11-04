@@ -329,7 +329,10 @@ function ordemDoDia(livres: string[], cargaNoDia: (v: string) => number, taxa: M
 async function horariosLivres(
   supabase: SupabaseClient,
   cfg: Config,
-  especialista: string | null = null
+  especialista: string | null = null,
+  // Remarcação: as calls que o próprio lead já tem não ocupam a agenda pra ele
+  // (a call nova substitui a antiga).
+  contato: string | null = null
 ): Promise<{ horario: string; vendedor: string; junto: number }[]> {
   const time = (cfg.vendedores ?? []).map((v) => v.nome);
   const vendedores = especialista && time.includes(especialista) ? [especialista] : time;
@@ -340,7 +343,7 @@ async function horariosLivres(
   const [{ data: marcadas }, taxa] = await Promise.all([
     supabase
       .from("teo_calls")
-      .select("inicio, vendedor")
+      .select("inicio, vendedor, contact_id")
       .neq("status", "cancelada")
       .gte("inicio", new Date(Date.now() - 12 * 3600_000).toISOString()),
     taxasDeConversao(supabase, time),
@@ -354,6 +357,9 @@ async function horariosLivres(
     const lista = inicios.get(m.vendedor) ?? [];
     lista.push(new Date(m.inicio).getTime());
     inicios.set(m.vendedor, lista);
+  }
+  if (contato && marcadas) {
+    for (let i = marcadas.length - 1; i >= 0; i--) if (marcadas[i].contact_id === contato) marcadas.splice(i, 1);
   }
   const ocupado = (ts: number, v: string) => (inicios.get(v) ?? []).some((t) => Math.abs(t - ts) < INTERVALO_MS);
   // Calls de outros vendedores que se sobrepõem a este horário (a call dura
@@ -700,7 +706,7 @@ async function marcarCall(
   especialista: string | null,
   args: { horario: string; email: string; resumo: string }
 ): Promise<string> {
-  const livres = await horariosLivres(supabase, cfg, especialista);
+  const livres = await horariosLivres(supabase, cfg, especialista, c.contact_id);
   const horario = args.horario.trim().slice(0, 16);
   const slot = livres.find((l) => l.horario === horario);
   const lista = (ls: typeof livres) =>
@@ -727,7 +733,7 @@ async function marcarCall(
     .single();
   if (error) {
     return /duplicate|unique/i.test(error.message)
-      ? `Esse horário acabou de ser ocupado. Livres agora: ${lista(await horariosLivres(supabase, cfg, especialista))}.`
+      ? `Esse horário acabou de ser ocupado. Livres agora: ${lista(await horariosLivres(supabase, cfg, especialista, c.contact_id))}.`
       : `Não consegui marcar (${error.message}). Diga que vai confirmar o horário e chame passar_para_humano.`;
   }
   const [dia, hora] = horario.split("T");
@@ -738,6 +744,32 @@ async function marcarCall(
     `📅 Call marcada pelo Téo: ${quando} com ${slot.vendedor} — ${email}\n${args.resumo}`
   );
   await log(supabase, "call marcada", { contact_id: c.contact_id, nome: c.nome, horario, email, vendedor: slot.vendedor });
+  // Remarcação: a call nova substitui as outras do lead que ainda não
+  // aconteceram (senão a antiga continua mandando lembrete e "te esperando").
+  // O convite antigo é cancelado na agenda, e a Graph avisa o lead e o vendedor.
+  if (nova) {
+    const { data: antigas } = await supabase
+      .from("teo_calls")
+      .select("id, nome, inicio, evento_id")
+      .eq("contact_id", c.contact_id)
+      .neq("id", nova.id)
+      .neq("status", "cancelada")
+      .gte("inicio", new Date().toISOString());
+    for (const a of antigas ?? []) {
+      await supabase.from("teo_calls").update({ status: "cancelada" }).eq("id", a.id);
+      if (a.evento_id) {
+        const g = await graph(supabase, cfg).catch(() => null);
+        if (g?.ok) {
+          await fetch(`${g.base}/${encodeURIComponent(a.evento_id)}/cancel`, {
+            method: "POST",
+            headers: g.auth,
+            body: JSON.stringify({ comment: `Sua call foi remarcada para ${quando}. O convite novo chega em seguida.` }),
+          }).catch(() => null);
+        }
+      }
+      await log(supabase, "call remarcada", { contact_id: c.contact_id, nome: c.nome, de: a.inicio, para: horario });
+    }
+  }
   if (nova) await criarConvite(supabase, cfg, nova).catch(() => false);
   return `Marcado: ${quando} (horário de Brasília) com ${primeiroNomeVendedor(slot.vendedor)}. O convite vai pro e-mail ${email}.`;
 }
@@ -1074,7 +1106,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       abrir,
       retomar,
       especialista: especialista ? primeiroNomeVendedor(especialista) : null,
-      horariosLivres: (await horariosLivres(supabase, cfg, especialista)).map(
+      horariosLivres: (await horariosLivres(supabase, cfg, especialista, c.contact_id)).map(
         (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})${l.junto ? " *" : ""}`
       ),
       marcarCall: (args) => marcarCall(supabase, c, cfg, especialista, args),
