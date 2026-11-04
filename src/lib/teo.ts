@@ -10,6 +10,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { transcreverAudio, transcricaoConfigurada } from "@/lib/transcribe";
 
 const MODEL = process.env.TEO_MODEL || "claude-opus-5-5";
 const FALLBACK_MODEL = "claude-opus-4-8";
@@ -26,6 +27,11 @@ export interface MsgUnnichat {
   origin?: string | null;
   templateComponents?: unknown;
   templateBodyParameters?: unknown;
+  /** arquivo da mídia (áudio, imagem…), público no storage do Unnichat */
+  url?: string | null;
+  contactId?: string;
+  /** texto do áudio, preenchido por ouvirAudios() antes de o Téo responder */
+  transcricao?: string;
 }
 
 export interface LeadTeo {
@@ -70,6 +76,71 @@ export async function historico(supabase: SupabaseClient, contactId: string): Pr
   return [...arr].sort((a, b) => String(a.date).localeCompare(String(b.date)));
 }
 
+// O Téo ouve áudio: antes de responder, os áudios recentes da conversa (do lead
+// e do time) viram texto pela mesma transcrição do suporte (Groq/Whisper). A
+// transcrição fica em teo_audios pra não transcrever de novo a cada rodada; se
+// falhar, tenta de novo até 3 vezes e, depois disso, o áudio segue como antes
+// ("o lead mandou um áudio que você não consegue ouvir").
+const MAX_TENTATIVAS_AUDIO = 3;
+const MAX_AUDIO_BYTES = 20 * 1024 * 1024;
+
+async function baixarETranscrever(url: string): Promise<{ ok: boolean; texto?: string; erro?: string }> {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return { ok: false, erro: `download ${r.status}` };
+    const bytes = await r.arrayBuffer();
+    if (bytes.byteLength > MAX_AUDIO_BYTES) return { ok: false, erro: `áudio grande demais (${bytes.byteLength} bytes)` };
+    const mime = (r.headers.get("content-type") || "").split(";")[0] || "audio/ogg";
+    const tr = await transcreverAudio(bytes, /audio|ogg|mpeg|mp4|wav/.test(mime) ? mime : "audio/ogg");
+    return tr.ok && tr.texto ? { ok: true, texto: tr.texto } : { ok: false, erro: tr.error ?? "sem texto" };
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+export async function ouvirAudios(supabase: SupabaseClient, msgs: MsgUnnichat[]): Promise<number> {
+  if (!transcricaoConfigurada()) return 0;
+  const audios = msgs
+    .slice(-MAX_MSGS_HISTORICO)
+    .filter((m) => m.senderBy !== "platform" && /audio|ptt/.test(m.type || "") && !(m.message ?? "").trim() && m.url);
+  if (!audios.length) return 0;
+  const { data: salvos } = await supabase
+    .from("teo_audios")
+    .select("msg_id, texto, tentativas")
+    .in(
+      "msg_id",
+      audios.map((a) => a.id)
+    );
+  const cache = new Map((salvos ?? []).map((s) => [s.msg_id as string, s as { texto: string | null; tentativas: number }]));
+  let novos = 0;
+  for (const a of audios) {
+    const salvo = cache.get(a.id);
+    if (salvo?.texto) {
+      a.transcricao = salvo.texto;
+      continue;
+    }
+    if ((salvo?.tentativas ?? 0) >= MAX_TENTATIVAS_AUDIO) continue;
+    const tr = await baixarETranscrever(a.url!);
+    await supabase.from("teo_audios").upsert(
+      {
+        msg_id: a.id,
+        contact_id: a.contactId ?? null,
+        de: a.senderBy,
+        texto: tr.ok ? tr.texto : null,
+        erro: tr.ok ? null : (tr.erro ?? "").slice(0, 300),
+        tentativas: (salvo?.tentativas ?? 0) + 1,
+        atualizado_em: new Date().toISOString(),
+      },
+      { onConflict: "msg_id" }
+    );
+    if (tr.ok && tr.texto) {
+      a.transcricao = tr.texto;
+      novos++;
+    }
+  }
+  return novos;
+}
+
 export async function enviarTexto(supabase: SupabaseClient, phone: string, texto: string): Promise<void> {
   const r = await unnichat(supabase, "POST", "/meta/messages", { phone, messageText: texto });
   if (r.status < 200 || r.status >= 300) {
@@ -105,6 +176,11 @@ function textoDaMensagem(m: MsgUnnichat): string | null {
     return `(mensagem automática) ${tpl ?? "[template]"}`;
   }
   if (t) return m.origin === "automation" ? `(mensagem automática) ${t}` : t;
+  if (m.transcricao) {
+    return m.senderBy === "contact"
+      ? `(áudio do lead) ${m.transcricao}`
+      : `(áudio que alguém do time mandou pro lead) ${m.transcricao}`;
+  }
   const tipo = m.type || "mídia";
   if (m.senderBy === "contact") {
     if (/audio|ptt/.test(tipo)) return "[o lead mandou um áudio, que você não consegue ouvir]";
@@ -168,6 +244,7 @@ Entender a situação da pessoa em poucas perguntas e, se fizer sentido, marcar 
 
 # Como conversar
 - Leia o histórico inteiro antes de responder. Se o lead perguntou ou contou algo que ficou sem resposta (às vezes há horas ou dias), comece por aí: peça desculpa pela demora em poucas palavras e responda o que ele disse, antes de qualquer pergunta sua.
+- Você ouve áudio: o que o lead fala em áudio chega como "(áudio do lead) …". Responda ao que ele disse, normalmente, sem comentar que era áudio nem pedir pra escrever. Só se vier "[o lead mandou um áudio, que você não consegue ouvir]" (falhou ao ouvir), peça com leveza pra ele mandar por escrito.
 - WhatsApp é bate-bola: mensagens curtas (até ~300 caracteres), UMA pergunta por mensagem. Nunca textão nem lista de recursos da comunidade.
 - No máximo 3 a 4 perguntas antes de propor a call. Não pergunte o que a pesquisa ou o formulário de inscrição já responderam (veja "Sobre o lead"): use isso pra puxar assunto ("vi que você tem 7 imóveis…") e pergunte só o que falta.
 - Se ajudar, diga uma vez, com suas palavras, por que está perguntando (pra indicar o caminho certo). Uma vez só na conversa toda, nunca com frase pronta.

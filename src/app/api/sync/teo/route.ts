@@ -7,6 +7,7 @@ import {
   anotar,
   enviarTexto,
   historico,
+  ouvirAudios,
   rodarTeo,
   unnichat,
   type LeadTeo,
@@ -1060,6 +1061,9 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // quando o lead clica nos botões dela. Enquanto o Téo responde, a conversa
     // é dele, a não ser que alguém do time já tenha conversado com o lead.
     if (!especialista && cfg.atendente_id) await garantirTeo(supabase, c, cfg.atendente_id);
+    // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
+    const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
+    if (ouvidos) await log(supabase, "áudio ouvido", { contact_id: c.contact_id, nome: c.nome, audios: ouvidos });
     const res = await rodarTeo({
       msgs,
       lead,
