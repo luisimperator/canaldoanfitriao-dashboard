@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { graphToken } from "@/lib/graph";
 import {
   anotar,
   enviarTexto,
@@ -387,25 +388,13 @@ async function graph(
   supabase: SupabaseClient,
   cfg: Config
 ): Promise<{ ok: true; base: string; auth: Record<string, string> } | { ok: false; erro: string } | null> {
-  if (!cfg.teams_tenant_id || !cfg.teams_client_id || !cfg.teams_organizador) return null;
-  const { data: segredo } = await supabase.rpc("teo_teams_segredo");
-  if (!segredo) return null;
-  const tok = await fetch(`https://login.microsoftonline.com/${cfg.teams_tenant_id}/oauth2/v2.0/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: cfg.teams_client_id,
-      client_secret: String(segredo),
-      scope: "https://graph.microsoft.com/.default",
-      grant_type: "client_credentials",
-    }),
-  });
-  const t = (await tok.json().catch(() => null)) as { access_token?: string; error_description?: string } | null;
-  if (!t?.access_token) return { ok: false, erro: `token ${tok.status}: ${(t?.error_description ?? "").slice(0, 200)}` };
+  if (!cfg.teams_organizador) return null;
+  const t = await graphToken(supabase, cfg);
+  if (!t?.ok) return t;
   return {
     ok: true,
     base: `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(cfg.teams_organizador)}/events`,
-    auth: { Authorization: `Bearer ${t.access_token}`, "Content-Type": "application/json" },
+    auth: t.auth,
   };
 }
 
@@ -1304,116 +1293,6 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
   return feitos;
 }
 
-// ---------- transcrições das calls (Teams) ----------
-
-// "WEBVTT … 00:00:01.000 --> 00:00:04.000\n<v Flávio Reis>Boa tarde</v>" vira
-// "[00:01] Flávio Reis: Boa tarde", juntando falas seguidas da mesma pessoa.
-function vttParaTexto(vtt: string): string {
-  const linhas: string[] = [];
-  let tempo = "";
-  let ultimo = "";
-  for (const bruta of vtt.split(/\r?\n/)) {
-    const l = bruta.trim();
-    const t = l.match(/^(\d{2}):(\d{2}):(\d{2})\.\d+\s+-->/);
-    if (t) {
-      const h = Number(t[1]);
-      tempo = h > 0 ? `${h}:${t[2]}:${t[3]}` : `${t[2]}:${t[3]}`;
-      continue;
-    }
-    const v = l.match(/^<v\s+([^>]+)>(.*?)(<\/v>)?$/);
-    if (!v) continue;
-    const quem = v[1].trim();
-    const fala = v[2].trim();
-    if (!fala) continue;
-    if (quem === ultimo && linhas.length) linhas[linhas.length - 1] += ` ${fala}`;
-    else linhas.push(`[${tempo}] ${quem}: ${fala}`);
-    ultimo = quem;
-  }
-  return linhas.join("\n");
-}
-
-// Depois que a call acaba, busca a transcrição na Graph e guarda em
-// teo_calls.transcricao (e a lista de gravações em gravacoes). Precisa das
-// permissões de aplicativo OnlineMeetingTranscript.Read.All e
-// OnlineMeetingRecording.Read.All, além da política de acesso do Teams. Tenta
-// a cada 30 min por até 2 dias depois da call; poucas por rodada.
-async function buscarTranscricoes(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
-  if (!cfg.teams_organizador_id) return [];
-  const agora = Date.now();
-  const { data: calls } = await supabase
-    .from("teo_calls")
-    .select("id, nome, inicio, meet_url, reuniao_id, transcricao_checada_em")
-    .neq("status", "cancelada")
-    .is("transcricao", null)
-    .like("meet_url", "https://teams.microsoft.com/%")
-    .lte("inicio", new Date(agora - 40 * 60_000).toISOString())
-    .gte("inicio", new Date(agora - 2 * 86400_000).toISOString())
-    .or(`transcricao_checada_em.is.null,transcricao_checada_em.lte.${new Date(agora - 30 * 60_000).toISOString()}`)
-    .order("inicio", { ascending: true })
-    .limit(3);
-  if (!calls?.length) return [];
-  const g = await graph(supabase, cfg);
-  if (!g?.ok) return [];
-  const base = `https://graph.microsoft.com/v1.0/users/${cfg.teams_organizador_id}/onlineMeetings`;
-  const feitos: string[] = [];
-  for (const k of calls) {
-    const marca = { transcricao_checada_em: new Date().toISOString() } as Record<string, unknown>;
-    try {
-      let reuniao = k.reuniao_id as string | null;
-      if (!reuniao) {
-        const r = await fetch(`${base}?$filter=JoinWebUrl eq '${String(k.meet_url).replace(/'/g, "''")}'`, {
-          headers: g.auth,
-        });
-        const j = (await r.json().catch(() => null)) as { value?: { id?: string }[]; error?: { message?: string } } | null;
-        reuniao = j?.value?.[0]?.id ?? null;
-        if (!reuniao) {
-          await supabase.from("teo_calls").update(marca).eq("id", k.id);
-          await log(supabase, "transcrição: reunião não achada", {
-            call_id: k.id,
-            nome: k.nome,
-            erro: `${r.status} ${(j?.error?.message ?? "").slice(0, 200)}`,
-          });
-          continue;
-        }
-        marca.reuniao_id = reuniao;
-      }
-      const tr = await fetch(`${base}/${reuniao}/transcripts`, { headers: g.auth });
-      const tj = (await tr.json().catch(() => null)) as { value?: { id: string }[]; error?: { message?: string } } | null;
-      const gr = await fetch(`${base}/${reuniao}/recordings`, { headers: g.auth });
-      const gj = (await gr.json().catch(() => null)) as
-        | { value?: { id: string; createdDateTime?: string; recordingContentUrl?: string }[] }
-        | null;
-      if (gj?.value?.length) marca.gravacoes = gj.value.map((x) => ({ id: x.id, em: x.createdDateTime ?? null }));
-      if (!tr.ok) {
-        await supabase.from("teo_calls").update(marca).eq("id", k.id);
-        await log(supabase, "transcrição falhou", {
-          call_id: k.id,
-          nome: k.nome,
-          erro: `${tr.status} ${(tj?.error?.message ?? "").slice(0, 200)}`,
-        });
-        continue;
-      }
-      const partes: string[] = [];
-      for (const t of tj?.value ?? []) {
-        const c = await fetch(`${base}/${reuniao}/transcripts/${t.id}/content?$format=text/vtt`, { headers: g.auth });
-        if (c.ok) partes.push(vttParaTexto(await c.text()));
-      }
-      const texto = partes.filter(Boolean).join("\n\n");
-      if (texto) {
-        marca.transcricao = texto;
-        marca.transcricao_em = new Date().toISOString();
-        feitos.push(`transcrição ${k.nome}`);
-        await log(supabase, "transcrição salva", { call_id: k.id, nome: k.nome, caracteres: texto.length });
-      }
-      await supabase.from("teo_calls").update(marca).eq("id", k.id);
-    } catch (e) {
-      await supabase.from("teo_calls").update(marca).eq("id", k.id);
-      await log(supabase, "transcrição falhou", { call_id: k.id, erro: e instanceof Error ? e.message : String(e) });
-    }
-  }
-  return feitos;
-}
-
 async function rodar() {
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
@@ -1424,7 +1303,6 @@ async function rodar() {
 
   const inicio = Date.now();
   const calls = await cuidarDasCalls(supabase, cfg as Config);
-  const transcricoes = await buscarTranscricoes(supabase, cfg as Config).catch(() => [] as string[]);
   const inscritos = await autoInscrever(supabase, cfg as Config);
   const tags = await marcarTag(supabase, cfg as Config);
 
@@ -1457,7 +1335,7 @@ async function rodar() {
   }
   await Promise.all(Array.from({ length: PARALELO }, () => pista()));
 
-  return NextResponse.json({ ok: true, calls, transcricoes, inscritos, tags, resultado, ms: Date.now() - inicio });
+  return NextResponse.json({ ok: true, calls, inscritos, tags, resultado, ms: Date.now() - inicio });
 }
 
 // GET: cron da Vercel (vercel.json). POST: disparo manual, já logado.
