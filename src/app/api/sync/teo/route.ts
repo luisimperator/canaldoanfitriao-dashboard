@@ -343,7 +343,17 @@ async function horariosLivres(
       .gte("inicio", new Date(Date.now() - 12 * 3600_000).toISOString()),
     taxasDeConversao(supabase, time),
   ]);
-  const ocupado = new Set((marcadas ?? []).map((m) => `${new Date(m.inicio).getTime()}|${m.vendedor}`));
+  // Entre o início de uma call e o da próxima do mesmo vendedor, no mínimo 1h
+  // (a call continua com 30 min no convite; a meia hora que sobra é folga).
+  const INTERVALO_MS = 60 * 60_000;
+  const inicios = new Map<string, number[]>();
+  for (const m of marcadas ?? []) {
+    if (!m.vendedor) continue;
+    const lista = inicios.get(m.vendedor) ?? [];
+    lista.push(new Date(m.inicio).getTime());
+    inicios.set(m.vendedor, lista);
+  }
+  const ocupado = (ts: number, v: string) => (inicios.get(v) ?? []).some((t) => Math.abs(t - ts) < INTERVALO_MS);
   const dia = (iso: string) => local(iso).slice(0, 10);
   const carga = new Map<string, number>();
   for (const m of marcadas ?? []) {
@@ -352,7 +362,7 @@ async function horariosLivres(
   const out: { horario: string; vendedor: string }[] = [];
   for (const h of todos) {
     const ts = new Date(h).getTime();
-    const livres = vendedores.filter((v) => !ocupado.has(`${ts}|${v}`));
+    const livres = vendedores.filter((v) => !ocupado(ts, v));
     if (livres.length === 0) continue;
     const [escolhido] = ordemDoDia(livres, (v) => carga.get(`${dia(h)}|${v}`) ?? 0, taxa);
     out.push({ horario: local(h), vendedor: escolhido });
