@@ -213,8 +213,13 @@ async function buscar(
           url: x.recordingContentUrl ?? null,
         }));
       }
+      // Situação das gravações, pra saber se a call gravou mesmo quando a
+      // transcrição falha (vai junto do erro da transcrição).
+      const situacaoGravacoes = gr.ok
+        ? `gravações: ${gj?.value?.length ?? 0}`
+        : `gravações: ${erroGraph(gr.status, gj)}`;
       if (!tr.ok) {
-        marca.erro = `transcrições: ${erroGraph(tr.status, tj)}`;
+        marca.erro = `transcrições: ${erroGraph(tr.status, tj)} | ${situacaoGravacoes}`;
         if (passou > DESISTIR_ERRO_MS) marca.status = "sem_transcricao";
         await supabase.from("call_transcricoes").update(marca).eq("join_url", k.join_url);
         continue;
@@ -236,9 +241,9 @@ async function buscar(
         marca.erro = null;
         feitos.push(nome);
         await log(supabase, "transcrição salva", { join_url: k.join_url, nome, caracteres: texto.length });
-      } else if (passou > DESISTIR_VAZIO_MS) {
-        marca.status = "sem_transcricao";
-        marca.erro = lista.length ? "transcrição vazia" : null;
+      } else {
+        marca.erro = `transcrições: ${lista.length ? "vazia" : "nenhuma ainda"} | ${situacaoGravacoes}`;
+        if (passou > DESISTIR_VAZIO_MS) marca.status = "sem_transcricao";
       }
     } catch (e) {
       marca.erro = e instanceof Error ? e.message.slice(0, 300) : String(e);

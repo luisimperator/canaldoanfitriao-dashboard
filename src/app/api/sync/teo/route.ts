@@ -1320,7 +1320,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         await anotar(
           supabase,
           k.contact_id,
-          `📞 Call agora às ${hora} com ${k.vendedor ?? "o especialista"} (marcada pelo Téo). Depois da call, o follow-up é seu: proposta e link logo em seguida.\n${k.resumo ?? ""}${conv?.ficha ? `\n\nFicha:\n${conv.ficha}` : ""}`
+          `📞 Call agora às ${hora} com ${k.vendedor ?? "o especialista"} (marcada pelo Téo). 🎥 Ao entrar na sala do Teams, confira se está gravando; se não estiver, clique em Gravar e transcrever. Depois da call, o follow-up é seu: proposta e link logo em seguida.\n${k.resumo ?? ""}${conv?.ficha ? `\n\nFicha:\n${conv.ficha}` : ""}`
         );
         await supabase
           .from("teo_conversas")
