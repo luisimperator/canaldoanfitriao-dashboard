@@ -321,6 +321,21 @@ function ordemDoDia(livres: string[], cargaNoDia: (v: string) => number, taxa: M
   return [...livres].sort((a, b) => (cargaNoDia(a) + 1) / t(a) - (cargaNoDia(b) + 1) / t(b) || t(b) - t(a));
 }
 
+// O lead é do vendedor da primeira call que o Téo marcou pra ele: remarcação
+// é sempre com essa pessoa (se ainda estiver no time), nunca troca.
+async function vendedorDoLead(supabase: SupabaseClient, cfg: Config, contato: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("teo_calls")
+    .select("vendedor")
+    .eq("contact_id", contato)
+    .not("vendedor", "is", null)
+    .order("criado_em", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const v = (data?.vendedor as string | null) ?? null;
+  return v && (cfg.vendedores ?? []).some((x) => x.nome === v) ? v : null;
+}
+
 // Horários da config daqui a 1h+ em que algum vendedor está livre. Os três
 // atendem em paralelo (cada um no seu computador): o mesmo horário aceita uma
 // call por vendedor. Em cada horário vai o vendedor livre que ordemDoDia()
@@ -351,15 +366,15 @@ async function horariosLivres(
   // Entre o início de uma call e o da próxima do mesmo vendedor, no mínimo 1h
   // (a call continua com 30 min no convite; a meia hora que sobra é folga).
   const INTERVALO_MS = 60 * 60_000;
+  if (contato && marcadas) {
+    for (let i = marcadas.length - 1; i >= 0; i--) if (marcadas[i].contact_id === contato) marcadas.splice(i, 1);
+  }
   const inicios = new Map<string, number[]>();
   for (const m of marcadas ?? []) {
     if (!m.vendedor) continue;
     const lista = inicios.get(m.vendedor) ?? [];
     lista.push(new Date(m.inicio).getTime());
     inicios.set(m.vendedor, lista);
-  }
-  if (contato && marcadas) {
-    for (let i = marcadas.length - 1; i >= 0; i--) if (marcadas[i].contact_id === contato) marcadas.splice(i, 1);
   }
   const ocupado = (ts: number, v: string) => (inicios.get(v) ?? []).some((t) => Math.abs(t - ts) < INTERVALO_MS);
   // Calls de outros vendedores que se sobrepõem a este horário (a call dura
@@ -1116,7 +1131,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
 
     const lead = await carregarLead(supabase, c);
     if (!lead.nome) lead.nome = c.nome;
-    const especialista = especialistaDaConversa(msgs, cfg);
+    const especialista = (await vendedorDoLead(supabase, cfg, c.contact_id)) ?? especialistaDaConversa(msgs, cfg);
     // A automação "Lista de Espera 2.0" tira o atendente e sorteia um vendedor
     // quando o lead clica nos botões dela. Enquanto o Téo responde, a conversa
     // é dele, a não ser que alguém do time já tenha conversado com o lead.

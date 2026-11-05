@@ -399,7 +399,7 @@ export async function rodarTeo(opts: {
         opts.precos ? `# Preços\n${opts.precos}` : null,
         `# Horários livres pra call (horário de Brasília)\n${
           opts.especialista
-            ? `${opts.especialista} já conversou com este lead, então a call é com ${opts.especialista}: os horários abaixo já são só os dessa pessoa. Pode dizer que é com quem já falou com o lead.\n`
+            ? `${opts.especialista} é o especialista deste lead (já tem call marcada ou já conversou com ele): a call é sempre com ${opts.especialista}, inclusive pra remarcar. Os horários abaixo já são só dessa pessoa. Nunca ofereça outro especialista; se nenhum horário servir, chame passar_para_humano (motivo call).\n`
             : ""
         }${
           opts.horariosLivres.some((h) => h.endsWith(" *"))
