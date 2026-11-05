@@ -1005,9 +1005,14 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     if (c.estado === "novo") {
       if (!janelaAberta) {
         if (c.template_em) return "aguardando resposta do template";
-        // Acabou de entrar: a automação do Unnichat está mandando a confirmação.
-        // Dá ~10 min pro lead abrir a janela antes de mandar o template.
-        if (Date.now() - new Date(c.criado_em).getTime() < 10 * 60_000) return "esperando a janela abrir";
+        // Acabou de entrar. Se a automação do Unnichat mandou a boas-vindas
+        // (com o "Confirmar"), dá ~10 min pro lead abrir a janela; se não
+        // mandou, o Téo abre no primeiro minuto. O minuto de folga cobre a
+        // boas-vindas, que sai ~45 s depois que a pessoa entra.
+        const boasVindas = reais.some((m) => m.senderBy === "user" && m.origin === "automation");
+        if (Date.now() - new Date(c.criado_em).getTime() < (boasVindas ? 10 : 1) * 60_000) {
+          return "esperando a janela abrir";
+        }
         if (!podeChamar()) {
           await adiar(supabase, c.contact_id, proximas8hSP().getTime() - Date.now());
           return "silêncio (template às 8h)";
