@@ -315,7 +315,7 @@ const TOOLS: Anthropic.Tool[] = [
       properties: {
         motivo: {
           type: "string",
-          enum: ["call", "preco", "comprar", "suporte", "airbnb_do_zero", "pediu_humano", "outro"],
+          enum: ["call", "preco", "comprar", "suporte", "airbnb_do_zero", "pediu_humano", "black", "outro"],
         },
         resumo: {
           type: "string",

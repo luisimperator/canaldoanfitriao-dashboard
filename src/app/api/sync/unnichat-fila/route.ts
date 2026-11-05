@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { contatoDoAviso, processarEventoUnnichat, type Vendedor } from "@/lib/unnichat-evento";
+import { inscreverEntrada } from "@/lib/teo-entrada";
 
 // Fila dos avisos do Unnichat. O webhook (/api/webhooks/unnichat) só grava o
 // aviso em webhook_log com pendente = true; esta rota, chamada pelo cron da
@@ -73,7 +74,9 @@ async function processarFila() {
         const tentativa = a.tentativas + 1;
         let r: Awaited<ReturnType<typeof processarEventoUnnichat>>;
         try {
-          r = await processarEventoUnnichat(supabase!, a.body, {
+          // Mensagem recebida (automação "Téo: entrada"): só inscreve no Téo,
+          // sem mexer no lead nem na etapa do funil.
+          r = a.etapa === "teo-entrada" ? await inscreverEntrada(supabase!, a.body) : await processarEventoUnnichat(supabase!, a.body, {
             etapa: a.etapa,
             recebidoEm: a.created_at,
             vendedores: (vendedores ?? []) as Vendedor[],
