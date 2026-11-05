@@ -31,6 +31,11 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/webhooks") || pathname.startsWith("/api/import")) {
     return NextResponse.next();
   }
+  // Agenda das calls (.ics) assinada no Google Agenda: o Google busca sem
+  // sessão; a rota exige a chave dela (?k=) e responde 404 sem ela.
+  if (pathname.startsWith("/api/agenda/")) {
+    return NextResponse.next();
+  }
   // Cron da Vercel (vercel.json) chamando os syncs: chega por GET, SEM cookie
   // de sessão — sem esta exceção o porteiro redirecionava o cron pra /login e
   // o sync nunca rodava. Com CRON_SECRET definido na Vercel, exige o header
