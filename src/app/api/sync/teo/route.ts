@@ -972,6 +972,13 @@ async function acompanhar(
   return { status: ok ? `acompanhamento ${etapa + 1} (template)` : "acompanhamento falhou" };
 }
 
+// Mensagem de um vendedor pelo painel do Unnichat: sai sem origem (o Téo
+// manda pela API, "unniApi"; automação e disparos têm origem própria).
+// Notas internas não contam.
+function ehDoVendedor(m: MsgUnnichat): boolean {
+  return m.senderBy === "user" && !m.origin && m.type !== "note";
+}
+
 function primeiroNome(nome: string | null): string {
   return (nome ?? "").trim().split(/\s+/)[0] || "tudo bem";
 }
@@ -988,6 +995,22 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     const janelaAberta = Boolean(
       ultimaDoLead && Date.now() - new Date(ultimaDoLead.date).getTime() < JANELA_MS
     );
+    // Um vendedor escreveu na conversa depois da última mensagem do Téo: a
+    // conversa é dele agora, o Téo sai sem responder por cima.
+    const doVendedor = [...reais].reverse().find(ehDoVendedor);
+    const ultimaApi = [...reais].reverse().find((m) => m.senderBy === "user" && m.origin === "unniApi");
+    if (
+      doVendedor &&
+      Date.now() - new Date(doVendedor.date).getTime() < 48 * 3600_000 &&
+      (!ultimaApi || new Date(doVendedor.date).getTime() > new Date(ultimaApi.date).getTime())
+    ) {
+      await supabase
+        .from("teo_conversas")
+        .update({ estado: "humano", motivo_humano: "vendedor", atualizado_em: new Date().toISOString() })
+        .eq("contact_id", c.contact_id);
+      await log(supabase, "vendedor assumiu", { contact_id: c.contact_id, nome: c.nome });
+      return "vendedor assumiu";
+    }
     const telefone = c.telefone;
     if (!telefone) return "sem telefone";
 
@@ -1334,6 +1357,29 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         await supabase.from("teo_calls").update({ passou_vendedor_em: new Date().toISOString() }).eq("id", k.id);
         await log(supabase, "passou pro vendedor", { contact_id: k.contact_id, nome: k.nome, vendedor: k.vendedor, hora });
         feitos.push(`vendedor ${k.nome}`);
+      }
+      // Passou pro vendedor, mas o lead escreveu perto da hora (pedindo pra
+      // remarcar, sem conseguir entrar…) e o vendedor não respondeu em 5 min:
+      // o Téo retoma a conversa em vez de deixar o lead sem resposta. Só até
+      // 15 min depois do horário; dali em diante a conversa é do vendedor.
+      if (k.passou_vendedor_em && agora < t + 15 * 60_000) {
+        const desde = new Date(k.passou_vendedor_em).getTime();
+        const depois = (await msgs()).filter((m) => new Date(m.date).getTime() > desde);
+        const doLead = depois.filter((m) => m.senderBy === "contact");
+        const ultLead = doLead[doLead.length - 1];
+        if (ultLead && !depois.some(ehDoVendedor) && agora - new Date(ultLead.date).getTime() >= 5 * 60_000) {
+          const { data: retomou } = await supabase
+            .from("teo_conversas")
+            .update({ estado: "em_conversa", motivo_humano: null, proxima_checagem: null, atualizado_em: new Date().toISOString() })
+            .eq("contact_id", k.contact_id)
+            .eq("estado", "humano")
+            .eq("motivo_humano", "call")
+            .select("contact_id");
+          if (retomou?.length) {
+            await log(supabase, "téo retomou antes da call", { contact_id: k.contact_id, nome: k.nome, hora });
+            feitos.push(`retomou ${k.nome}`);
+          }
+        }
       }
     } catch (e) {
       await log(supabase, "erro na call", { contact_id: k.contact_id, erro: e instanceof Error ? e.message : String(e) });
