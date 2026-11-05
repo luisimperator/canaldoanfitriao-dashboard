@@ -26,6 +26,7 @@ type Evento = {
 
 type Call = {
   id: string;
+  status: string;
   nome: string | null;
   vendedor: string | null;
   inicio: string;
@@ -108,12 +109,15 @@ export async function GET(request: NextRequest) {
 
   const { data: callsDb } = await supabase
     .from("teo_calls")
-    .select("id, nome, vendedor, inicio, meet_url, resumo")
-    .neq("status", "cancelada")
+    .select("id, status, nome, vendedor, inicio, meet_url, resumo")
     .neq("nome", "Teste Teams")
     .gte("inicio", de.toISOString())
     .lte("inicio", ate.toISOString());
-  const calls = (callsDb ?? []) as Call[];
+  const todas = (callsDb ?? []) as Call[];
+  // Evento da agenda cuja call foi cancelada (ou remarcada) não entra, mesmo
+  // que o convite antigo ainda esteja na agenda do anfitriao@.
+  const canceladas = new Set(todas.filter((c) => c.status === "cancelada" && c.meet_url).map((c) => c.meet_url as string));
+  const calls = todas.filter((c) => c.status !== "cancelada");
   const porLink = new Map(calls.filter((c) => c.meet_url).map((c) => [c.meet_url as string, c]));
 
   const linhas: string[] = [
@@ -154,6 +158,7 @@ export async function GET(request: NextRequest) {
     const fim = utc(e.end?.dateTime);
     if (e.isCancelled || !inicio || !fim) continue;
     const link = e.onlineMeeting?.joinUrl ?? null;
+    if (link && canceladas.has(link) && !porLink.has(link)) continue;
     const call = link ? porLink.get(link) : undefined;
     if (call) usados.add(call.id);
     const titulo = call
