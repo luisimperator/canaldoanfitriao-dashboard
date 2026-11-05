@@ -46,6 +46,9 @@ interface Conversa {
   followup_etapa: number;
   silencio_desde: string | null;
   followup_em: string | null;
+  black_passou_em?: string | null;
+  black_vendedor?: string | null;
+  black_retomou_em?: string | null;
 }
 
 interface Config {
@@ -53,6 +56,8 @@ interface Config {
   horarios: string[] | null;
   vendedores: { nome: string; email: string; atendente_id: string; sala?: string | null }[] | null;
   auto_inscrever_ate: string | null;
+  /** Modo Black: até quando vale (null = desligado). */
+  black_ate?: string | null;
   contexto: string;
   precos: string | null;
   instrucoes_extras: string | null;
@@ -167,6 +172,51 @@ async function log(supabase: SupabaseClient, note: string, body: Record<string, 
   await supabase.from("webhook_log").insert({ source: "teo", note, body });
 }
 
+// ---------- modo Black ----------
+
+function blackAtiva(cfg: Config): boolean {
+  return Boolean(cfg.black_ate && new Date(cfg.black_ate).getTime() > Date.now());
+}
+
+// Vendedores de plantão na Black: das 9h às 23h de Brasília.
+function plantaoBlack(): boolean {
+  const h = new Date(Date.now() - 3 * 3600_000).getUTCHours();
+  return h >= 9 && h < 23;
+}
+
+const ALUNO_TAG = /^(aluno|alunoa5e|aluno-a5e|aluno-gigantes|aluno-geral|alunos-a5e|gigantes-\d|comprou:)/i;
+const ESPERA_BLACK_MS = 10 * 60_000;
+
+function blocoBlack(o: { plantao: boolean; aluno: boolean; retomou: boolean }): string {
+  return [
+    "# MODO BLACK FRIDAY (vale agora e manda mais que as outras regras de objetivo)",
+    'A Black Friday Histórica do Canal do Anfitrião está aberta. O Rômulo abriu ao vivo em 05/11 às 19h (youtube.com/live/8VTlZf2qIUQ). Muita gente chega com "Vim da live da Black Friday Histórica e tenho uma dúvida".',
+    "Agora o seu objetivo NÃO é marcar call. Não ofereça call nova.",
+    o.retomou
+      ? "O especialista não conseguiu responder a tempo, então agora quem responde é você: tire a dúvida com as informações abaixo e siga a conversa até a pessoa comprar ou decidir. Comece natural, sem dizer que o especialista sumiu (ex.: \"Pra você não ficar esperando, já te adianto:\"). Não chame passar_para_humano por causa da Black de novo; só pra suporte, mentorado ou se a pessoa pedir uma pessoa."
+      : o.plantao
+        ? 'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber (no máximo duas trocas). Pergunta simples e factual (link da live, link da página) você responde na hora. Entendida a dúvida, diga que vai chamar um dos especialistas, que responde por aqui em instantes, e chame passar_para_humano com motivo "black" e um resumo de uma linha da dúvida (diga se a pessoa é aluna e o que ela quer).'
+        : "Os especialistas estão fora agora (plantão das 9h às 23h): você mesmo responde a dúvida com as informações abaixo e segue a conversa. Se a pessoa pedir uma pessoa, diga que um especialista fala com ela a partir das 9h e chame passar_para_humano (pediu_humano).",
+    "Tom: a maior parte do público já é aluno ou já comprou algo do Rômulo. A linha é \"você já conhece o resultado, agora leva tudo\". Nada de narrativa de dor.",
+    "Nunca fale de sócios, sociedade, estrutura da empresa, faturamento, metas ou números de vendas.",
+    "Mentorado da Mentoria Alfaiate: não venda nada; chame passar_para_humano (pediu_humano). Dúvida de acesso/plataforma de aluno: passar_para_humano (suporte).",
+    "",
+    "A oferta (Black Friday Vitalícia), um combo que leva tudo:",
+    "- Anfitrião 5 Estrelas (R$ 2.997), Gigantes da Temporada (R$ 4.997), Sublocação (R$ 997), Booking (R$ 997), Decoração (R$ 697) e Fotografia (R$ 497).",
+    "- Assistente pessoal de IA por 1 ano (R$ 997): a novidade de 2026. Não detalhe como é entregue.",
+    "- Ingresso do Encontro presencial 2027 + gravações das 4 edições, só pros 100 primeiros (R$ 997).",
+    "- Comunidades de WhatsApp por 4 anos (A5E R$ 3.988 e Gigantes R$ 7.988).",
+    "- Tudo somado: R$ 25.152.",
+    "Preço:",
+    "- Quem não é aluno: R$ 8.997 à vista ou 12x de R$ 899,71 no cartão (também Pix e saldo Eduzz). Boleto parcelado (com análise): 12x de R$ 949,71. Página: anfitriao5estrelas.com.br/pagamento-nao-alunos/",
+    o.aluno
+      ? "- Este lead É aluno (pelo cadastro): pra ele é R$ 4.997 à vista ou 12x de R$ 499,70, com o cupom BLACKFRIDAYALUNOS. Página: anfitriao5estrelas.com.br/pagamento-alunos/"
+      : "- Aluno tem condição especial, mas você não sabe se este lead é aluno: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, diga que o especialista confirma o cadastro e passa a condição de aluno.",
+    "- Página da Black: anfitriao5estrelas.com.br/black-friday-historica/",
+    "Você não sabe: quando o carrinho fecha, a garantia da Black e detalhes da entrega da IA. Não invente nada disso: o especialista confirma.",
+  ].join("\n");
+}
+
 // Inscreve sozinho os leads novos da Lista de Espera (fora da Black): quem já
 // respondeu a pesquisa entra na hora; quem não respondeu, depois de 15 min.
 async function autoInscrever(supabase: SupabaseClient, cfg: Config): Promise<number> {
@@ -183,7 +233,7 @@ async function autoInscrever(supabase: SupabaseClient, cfg: Config): Promise<num
     .not("unnichat_id", "is", null);
   const candidatos = (leads ?? []).filter((l) => {
     const tags = (Array.isArray(l.extra?.tags) ? l.extra.tags : []).map((t: unknown) => String(t).toLowerCase());
-    return tags.includes("lista-de-espera") && !tags.some((t: string) => t.includes("black-2026"));
+    return tags.includes("lista-de-espera") && (blackAtiva(cfg) || !tags.some((t: string) => t.includes("black-2026")));
   });
   if (candidatos.length === 0) return 0;
   const ids = candidatos.map((l) => l.unnichat_id as string);
@@ -1104,7 +1154,18 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         Boolean(ultimaDoLead) &&
         ultimaDoLead!.id !== c.ultima_msg_tratada &&
         (!ultimaDoTeo || new Date(ultimaDoLead!.date).getTime() > new Date(ultimaDoTeo.date).getTime());
-      if (!pendente) {
+      // Black: o vendedor não respondeu em 10 min e o Téo ainda não falou
+      // desde então — ele responde a dúvida agora.
+      const retomaBlack =
+        Boolean(c.black_retomou_em) &&
+        janelaAberta &&
+        !reais.some(
+          (m) => m.senderBy === "user" && m.origin === "unniApi" && new Date(m.date).getTime() > new Date(c.black_retomou_em!).getTime()
+        );
+      if (retomaBlack && !pendente) {
+        retomar =
+          "O especialista não respondeu a tempo. Responda você, agora, a dúvida que o lead trouxe sobre a Black (está no histórico), com as informações do MODO BLACK FRIDAY.";
+      } else if (!pendente) {
         if (ultima?.senderBy === "contact") {
           await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
           return "já tratada";
@@ -1146,7 +1207,18 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       lead,
       contexto: cfg.contexto,
       precos: cfg.precos ?? "",
-      extras: cfg.instrucoes_extras ?? "",
+      extras: [
+        cfg.instrucoes_extras ?? "",
+        blackAtiva(cfg)
+          ? blocoBlack({
+              plantao: plantaoBlack(),
+              aluno: lead.tags.some((t) => ALUNO_TAG.test(t.trim())),
+              retomou: Boolean(c.black_retomou_em),
+            })
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
       ficha: c.ficha,
       abrir,
       retomar,
@@ -1187,7 +1259,9 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       })
       .eq("contact_id", c.contact_id);
 
-    if (humano) {
+    if (humano && blackAtiva(cfg) && plantaoBlack() && humano.motivo !== "suporte") {
+      await passarNaBlack(supabase, cfg, c, especialista, humano.resumo, ficha);
+    } else if (humano) {
       await anotar(
         supabase,
         c.contact_id,
@@ -1405,6 +1479,82 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
   return feitos;
 }
 
+// Black: passa a conversa pro vendedor do lead (ou pro que recebeu menos
+// conversas da Black hoje), atribui no Unnichat e deixa a nota. Se ele não
+// digitar nada em 10 min, cuidarDaBlack devolve pro Téo.
+async function passarNaBlack(
+  supabase: SupabaseClient,
+  cfg: Config,
+  c: Conversa,
+  especialista: string | null,
+  resumo: string,
+  ficha: string | null
+): Promise<void> {
+  const time = cfg.vendedores ?? [];
+  let v = time.find((x) => x.nome === especialista) ?? null;
+  if (!v && time.length) {
+    const hojeSP = new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
+    const { data: hoje } = await supabase
+      .from("teo_conversas")
+      .select("black_vendedor")
+      .gte("black_passou_em", `${hojeSP}T03:00:00Z`);
+    const carga = new Map<string, number>();
+    for (const r of hoje ?? []) if (r.black_vendedor) carga.set(r.black_vendedor, (carga.get(r.black_vendedor) ?? 0) + 1);
+    v = [...time].sort((a, b) => (carga.get(a.nome) ?? 0) - (carga.get(b.nome) ?? 0))[0];
+  }
+  if (v?.atendente_id) await unnichat(supabase, "POST", `/contact/${c.contact_id}/assign`, { attendantId: v.atendente_id });
+  await anotar(
+    supabase,
+    c.contact_id,
+    `🔥 BLACK — ${v ? primeiroNomeVendedor(v.nome) : "time"}, responda agora por aqui (se ninguém responder em 10 min, o Téo responde).\nDúvida: ${resumo}${ficha ? `\n\nFicha:\n${ficha}` : ""}`
+  );
+  await supabase
+    .from("teo_conversas")
+    .update({ black_passou_em: new Date().toISOString(), black_vendedor: v?.nome ?? null, black_retomou_em: null })
+    .eq("contact_id", c.contact_id);
+  await log(supabase, "black: passou pro vendedor", { contact_id: c.contact_id, nome: c.nome, vendedor: v?.nome ?? null, resumo });
+}
+
+// Black: conversa passada pro vendedor há 10 min sem nenhuma mensagem digitada
+// por ele volta pro Téo, que responde a dúvida.
+async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
+  if (!blackAtiva(cfg)) return [];
+  const feitos: string[] = [];
+  const { data: paradas } = await supabase
+    .from("teo_conversas")
+    .select("contact_id, nome, black_passou_em, black_vendedor")
+    .eq("estado", "humano")
+    .eq("ativo", true)
+    .is("black_retomou_em", null)
+    .not("black_passou_em", "is", null)
+    .lte("black_passou_em", new Date(Date.now() - ESPERA_BLACK_MS).toISOString())
+    .gte("black_passou_em", new Date(Date.now() - 6 * 3600_000).toISOString());
+  for (const p of paradas ?? []) {
+    const desde = new Date(p.black_passou_em as string).getTime();
+    const msgs = await historico(supabase, p.contact_id).catch(() => null);
+    if (!msgs) continue;
+    if (msgs.some((m) => ehDoVendedor(m) && new Date(m.date).getTime() > desde)) {
+      // O vendedor respondeu: a conversa é dele; não volta mais pro Téo.
+      await supabase.from("teo_conversas").update({ black_retomou_em: null, black_passou_em: null }).eq("contact_id", p.contact_id);
+      continue;
+    }
+    await supabase
+      .from("teo_conversas")
+      .update({
+        estado: "em_conversa",
+        motivo_humano: null,
+        black_retomou_em: new Date().toISOString(),
+        proxima_checagem: null,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq("contact_id", p.contact_id);
+    if (cfg.atendente_id) await unnichat(supabase, "POST", `/contact/${p.contact_id}/assign`, { attendantId: cfg.atendente_id });
+    await log(supabase, "black: téo retomou (vendedor não respondeu em 10 min)", { contact_id: p.contact_id, nome: p.nome, vendedor: p.black_vendedor });
+    feitos.push(`black retomou ${p.nome}`);
+  }
+  return feitos;
+}
+
 async function rodar() {
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "Supabase não configurado." }, { status: 501 });
@@ -1415,11 +1565,12 @@ async function rodar() {
 
   const inicio = Date.now();
   const calls = await cuidarDasCalls(supabase, cfg as Config);
+  const black = await cuidarDaBlack(supabase, cfg as Config).catch(() => [] as string[]);
   const inscritos = await autoInscrever(supabase, cfg as Config);
   const tags = await marcarTag(supabase, cfg as Config);
 
   const campos =
-    "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em";
+    "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em";
   // Só as conversas cuja próxima checagem já chegou (as paradas são lidas
   // de forma espaçada). Se o filtro falhar, lê todas, como antes.
   const consulta = await supabase
@@ -1447,7 +1598,7 @@ async function rodar() {
   }
   await Promise.all(Array.from({ length: PARALELO }, () => pista()));
 
-  return NextResponse.json({ ok: true, calls, inscritos, tags, resultado, ms: Date.now() - inicio });
+  return NextResponse.json({ ok: true, calls, black, inscritos, tags, resultado, ms: Date.now() - inicio });
 }
 
 // GET: cron da Vercel (vercel.json). POST: disparo manual, já logado.
