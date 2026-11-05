@@ -191,7 +191,7 @@ function blocoBlack(o: { plantao: boolean; aluno: boolean; retomou: boolean }): 
   return [
     "# MODO BLACK FRIDAY (vale agora e manda mais que as outras regras de objetivo)",
     'A Black Friday Histórica do Canal do Anfitrião está aberta. O Rômulo abriu ao vivo em 05/11 às 19h (youtube.com/live/8VTlZf2qIUQ). Muita gente chega com "Vim da live da Black Friday Histórica e tenho uma dúvida".',
-    "Agora o seu objetivo NÃO é marcar call. Não ofereça call nova.",
+    "Agora o seu objetivo NÃO é marcar call: quem fala da Black é atendido por um especialista aqui mesmo, no chat. Não ofereça call; só marque se a própria pessoa pedir pra conversar por vídeo.",
     o.retomou
       ? "O especialista não conseguiu responder a tempo, então agora quem responde é você: tire a dúvida com as informações abaixo e siga a conversa até a pessoa comprar ou decidir. Comece natural, sem dizer que o especialista sumiu (ex.: \"Pra você não ficar esperando, já te adianto:\"). Não chame passar_para_humano por causa da Black de novo; só pra suporte, mentorado ou se a pessoa pedir uma pessoa."
       : o.plantao
