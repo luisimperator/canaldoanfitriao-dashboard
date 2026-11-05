@@ -987,11 +987,13 @@ async function acompanhar(
   return { status: ok ? `acompanhamento ${etapa + 1} (template)` : "acompanhamento falhou" };
 }
 
-// Mensagem de um vendedor pelo painel do Unnichat: sai sem origem (o Téo
-// manda pela API, "unniApi"; automação e disparos têm origem própria).
-// Notas internas não contam.
+// Mensagem digitada por um vendedor no painel do Unnichat: sai sem origem (o
+// Téo manda pela API, "unniApi"; automação tem origem própria). Template não
+// conta: disparo em massa (ex.: a Black) também sai sem origem. Nota interna
+// também não.
+const TIPOS_DO_VENDEDOR = new Set(["message", "audio", "image", "document", "video"]);
 function ehDoVendedor(m: MsgUnnichat): boolean {
-  return m.senderBy === "user" && !m.origin && m.type !== "note";
+  return m.senderBy === "user" && !m.origin && TIPOS_DO_VENDEDOR.has(m.type);
 }
 
 function primeiroNome(nome: string | null): string {
