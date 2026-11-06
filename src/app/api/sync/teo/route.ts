@@ -1520,6 +1520,47 @@ async function passarNaBlack(
 async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
   if (!blackAtiva(cfg)) return [];
   const feitos: string[] = [];
+  // Quem pediu especialista fora do plantão (madrugada) ficou só com a nota:
+  // quando o plantão abre, vai pro vendedor como uma passagem normal da Black
+  // (com os 10 min de espera).
+  if (plantaoBlack()) {
+    const { data: noturnos } = await supabase
+      .from("teo_conversas")
+      .select("contact_id, nome, ficha")
+      .eq("estado", "humano")
+      .eq("ativo", true)
+      .in("motivo_humano", ["black", "pediu_humano", "preco", "comprar"])
+      .is("black_passou_em", null)
+      .gte("atualizado_em", new Date(Date.now() - 16 * 3600_000).toISOString());
+    for (const n of noturnos ?? []) {
+      const { data: ult } = await supabase
+        .from("webhook_log")
+        .select("body, created_at")
+        .eq("source", "teo")
+        .eq("note", "passou pro time")
+        .eq("body->>contact_id", n.contact_id)
+        .gte("created_at", new Date(Date.now() - 16 * 3600_000).toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      // Só quem passou fora do plantão (23h–9h); de dia já passou na hora.
+      const quando = ult?.created_at ? new Date(new Date(ult.created_at).getTime() - 3 * 3600_000).getUTCHours() : null;
+      if (quando === null || (quando >= 9 && quando < 23)) continue;
+      const resumo =
+        ((ult?.body as { humano?: { resumo?: string } } | null)?.humano?.resumo ?? "") ||
+        "Pediu um especialista fora do plantão. Leia a conversa.";
+      const especialista = await vendedorDoLead(supabase, cfg, n.contact_id);
+      await passarNaBlack(
+        supabase,
+        cfg,
+        { contact_id: n.contact_id, nome: n.nome } as Conversa,
+        especialista,
+        `(da madrugada) ${resumo}`,
+        (n.ficha as string | null) ?? null
+      );
+      feitos.push(`black noturno ${n.nome}`);
+    }
+  }
   const { data: paradas } = await supabase
     .from("teo_conversas")
     .select("contact_id, nome, black_passou_em, black_vendedor")
