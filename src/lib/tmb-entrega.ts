@@ -783,7 +783,7 @@ export async function varredura(supabase: SupabaseClient, cfg: TmbConfig): Promi
   }
 
   const partes = [
-    `TMB: ${api.pedidos.length} pedidos da Black 2026`,
+    `TMB: ${api.pedidos.length} pedidos da Black 2026 (API: ${api.atualizados ?? "?"} atualizados${api.atualizados === 0 ? " — a TMB pode ter falhado agora; valeu a última sincronização" : ""})`,
     ...(api.erro ? [api.erro] : []),
     ...Object.entries(cont).map(([k, v]) => `${k}: ${v}`),
   ];
