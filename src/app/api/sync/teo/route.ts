@@ -520,6 +520,38 @@ async function criarReuniaoOnline(
   return { ok: true, link: m.joinWebUrl, id: m.id ?? null };
 }
 
+// Liga "gravar e transcrever automaticamente" na reunião do Teams da call,
+// direto na reunião (vale mesmo pra reunião criada pela agenda e não depende
+// do vendedor lembrar). Acha a reunião pelo link quando não temos o id.
+async function ligarGravacao(
+  supabase: SupabaseClient,
+  cfg: Config,
+  k: { id: string; nome: string | null; meet_url: string | null; reuniao_id?: string | null }
+): Promise<"ok" | string> {
+  if (!cfg.teams_organizador_id || !k.meet_url?.includes("teams.microsoft.com")) return "sem teams";
+  const g = await graph(supabase, cfg);
+  if (!g?.ok) return g ? g.erro : "sem graph";
+  const base = `https://graph.microsoft.com/v1.0/users/${cfg.teams_organizador_id}/onlineMeetings`;
+  let id = k.reuniao_id ?? null;
+  if (!id) {
+    const filtro = encodeURIComponent(`JoinWebUrl eq '${k.meet_url.replace(/'/g, "''")}'`);
+    const r = await fetch(`${base}?$filter=${filtro}`, { headers: g.auth });
+    const j = (await r.json().catch(() => null)) as { value?: { id?: string }[]; error?: { message?: string } } | null;
+    id = j?.value?.[0]?.id ?? null;
+    if (!id) return `reunião não achada (${r.status} ${(j?.error?.message ?? "").slice(0, 120)})`;
+  }
+  const res = await fetch(`${base}/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: g.auth,
+    body: JSON.stringify({ recordAutomatically: true }),
+  });
+  if (!res.ok) {
+    const e = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+    return `PATCH ${res.status}: ${(e?.error?.message ?? "").slice(0, 160)}`;
+  }
+  return "ok";
+}
+
 async function criarComSala(
   supabase: SupabaseClient,
   cfg: Config,
@@ -1340,7 +1372,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
   const agora = Date.now();
   const { data: calls } = await supabase
     .from("teo_calls")
-    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status, evento_id")
+    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status, evento_id, reuniao_id")
     .in("status", ["marcada", "convite_enviado"])
     .gte("inicio", new Date(agora - 2 * 3600_000).toISOString());
   for (const k of calls ?? []) {
@@ -1350,6 +1382,33 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
       if (ok) {
         feitos.push(`convite ${k.nome}`);
         continue; // o lembrete pega o link na próxima rodada
+      }
+    }
+    // Gravação automática: liga uma vez por reunião, até 26h antes (e até 5
+    // min depois do início). O log guarda o link, então convite reemitido
+    // (link novo) liga de novo.
+    if (k.meet_url && t > agora - 5 * 60_000 && t < agora + 26 * 3600_000) {
+      const { data: feito } = await supabase
+        .from("webhook_log")
+        .select("id")
+        .eq("source", "teo")
+        .eq("note", "gravação automática ligada")
+        .eq("body->>meet_url", k.meet_url)
+        .limit(1);
+      if (!feito?.length) {
+        const r = await ligarGravacao(supabase, cfg, k).catch((e) => (e instanceof Error ? e.message : String(e)));
+        if (r === "ok") {
+          await log(supabase, "gravação automática ligada", { call_id: k.id, nome: k.nome, meet_url: k.meet_url });
+        } else if (r !== "sem teams") {
+          const { count } = await supabase
+            .from("webhook_log")
+            .select("id", { count: "exact", head: true })
+            .eq("source", "teo")
+            .eq("note", "gravação automática falhou")
+            .eq("body->>meet_url", k.meet_url);
+          // Tenta de novo nas rodadas seguintes, mas registra só as 3 primeiras falhas.
+          if ((count ?? 0) < 3) await log(supabase, "gravação automática falhou", { call_id: k.id, nome: k.nome, meet_url: k.meet_url, erro: r });
+        }
       }
     }
     const { data: conv } = await supabase
