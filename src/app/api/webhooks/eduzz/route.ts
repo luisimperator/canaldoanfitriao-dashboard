@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { confirmarMatricula } from "@/lib/tmb-entrega";
 
 // Webhook da Eduzz.
 // Cadastre https://SEU_DOMINIO/api/webhooks/eduzz?key=EDUZZ_WEBHOOK_KEY no painel.
@@ -68,6 +69,19 @@ export async function POST(req: NextRequest) {
   await supabase
     .from("webhook_log")
     .insert({ source: "eduzz", note: event || "(sem event)", body });
+
+  // Matrícula na Nutror: se for no pacote da Black e o e-mail tiver pedido da
+  // TMB esperando a Entrega Manual, fecha como entregue (src/lib/tmb-entrega).
+  if (event === "nutror.enrollment_created") {
+    try {
+      await confirmarMatricula(supabase, body);
+    } catch (e) {
+      await supabase
+        .from("webhook_log")
+        .insert({ source: "tmb_painel", note: "erro ao confirmar matrícula", body: { erro: e instanceof Error ? e.message : String(e) } });
+    }
+    return NextResponse.json({ ok: true, action: "logged", event });
+  }
 
   const invoiceId = String(data.id ?? data.invoice_id ?? "");
 
