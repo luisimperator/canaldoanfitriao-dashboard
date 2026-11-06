@@ -37,11 +37,11 @@ export function listIntegrations(): IntegrationInfo[] {
     {
       id: "tmb",
       name: "TMB (pagamentos pix / boleto parcelado)",
-      role: "Pagamentos previstos e inadimplentes",
+      role: "Pedidos parcelados da Black e entrega na Nutror",
       envVars: ["TMB_WEBHOOK_KEY"],
       configured: has("TMB_WEBHOOK_KEY"),
       howItWorks:
-        "Cadastre o webhook https://SEU_DOMINIO/api/webhooks/tmb?key=TMB_WEBHOOK_KEY no painel da TMB. Por enquanto o endpoint registra todo evento recebido (webhook_log) para mapearmos o formato real; depois construímos a visão de pagamentos previstos e inadimplência.",
+        "Cadastre https://SEU_DOMINIO/api/webhooks/tmb nos webhooks Vendas e Financeiro do produto da Black na TMB, com o cabeçalho x-tmb-key = TMB_WEBHOOK_KEY. Todo aviso fica em tmb_eventos e passa pela regra de entrega (tela Entrega TMB). A varredura diária usa a sincronização da API da TMB que já roda no Supabase (sync_tmb_pedidos, token no Vault).",
     },
     {
       id: "meta_ads",

@@ -3,6 +3,7 @@
     { "path": "/api/sync/mailchimp", "schedule": "15 */2 * * *" },
     { "path": "/api/sync/unnichat-fila", "schedule": "* * * * *" },
     { "path": "/api/sync/teo", "schedule": "* * * * *" },
-    { "path": "/api/sync/calls", "schedule": "7,37 * * * *" }
+    { "path": "/api/sync/calls", "schedule": "7,37 * * * *" },
+    { "path": "/api/sync/tmb-varredura", "schedule": "13 10 * * *" }
   ]
 }

@@ -115,7 +115,7 @@ export async function getIntegrationsHealth(): Promise<IntegrationsHealth | null
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       countOf("fin_transactions", (q: any) => q),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      countOf("webhook_log", (q: any) => q.eq("source", "tmb")),
+      countOf("tmb_eventos", (q: any) => q.eq("origem", "webhook")),
       admin
         .from("webhook_log")
         .select("source, note, created_at")
