@@ -1567,6 +1567,7 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
     .eq("estado", "humano")
     .eq("ativo", true)
     .is("black_retomou_em", null)
+    .neq("motivo_humano", "vendedor")
     .not("black_passou_em", "is", null)
     .lte("black_passou_em", new Date(Date.now() - ESPERA_BLACK_MS).toISOString())
     .gte("black_passou_em", new Date(Date.now() - 6 * 3600_000).toISOString());
@@ -1575,8 +1576,9 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
     const msgs = await historico(supabase, p.contact_id).catch(() => null);
     if (!msgs) continue;
     if (msgs.some((m) => ehDoVendedor(m) && new Date(m.date).getTime() > desde)) {
-      // O vendedor respondeu: a conversa é dele; não volta mais pro Téo.
-      await supabase.from("teo_conversas").update({ black_retomou_em: null, black_passou_em: null }).eq("contact_id", p.contact_id);
+      // O vendedor respondeu: a conversa é dele; não volta mais pro Téo nem é
+      // passada de novo (black_passou_em fica, motivo vira "vendedor").
+      await supabase.from("teo_conversas").update({ motivo_humano: "vendedor" }).eq("contact_id", p.contact_id);
       continue;
     }
     await supabase
