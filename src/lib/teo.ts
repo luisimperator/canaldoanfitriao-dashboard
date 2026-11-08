@@ -209,6 +209,15 @@ export function paraClaude(msgs: MsgUnnichat[], instrucaoFinal?: string): Anthro
     const last = out[out.length - 1];
     if (last.role === "user") last.content = `${last.content as string}\n\n${instrucaoFinal}`;
     else out.push({ role: "user", content: instrucaoFinal });
+  } else if (out[out.length - 1].role === "assistant") {
+    // A conversa não pode terminar com o Téo: o modelo recusa "prefill" (erro
+    // 400) e a conversa trava, repetindo o erro a cada rodada. Acontece quando
+    // uma automação ou alguém do time escreveu depois da última mensagem do lead.
+    out.push({
+      role: "user",
+      content:
+        "[Instrução interna, o lead não vê: a última mensagem acima saiu depois da última mensagem do lead (automação ou time). Se ainda falta responder algo que o lead disse, responda; se não, devolva a resposta vazia, sem texto nenhum.]",
+    });
   }
   return out;
 }
