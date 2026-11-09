@@ -1234,11 +1234,17 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
 
     const lead = await carregarLead(supabase, c);
     if (!lead.nome) lead.nome = c.nome;
-    const especialista = (await vendedorDoLead(supabase, cfg, c.contact_id)) ?? especialistaDaConversa(msgs, cfg);
+    const doTime = (await vendedorDoLead(supabase, cfg, c.contact_id)) ?? especialistaDaConversa(msgs, cfg);
+    // Sem call e sem ninguém do time na conversa: o vendedor que já recebeu o
+    // lead numa passagem da Black. A oferta de horário e a próxima passagem vão
+    // pra mesma pessoa (senão cada passagem caía num vendedor diferente).
+    const daBlack =
+      c.black_vendedor && (cfg.vendedores ?? []).some((v) => v.nome === c.black_vendedor) ? c.black_vendedor : null;
+    const especialista = doTime ?? daBlack;
     // A automação "Lista de Espera 2.0" tira o atendente e sorteia um vendedor
     // quando o lead clica nos botões dela. Enquanto o Téo responde, a conversa
     // é dele, a não ser que alguém do time já tenha conversado com o lead.
-    if (!especialista && cfg.atendente_id) await garantirTeo(supabase, c, cfg.atendente_id);
+    if (!doTime && cfg.atendente_id) await garantirTeo(supabase, c, cfg.atendente_id);
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
     if (ouvidos) await log(supabase, "áudio ouvido", { contact_id: c.contact_id, nome: c.nome, audios: ouvidos });
@@ -1594,7 +1600,7 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
   if (plantaoBlack()) {
     const { data: noturnos } = await supabase
       .from("teo_conversas")
-      .select("contact_id, nome, ficha")
+      .select("contact_id, nome, ficha, black_vendedor")
       .eq("estado", "humano")
       .eq("ativo", true)
       .in("motivo_humano", ["black", "pediu_humano", "preco", "comprar"])
@@ -1619,10 +1625,12 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
         "Pediu um especialista fora do plantão. Leia a conversa.";
       // Mesmo critério da passagem de dia: o vendedor da primeira call ou,
       // sem call, quem do time já conversou com o lead (senão o aluno de um
-      // vendedor caía no rodízio e ia pra outro).
+      // vendedor caía no rodízio e ia pra outro); por último, quem já recebeu
+      // o lead numa passagem da Black (passarNaBlack confere se está no time).
       const especialista =
         (await vendedorDoLead(supabase, cfg, n.contact_id)) ??
-        especialistaDaConversa(await historico(supabase, n.contact_id).catch(() => []), cfg);
+        especialistaDaConversa(await historico(supabase, n.contact_id).catch(() => []), cfg) ??
+        ((n.black_vendedor as string | null) ?? null);
       await passarNaBlack(
         supabase,
         cfg,
