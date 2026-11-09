@@ -7,6 +7,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import type { TabDef } from "@/lib/access";
 import { InstallButton } from "@/components/InstallButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PushVendasButton } from "@/components/PushVendasButton";
 
 // Navegação com estado "pendente": ao clicar, o item já fica destacado e mostra
 // um spinner na hora (feedback imediato), antes mesmo de a página carregar.
@@ -130,14 +131,18 @@ function Footer({
   email,
   logout,
   loading,
+  avisoVendas,
 }: {
   email: string | null;
   logout: () => void;
   loading: boolean;
+  /** Quem vê a aba Vendas pode ligar o aviso de venda nova. */
+  avisoVendas: boolean;
 }) {
   return (
     <div className="border-t border-slate-800 px-4 py-3 text-[11px] text-slate-500">
       <InstallButton />
+      {email && avisoVendas && <PushVendasButton />}
       {email ? (
         <div className="flex items-center justify-between gap-2">
           <ThemeToggle />
@@ -205,7 +210,7 @@ export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null 
             <nav className="flex-1 overflow-y-auto px-3 py-3">
               <NavItems tabs={tabs} pathname={pathname} pending={pending} onClick={go} />
             </nav>
-            <Footer email={email} logout={logout} loading={loading} />
+            <Footer email={email} logout={logout} loading={loading} avisoVendas={tabs.some((t) => t.href === "/vendas")} />
           </aside>
         </div>
       )}
@@ -218,7 +223,7 @@ export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <NavItems tabs={tabs} pathname={pathname} pending={pending} onClick={navigate} />
         </nav>
-        <Footer email={email} logout={logout} loading={loading} />
+        <Footer email={email} logout={logout} loading={loading} avisoVendas={tabs.some((t) => t.href === "/vendas")} />
       </aside>
     </>
   );

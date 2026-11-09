@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { notificarVenda } from "@/lib/push";
 import { lerConfig, lerPedidos, processarPedido, registrarErro, registrarEvento, type Resultado } from "@/lib/tmb-entrega";
 
 // Webhook da TMB (pedidos parcelados da Black Friday Histórica).
@@ -54,6 +55,24 @@ export async function POST(req: NextRequest) {
   const dados = (b?.dados ?? b) as Record<string, unknown> | undefined;
   const note = String(b?.event ?? dados?.status_pedido ?? dados?.status_pagamento ?? b?.status ?? "evento");
   await supabase.from("webhook_log").insert({ source: "tmb", note: simulacao ? `simulação: ${note}` : note, body });
+
+  // Aviso de venda nova no celular: pedido que virou "Efetivado" (1ª parcela
+  // paga), uma vez por pedido. Simulação não avisa.
+  if (!simulacao) {
+    const efetivados = pedidos.filter((p) => p.pedidoId && (p.status ?? "").toLowerCase() === "efetivado");
+    if (efetivados.length > 0) {
+      after(async () => {
+        for (const p of efetivados) {
+          await notificarVenda({
+            chave: `tmb:${p.pedidoId}`,
+            plataforma: "TMB",
+            valor: p.valor ?? 0,
+            produto: p.produto ?? p.oferta ?? "Pedido TMB",
+          });
+        }
+      });
+    }
+  }
 
   const cfg = await lerConfig(supabase);
   if (!cfg) {
