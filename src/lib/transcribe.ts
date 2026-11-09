@@ -110,3 +110,47 @@ export async function transcreverAudio(
     return { ok: false, error: e instanceof Error ? e.message : "erro de rede" };
   }
 }
+
+export interface TrechoTranscrito {
+  /** Segundos desde o início do áudio. */
+  inicio: number;
+  texto: string;
+}
+
+/**
+ * Como transcreverAudio, mas devolve os trechos com o tempo de cada um
+ * (verbose_json). Serve pra áudio longo (gravação de call), em que o tempo
+ * importa pra saber quem estava falando.
+ */
+export async function transcreverComTempos(
+  bytes: ArrayBuffer,
+  mime: string,
+  nome: string
+): Promise<{ ok: true; trechos: TrechoTranscrito[] } | { ok: false; error: string }> {
+  const p = provedor();
+  if (!p) return { ok: false, error: "Nenhuma chave de transcrição configurada." };
+  try {
+    const form = new FormData();
+    form.append("file", new Blob([bytes], { type: mime }), nome);
+    form.append("model", p.model);
+    form.append("language", "pt");
+    form.append("response_format", "verbose_json");
+    const res = await fetch(`${p.baseUrl}/audio/transcriptions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${p.key}` },
+      body: form,
+    });
+    const json = (await res.json().catch(() => ({}))) as {
+      text?: string;
+      segments?: { start?: number; text?: string }[];
+    };
+    if (!res.ok) return { ok: false, error: JSON.stringify(json).slice(0, 300) };
+    const trechos = (json.segments ?? [])
+      .map((s) => ({ inicio: Number(s.start ?? 0), texto: String(s.text ?? "").trim() }))
+      .filter((s) => s.texto);
+    if (!trechos.length && json.text?.trim()) trechos.push({ inicio: 0, texto: json.text.trim() });
+    return { ok: true, trechos };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "erro de rede" };
+  }
+}
