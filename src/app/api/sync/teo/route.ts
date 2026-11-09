@@ -510,6 +510,7 @@ async function criarReuniaoOnline(
       endDateTime: fim.toISOString(),
       lobbyBypassSettings: { scope: "everyone", isDialInBypassEnabled: true },
       recordAutomatically: true,
+      meetingSpokenLanguageTag: "pt-BR",
       allowedPresenters: dados.vendedorEmail ? "roleIsPresenter" : "organization",
       participants: dados.vendedorEmail
         ? { attendees: [{ upn: dados.vendedorEmail, role: "presenter" }] }
@@ -528,6 +529,8 @@ async function criarReuniaoOnline(
 // Liga "gravar e transcrever automaticamente" na reunião do Teams da call,
 // direto na reunião (vale mesmo pra reunião criada pela agenda e não depende
 // do vendedor lembrar). Acha a reunião pelo link quando não temos o id.
+// Fixa o idioma falado em pt-BR: sem isso a Teams transcreve como inglês
+// (en-US) e a transcrição sai sem sentido.
 async function ligarGravacao(
   supabase: SupabaseClient,
   cfg: Config,
@@ -548,7 +551,7 @@ async function ligarGravacao(
   const res = await fetch(`${base}/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: g.auth,
-    body: JSON.stringify({ recordAutomatically: true }),
+    body: JSON.stringify({ recordAutomatically: true, meetingSpokenLanguageTag: "pt-BR" }),
   });
   if (!res.ok) {
     const e = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
@@ -1391,19 +1394,20 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
     }
     // Gravação automática: liga uma vez por reunião, até 26h antes (e até 5
     // min depois do início). O log guarda o link, então convite reemitido
-    // (link novo) liga de novo.
+    // (link novo) liga de novo. A nota leva "(pt-BR)" desde que o idioma passou
+    // a ir junto, pra que as reuniões ligadas antes recebam o idioma uma vez.
     if (k.meet_url && t > agora - 5 * 60_000 && t < agora + 26 * 3600_000) {
       const { data: feito } = await supabase
         .from("webhook_log")
         .select("id")
         .eq("source", "teo")
-        .eq("note", "gravação automática ligada")
+        .eq("note", "gravação automática ligada (pt-BR)")
         .eq("body->>meet_url", k.meet_url)
         .limit(1);
       if (!feito?.length) {
         const r = await ligarGravacao(supabase, cfg, k).catch((e) => (e instanceof Error ? e.message : String(e)));
         if (r === "ok") {
-          await log(supabase, "gravação automática ligada", { call_id: k.id, nome: k.nome, meet_url: k.meet_url });
+          await log(supabase, "gravação automática ligada (pt-BR)", { call_id: k.id, nome: k.nome, meet_url: k.meet_url });
         } else if (r !== "sem teams") {
           const { count } = await supabase
             .from("webhook_log")
