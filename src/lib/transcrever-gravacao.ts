@@ -22,7 +22,7 @@ const exec = promisify(execFile);
 const PARTE_S = 20 * 60;
 
 // Frases que o Whisper inventa em silêncio.
-const ALUCINACAO = /amara\.org|legendas pela comunidade|obrigad[oa] por assistir|inscreva-se no canal/i;
+const ALUCINACAO = /amara\.org|legendas? pela comunidade|^legendas?\b|legenda adriana|obrigad[oa] por assistir|inscreva-se no canal/i;
 
 function caminhoFfmpeg(): string | null {
   const candidatos = [ffmpegStatic, path.join(process.cwd(), "node_modules/ffmpeg-static/ffmpeg")];
@@ -112,7 +112,10 @@ export async function transcreverGravacoes(
         const r = await transcreverComTempos(ab, "audio/mpeg", nome);
         if (!r.ok) return { ok: false, erro: `transcrever: ${r.error}` };
         for (const s of r.trechos) {
-          if (!ALUCINACAO.test(s.texto)) trechos.push({ t: desloc + i * PARTE_S + s.inicio, texto: s.texto });
+          // Silêncio longo vira o mesmo trecho repetido: fica só o primeiro.
+          const anterior = trechos[trechos.length - 1]?.texto;
+          if (ALUCINACAO.test(s.texto) || s.texto === anterior) continue;
+          trechos.push({ t: desloc + i * PARTE_S + s.inicio, texto: s.texto });
         }
       }
     } catch (e) {
