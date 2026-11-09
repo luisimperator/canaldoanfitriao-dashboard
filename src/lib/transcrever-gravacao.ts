@@ -20,6 +20,11 @@ import { transcreverComTempos } from "./transcribe";
 
 const exec = promisify(execFile);
 const PARTE_S = 20 * 60;
+// Sala esquecida aberta grava horas de silêncio (a da Ligia, 09/11, gravou 4h
+// de uma call de 30 min) e estoura o limite de áudio por hora do Whisper.
+// Corta 3 min depois da última fala da Teams; sem falas, em 90 min.
+const FOLGA_DEPOIS_DA_FALA_S = 3 * 60;
+const MAXIMO_S = 90 * 60;
 
 // Frases que o Whisper inventa em silêncio.
 const ALUCINACAO = /amara\.org|legendas? pela comunidade|^legendas?\b|legenda adriana|obrigad[oa] por assistir|inscreva-se no canal/i;
@@ -84,9 +89,11 @@ export async function transcreverGravacoes(
   if (!validas.length) return { ok: false, erro: "sem gravação" };
   const base = validas[0].inicio ? new Date(validas[0].inicio).getTime() : null;
   const trechos: { t: number; texto: string }[] = [];
+  const fim = turnos.length ? turnos[turnos.length - 1].t + FOLGA_DEPOIS_DA_FALA_S : MAXIMO_S;
 
   for (const g of validas) {
     const desloc = base && g.inicio ? Math.max(0, (new Date(g.inicio).getTime() - base) / 1000) : 0;
+    if (desloc >= fim) continue;
     const dir = await mkdtemp(path.join(tmpdir(), "gravacao-"));
     try {
       const res = await fetch(g.url, { headers: { Authorization: auth.Authorization } });
@@ -97,6 +104,7 @@ export async function transcreverGravacoes(
         ff,
         [
           "-hide_banner", "-loglevel", "error", "-y", "-i", video,
+          "-t", String(Math.ceil(fim - desloc)),
           "-vn", "-ac", "1", "-ar", "16000", "-c:a", "libmp3lame", "-b:a", "32k",
           "-f", "segment", "-segment_time", String(PARTE_S), "-reset_timestamps", "1",
           path.join(dir, "parte%03d.mp3"),
