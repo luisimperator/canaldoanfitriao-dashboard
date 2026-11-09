@@ -28,6 +28,8 @@ const RECHECAR_MS = 30 * 60_000;
 // ninguém falou). Com erro (permissão, reunião não achada), tenta por 14 dias.
 const DESISTIR_VAZIO_MS = 24 * 3600_000;
 const DESISTIR_ERRO_MS = 14 * 86400_000;
+// Gravou mas a Teams não transcreveu até 1h30 depois do fim: refaz pela gravação.
+const SEM_TRANSCRICAO_MS = 90 * 60_000;
 const POR_RODADA = 6;
 
 type Cfg = {
@@ -250,7 +252,11 @@ async function buscar(
         await log(supabase, "transcrição salva", { join_url: k.join_url, nome, caracteres: texto.length });
       } else {
         marca.erro = `transcrições: ${lista.length ? "vazia" : "nenhuma ainda"} | ${situacaoGravacoes}`;
-        if (passou > DESISTIR_VAZIO_MS) marca.status = "sem_transcricao";
+        // A Teams não transcreveu, mas a call gravou: 1h30 depois do fim,
+        // transcreve pela gravação (sem os nomes de quem fala).
+        if (Array.isArray(marca.gravacoes) && marca.gravacoes.length && passou > SEM_TRANSCRICAO_MS) {
+          marca.retranscrever = true;
+        } else if (passou > DESISTIR_VAZIO_MS) marca.status = "sem_transcricao";
       }
     } catch (e) {
       marca.erro = e instanceof Error ? e.message.slice(0, 300) : String(e);
