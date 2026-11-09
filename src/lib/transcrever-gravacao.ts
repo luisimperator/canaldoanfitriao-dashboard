@@ -25,6 +25,10 @@ const PARTE_S = 20 * 60;
 // Corta 3 min depois da última fala da Teams; sem falas, em 90 min.
 const FOLGA_DEPOIS_DA_FALA_S = 3 * 60;
 const MAXIMO_S = 90 * 60;
+// O limite do Whisper é em segundos de áudio: acelerar a fala 1,5x gasta um
+// terço a menos (a conta do Groq é dividida com outro uso). Os tempos voltam
+// pro relógio da call multiplicando pela velocidade.
+const VELOCIDADE = 1.5;
 
 // Frases que o Whisper inventa em silêncio.
 const ALUCINACAO = /amara\.org|legendas? pela comunidade|^legendas?\b|legenda adriana|obrigad[oa] por assistir|inscreva-se no canal/i;
@@ -103,9 +107,9 @@ export async function transcreverGravacoes(
       await exec(
         ff,
         [
-          "-hide_banner", "-loglevel", "error", "-y", "-i", video,
-          "-t", String(Math.ceil(fim - desloc)),
-          "-vn", "-ac", "1", "-ar", "16000", "-c:a", "libmp3lame", "-b:a", "32k",
+          "-hide_banner", "-loglevel", "error", "-y",
+          "-t", String(Math.ceil(fim - desloc)), "-i", video,
+          "-vn", "-filter:a", `atempo=${VELOCIDADE}`, "-ac", "1", "-ar", "16000", "-c:a", "libmp3lame", "-b:a", "32k",
           "-f", "segment", "-segment_time", String(PARTE_S), "-reset_timestamps", "1",
           path.join(dir, "parte%03d.mp3"),
         ],
@@ -123,7 +127,7 @@ export async function transcreverGravacoes(
           // Silêncio longo vira o mesmo trecho repetido: fica só o primeiro.
           const anterior = trechos[trechos.length - 1]?.texto;
           if (ALUCINACAO.test(s.texto) || s.texto === anterior) continue;
-          trechos.push({ t: desloc + i * PARTE_S + s.inicio, texto: s.texto });
+          trechos.push({ t: desloc + (i * PARTE_S + s.inicio) * VELOCIDADE, texto: s.texto });
         }
       }
     } catch (e) {

@@ -31,6 +31,9 @@ const DESISTIR_ERRO_MS = 14 * 86400_000;
 // Gravou mas a Teams não transcreveu até 1h30 depois do fim: refaz pela gravação.
 const SEM_TRANSCRICAO_MS = 90 * 60_000;
 const POR_RODADA = 6;
+// A refação baixa vídeo e transcreve: só começa uma nova até 200 s de rodada
+// (maxDuration 300 s).
+const REFAZER_ATE_MS = 200_000;
 
 type Cfg = {
   teams_tenant_id: string | null;
@@ -266,17 +269,36 @@ async function buscar(
   return feitos;
 }
 
-// Refaz pela gravação a transcrição marcada com retranscrever. O texto da Teams
-// fica em transcricao_teams (dá os nomes de quem fala).
-async function refazer(supabase: SupabaseClient, auth: Record<string, string>): Promise<string[]> {
-  const { data: fila } = await supabase
+// Duração gravada (s), pra fila andar das curtas pras longas.
+function duracaoGravada(gravacoes: unknown): number {
+  const lista = Array.isArray(gravacoes) ? (gravacoes as { inicio?: string | null; fim?: string | null }[]) : [];
+  const total = lista.reduce((soma, g) => {
+    const ini = g.inicio ? new Date(g.inicio).getTime() : NaN;
+    const fim = g.fim ? new Date(g.fim).getTime() : NaN;
+    return soma + (Number.isFinite(ini) && Number.isFinite(fim) ? Math.max(0, fim - ini) / 1000 : 3600);
+  }, 0);
+  return lista.length ? total : Infinity;
+}
+
+// Refaz pela gravação as transcrições marcadas com retranscrever, das
+// gravações mais curtas pras mais longas (uma sala esquecida aberta não trava
+// as calls normais), enquanto a rodada tiver tempo. Para no primeiro limite do
+// provedor: as próximas bateriam no mesmo limite. O texto da Teams fica em
+// transcricao_teams (dá os nomes de quem fala).
+async function refazer(
+  supabase: SupabaseClient,
+  auth: Record<string, string>,
+  inicioRodada: number
+): Promise<string[]> {
+  const { data: marcadas } = await supabase
     .from("call_transcricoes")
     .select("join_url, lead_nome, assunto, gravacoes, transcricao, transcricao_teams, transcricao_fonte")
     .eq("retranscrever", true)
-    .order("inicio", { ascending: true })
-    .limit(1);
+    .limit(30);
+  const fila = [...(marcadas ?? [])].sort((a, b) => duracaoGravada(a.gravacoes) - duracaoGravada(b.gravacoes));
   const feitos: string[] = [];
-  for (const k of fila ?? []) {
+  for (const k of fila) {
+    if (Date.now() - inicioRodada > REFAZER_ATE_MS) break;
     const nome = k.lead_nome ?? k.assunto ?? k.join_url.slice(0, 60);
     const teams = (k.transcricao_teams as string | null) ?? (k.transcricao_fonte === "gravação" ? null : (k.transcricao as string | null));
     const r = await transcreverGravacoes((k.gravacoes ?? []) as Gravacao[], auth, turnosDaTeams(teams));
@@ -306,6 +328,7 @@ async function refazer(supabase: SupabaseClient, auth: Record<string, string>): 
         .update({ retranscrever: limite, erro: `refazer pela gravação: ${r.erro}`.slice(0, 300) })
         .eq("join_url", k.join_url);
       await log(supabase, "refazer pela gravação falhou", { join_url: k.join_url, nome, erro: r.erro });
+      if (limite) break;
     }
   }
   return feitos;
@@ -331,7 +354,7 @@ async function rodar() {
   const novas = await registrar(supabase, cfg as Cfg, g.auth, org);
   const salvas = await buscar(supabase, g.auth, org);
   // A etapa pesada só entra com folga no tempo da função (maxDuration).
-  const refeitas = Date.now() - inicio < 60_000 ? await refazer(supabase, g.auth) : [];
+  const refeitas = Date.now() - inicio < 60_000 ? await refazer(supabase, g.auth, inicio) : [];
   return NextResponse.json({ ok: true, novas, salvas, refeitas, ms: Date.now() - inicio });
 }
 
