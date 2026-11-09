@@ -2,19 +2,23 @@ import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { graphToken, vttParaTexto } from "@/lib/graph";
+import { pareceIngles, transcreverGravacoes, turnosDaTeams, type Gravacao } from "@/lib/transcrever-gravacao";
 
 // Acervo das calls do Teams (tabela call_transcricoes), separado do Téo: guarda
 // a transcrição e as gravações de toda call da agenda do anfitriao@, pra
 // análise semanal e mensal. Roda a cada 30 min (vercel.json):
 //  1. registra as reuniões do Teams da agenda dos últimos 3 dias que já
 //     terminaram há 40 min, mais as calls do Téo com link do Teams;
-//  2. para as que ainda aguardam, busca a transcrição e as gravações na Graph.
+//  2. para as que ainda aguardam, busca a transcrição e as gravações na Graph;
+//  3. refaz, a partir da gravação, a transcrição que a Teams fez no idioma
+//     errado (retranscrever = true: marcado aqui quando o texto sai em inglês,
+//     ou à mão). Uma por rodada, porque baixa o vídeo inteiro.
 // Precisa das permissões de aplicativo OnlineMeetingTranscript.Read.All e
 // OnlineMeetingRecording.Read.All, e da política de acesso do Teams
 // (Agenda-Canal) concedida ao anfitriao@. Sem elas a call fica "aguardando"
 // com o erro anotado, e é buscada de novo por até 14 dias.
 
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 const JANELA_DIAS = 3;
 const DEPOIS_DO_FIM_MS = 40 * 60_000;
@@ -238,7 +242,10 @@ async function buscar(
         marca.transcricao = texto;
         marca.transcricao_ids = lista.map((t) => t.id);
         marca.transcrito_em = new Date().toISOString();
+        marca.transcricao_fonte = "teams";
         marca.erro = null;
+        // Teams no idioma errado: refaz pela gravação na próxima etapa.
+        if (pareceIngles(texto) && Array.isArray(marca.gravacoes) && marca.gravacoes.length) marca.retranscrever = true;
         feitos.push(nome);
         await log(supabase, "transcrição salva", { join_url: k.join_url, nome, caracteres: texto.length });
       } else {
@@ -249,6 +256,48 @@ async function buscar(
       marca.erro = e instanceof Error ? e.message.slice(0, 300) : String(e);
     }
     await supabase.from("call_transcricoes").update(marca).eq("join_url", k.join_url);
+  }
+  return feitos;
+}
+
+// Refaz pela gravação a transcrição marcada com retranscrever. O texto da Teams
+// fica em transcricao_teams (dá os nomes de quem fala).
+async function refazer(supabase: SupabaseClient, auth: Record<string, string>): Promise<string[]> {
+  const { data: fila } = await supabase
+    .from("call_transcricoes")
+    .select("join_url, lead_nome, assunto, gravacoes, transcricao, transcricao_teams, transcricao_fonte")
+    .eq("retranscrever", true)
+    .order("inicio", { ascending: true })
+    .limit(1);
+  const feitos: string[] = [];
+  for (const k of fila ?? []) {
+    const nome = k.lead_nome ?? k.assunto ?? k.join_url.slice(0, 60);
+    const teams = (k.transcricao_teams as string | null) ?? (k.transcricao_fonte === "gravação" ? null : (k.transcricao as string | null));
+    const r = await transcreverGravacoes((k.gravacoes ?? []) as Gravacao[], auth, turnosDaTeams(teams));
+    if (r.ok) {
+      await supabase
+        .from("call_transcricoes")
+        .update({
+          transcricao: r.texto,
+          transcricao_teams: teams,
+          transcricao_fonte: "gravação",
+          retranscrever: false,
+          status: "ok",
+          erro: null,
+          transcrito_em: new Date().toISOString(),
+        })
+        .eq("join_url", k.join_url);
+      await log(supabase, "transcrição refeita pela gravação", { join_url: k.join_url, nome, caracteres: r.texto.length });
+      feitos.push(nome);
+    } else {
+      // Não tenta de novo sozinho (baixa o vídeo inteiro a cada vez): marque
+      // retranscrever de novo depois de resolver o erro.
+      await supabase
+        .from("call_transcricoes")
+        .update({ retranscrever: false, erro: `refazer pela gravação: ${r.erro}`.slice(0, 300) })
+        .eq("join_url", k.join_url);
+      await log(supabase, "refazer pela gravação falhou", { join_url: k.join_url, nome, erro: r.erro });
+    }
   }
   return feitos;
 }
@@ -272,7 +321,9 @@ async function rodar() {
   }
   const novas = await registrar(supabase, cfg as Cfg, g.auth, org);
   const salvas = await buscar(supabase, g.auth, org);
-  return NextResponse.json({ ok: true, novas, salvas, ms: Date.now() - inicio });
+  // A etapa pesada só entra com folga no tempo da função (maxDuration).
+  const refeitas = Date.now() - inicio < 60_000 ? await refazer(supabase, g.auth) : [];
+  return NextResponse.json({ ok: true, novas, salvas, refeitas, ms: Date.now() - inicio });
 }
 
 // GET: cron da Vercel (vercel.json). POST: disparo manual, já logado.
