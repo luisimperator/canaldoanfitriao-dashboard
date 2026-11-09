@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { num } from "@/lib/format";
 import { Card, PageHeader } from "@/components/ui";
 import { DateRangePicker } from "@/components/DateRangePicker";
+import { getAccess } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function ConversasPage({
 }: {
   searchParams: Promise<{ outcome?: string; seller?: string; from?: string; to?: string }>;
 }) {
-  const sp = await searchParams;
+  const [sp, access] = await Promise.all([searchParams, getAccess()]);
   const outcome = sp.outcome ?? "all";
   const seller = sp.seller ?? "all";
   const re = /^\d{4}-\d{2}(-\d{2})?$/;
@@ -74,6 +75,30 @@ export default async function ConversasPage({
         title="Conversas do atendimento"
         subtitle="Filtre por resultado e vendedor e exporte o perfil 360 (Unnichat + Mailchimp + Eduzz) pra análise"
       />
+
+      {access.isAdmin && (
+        <Card className="mb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm text-slate-600 dark:text-zinc-400">
+              💬 Todas as conversas do Téo, no visual do WhatsApp (demora uns segundos pra montar):
+            </span>
+            <a
+              href="/api/teo/conversas"
+              target="_blank"
+              rel="noopener"
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+            >
+              Abrir
+            </a>
+            <a
+              href="/api/teo/conversas?download=1"
+              className="rounded-lg border border-slate-300 dark:border-white/15 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5"
+            >
+              ↓ Baixar .htm
+            </a>
+          </div>
+        </Card>
+      )}
 
       <Card className="mb-4">
         <div className="flex flex-col gap-3">
