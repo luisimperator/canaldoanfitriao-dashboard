@@ -49,6 +49,8 @@ interface Conversa {
   black_passou_em?: string | null;
   black_vendedor?: string | null;
   black_retomou_em?: string | null;
+  /** Teste de venda direta: true = o Téo vende este lead até o fim, sem call. */
+  venda_teo?: boolean | null;
 }
 
 interface Config {
@@ -58,6 +60,10 @@ interface Config {
   auto_inscrever_ate: string | null;
   /** Modo Black: até quando vale (null = desligado). */
   black_ate?: string | null;
+  /** Teste de venda direta do Téo: a cada N leads que vão pra call, o próximo
+   * lead novo o Téo vende sozinho (null = desligado). Conta desde venda_teo_desde. */
+  venda_teo_a_cada?: number | null;
+  venda_teo_desde?: string | null;
   contexto: string;
   precos: string | null;
   instrucoes_extras: string | null;
@@ -187,17 +193,55 @@ function plantaoBlack(): boolean {
 const ALUNO_TAG = /^(aluno|alunoa5e|aluno-a5e|aluno-gigantes|aluno-geral|alunos-a5e|gigantes-\d|comprou:)/i;
 const ESPERA_BLACK_MS = 10 * 60_000;
 
-function blocoBlack(o: { plantao: boolean; aluno: boolean; retomou: boolean }): string {
+// Checkout da Black (os mesmos botões das páginas de pagamento), com
+// utm_source=teo: a venda que o Téo fecha sozinho aparece como dele na Eduzz.
+// Só pra lead sem especialista (o lead de um vendedor continua com a página,
+// sem mexer na atribuição dele).
+const CHECKOUT_TEO = {
+  naoAluno: {
+    pix: "https://chk.eduzz.com/Q9N54JR101?p=1&utm_source=teo",
+    cartao: "https://chk.eduzz.com/Q9N54JR101?utm_source=teo",
+    boleto: "https://pay.tmb.com.br/CANALDOANFIT/P3D32578592?utm_source=teo",
+  },
+  aluno: {
+    pix: "https://sun.eduzz.com/Q9N54JR101?cupom=BLACKFRIDAYALUNOS&p=1&utm_source=teo",
+    cartao: "https://sun.eduzz.com/Q9N54JR101?cupom=BLACKFRIDAYALUNOS&utm_source=teo",
+    boleto: "https://pay.tmb.com.br/CANALDOANFIT/7UV325776UG?utm_source=teo",
+  },
+};
+
+function blocoBlack(o: {
+  plantao: boolean;
+  aluno: boolean;
+  retomou: boolean;
+  /** lead sem especialista: quem fecha a venda por aqui é o Téo (links com utm teo) */
+  semEspecialista: boolean;
+  /** lead sorteado pro teste de venda direta: o Téo vende até o fim, sem call */
+  vendaTeo: boolean;
+}): string {
+  const k = o.aluno ? CHECKOUT_TEO.aluno : CHECKOUT_TEO.naoAluno;
+  const linksTeo = `Links pra pagar (use estes, um por forma de pagamento, quando a pessoa escolher): Pix ${k.pix} · Cartão ${k.cartao} · Boleto parcelado ${k.boleto}. A página continua valendo pra ela ver tudo antes.`;
   return [
     "# MODO BLACK FRIDAY (vale agora e manda mais que as outras regras de objetivo)",
     'A Black Friday Histórica do Canal do Anfitrião está aberta. O Rômulo abriu ao vivo em 05/11 às 19h (youtube.com/live/8VTlZf2qIUQ). Muita gente chega com "Vim da live da Black Friday Histórica e tenho uma dúvida".',
-    "Seu objetivo é MARCAR A CALL de 20 min com o especialista (no Teams), como no fluxo normal: é na call que ele apresenta a Black e passa a melhor condição pro caso da pessoa. Tire a dúvida com as informações abaixo e emende com a call, oferecendo horários da lista.",
-    "Se a pessoa não puder ou não quiser call e preferir resolver por mensagem, quem atende por mensagem é você: siga tirando as dúvidas por aqui com as informações abaixo, passe a página de pagamento certa quando ela quiser comprar e deixe a call só como opção, sem insistir. Não diga que um vendedor vai atender por mensagem.",
-    o.retomou
+    o.vendaTeo
+      ? [
+          "TESTE DE VENDA DIRETA — ESTE LEAD É SEU ATÉ O FIM. Ele foi sorteado pro teste em que você mesmo vende, sem call (vale acima de qualquer regra destas instruções ou dos ajustes do dono que mande oferecer call ou passar pro time).",
+          "Seu objetivo é VENDER A BLACK POR AQUI: entenda o caso em poucas perguntas (o que tem hoje, o que trava, o que quer), mostre como a Black resolve isso com 2 ou 3 pontos ligados ao caso dela (não a lista inteira), trate as objeções com curiosidade (pergunte o porquê, concorde com o que for verdade, sem rebater nem pressionar) e, quando ela topar, mande o link de pagamento da forma que ela escolher e acompanhe até concluir.",
+          "Não ofereça call. Se ela mesma pedir call, aí marque normalmente com os horários da lista.",
+          "Só chame passar_para_humano (motivo \"black\", resumo de uma linha) se ela pedir pra falar com uma pessoa, ou se precisar de algo que só o time decide: condição fora da tabela, outra forma de pagamento, abater curso já comprado, curso avulso.",
+        ].join(" ")
+      : "Seu objetivo é MARCAR A CALL de 20 min com o especialista (no Teams), como no fluxo normal: é na call que ele apresenta a Black e passa a melhor condição pro caso da pessoa. Tire a dúvida com as informações abaixo e emende com a call, oferecendo horários da lista.",
+    "QUEM JÁ ESTÁ FECHANDO NÃO VAI PRA CALL: se a pessoa já decidiu comprar (pede o link, pergunta como paga, diz que vai fechar, ou a única dúvida que sobrou é de pagamento e você sabe responder), marcar call só adia a venda. Não ofereça call: passe o link de pagamento certo e ajude a concluir aqui mesmo. Call só se ela pedir.",
+    o.vendaTeo
+      ? ""
+      : "Se a pessoa não puder ou não quiser call e preferir resolver por mensagem, quem atende por mensagem é você: siga tirando as dúvidas por aqui com as informações abaixo, passe a página de pagamento certa quando ela quiser comprar e deixe a call só como opção, sem insistir. Não diga que um vendedor vai atender por mensagem.",
+    o.vendaTeo
+      ? ""
+      : o.retomou
       ? "O especialista não conseguiu responder a tempo, então agora quem responde é você: tire a dúvida com as informações abaixo e conduza pra call com o especialista (horários da lista). Comece natural, sem dizer que o especialista sumiu (ex.: \"Pra você não ficar esperando, já te adianto:\"). Não chame passar_para_humano por causa da Black de novo; só pra suporte, mentorado ou se a pessoa pedir uma pessoa."
       : [
-          'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda com as informações abaixo e ofereça dois horários da lista pra call com o especialista.',
-          "Se a pessoa já quer comprar, passe a página de pagamento certa e ofereça a call só se ela tiver dúvida.",
+          'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda com as informações abaixo e ofereça dois horários da lista pra call com o especialista (a não ser que ela já esteja fechando: aí feche por aqui).',
           o.plantao
             ? 'Só chame passar_para_humano (motivo "black", com um resumo de uma linha: se é aluna e o que quer) se a pessoa pedir pra falar com uma pessoa, ou se, sem call, ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado, outra forma de pagamento). Nesse caso diga que esse ponto o especialista responde por aqui; o resto você mesmo resolve.'
             : "Se a pessoa recusar a call e pedir uma pessoa, diga que um especialista fala com ela a partir das 9h e chame passar_para_humano (pediu_humano).",
@@ -218,8 +262,48 @@ function blocoBlack(o: { plantao: boolean; aluno: boolean; retomou: boolean }): 
       ? "- Este lead É aluno (pelo cadastro): pra ele é R$ 4.997 à vista ou 12x de R$ 499,70, com o cupom BLACKFRIDAYALUNOS. Página: anfitriao5estrelas.com.br/pagamento-alunos/"
       : "- Aluno tem condição especial, mas você não sabe se este lead é aluno: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, diga que o especialista confirma o cadastro e passa a condição de aluno.",
     "- Página da Black: anfitriao5estrelas.com.br/black-friday-historica/",
+    o.semEspecialista || o.vendaTeo ? `- ${linksTeo}` : "",
     "Você não sabe: quando o carrinho fecha, a garantia da Black e detalhes da entrega da IA. Não invente nada disso: o especialista confirma.",
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+// Teste de venda direta: a cada N leads que vão pra call (calls marcadas desde
+// venda_teo_desde, um por lead), o próximo lead NOVO sem especialista é do Téo
+// (venda_teo = true). Os outros leads novos ficam com venda_teo = false (grupo
+// de comparação). A decisão vale pra conversa toda.
+async function sortearVendaTeo(supabase: SupabaseClient, cfg: Config, c: Conversa): Promise<boolean> {
+  if (c.venda_teo != null) return c.venda_teo;
+  const n = cfg.venda_teo_a_cada ?? 0;
+  const desde = cfg.venda_teo_desde;
+  if (!n || !desde || c.criado_em < desde) return false;
+  const [{ data: calls }, { count: doTeo }] = await Promise.all([
+    supabase.from("teo_calls").select("contact_id").gte("criado_em", desde),
+    supabase
+      .from("teo_conversas")
+      .select("contact_id", { count: "exact", head: true })
+      .eq("venda_teo", true)
+      .gte("venda_teo_em", desde),
+  ]);
+  const leadsComCall = new Set((calls ?? []).map((k) => k.contact_id)).size;
+  const vez = leadsComCall >= ((doTeo ?? 0) + 1) * n;
+  const { data: marcou } = await supabase
+    .from("teo_conversas")
+    .update({ venda_teo: vez, venda_teo_em: new Date().toISOString() })
+    .eq("contact_id", c.contact_id)
+    .is("venda_teo", null)
+    .select("contact_id");
+  if (!marcou?.length) return false;
+  if (vez) {
+    await log(supabase, "teste venda do téo: sorteado", { contact_id: c.contact_id, nome: c.nome, leads_com_call: leadsComCall });
+    await anotar(
+      supabase,
+      c.contact_id,
+      `🧪 Teste de venda direta: este lead o Téo vai tentar vender sozinho, sem call (1 a cada ${n} leads). Os links dele vão com utm_source=teo. Se o lead pedir uma pessoa, o Téo passa pro time.`
+    );
+  }
+  return vez;
 }
 
 // Inscreve sozinho os leads novos da Lista de Espera (fora da Black): quem já
@@ -1245,6 +1329,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // quando o lead clica nos botões dela. Enquanto o Téo responde, a conversa
     // é dele, a não ser que alguém do time já tenha conversado com o lead.
     if (!doTime && cfg.atendente_id) await garantirTeo(supabase, c, cfg.atendente_id);
+    const vendaTeo = blackAtiva(cfg) && !especialista ? await sortearVendaTeo(supabase, cfg, c).catch(() => false) : false;
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
     if (ouvidos) await log(supabase, "áudio ouvido", { contact_id: c.contact_id, nome: c.nome, audios: ouvidos });
@@ -1260,6 +1345,8 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
               plantao: plantaoBlack(),
               aluno: lead.tags.some((t) => ALUNO_TAG.test(t.trim())),
               retomou: Boolean(c.black_retomou_em),
+              semEspecialista: !especialista,
+              vendaTeo,
             })
           : "",
       ]
@@ -1694,7 +1781,7 @@ async function rodar() {
   const tags = await marcarTag(supabase, cfg as Config);
 
   const campos =
-    "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em";
+    "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo";
   // Só as conversas cuja próxima checagem já chegou (as paradas são lidas
   // de forma espaçada). Se o filtro falhar, lê todas, como antes.
   const consulta = await supabase
