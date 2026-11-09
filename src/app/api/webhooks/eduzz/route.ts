@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { confirmarMatricula } from "@/lib/tmb-entrega";
+import { notificarVenda } from "@/lib/push";
 
 // Webhook da Eduzz.
 // Cadastre https://SEU_DOMINIO/api/webhooks/eduzz?key=EDUZZ_WEBHOOK_KEY no painel.
@@ -187,5 +188,16 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Aviso de venda nova no celular (uma vez por fatura), depois de responder
+  // à Eduzz pra não segurar o webhook.
+  after(async () => {
+    let vendedor: string | null = null;
+    if (sellerId) {
+      const { data: s } = await supabase.from("sellers").select("name").eq("id", sellerId).maybeSingle();
+      vendedor = s?.name ?? null;
+    }
+    await notificarVenda({ chave: `eduzz:${invoiceId}`, plataforma: "Eduzz", valor: amount, produto: product, vendedor });
+  });
   return NextResponse.json({ ok: true, action: "paid" });
 }
