@@ -1613,7 +1613,12 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
       const resumo =
         ((ult?.body as { humano?: { resumo?: string } } | null)?.humano?.resumo ?? "") ||
         "Pediu um especialista fora do plantão. Leia a conversa.";
-      const especialista = await vendedorDoLead(supabase, cfg, n.contact_id);
+      // Mesmo critério da passagem de dia: o vendedor da primeira call ou,
+      // sem call, quem do time já conversou com o lead (senão o aluno de um
+      // vendedor caía no rodízio e ia pra outro).
+      const especialista =
+        (await vendedorDoLead(supabase, cfg, n.contact_id)) ??
+        especialistaDaConversa(await historico(supabase, n.contact_id).catch(() => []), cfg);
       await passarNaBlack(
         supabase,
         cfg,
