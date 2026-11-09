@@ -29,8 +29,6 @@ export function CardDistribuicao({
   const pago = (d?.realizado.total ?? 0) > 0;
   const cravado = Boolean(d?.fechado);
   const valor = d?.valor ?? p.aDistribuir;
-  // Depois de cravado o vivo continua andando — mostra a diferença.
-  const drift = cravado && d ? d.valorVivo - d.valor : 0;
 
   return (
     <div className="mb-4 rounded-xl border border-emerald-200 dark:border-emerald-500/25 bg-emerald-50/60 dark:bg-emerald-500/[0.07] p-5">
@@ -58,8 +56,11 @@ export function CardDistribuicao({
 
           <div className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">
             {pct(1 - p.percentualReserva)} do caixa livre · os outros{" "}
-            {pct(p.percentualReserva)} ({brl(p.vaiProCofre)}) vão pro cofre
-            {d && d.sobraArredondamento > 0 && !pago && (
+            {pct(p.percentualReserva)}
+            {/* Cravada: o valor do cofre e o arredondamento de agora já não são
+                os da distribuição, então não aparecem. */}
+            {!cravado && ` (${brl(p.vaiProCofre)})`} vão pro cofre
+            {d && d.sobraArredondamento > 0 && !pago && !cravado && (
               <>
                 {" "}
                 · redondo pra baixo ({brl(d.valorBruto)} − {brl(d.sobraArredondamento)} que
@@ -68,27 +69,12 @@ export function CardDistribuicao({
             )}
           </div>
 
-          {d && !pago && (
+          {/* Cravada: só o selo, sem observação (pedido do Fernando, 09/11). */}
+          {d && !pago && !cravado && (
             <div className="mt-1.5 text-[11px] text-slate-500 dark:text-zinc-400">
-              {cravado ? (
-                <>
-                  Cravada em {shortDate((d.fechadoEm ?? "").slice(0, 10))}
-                  {d.fechadoPor && d.fechadoPor !== "auto" && ` por ${d.fechadoPor}`}.
-                  {Math.abs(drift) >= 1 && (
-                    <>
-                      {" "}
-                      Pelo caixa de agora daria {brl(d.valorVivo)} ({drift > 0 ? "+" : ""}
-                      {brl(drift)}) — vale o valor cravado.
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  Ainda em aberto: recalcula sozinho até{" "}
-                  <strong>{shortDate(d.dataFechamento)} às 20h50</strong> (dia útil anterior à
-                  transferência). Tudo que entrar até lá aumenta o bolo.
-                </>
-              )}
+              Ainda em aberto: recalcula sozinho até{" "}
+              <strong>{shortDate(d.dataFechamento)} às 20h50</strong> (dia útil anterior à
+              transferência). Tudo que entrar até lá aumenta o bolo.
             </div>
           )}
         </div>
@@ -180,28 +166,30 @@ export function CardDistribuicao({
         />
       </div>
 
-      <p className="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-zinc-500">
-        O caixa livre é o <strong>menor saldo</strong> projetado entre{" "}
-        {shortDate(p.dataDistribuicao)} e {shortDate(p.horizonte)} (o vale cai em{" "}
-        {shortDate(p.diaDoVale)}, com {brl(p.menorCaixaDoPeriodo)}), já descontadas as contas
-        do período — inclusive a fatura do Meta do mês que vem. Tirar esse valor não fura o
-        colchão em nenhum dia.
-        {!cofreMandaNoColchao && (
-          <>
-            {" "}
-            Enquanto o cofre for menor que o piso de {brl(p.pisoOperacional)}, quem trava o
-            saque é o piso — guardar não custa distribuição neste momento.
-          </>
-        )}
-        {d && !pago && !cravado && (
-          <>
-            {" "}
-            O valor crava em {shortDate(d.dataFechamento)} e a transferência sai em{" "}
-            {shortDate(d.dataDistribuicao)}; quando o Pix cair pros sócios (±5 dias da data),
-            a baixa é automática pelo extrato.
-          </>
-        )}
-      </p>
+      {!cravado && (
+        <p className="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-zinc-500">
+          O caixa livre é o <strong>menor saldo</strong> projetado entre{" "}
+          {shortDate(p.dataDistribuicao)} e {shortDate(p.horizonte)} (o vale cai em{" "}
+          {shortDate(p.diaDoVale)}, com {brl(p.menorCaixaDoPeriodo)}), já descontadas as contas
+          do período — inclusive a fatura do Meta do mês que vem. Tirar esse valor não fura o
+          colchão em nenhum dia.
+          {!cofreMandaNoColchao && (
+            <>
+              {" "}
+              Enquanto o cofre for menor que o piso de {brl(p.pisoOperacional)}, quem trava o
+              saque é o piso — guardar não custa distribuição neste momento.
+            </>
+          )}
+          {d && !pago && !cravado && (
+            <>
+              {" "}
+              O valor crava em {shortDate(d.dataFechamento)} e a transferência sai em{" "}
+              {shortDate(d.dataDistribuicao)}; quando o Pix cair pros sócios (±5 dias da data),
+              a baixa é automática pelo extrato.
+            </>
+          )}
+        </p>
+      )}
 
       {d?.podeFechar && !pago && <FecharDistribuicao valor={d.valorVivo} />}
     </div>
