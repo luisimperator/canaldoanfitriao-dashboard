@@ -192,13 +192,14 @@ function blocoBlack(o: { plantao: boolean; aluno: boolean; retomou: boolean }): 
     "# MODO BLACK FRIDAY (vale agora e manda mais que as outras regras de objetivo)",
     'A Black Friday Histórica do Canal do Anfitrião está aberta. O Rômulo abriu ao vivo em 05/11 às 19h (youtube.com/live/8VTlZf2qIUQ). Muita gente chega com "Vim da live da Black Friday Histórica e tenho uma dúvida".',
     "Seu objetivo é MARCAR A CALL de 20 min com o especialista (no Teams), como no fluxo normal: é na call que ele apresenta a Black e passa a melhor condição pro caso da pessoa. Tire a dúvida com as informações abaixo e emende com a call, oferecendo horários da lista.",
+    "Se a pessoa não puder ou não quiser call e preferir resolver por mensagem, quem atende por mensagem é você: siga tirando as dúvidas por aqui com as informações abaixo, passe a página de pagamento certa quando ela quiser comprar e deixe a call só como opção, sem insistir. Não diga que um vendedor vai atender por mensagem.",
     o.retomou
       ? "O especialista não conseguiu responder a tempo, então agora quem responde é você: tire a dúvida com as informações abaixo e conduza pra call com o especialista (horários da lista). Comece natural, sem dizer que o especialista sumiu (ex.: \"Pra você não ficar esperando, já te adianto:\"). Não chame passar_para_humano por causa da Black de novo; só pra suporte, mentorado ou se a pessoa pedir uma pessoa."
       : [
           'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda com as informações abaixo e ofereça dois horários da lista pra call com o especialista.',
           "Se a pessoa já quer comprar, passe a página de pagamento certa e ofereça a call só se ela tiver dúvida.",
           o.plantao
-            ? 'Só chame passar_para_humano (motivo "black", com um resumo de uma linha: se é aluna e o que quer) se a pessoa recusar a call e quiser falar com alguém por aqui, ou pedir uma pessoa.'
+            ? 'Só chame passar_para_humano (motivo "black", com um resumo de uma linha: se é aluna e o que quer) se a pessoa pedir pra falar com uma pessoa, ou se, sem call, ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado, outra forma de pagamento). Nesse caso diga que esse ponto o especialista responde por aqui; o resto você mesmo resolve.'
             : "Se a pessoa recusar a call e pedir uma pessoa, diga que um especialista fala com ela a partir das 9h e chame passar_para_humano (pediu_humano).",
         ].join(" "),
     "Tom: a maior parte do público já é aluno ou já comprou algo do Rômulo. A linha é \"você já conhece o resultado, agora leva tudo\". Nada de narrativa de dor.",
