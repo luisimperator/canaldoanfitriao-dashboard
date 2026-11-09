@@ -290,11 +290,14 @@ async function refazer(supabase: SupabaseClient, auth: Record<string, string>): 
       await log(supabase, "transcrição refeita pela gravação", { join_url: k.join_url, nome, caracteres: r.texto.length });
       feitos.push(nome);
     } else {
-      // Não tenta de novo sozinho (baixa o vídeo inteiro a cada vez): marque
-      // retranscrever de novo depois de resolver o erro.
+      // Limite de áudio por hora do provedor (o mesmo dos áudios do WhatsApp):
+      // passa, então fica marcada e tenta de novo na próxima rodada. Outro
+      // erro não tenta de novo sozinho (baixa o vídeo inteiro a cada vez):
+      // marque retranscrever de novo depois de resolver.
+      const limite = /rate limit|too many requests|\b429\b|try again in/i.test(r.erro);
       await supabase
         .from("call_transcricoes")
-        .update({ retranscrever: false, erro: `refazer pela gravação: ${r.erro}`.slice(0, 300) })
+        .update({ retranscrever: limite, erro: `refazer pela gravação: ${r.erro}`.slice(0, 300) })
         .eq("join_url", k.join_url);
       await log(supabase, "refazer pela gravação falhou", { join_url: k.join_url, nome, erro: r.erro });
     }
