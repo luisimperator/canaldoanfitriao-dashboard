@@ -249,8 +249,9 @@ async function buscar(
         marca.transcrito_em = new Date().toISOString();
         marca.transcricao_fonte = "teams";
         marca.erro = null;
-        // Teams no idioma errado: refaz pela gravação na próxima etapa.
-        if (pareceIngles(texto) && Array.isArray(marca.gravacoes) && marca.gravacoes.length) marca.retranscrever = true;
+        // Teams no idioma errado: refaz pela gravação na próxima etapa. Teams
+        // em português (mesmo chegando atrasada) vale e sai da fila do Whisper.
+        marca.retranscrever = pareceIngles(texto) && Array.isArray(marca.gravacoes) && marca.gravacoes.length > 0;
         feitos.push(nome);
         await log(supabase, "transcrição salva", { join_url: k.join_url, nome, caracteres: texto.length });
       } else {
