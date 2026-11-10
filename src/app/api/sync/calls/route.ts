@@ -28,8 +28,11 @@ const RECHECAR_MS = 30 * 60_000;
 // ninguém falou). Com erro (permissão, reunião não achada), tenta por 14 dias.
 const DESISTIR_VAZIO_MS = 24 * 3600_000;
 const DESISTIR_ERRO_MS = 14 * 86400_000;
-// Gravou mas a Teams não transcreveu até 1h30 depois do fim: refaz pela gravação.
-const SEM_TRANSCRICAO_MS = 90 * 60_000;
+// Gravou mas a Teams não transcreveu até 6h depois do fim: refaz pela gravação.
+// A transcrição nativa da Teams é o caminho principal e às vezes chega horas
+// depois (a da Ligia, em 09/11, levou 5h); o Whisper (Groq grátis, cota
+// diária dividida com os áudios do WhatsApp do Téo) é só a reserva.
+const SEM_TRANSCRICAO_MS = 6 * 3600_000;
 const POR_RODADA = 6;
 // A refação baixa vídeo e transcreve: só começa uma nova até 200 s de rodada
 // (maxDuration 300 s).
