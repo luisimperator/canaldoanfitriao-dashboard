@@ -326,10 +326,25 @@ async function refazer(
       // passa, então fica marcada e tenta de novo na próxima rodada. Outro
       // erro não tenta de novo sozinho (baixa o vídeo inteiro a cada vez):
       // marque retranscrever de novo depois de resolver.
+      // Outro erro: sai da fila e do "aguardando" (status sem_transcricao), senão
+      // o buscar remarca a cada rodada e o Whisper gasta cota em loop. Gravação
+      // sem fala nenhuma ("transcrição vazia") é falta do lead: o vendedor ficou
+      // sozinho na sala.
       const limite = /rate limit|too many requests|\b429\b|try again in/i.test(r.erro);
+      const semFala = r.erro === "transcrição vazia";
       await supabase
         .from("call_transcricoes")
-        .update({ retranscrever: limite, erro: `refazer pela gravação: ${r.erro}`.slice(0, 300) })
+        .update(
+          limite
+            ? { retranscrever: true, erro: `refazer pela gravação: ${r.erro}`.slice(0, 300) }
+            : {
+                retranscrever: false,
+                status: "sem_transcricao",
+                erro: semFala
+                  ? "sem fala na gravação (só o vendedor na sala: lead faltou)"
+                  : `refazer pela gravação: ${r.erro}`.slice(0, 300),
+              }
+        )
         .eq("join_url", k.join_url);
       await log(supabase, "refazer pela gravação falhou", { join_url: k.join_url, nome, erro: r.erro });
       if (limite) break;
