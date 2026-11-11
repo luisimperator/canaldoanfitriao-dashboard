@@ -310,6 +310,38 @@ function blocoBlack(o: {
     .join("\n");
 }
 
+/**
+ * Compra da Black 2026 já feita por este lead: pelos e-mails (cadastro e os que
+ * ele mandou na conversa) ou pelo telefone do WhatsApp, na Eduzz e na TMB
+ * (função teo_compra_black do banco). Sem isso o Téo oferecia a Black a quem já
+ * tinha comprado (Ricardo, 11/11).
+ */
+async function acharCompraDaBlack(
+  supabase: SupabaseClient,
+  emails: string[],
+  telefone: string | null
+): Promise<{ origem: string; quando: string; email: string } | null> {
+  if (!emails.length && !telefone) return null;
+  const { data, error } = await supabase.rpc("teo_compra_black", { p_emails: emails, p_telefone: telefone });
+  if (error) throw error;
+  const linha = (data as { origem: string; quando: string; email: string }[] | null)?.[0];
+  return linha ?? null;
+}
+
+function avisoJaComprouBlack(compra: { origem: string; quando: string; email: string }): string {
+  const dia = new Date(compra.quando).toLocaleDateString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+  });
+  return [
+    `JÁ COMPROU A BLACK (vale acima do MODO BLACK FRIDAY e dos ajustes do dono): este lead comprou a Black Friday Histórica em ${dia} (${compra.origem}, e-mail ${compra.email}).`,
+    "Não ofereça nem venda a Black de novo, não mande link de pagamento e não ofereça call de venda.",
+    "Se ele escreveu, agradeça a confiança e ajude no que ele pedir. Dúvida de acesso, login, grupos ou conteúdo é com o suporte: chame passar_para_humano (suporte).",
+    "Se esta for uma mensagem de acompanhamento (retomar a conversa com quem parou de responder), não mande nada: responda só [SEM_RESPOSTA].",
+  ].join(" ");
+}
+
 /** Aviso só deste lead (fica fora do bloco da Black, que vai em cache). */
 function avisoEmailsSemCompra(emails: string[]): string | null {
   if (!emails.length) return null;
@@ -1410,6 +1442,10 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // Aluno pelo cadastro (tag) ou por compra de curso no e-mail do cadastro ou
     // num e-mail que o lead mandou na conversa (assim o Téo confirma sozinho).
     const alunoPorTag = lead.tags.some((t) => ALUNO_TAG.test(t.trim()));
+    // Já comprou a Black? (e-mails do lead ou o telefone do WhatsApp)
+    const jaComprouBlack = blackAtiva(cfg)
+      ? await acharCompraDaBlack(supabase, emailsDaConversa(lead.email ?? null, msgs), c.telefone).catch(() => null)
+      : null;
     const emailsDoLead = blackAtiva(cfg) && !alunoPorTag ? emailsDaConversa(lead.email ?? null, msgs) : [];
     const compraDeCurso = emailsDoLead.length ? await acharCompraDeCurso(supabase, emailsDoLead).catch(() => null) : null;
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
@@ -1434,7 +1470,11 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       ]
         .filter(Boolean)
         .join("\n\n"),
-      avisoDoLead: blackAtiva(cfg) && !compraDeCurso ? avisoEmailsSemCompra(emailsDoLead) : null,
+      avisoDoLead: jaComprouBlack
+        ? avisoJaComprouBlack(jaComprouBlack)
+        : blackAtiva(cfg) && !compraDeCurso
+          ? avisoEmailsSemCompra(emailsDoLead)
+          : null,
       ficha: c.ficha,
       abrir,
       retomar,
