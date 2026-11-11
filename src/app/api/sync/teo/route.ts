@@ -53,6 +53,9 @@ interface Conversa {
   venda_teo?: boolean | null;
 }
 
+const CAMPOS_CONVERSA =
+  "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo";
+
 interface Config {
   ligado: boolean;
   horarios: string[] | null;
@@ -1223,6 +1226,20 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
   const pegou = await supabase.rpc("teo_lock", { p_contact: c.contact_id, p_segundos: 180 });
   if (!pegou.data) return "travada";
   try {
+    // A fila é lida no começo da rodada. Quando duas rodadas se sobrepõem (às
+    // 8h, com muitos acompanhamentos, uma rodada passa de 1 min), a segunda
+    // tinha a conversa antiga e mandava o mesmo acompanhamento de novo. Com a
+    // trava na mão, relê a conversa e segue com o que está no banco agora.
+    const { data: atual } = await supabase
+      .from("teo_conversas")
+      .select(`${CAMPOS_CONVERSA}, ativo, proxima_checagem`)
+      .eq("contact_id", c.contact_id)
+      .maybeSingle();
+    if (!atual) return "sumiu";
+    const fresca = atual as unknown as Conversa & { ativo: boolean; proxima_checagem: string | null };
+    if (!fresca.ativo || !["novo", "em_conversa", "encerrado"].includes(fresca.estado)) return "mudou de estado";
+    if (fresca.proxima_checagem && new Date(fresca.proxima_checagem).getTime() > Date.now()) return "já tratada";
+    c = fresca;
     const msgs: MsgUnnichat[] = await historico(supabase, c.contact_id);
     const reais = msgs.filter((m) => m.senderBy !== "platform");
     const ultima = reais[reais.length - 1];
@@ -1915,8 +1932,7 @@ async function rodar() {
   const inscritos = await autoInscrever(supabase, cfg as Config);
   const tags = await marcarTag(supabase, cfg as Config);
 
-  const campos =
-    "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo";
+  const campos = CAMPOS_CONVERSA;
   // Só as conversas cuja próxima checagem já chegou (as paradas são lidas
   // de forma espaçada). Se o filtro falhar, lê todas, como antes.
   const consulta = await supabase
