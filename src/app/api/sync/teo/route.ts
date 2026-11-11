@@ -1577,7 +1577,7 @@ async function avisarDaCall(
 //   pessoa responder, a janela de 24h reabre pro lembrete do dia);
 // * ~90 min antes: lembrete com o link;
 // * 10 min antes: a conversa passa pro vendedor no Unnichat, com a ficha;
-// * 3 min depois do horário: "o Flávio já está na sala te esperando", com o
+// * 3 min depois do horário: "Flávio já está na sala te esperando" (sem artigo: serve pra vendedora), com o
 //   link, a menos que o lead tenha escrito perto da hora.
 // Com a janela fechada, os avisos saem pelo template "lembrete_call". O
 // follow-up pós-call é do vendedor.
@@ -1700,7 +1700,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
               cfg,
               conv.telefone,
               await janela(),
-              `Oi, ${nome}! O ${vend} já está na sala te esperando. Se ainda não conseguiu entrar, é por este link: ${k.meet_url}`,
+              `Oi, ${nome}! ${vend} já está na sala te esperando. Se ainda não conseguiu entrar, é por este link: ${k.meet_url}`,
               [nome, vend, `começou agora e ${vend} já está na sala te esperando`]
             );
         await supabase.from("teo_calls").update({ esperando_em: new Date().toISOString() }).eq("id", k.id);
