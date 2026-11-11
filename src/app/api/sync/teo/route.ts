@@ -1902,6 +1902,33 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
       await supabase.from("teo_conversas").update({ motivo_humano: "vendedor" }).eq("contact_id", p.contact_id);
       continue;
     }
+    // O Téo já retomou desde a última mensagem do lead e passou de novo (algo
+    // que só o time faz, ex.: gerar o link de renovação): não retoma outra vez.
+    // Sem isso o lead recebia a mesma resposta a cada 10 min (Fernando Luiz,
+    // 11/11). Se o lead escrever de novo, a retomada volta a valer.
+    const ultimaDoLead = Math.max(
+      0,
+      ...msgs.filter((m) => m.senderBy === "contact").map((m) => new Date(m.date).getTime())
+    );
+    const { count: jaRetomou } = await supabase
+      .from("webhook_log")
+      .select("id", { count: "exact", head: true })
+      .eq("source", "teo")
+      .like("note", "black: téo retomou%")
+      .eq("body->>contact_id", p.contact_id)
+      .gt("created_at", new Date(ultimaDoLead).toISOString());
+    if (jaRetomou) {
+      await supabase
+        .from("teo_conversas")
+        .update({ motivo_humano: "vendedor", atualizado_em: new Date().toISOString() })
+        .eq("contact_id", p.contact_id);
+      await log(supabase, "black: não retomou de novo (lead não escreveu desde a última retomada)", {
+        contact_id: p.contact_id,
+        nome: p.nome,
+        vendedor: p.black_vendedor,
+      });
+      continue;
+    }
     await supabase
       .from("teo_conversas")
       .update({
