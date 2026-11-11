@@ -1255,6 +1255,11 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // Black: o que o vendedor escreveu antes de o Téo retomar (ele parou de
     // responder) não devolve a conversa pra ele; só o que escrever depois.
     const retomouEm = c.black_retomou_em ? new Date(c.black_retomou_em).getTime() : 0;
+    // Primeira rodada depois de o Téo retomar uma conversa da Black (ele ainda
+    // não mandou nada desde a retomada).
+    const primeiraAposRetomada =
+      retomouEm > 0 &&
+      !reais.some((m) => m.senderBy === "user" && m.origin === "unniApi" && new Date(m.date).getTime() > retomouEm);
     if (
       doVendedor &&
       Date.now() - new Date(doVendedor.date).getTime() < 48 * 3600_000 &&
@@ -1438,6 +1443,33 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       ),
       marcarCall: (args) => marcarCall(supabase, c, cfg, especialista, args),
     });
+
+    // Retomou a conversa da Black e não tem nada a dizer (ex.: o lead só
+    // agradeceu depois de pagar), ou só quer passar de volta: devolve em
+    // silêncio pro vendedor. Sem isso, a conversa ficava em loop: o Téo
+    // pulava o acompanhamento a cada minuto ou passava e retomava a cada 10.
+    if (primeiraAposRetomada && res.mensagens.length === 0) {
+      const v = (cfg.vendedores ?? []).find((x) => x.nome === c.black_vendedor);
+      await supabase
+        .from("teo_conversas")
+        .update({
+          estado: "humano",
+          motivo_humano: "vendedor",
+          ultima_msg_tratada: ultimaDoLead?.id ?? c.ultima_msg_tratada,
+          ficha: [c.ficha, res.ficha].filter(Boolean).join("\n") || null,
+          atualizado_em: new Date().toISOString(),
+        })
+        .eq("contact_id", c.contact_id);
+      if (v?.atendente_id) await unnichat(supabase, "POST", `/contact/${c.contact_id}/assign`, { attendantId: v.atendente_id });
+      if (res.humano) await anotar(supabase, c.contact_id, `🤖 Téo devolveu pro time — ${res.humano.resumo}`);
+      await log(supabase, "black: téo devolveu ao vendedor (nada a responder)", {
+        contact_id: c.contact_id,
+        nome: c.nome,
+        vendedor: c.black_vendedor ?? null,
+        humano: res.humano ?? null,
+      });
+      return "devolveu ao vendedor";
+    }
 
     for (const [i, texto] of res.mensagens.entries()) {
       if (i > 0) await new Promise((r) => setTimeout(r, 1500));
@@ -1864,7 +1896,7 @@ async function retomarVendedorParado(supabase: SupabaseClient, cfg: Config): Pro
   if (!ids.length) return [];
   const { data: comVendedor } = await supabase
     .from("teo_conversas")
-    .select("contact_id, nome, black_vendedor")
+    .select("contact_id, nome, black_vendedor, black_retomou_em")
     .eq("estado", "humano")
     .eq("ativo", true)
     .eq("motivo_humano", "vendedor")
@@ -1886,6 +1918,8 @@ async function retomarVendedorParado(supabase: SupabaseClient, cfg: Config): Pro
     if (!ultimaDoLead) continue;
     const t = new Date(ultimaDoLead.date).getTime();
     if (agora - t < ESPERA_BLACK_MS || agora - t > 6 * 3600_000) continue;
+    // Já retomou por esta mensagem (e devolveu): só volta se o lead escrever de novo.
+    if (p.black_retomou_em && new Date(p.black_retomou_em as string).getTime() >= t) continue;
     const respondida = msgs.some(
       (m) =>
         new Date(m.date).getTime() > t &&
