@@ -47,6 +47,11 @@ export async function proxy(request: NextRequest) {
     const fromCron = secret ? auth === `Bearer ${secret}` : ua.includes("vercel-cron");
     if (fromCron) return NextResponse.next();
   }
+  // Páginas de roteiro da call: fora do login do painel, com senha própria
+  // (src/lib/roteiros/porta.ts, ROTEIRO_SENHA na Vercel).
+  if (pathname === "/roteiro-sales-call-atual" || pathname === "/roteiro-sales-call-nova") {
+    return NextResponse.next();
+  }
   // Redirect curto dos QR codes/links: público (é escaneado por qualquer um,
   // antes de virar lead). Valida o slug por conta própria.
   if (pathname.startsWith("/r/")) {

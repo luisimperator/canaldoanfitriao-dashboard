@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Roteiro Novo da Call</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: guia de bolso da call no padrão do Encontro dos Anfitriões. Menu fixo à esquerda com as 8 etapas na ordem da call; à direita, cada etapa com as falas em destaque, o que fazer e o que não fazer. */
+:root {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --bg-2: #0b0e0d;
+  --fg: #f6f6f6;
+  --muted: rgba(246, 246, 246, 0.68);
+  --faint: rgba(246, 246, 246, 0.42);
+  --line: rgba(255, 255, 255, 0.10);
+  --card: rgba(255, 255, 255, 0.04);
+  --teal: #2dd4bf;
+  --teal-ink: #052e2a;
+  --teal-wash: rgba(45, 212, 191, 0.07);
+  --teal-edge: rgba(45, 212, 191, 0.40);
+  --red: #ff2e5f;
+  --red-band: #e2063c;
+  --red-wash: rgba(255, 46, 95, 0.07);
+  --red-edge: rgba(255, 46, 95, 0.32);
+  --display: "Bebas Neue", "Oswald", "Arial Narrow", Impact, sans-serif;
+  --body: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", sans-serif;
+  --ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 19px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 900px) { .wrap { padding-left: max(40px, env(safe-area-inset-left, 0px)); padding-right: max(40px, env(safe-area-inset-right, 0px)); } }
+.t { color: var(--teal); }
+strong { font-weight: 700; color: var(--fg); }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 6px; }
+
+.band { background: var(--red-band); color: #fff; text-align: center; font-family: var(--display); letter-spacing: 0.32em; font-size: 15px; padding-block: 10px; }
+
+/* hero */
+.hero { border-bottom: 1px solid var(--line); background: radial-gradient(900px 520px at 85% 0%, rgba(45, 212, 191, 0.16), transparent 60%), radial-gradient(700px 480px at 0% 100%, rgba(226, 6, 60, 0.12), transparent 60%), var(--bg-2); }
+.hero .wrap { padding-block: 56px 44px; display: grid; gap: 26px; }
+.brand { font-family: var(--display); letter-spacing: 0.18em; font-size: 18px; color: var(--muted); }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; font-family: var(--display); letter-spacing: 0.16em; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--teal-edge); color: var(--teal); background: var(--teal-wash); }
+.pill.red { border-color: transparent; background: var(--red-band); color: #fff; }
+.pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(56px, 8.4vw, 112px); line-height: 0.9; letter-spacing: 0.02em; margin: 0; text-wrap: balance; }
+.lede { max-width: 64ch; font-size: 21px; color: var(--muted); margin: 0; }
+.closer { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 16px; background: var(--card); overflow: hidden; }
+.closer a { text-decoration: none; padding: 14px 14px 16px; display: grid; gap: 4px; min-width: 0; transition: background 0.2s; }
+.closer a + a { border-left: 1px solid var(--line); }
+.closer a:hover { background: var(--teal-wash); }
+.closer b { font-family: var(--display); font-weight: 400; font-size: 34px; line-height: 1; color: var(--teal); }
+.closer span { font-family: var(--display); font-size: 17px; letter-spacing: 0.04em; line-height: 1.05; }
+
+/* corpo com menu */
+.layout { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 48px; padding-block: 40px 24px; }
+.nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; display: grid; gap: 2px; }
+.nav .label { font-family: var(--display); letter-spacing: 0.2em; font-size: 14px; color: var(--faint); margin-bottom: 8px; }
+.nav a { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; text-decoration: none; color: var(--muted); font-family: var(--display); font-size: 19px; letter-spacing: 0.04em; border: 1px solid transparent; }
+.nav a b { font-weight: 400; color: var(--faint); font-size: 22px; }
+.nav a:hover { color: var(--fg); }
+.nav a.on { background: var(--teal-wash); border-color: var(--teal-edge); color: var(--fg); }
+.nav a.on b { color: var(--teal); }
+.nav .rule { margin-top: 18px; padding: 14px; border-radius: 12px; border: 1px solid var(--line); font-family: var(--ui); font-size: 13px; color: var(--muted); line-height: 1.45; }
+.nav .rule strong { color: var(--teal); }
+
+/* etapas */
+.stage { padding-block: 8px 56px; scroll-margin-top: 24px; display: grid; gap: 22px; }
+.stage + .stage { border-top: 1px solid var(--line); padding-top: 48px; }
+.stage-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: end; }
+.num { font-family: var(--display); font-size: 104px; line-height: 0.8; color: var(--teal); letter-spacing: 0.01em; }
+.kicker { font-family: var(--display); letter-spacing: 0.2em; font-size: 15px; color: var(--faint); }
+h2 { font-family: var(--display); font-weight: 400; font-size: clamp(40px, 4.4vw, 62px); line-height: 0.95; letter-spacing: 0.02em; margin: 2px 0 0; text-wrap: balance; }
+.intro { margin: 0; max-width: 64ch; font-size: 20px; color: var(--muted); }
+
+.say { margin: 0; padding: 22px 26px; border-radius: 16px; border: 1px solid var(--teal-edge); background: var(--teal-wash); font-size: 27px; line-height: 1.32; font-weight: 500; position: relative; }
+.say::before { content: "FALA"; display: block; font-family: var(--display); font-size: 13px; letter-spacing: 0.22em; color: var(--teal); margin-bottom: 6px; }
+.say.small { font-size: 22px; }
+.say .slot { color: var(--teal); border-bottom: 2px dashed var(--teal-edge); }
+.says { display: grid; gap: 12px; }
+
+.do, .dont { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
+.do li, .dont li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 19px; color: var(--muted); }
+.do li::before, .dont li::before { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-family: var(--ui); font-size: 13px; font-weight: 700; margin-top: 2px; }
+.do li::before { content: "✓"; background: var(--teal); color: var(--teal-ink); }
+.dont li::before { content: "✕"; background: var(--red); color: #fff; }
+.dont li { color: var(--fg); }
+.dontbox { padding: 16px 20px; border-radius: 14px; border: 1px solid var(--red-edge); background: var(--red-wash); display: grid; gap: 8px; }
+.dontbox .kicker { color: var(--red); }
+
+.example { padding: 18px 22px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); display: grid; gap: 6px; }
+.example .kicker { color: var(--faint); }
+.example p { margin: 0; font-size: 20px; font-style: italic; color: var(--fg); }
+
+/* fórmula do rótulo */
+.formula { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.formula div { padding: 14px 16px; border-radius: 12px; border: 1px dashed var(--teal-edge); display: grid; gap: 2px; min-width: 0; }
+.formula b { font-family: var(--display); font-weight: 400; font-size: 24px; color: var(--teal); letter-spacing: 0.04em; }
+.formula span { font-family: var(--ui); font-size: 13px; color: var(--muted); }
+
+/* ciclo da dor */
+.loop { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; counter-reset: q; }
+.loop div { position: relative; padding: 16px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); font-size: 19px; line-height: 1.3; font-weight: 500; min-width: 0; }
+.loop div::after { content: "→"; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--bg); color: var(--teal); font-family: var(--ui); font-size: 12px; display: grid; place-items: center; z-index: 1; }
+.loop div:last-child::after { content: "↺"; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.box { padding: 18px 20px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.box h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 26px; letter-spacing: 0.03em; line-height: 1; }
+.box p { margin: 0; color: var(--muted); font-size: 18.5px; }
+.box q { color: var(--fg); quotes: "“" "”"; }
+
+/* mesinha */
+.mesa { display: grid; gap: 0; margin-top: 4px; }
+.tampo { height: 22px; border-radius: 10px; background: linear-gradient(90deg, var(--teal-edge), var(--teal), var(--teal-edge)); box-shadow: 0 10px 40px rgba(45, 212, 191, 0.18); }
+.pernas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.perna { display: grid; grid-template-rows: auto 1fr; justify-items: center; min-width: 0; }
+.perna i { width: 10px; height: 46px; background: linear-gradient(var(--teal), var(--teal-edge)); border-radius: 0 0 4px 4px; }
+.perna .box { width: 100%; text-align: left; border-color: var(--teal-edge); }
+.perna .box b { font-family: var(--display); font-weight: 400; font-size: 40px; line-height: 0.9; color: var(--teal); }
+.perna .box p { color: var(--fg); font-size: 19px; }
+.perna .box .ok { font-family: var(--display); letter-spacing: 0.12em; color: var(--teal); font-size: 16px; }
+.cai { text-align: center; font-family: var(--display); font-size: 30px; letter-spacing: 0.04em; margin-top: 14px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: s; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; align-items: start; }
+.steps > li::before { content: counter(s); font-family: var(--display); font-size: 34px; line-height: 1; color: var(--teal); text-align: center; border: 1px solid var(--teal-edge); border-radius: 12px; padding: 6px 0 2px; }
+.steps h3 { margin: 4px 0 4px; font-family: var(--display); font-weight: 400; font-size: 28px; letter-spacing: 0.03em; line-height: 1; }
+.steps p { margin: 0; color: var(--muted); font-size: 19px; }
+.trailer { display: inline-flex; align-items: center; gap: 8px; font-family: var(--ui); font-size: 13px; color: var(--teal); border: 1px solid var(--teal-edge); border-radius: 999px; padding: 4px 10px; margin-top: 6px; }
+
+/* escada */
+.ladder { display: grid; gap: 8px; }
+.step { display: grid; grid-template-columns: 150px 220px minmax(0, 1fr); gap: 16px; align-items: center; padding: 14px 18px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); }
+.step .price { font-family: var(--display); font-size: 38px; line-height: 1; color: var(--teal); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.step .when { font-family: var(--ui); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--faint); }
+.step .line { font-size: 19px; line-height: 1.35; }
+.step:nth-child(1) { margin-right: 54px; }
+.step:nth-child(2) { margin-right: 36px; }
+.step:nth-child(3) { margin-right: 18px; }
+.step.bonus { border-color: var(--teal-edge); background: var(--teal-wash); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+table { width: 100%; border-collapse: collapse; font-family: var(--ui); font-size: 14px; font-variant-numeric: tabular-nums; min-width: 560px; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-weight: 600; color: var(--faint); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+tr:last-child td { border-bottom: 0; }
+td.save { color: var(--teal); font-weight: 600; }
+.note { font-family: var(--ui); font-size: 13px; color: var(--faint); margin: 0; }
+
+/* objeções */
+.jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.jump a { font-family: var(--ui); font-size: 13px; text-decoration: none; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.jump a:hover { border-color: var(--teal-edge); color: var(--fg); }
+.objs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.obj { padding: 20px 22px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); display: grid; gap: 10px; align-content: start; min-width: 0; scroll-margin-top: 24px; }
+.obj:target { border-color: var(--teal-edge); background: var(--teal-wash); }
+.obj header { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.obj header b { font-family: var(--display); font-weight: 400; font-size: 34px; line-height: 1; color: var(--teal); }
+.obj h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 28px; letter-spacing: 0.03em; line-height: 1; }
+.obj .resp { margin: 0; font-size: 19.5px; line-height: 1.42; }
+.obj .resp em { font-style: normal; color: var(--teal); }
+.obj ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 19px; }
+.obj ol li::marker { color: var(--teal); font-family: var(--display); }
+.obj .tip { font-family: var(--ui); font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+.obj.wide { grid-column: 1 / -1; }
+
+/* depois do sim */
+.after-yes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; counter-reset: a; }
+.after-yes div { counter-increment: a; padding: 16px 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.after-yes div::before { content: counter(a); font-family: var(--display); font-size: 30px; line-height: 1; color: var(--teal); }
+.after-yes b { font-family: var(--display); font-weight: 400; font-size: 24px; letter-spacing: 0.03em; line-height: 1; }
+.after-yes span { font-size: 17.5px; color: var(--muted); line-height: 1.38; }
+
+footer { border-top: 1px solid var(--line); }
+footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+
+@media (max-width: 1100px) {
+  .closer { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .closer a:nth-child(5) { border-left: 0; }
+  .closer a:nth-child(n+5) { border-top: 1px solid var(--line); }
+  .step { grid-template-columns: 130px minmax(0, 1fr); }
+  .step .line { grid-column: 1 / -1; }
+  .after-yes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .loop { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .loop div::after { display: none; }
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-top: 0; }
+  .nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; gap: 6px; overflow-x: auto; padding-block: 10px; background: rgba(10, 10, 10, 0.94); margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding-inline: max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); }
+  .nav .label, .nav .rule { display: none; }
+  .nav a { flex: none; grid-template-columns: auto auto; padding: 6px 12px; font-size: 16px; border-color: var(--line); }
+  .nav a b { font-size: 18px; }
+}
+@media (max-width: 720px) {
+  body { font-size: 18px; }
+  .closer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .closer a:nth-child(odd) { border-left: 0; }
+  .closer a:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .num { font-size: 72px; }
+  .say { font-size: 22px; padding: 18px 20px; }
+  .formula, .grid2, .pernas, .objs, .after-yes, .loop { grid-template-columns: minmax(0, 1fr); }
+  .perna i { display: none; }
+  .tampo { display: none; }
+  .step { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .step:nth-child(n) { margin-right: 0; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="band">ROTEIRO NOVO · TIME COMERCIAL · <a href="/roteiro-sales-call-atual" style="color:#fff">VER A ANÁLISE DO ROTEIRO DE HOJE</a></div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="brand">CANAL DO ANFITRIÃO</div>
+    <div class="pills">
+      <span class="pill"><span class="dot"></span>Call de 30 min no Teams</span>
+      <span class="pill red">Etapas do CLOSER</span>
+    </div>
+    <h1>O roteiro<br><span class="t">da call</span></h1>
+    <p class="lede">O vendedor primeiro pergunta e escuta. <strong>Só mostra a comunidade depois que o lead disse onde está, onde quer chegar e o que está no caminho.</strong></p>
+    <nav class="closer" aria-label="As 8 etapas">
+      <a href="#e1"><b>1</b><span>Clarificar</span></a>
+      <a href="#e2"><b>2</b><span>Rotular</span></a>
+      <a href="#e3"><b>3</b><span>Ciclo da dor</span></a>
+      <a href="#e4"><b>4</b><span>Transição</span></a>
+      <a href="#e5"><b>5</b><span>Vender a viagem</span></a>
+      <a href="#e6"><b>6</b><span>Fechamento</span></a>
+      <a href="#e7"><b>7</b><span>Objeções</span></a>
+      <a href="#e8"><b>8</b><span>Depois do sim</span></a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="nav" aria-label="Etapas da call">
+    <span class="label">Etapas</span>
+    <a href="#e1"><b>1</b>Clarificar</a>
+    <a href="#e2"><b>2</b>Rotular</a>
+    <a href="#e3"><b>3</b>Ciclo da dor</a>
+    <a href="#e4"><b>4</b>Transição</a>
+    <a href="#e5"><b>5</b>Vender a viagem</a>
+    <a href="#e6"><b>6</b>Fechamento</a>
+    <a href="#e7"><b>7</b>Objeções</a>
+    <a href="#e8"><b>8</b>Depois do sim</a>
+    <div class="rule">Pergunta e escuta <strong>antes</strong> de mostrar. A comunidade só entra na etapa 5.</div>
+  </nav>
+
+  <main>
+    <!-- 1 -->
+    <section class="stage" id="e1">
+      <div class="stage-head"><span class="num">1</span><div><span class="kicker">Clarificar</span><h2>Por que a pessoa <span class="t">está aqui</span></h2></div></div>
+      <div class="says">
+        <p class="say">O que te fez entrar na lista de espera e agendar essa chamada?</p>
+        <p class="say small">Me conta mais.</p>
+      </div>
+      <ul class="do">
+        <li>Depois da pergunta, só escuta. Quando ela parar de falar, “me conta mais”.</li>
+        <li>Chega com a ficha do Téo e não repete as perguntas de cadastro.</li>
+      </ul>
+      <div class="dontbox">
+        <span class="kicker">Nessa etapa, não</span>
+        <ul class="dont">
+          <li>Nada de comunidade, de Rômulo ou de preço.</li>
+          <li>A pergunta “você conhece o Rômulo?” saiu do roteiro.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="stage" id="e2">
+      <div class="stage-head"><span class="num">2</span><div><span class="kicker">Rotular</span><h2>Devolver o problema <span class="t">nas palavras dela</span></h2></div></div>
+      <p class="say">Deixa eu ver se entendi: hoje você <span class="slot">[onde está]</span>, quer chegar em <span class="slot">[meta]</span>, e o que está no caminho é <span class="slot">[problema]</span>. É isso?</p>
+      <div class="formula" aria-hidden="true">
+        <div><b>Onde está</b><span>a situação de hoje</span></div>
+        <div><b>Meta</b><span>onde quer chegar</span></div>
+        <div><b>Problema</b><span>o que está no caminho</span></div>
+      </div>
+      <div class="example">
+        <span class="kicker">Exemplo real, call de 03/11</span>
+        <p>“Hoje vocês estão construindo 12 lofts em Foz, querem que eles rodem sozinhos pra vocês poderem viajar, e o que está no caminho é que você nunca mexeu com Airbnb e tem medo de errar no preço. É isso?”</p>
+      </div>
+      <ul class="do"><li>Se ela corrigir, rotula de novo até ouvir “é isso”.</li></ul>
+    </section>
+
+    <!-- 3 -->
+    <section class="stage" id="e3">
+      <div class="stage-head"><span class="num">3</span><div><span class="kicker">Visão geral</span><h2>O ciclo <span class="t">da dor</span></h2></div></div>
+      <p class="intro">Pergunte em sequência e repita até ela dizer que é só isso.</p>
+      <div class="loop">
+        <div>O que você já tentou até agora pra resolver isso?</div>
+        <div>E como foi?</div>
+        <div>O que você gostou? E o que não gostou?</div>
+        <div>Tentou mais alguma coisa?</div>
+      </div>
+      <div class="grid2">
+        <div class="box"><h3>O que ela gostou vira ponte</h3><p><q>Se você gostou disso, vai adorar…</q> Do que ela odiou, o vendedor não fala nada parecido.</p></div>
+        <div class="box"><h3>Quem decide e como quer</h3><p><q>Alguém decide isso junto com você?</q></p><p><q>Você quer aprender a fazer ou prefere que alguém faça por você?</q></p></div>
+        <div class="box"><h3>Munição pro preço</h3><p><q>Qual é a diária média hoje? Quantas noites por mês fica ocupado?</q> Se o imóvel ainda não roda: <q>Qual diária você espera cobrar?</q></p><p>E a situação: imóvel pronto, em obra, alugado no fixo, quantos imóveis.</p></div>
+        <div class="box"><h3>Ache a perna bamba</h3><p><q>Chega mensagem de hóspede e não fecha, ou nem chega?</q></p><p><q>Você muda o preço na mão, no automático ou deixa fixo?</q></p><p>Na hora de vender a viagem, demore mais na perna fraca.</p></div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="stage" id="e4">
+      <div class="stage-head"><span class="num">4</span><div><span class="kicker">Transição</span><h2>Pedir licença <span class="t">pra mostrar</span></h2></div></div>
+      <p class="say">Acho que você vai gostar do que a gente tem. Posso te mostrar?</p>
+      <div class="dontbox"><span class="kicker">Saiu do roteiro</span><ul class="dont"><li>O combinado dos “dois sentimentos”.</li></ul></div>
+    </section>
+
+    <!-- 5 -->
+    <section class="stage" id="e5">
+      <div class="stage-head"><span class="num">5</span><div><span class="kicker">Vender a viagem</span><h2>Resultado, <span class="t">não módulo</span></h2></div></div>
+      <p class="intro">Fale do resultado: calendário cheio, 5 estrelas, o Pix caindo, viajar enquanto o imóvel roda. Sem tour pelos módulos. E chame o A5E de <strong>comunidade</strong>, não de curso: as aulas gravadas, o grupo e os encontros fazem parte dela.</p>
+      <ol class="steps">
+        <li>
+          <div>
+            <h3>Trailer do A5E</h3>
+            <p>Compartilhe a tela com o som do computador, antes dos pilares. Logo depois, uma frase sobre o Rômulo:</p>
+            <span class="trailer">▶ 3min46</span>
+          </div>
+        </li>
+      </ol>
+      <p class="say small">O Rômulo começou em 2016 alugando no Airbnb um quartinho do apartamento onde ele morava, pra ajudar a pagar o aluguel. Hoje ele administra mais de 70 imóveis.</p>
+      <ol class="steps" start="2" style="counter-reset: s 1">
+        <li><div><h3>A mesinha de 3 pernas</h3><p>Com um “Faz sentido?” depois de cada perna.</p></div></li>
+      </ol>
+      <p class="say small">Pra um imóvel de temporada dar certo, ele é como uma mesinha de 3 pernas.</p>
+      <div class="mesa" aria-label="A mesinha de 3 pernas">
+        <div class="tampo"></div>
+        <div class="pernas">
+          <div class="perna"><i></i><div class="box"><b>1</b><p>Um anúncio que chama a atenção e converte interessados em hóspedes.</p><span class="ok">Faz sentido?</span></div></div>
+          <div class="perna"><i></i><div class="box"><b>2</b><p>A configuração perfeita pra você virar um queridinho do algoritmo e ser mais impulsionado.</p><span class="ok">Faz sentido?</span></div></div>
+          <div class="perna"><i></i><div class="box"><b>3</b><p>Entregar uma ótima experiência pra receber 5 estrelas, e aí o ciclo virtuoso continua acontecendo.</p><span class="ok">Faz sentido?</span></div></div>
+        </div>
+        <p class="cai">“Se uma perna não estiver boa, <span class="t">a mesa inteira cai.</span>”</p>
+      </div>
+      <ol class="steps" start="3" style="counter-reset: s 2">
+        <li><div><h3>Comunidade e lives</h3><p>Logo depois da mesinha.</p></div></li>
+      </ol>
+      <p class="say small">E você não faz isso sozinho: tem a comunidade no WhatsApp, com proprietários do Brasil inteiro, e as lives com o Rômulo pra tirar dúvida.</p>
+      <ul class="do">
+        <li>Explique cada perna com as suas palavras, sem passar vídeo. Uma imagem do Rômulo ajuda, mas não é obrigatória.</li>
+        <li>Os casos de alunos ficam para depois.</li>
+      </ul>
+    </section>
+
+    <!-- 6 -->
+    <section class="stage" id="e6">
+      <div class="stage-head"><span class="num">6</span><div><span class="kicker">Fechamento</span><h2>Primeiro o resumo, <span class="t">depois o preço</span></h2></div></div>
+      <div class="says">
+        <p class="say">Então, resumindo: você entra na comunidade com as aulas gravadas, o grupo de WhatsApp com o Rômulo dentro e as lives mensais pra tirar dúvida.</p>
+        <p class="say">O investimento é R$ 2.997, ou 12x de R$ 299,70. E você tem 14 dias de garantia. A lei dá 7, a gente dá 14: é o dobro. Se não for o que eu te disse, devolvemos 100%, sem precisar explicar nada. Bora começar hoje?</p>
+      </div>
+      <ul class="do"><li>Qualquer resposta que não seja “sim” vai para as objeções (etapa 7).</li></ul>
+
+      <div class="box" style="background:transparent;border:0;padding:0">
+        <span class="kicker">Escada de preço</span>
+        <p>Cada degrau vem com aprovação e prazo.</p>
+      </div>
+      <div class="ladder" aria-label="Escada de preço">
+        <div class="step"><span class="price">R$ 2.997</span><span class="when">Sempre o primeiro</span><span class="line">O fechamento acima.</span></div>
+        <div class="step"><span class="price">R$ 2.797</span><span class="when">Objeção de preço (cupom)</span><span class="line">“Tenho um cupom que deixa em R$ 2.797. Como o cupom não é perpétuo, ele vale até amanhã às 13h.”</span></div>
+        <div class="step"><span class="price">R$ 2.497</span><span class="when">Só com uma trava concreta</span><span class="line">“Conversei com a minha equipe e consegui aprovar R$ 2.497, válido até amanhã às 13h.”</span></div>
+        <div class="step bonus"><span class="price">Bônus</span><span class="when">Pediu mais desconto</span><span class="line">Não baixa mais: oferece o curso de Booking de bônus.</span></div>
+      </div>
+
+      <div class="box" style="background:transparent;border:0;padding:0">
+        <span class="kicker">Reclamou dos juros? Menos parcelas</span>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Preço à vista</th><th>12x (total)</th><th>6x (total)</th><th>4x (total)</th><th>6x economiza</th></tr></thead>
+          <tbody>
+            <tr><td>R$ 2.997 (tabela)</td><td>R$ 299,70 (R$ 3.596)</td><td>R$ 551,83 (R$ 3.311)</td><td>R$ 804,79 (R$ 3.219)</td><td class="save">R$ 285</td></tr>
+            <tr><td>R$ 2.797 (cupom)</td><td>R$ 279,70 (R$ 3.356)</td><td>R$ 515,00 (R$ 3.090)</td><td>R$ 751,08 (R$ 3.004)</td><td class="save">R$ 266</td></tr>
+            <tr><td>R$ 2.497 (aprovação)</td><td>R$ 249,70 (R$ 2.996)</td><td>R$ 459,76 (R$ 2.759)</td><td>R$ 670,52 (R$ 2.682)</td><td class="save">R$ 237</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Taxa da Eduzz de 2,92% ao mês. Confira no checkout antes de usar.</p>
+    </section>
+
+    <!-- 7 -->
+    <section class="stage" id="e7">
+      <div class="stage-head"><span class="num">7</span><div><span class="kicker">Objeções</span><h2>As 11 que <span class="t">mais aparecem</span></h2></div></div>
+      <p class="intro">As 10 primeiras estão na ordem do que mais aparece nas conversas. A 11ª entrou depois e é a 5ª mais comum.</p>
+      <nav class="jump" aria-label="Ir para a objeção">
+        <a href="#o1">Preço</a><a href="#o2">Momento</a><a href="#o3">Vou pensar</a><a href="#o4">YouTube</a><a href="#o5">Cônjuge ou sócio</a><a href="#o6">Serve pro meu caso?</a><a href="#o7">Juros</a><a href="#o8">Façam por mim</a><a href="#o9">Confiança</a><a href="#o10">Já fiz curso</a><a href="#o11">Não tenho tempo</a>
+      </nav>
+      <div class="objs">
+        <article class="obj" id="o1">
+          <header><b>1</b><h3>Preço</h3></header>
+          <p class="resp"><em>Lógica:</em> “12x de R$ 299,70 é menos que uma diária sua de R$ [diária dela] por mês.”</p>
+          <p class="resp"><em>Prova:</em> o Danilo era barbeiro havia 18 anos, fez o curso e em 2 meses fez uns R$ 18 mil. Hoje tem um apartamento em Ubatuba e dois com sócios no Guarujá. “Pra ganhar R$ 1.000 eu tinha que cortar 20 cabelos. Hoje a cobertura é R$ 1.000 a diária.”</p>
+          <p class="tip">Condição: 12x, boleto parcelado, dois cartões e a escada de preço. Quando chegarem outros casos, use o mais parecido com o lead.</p>
+        </article>
+        <article class="obj" id="o2">
+          <header><b>2</b><h3>Momento (obra, bebê, viagem, mês que vem)</h3></header>
+          <p class="resp">“Quanto isso é importante pra você? A obra é justamente o melhor momento: você estuda agora e abre já certo.”</p>
+          <p class="tip">Se não fechar, marca a retomada numa data.</p>
+        </article>
+        <article class="obj" id="o3">
+          <header><b>3</b><h3>Vou pensar</h3></header>
+          <p class="resp">“Você acha que vai melhor com isso do que sem? Chega mais rápido sozinha ou com a gente? Tem como pagar?”</p>
+          <p class="tip">Depois, em voz mais baixa: “O que você tem medo que aconteça?”</p>
+        </article>
+        <article class="obj" id="o4">
+          <header><b>4</b><h3>YouTube ou lives grátis</h3></header>
+          <p class="resp">“O que você faz hoje te dá o resultado que você tem hoje.”</p>
+          <p class="resp">“Nas lives e no YouTube o Rômulo mostra o quê fazer. Na comunidade ele mostra o como, tintim por tintim, e você pergunta no grupo quando travar.”</p>
+        </article>
+        <article class="obj wide" id="o5">
+          <header><b>5</b><h3>Cônjuge ou sócio</h3></header>
+          <p class="resp"><em>Melhor ainda:</em> chamar o cônjuge para a call já na marcação. Se não veio, as seis falas, nesta ordem:</p>
+          <ol>
+            <li>“E se ele não deixar?”</li>
+            <li>“Do que ele seria contra?”</li>
+            <li>“Ele sabe que você está tentando resolver isso? Ele aprova ficar como está? Então por que seria contra resolver?”</li>
+            <li>“Acho que você está pedindo permissão quando precisa de apoio.”</li>
+            <li>“Daqui a 5 anos, se não fizer, quem você vai culpar?”</li>
+            <li>“Entra hoje. Se em casa ele não topar, você tem 14 dias e recebe tudo de volta.”</li>
+          </ol>
+        </article>
+        <article class="obj" id="o6">
+          <header><b>6</b><h3>Serve pro meu caso?</h3></header>
+          <p class="resp"><em>Diagnóstico:</em> de 1 a 5 imóveis, A5E. Com mais imóveis ou gestão para terceiros, Gigantes. Uma recomendação só.</p>
+          <p class="resp"><em>Imóvel longe:</em> “Na comunidade o Rômulo mostra um imóvel em Balneário Camboriú, a 600 km da casa dele, rodando sem ele lá.”</p>
+          <p class="resp"><em>Imóvel simples:</em> “Hóspede valoriza mais funcionalidade e limpeza do que luxo.”</p>
+        </article>
+        <article class="obj" id="o7">
+          <header><b>7</b><h3>Juros</h3></header>
+          <p class="resp">“O juros não é nosso, é da Eduzz. Mas dá pra pagar bem menos: em 6x fica R$ 551,83 por mês, uns R$ 285 a menos que no 12x. E no Pix à vista não tem juros.”</p>
+          <p class="tip">Valores de 12x, 6x e 4x na tabela da etapa 6.</p>
+        </article>
+        <article class="obj" id="o8">
+          <header><b>8</b><h3>Quero que façam por mim</h3></header>
+          <p class="resp">“Até pra isso você precisa entender o mínimo, pra saber o que cobrar. Te garanto: só de estar lá no grupo, cercado de pessoas falando disso o tempo todo, e com o Rômulo respondendo a turma e você, você já aprende. Seis meses lá e você começa a entender várias dinâmicas pra ter mais resultado.”</p>
+        </article>
+        <article class="obj" id="o9">
+          <header><b>9</b><h3>Confiança</h3></header>
+          <p class="resp">“Faz sentido desconfiar, tem muito golpe por aí. O pagamento é pela Eduzz, você tem 14 dias de garantia com 100% de volta, e eu te mostro o grupo funcionando agora.”</p>
+        </article>
+        <article class="obj" id="o10">
+          <header><b>10</b><h3>Já fiz curso e não serviu</h3></header>
+          <p class="resp">“Pior que um investimento ruim é deixar ele te impedir de fazer um bom. O primeiro namoro da escola não deu certo e você não desistiu de namorar.”</p>
+        </article>
+        <article class="obj" id="o11">
+          <header><b>11</b><h3>Não tenho tempo</h3></header>
+          <p class="resp">“Hoje, quanto tempo por semana você gasta com o imóvel? Respondendo hóspede, resolvendo limpeza, mexendo em preço? Normalmente a falta de tempo vem justamente de fazer tudo sem processo. As aulas são gravadas, você assiste quando, onde e sempre que quiser, 20 minutinhos por dia. E o que você aprende ali (mensagem automática, fechadura eletrônica, rotina de limpeza) é o que te devolve tempo. E mesmo na semana mais corrida: só de estar lá no grupo, cercado de pessoas falando disso o tempo todo, e com o Rômulo respondendo a turma e você, você já aprende. Faz sentido?”</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="stage" id="e8">
+      <div class="stage-head"><span class="num">8</span><div><span class="kicker">Reforçar depois do sim</span><h2>O sim <span class="t">não é o fim</span></h2></div></div>
+      <div class="says">
+        <p class="say small">Me manda o comprovante que a minha equipe já libera os bônus.</p>
+        <p class="say small">Decisão certa, porque <span class="slot">[a meta dela, nas palavras dela]</span>.</p>
+      </div>
+      <ul class="do"><li>O link de pagamento vai durante a call.</li><li>Depois, o Téo recebe o aluno, repete a meta dele e passa os primeiros passos:</li></ul>
+      <div class="after-yes">
+        <div><b>Entrar no grupo</b><span>E se apresentar.</span></div>
+        <div><b>Pesquisa de entrada</b><span>Diagnóstico refeito a cada 6 meses para medir as histórias de sucesso.</span></div>
+        <div><b>Módulo inicial</b><span>“Abre o seu anúncio do lado da aula e já vai mexendo. Só não muda mil coisas ao mesmo tempo: uma por vez, pra saber o que funcionou.”</span></div>
+        <div><b>Acompanhamento</b><span>O Téo acompanha o aluno depois da entrada.</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>Fonte: roteiro novo da call de vendas, versão de 04/11/2026.</span>
+    <span>Canal do Anfitrião · uso interno do time comercial</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav a'));
+  var stages = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function update() {
+    var y = window.scrollY + window.innerHeight * 0.3;
+    var idx = 0;
+    for (var i = 0; i < stages.length; i++) { if (stages[i] && stages[i].offsetTop <= y) idx = i; }
+    links.forEach(function (a, i) {
+      var on = i === idx;
+      a.classList.toggle('on', on);
+      if (on) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current');
+    });
+    var cur = links[idx];
+    var nav = cur && cur.parentElement;
+    if (nav && nav.scrollWidth > nav.clientWidth) {
+      var left = cur.offsetLeft - nav.clientWidth / 2 + cur.clientWidth / 2;
+      if (Math.abs(nav.scrollLeft - left) > 40) nav.scrollLeft = left;
+    }
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+</script>
+</body>
+</html>
