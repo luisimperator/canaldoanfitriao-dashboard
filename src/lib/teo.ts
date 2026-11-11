@@ -13,8 +13,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { transcreverAudio, transcricaoConfigurada } from "@/lib/transcribe";
 
 const MODEL = process.env.TEO_MODEL || "claude-opus-5-5";
+// Acompanhamento (retomar quem parou de responder): mensagem curta, sem
+// negociação; vai num modelo mais barato. Conversa ao vivo segue no MODEL.
+const MODEL_ACOMPANHAMENTO = process.env.TEO_MODEL_ACOMPANHAMENTO || "claude-sonnet-5-5";
 const FALLBACK_MODEL = "claude-opus-4-8";
+// Esforço de raciocínio: "medium", um acima do "low". Fixo aqui (e não no
+// padrão do modelo) porque o padrão do Sonnet 5.5 é "high".
 const EFFORT = (process.env.TEO_EFFORT || "medium") as "low" | "medium" | "high";
+// Cache do prompt: o que não muda entre leads (regras, preços, ajustes do
+// dono) fica guardado 1h e custa 5% do preço na leitura. Só o que é do lead
+// (hora, horários livres, ficha, histórico) é cobrado cheio.
+const CACHE_1H = { type: "ephemeral", ttl: "1h" } as const;
 const MAX_TURNS = 4;
 const MAX_MSGS_HISTORICO = 40;
 
@@ -45,10 +54,24 @@ export interface LeadTeo {
   email?: string | null;
 }
 
+export interface UsoTeo {
+  modelo: string;
+  /** chamadas à API nesta resposta (o laço de ferramentas pode dar mais de uma) */
+  chamadas: number;
+  /** tokens de entrada cobrados cheios */
+  entrada: number;
+  /** tokens lidos do cache (5% do preço) */
+  cache_lido: number;
+  /** tokens gravados no cache (1,25x a 2x do preço) */
+  cache_gravado: number;
+  saida: number;
+}
+
 export interface ResultadoTeo {
   mensagens: string[];
   humano: { motivo: string; resumo: string } | null;
   ficha: string | null;
+  uso?: UsoTeo;
 }
 
 // ---------- Unnichat ----------
@@ -389,8 +412,12 @@ export async function rodarTeo(opts: {
   extras: string;
   ficha: string | null;
   abrir: boolean;
-  /** acompanhamento: instrução pro Téo retomar a conversa com quem parou de responder */
+  /** instrução pro Téo retomar a conversa (acompanhamento ou retomada da Black) */
   retomar?: string;
+  /** é acompanhamento de quem parou de responder: roda no modelo mais barato */
+  acompanhamento?: boolean;
+  /** avisos só deste lead (ex.: e-mails já conferidos sem compra), fora do cache */
+  avisoDoLead?: string | null;
   /** primeiro nome de quem do time já conversou com o lead: a call é com essa pessoa */
   especialista?: string | null;
   /** horários livres pra call, já em horário de Brasília (AAAA-MM-DDTHH:MM) */
@@ -398,14 +425,22 @@ export async function rodarTeo(opts: {
   marcarCall: (args: { horario: string; email: string; resumo: string }) => Promise<string>;
 }): Promise<ResultadoTeo> {
   const client = new Anthropic();
+  // Ordem pensada pro cache: o que vale pra todo lead vem primeiro (com
+  // marcador de cache), o que é deste lead e deste minuto vem por último.
+  const fixo = [
+    opts.contexto ? `# Aviso do dia\n${opts.contexto}` : null,
+    opts.precos ? `# Preços\n${opts.precos}` : null,
+    opts.extras ? `# Ajustes do dono (valem acima das regras gerais)\n${opts.extras}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   const system: Anthropic.TextBlockParam[] = [
-    { type: "text", text: PROMPT, cache_control: { type: "ephemeral", ttl: "1h" } },
+    { type: "text", text: PROMPT, cache_control: CACHE_1H },
+    ...(fixo ? [{ type: "text" as const, text: fixo, cache_control: CACHE_1H }] : []),
     {
       type: "text",
       text: [
         `# Agora\n${agoraSP()} (horário de Brasília).`,
-        opts.contexto ? `# Aviso do dia\n${opts.contexto}` : null,
-        opts.precos ? `# Preços\n${opts.precos}` : null,
         `# Horários livres pra call (horário de Brasília)\n${
           opts.especialista
             ? `${opts.especialista} é o especialista deste lead (já tem call marcada ou já conversou com ele): a call é sempre com ${opts.especialista}, inclusive pra remarcar. Os horários abaixo já são só dessa pessoa. Nunca ofereça outro especialista; se nenhum horário servir, chame passar_para_humano (motivo call).\n`
@@ -418,8 +453,8 @@ export async function rodarTeo(opts: {
           opts.horariosLivres.length ? opts.horariosLivres.join(", ") : "nenhum no momento: pergunte dia e período e passe pro time"
         }`,
         blocoLead(opts.lead),
+        opts.avisoDoLead ? `# Sobre este lead (vale junto com os ajustes do dono)\n${opts.avisoDoLead}` : null,
         opts.ficha ? `# Ficha até agora\n${opts.ficha}` : null,
-        opts.extras ? `# Ajustes do dono (valem acima das regras gerais)\n${opts.extras}` : null,
       ]
         .filter(Boolean)
         .join("\n\n"),
@@ -434,28 +469,40 @@ export async function rodarTeo(opts: {
 
   let humano: ResultadoTeo["humano"] = null;
   const notas: string[] = [];
-  let model = MODEL;
+  // Se um modelo sumir (404), cai pro próximo da lista.
+  const modelos = [...new Set(opts.acompanhamento ? [MODEL_ACOMPANHAMENTO, MODEL, FALLBACK_MODEL] : [MODEL, FALLBACK_MODEL])];
+  let m = 0;
+  const uso: UsoTeo = { modelo: modelos[0], chamadas: 0, entrada: 0, cache_lido: 0, cache_gravado: 0, saida: 0 };
 
   for (let turn = 0; turn < MAX_TURNS; turn++) {
     let resp: Anthropic.Message;
     try {
       resp = await client.messages.create({
-        model,
+        model: modelos[m],
         max_tokens: 4096,
         system,
         tools: TOOLS,
         messages,
         thinking: { type: "adaptive" },
         output_config: { effort: EFFORT },
+        // Cache automático do fim da conversa (5 min): quando o Téo usa uma
+        // ferramenta e volta, a segunda chamada lê o histórico do cache.
+        cache_control: { type: "ephemeral" },
       });
     } catch (e) {
-      if (e instanceof Anthropic.NotFoundError && model !== FALLBACK_MODEL) {
-        model = FALLBACK_MODEL;
+      if (e instanceof Anthropic.NotFoundError && m < modelos.length - 1) {
+        m++;
+        uso.modelo = modelos[m];
         turn--;
         continue;
       }
       throw e;
     }
+    uso.chamadas++;
+    uso.entrada += resp.usage.input_tokens;
+    uso.cache_lido += resp.usage.cache_read_input_tokens ?? 0;
+    uso.cache_gravado += resp.usage.cache_creation_input_tokens ?? 0;
+    uso.saida += resp.usage.output_tokens;
 
     if (resp.stop_reason === "tool_use") {
       messages.push({ role: "assistant", content: resp.content });
@@ -497,7 +544,8 @@ export async function rodarTeo(opts: {
       mensagens: texto ? dividir(texto) : [],
       humano,
       ficha: notas.length ? notas.join("\n") : null,
+      uso,
     };
   }
-  return { mensagens: [], humano, ficha: notas.length ? notas.join("\n") : null };
+  return { mensagens: [], humano, ficha: notas.length ? notas.join("\n") : null, uso };
 }
