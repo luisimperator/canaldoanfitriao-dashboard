@@ -193,6 +193,37 @@ function plantaoBlack(): boolean {
 const ALUNO_TAG = /^(aluno|alunoa5e|aluno-a5e|aluno-gigantes|aluno-geral|alunos-a5e|gigantes-\d|comprou:)/i;
 const ESPERA_BLACK_MS = 10 * 60_000;
 
+// Compra de curso que dá condição de aluno na Black: os cursos do combo e a
+// Black passada. Ingresso de Encontro e imersão não contam.
+const CURSO_RE = /(anfitri[aã]o 5 estrelas|gigantes da temporada|subloca|booking|black friday hist|decora[cç][aã]o|fotografia)/i;
+const NAO_CURSO_RE = /(encontro|imers[aã]o|ingresso)/i;
+const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/gi;
+
+// E-mail do cadastro e os que o lead mandou na conversa (no máximo 5).
+function emailsDaConversa(cadastro: string | null, msgs: MsgUnnichat[]): string[] {
+  const achados = new Set<string>();
+  if (cadastro?.includes("@")) achados.add(cadastro.trim().toLowerCase());
+  for (const m of msgs) {
+    if (m.senderBy !== "contact" || !m.message) continue;
+    for (const e of m.message.match(EMAIL_RE) ?? []) achados.add(e.toLowerCase().replace(/\.$/, ""));
+  }
+  return [...achados].slice(-5);
+}
+
+async function acharCompraDeCurso(
+  supabase: SupabaseClient,
+  emails: string[]
+): Promise<{ email: string; produto: string } | null> {
+  const { data } = await supabase
+    .from("sales")
+    .select("buyer_email, product")
+    .eq("status", "paga")
+    .or(emails.map((e) => `buyer_email.ilike.${e}`).join(","))
+    .limit(200);
+  const curso = (data ?? []).find((s) => CURSO_RE.test(s.product ?? "") && !NAO_CURSO_RE.test(s.product ?? ""));
+  return curso ? { email: String(curso.buyer_email).toLowerCase(), produto: String(curso.product) } : null;
+}
+
 // Checkout da Black (os mesmos botões das páginas de pagamento), com
 // utm_source=teo: a venda que o Téo fecha sozinho aparece como dele na Eduzz.
 // Só pra lead sem especialista (o lead de um vendedor continua com a página,
@@ -213,6 +244,8 @@ const CHECKOUT_TEO = {
 function blocoBlack(o: {
   plantao: boolean;
   aluno: boolean;
+  /** e-mails (do cadastro ou mandados na conversa) já conferidos sem compra de curso */
+  emailsSemCompra?: string[];
   retomou: boolean;
   /** lead sem especialista: quem fecha a venda por aqui é o Téo (links com utm teo) */
   semEspecialista: boolean;
@@ -239,7 +272,12 @@ function blocoBlack(o: {
     o.vendaTeo
       ? ""
       : o.retomou
-      ? "O especialista não conseguiu responder a tempo, então agora quem responde é você: tire a dúvida com as informações abaixo e conduza pra call com o especialista (horários da lista). Comece natural, sem dizer que o especialista sumiu (ex.: \"Pra você não ficar esperando, já te adianto:\"). Não chame passar_para_humano por causa da Black de novo; só pra suporte, mentorado ou se a pessoa pedir uma pessoa."
+      ? [
+          "O especialista não respondeu a tempo, então agora quem atende é você, no lugar dele, até o fim da venda. Responda a dúvida e siga a venda por aqui: condição certa pro caso dela, forma de pagamento e a página de pagamento quando ela quiser comprar. Não ofereça call e não diga que o especialista vai responder, confirmar ou mandar algo; call só se ela pedir.",
+          "Se o especialista já tinha conversado com ela, continue de onde ele parou: não repita o que ele já disse e não contradiga o que ele combinou. Você continua sendo o Téo, da equipe do Rômulo: não se passe pelo especialista.",
+          "Comece natural, sem dizer que o especialista sumiu (ex.: \"Pra você não ficar esperando, já te adianto:\"). Se a última mensagem dela for só um agradecimento ou um \"vou ver\", responda curto e deixe a porta aberta, sem insistir.",
+          "Não chame passar_para_humano por causa da Black de novo; só pra suporte, mentorado, se a pessoa pedir uma pessoa, ou se ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado).",
+        ].join(" ")
       : [
           'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda com as informações abaixo e ofereça dois horários da lista pra call com o especialista (a não ser que ela já esteja fechando: aí feche por aqui).',
           o.plantao
@@ -260,7 +298,14 @@ function blocoBlack(o: {
     "- Quem não é aluno: R$ 8.997 à vista ou 12x de R$ 899,71 no cartão (também Pix e saldo Eduzz). Boleto parcelado (com análise): 12x de R$ 949,71. Página: anfitriao5estrelas.com.br/pagamento-nao-alunos/",
     o.aluno
       ? "- Este lead É aluno (pelo cadastro): pra ele é R$ 4.997 à vista ou 12x de R$ 499,70, com o cupom BLACKFRIDAYALUNOS. Página: anfitriao5estrelas.com.br/pagamento-alunos/"
-      : "- Aluno tem condição especial, mas você não sabe se este lead é aluno: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, diga que o especialista confirma o cadastro e passa a condição de aluno.",
+      : [
+          "- Aluno tem condição especial, mas o cadastro deste lead não mostra compra de curso: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, peça o e-mail que ela usou na compra do curso; o sistema confere e, se achar, na sua próxima resposta este bloco já vem com a condição de aluno. Não diga que o especialista confirma.",
+          o.emailsSemCompra?.length
+            ? `  Já conferi e não há compra de curso nestes e-mails: ${o.emailsSemCompra.join(", ")}. Se ela disse que é aluna, diga isso com naturalidade e pergunte se comprou com outro e-mail; se não tiver outro, siga com a condição de quem não é aluno (e diga que, se lembrar de outro e-mail, é só mandar).`
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
     "- Página da Black: anfitriao5estrelas.com.br/black-friday-historica/",
     o.semEspecialista || o.vendaTeo ? `- ${linksTeo}` : "",
     "Você não sabe: quando o carrinho fecha, a garantia da Black e detalhes da entrega da IA. Não invente nada disso: o especialista confirma.",
@@ -1190,9 +1235,13 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // conversa é dele agora, o Téo sai sem responder por cima.
     const doVendedor = [...reais].reverse().find(ehDoVendedor);
     const ultimaApi = [...reais].reverse().find((m) => m.senderBy === "user" && m.origin === "unniApi");
+    // Black: o que o vendedor escreveu antes de o Téo retomar (ele parou de
+    // responder) não devolve a conversa pra ele; só o que escrever depois.
+    const retomouEm = c.black_retomou_em ? new Date(c.black_retomou_em).getTime() : 0;
     if (
       doVendedor &&
       Date.now() - new Date(doVendedor.date).getTime() < 48 * 3600_000 &&
+      new Date(doVendedor.date).getTime() > retomouEm &&
       (!ultimaApi || new Date(doVendedor.date).getTime() > new Date(ultimaApi.date).getTime())
     ) {
       await supabase
@@ -1329,7 +1378,17 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // quando o lead clica nos botões dela. Enquanto o Téo responde, a conversa
     // é dele, a não ser que alguém do time já tenha conversado com o lead.
     if (!doTime && cfg.atendente_id) await garantirTeo(supabase, c, cfg.atendente_id);
-    const vendaTeo = blackAtiva(cfg) && !especialista ? await sortearVendaTeo(supabase, cfg, c).catch(() => false) : false;
+    // O sorteado do teste continua do Téo mesmo depois de uma passagem da Black
+    // (black_vendedor); só sai do teste se tiver call ou conversa com alguém do time.
+    const vendaTeo =
+      blackAtiva(cfg) && !doTime && (c.venda_teo === true || !especialista)
+        ? await sortearVendaTeo(supabase, cfg, c).catch(() => false)
+        : false;
+    // Aluno pelo cadastro (tag) ou por compra de curso no e-mail do cadastro ou
+    // num e-mail que o lead mandou na conversa (assim o Téo confirma sozinho).
+    const alunoPorTag = lead.tags.some((t) => ALUNO_TAG.test(t.trim()));
+    const emailsDoLead = blackAtiva(cfg) && !alunoPorTag ? emailsDaConversa(lead.email ?? null, msgs) : [];
+    const compraDeCurso = emailsDoLead.length ? await acharCompraDeCurso(supabase, emailsDoLead).catch(() => null) : null;
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
     if (ouvidos) await log(supabase, "áudio ouvido", { contact_id: c.contact_id, nome: c.nome, audios: ouvidos });
@@ -1343,7 +1402,8 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         blackAtiva(cfg)
           ? blocoBlack({
               plantao: plantaoBlack(),
-              aluno: lead.tags.some((t) => ALUNO_TAG.test(t.trim())),
+              aluno: alunoPorTag || Boolean(compraDeCurso),
+              emailsSemCompra: compraDeCurso ? [] : emailsDoLead,
               retomou: Boolean(c.black_retomou_em),
               semEspecialista: !especialista,
               vendaTeo,
@@ -1667,7 +1727,7 @@ async function passarNaBlack(
   await anotar(
     supabase,
     c.contact_id,
-    `🔥 BLACK — ${v ? primeiroNomeVendedor(v.nome) : "time"}, responda agora por aqui (se ninguém responder em 10 min, o Téo responde).\nDúvida: ${resumo}${ficha ? `\n\nFicha:\n${ficha}` : ""}`
+    `🔥 BLACK — ${v ? primeiroNomeVendedor(v.nome) : "time"}, responda agora por aqui. Se você não responder em 10 min (agora ou sempre que o lead escrever de novo), o Téo assume e segue a venda.\nDúvida: ${resumo}${ficha ? `\n\nFicha:\n${ficha}` : ""}`
   );
   await supabase
     .from("teo_conversas")
@@ -1762,6 +1822,81 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
     if (cfg.atendente_id) await unnichat(supabase, "POST", `/contact/${p.contact_id}/assign`, { attendantId: cfg.atendente_id });
     await log(supabase, "black: téo retomou (vendedor não respondeu em 10 min)", { contact_id: p.contact_id, nome: p.nome, vendedor: p.black_vendedor });
     feitos.push(`black retomou ${p.nome}`);
+  }
+  feitos.push(...(await retomarVendedorParado(supabase, cfg)));
+  return feitos;
+}
+
+// Black: o vendedor já tinha respondido (a conversa ficou com ele, motivo
+// "vendedor"), mas o lead escreveu de novo e ninguém respondeu em 10 min. O
+// Téo assume e segue a venda. Só olha quem escreveu nas últimas 6h (pelos
+// eventos do webhook), pra não ler o histórico de todo mundo a cada minuto, e
+// não entra em conversa com call acontecendo.
+async function retomarVendedorParado(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
+  const agora = Date.now();
+  const { data: eventos } = await supabase
+    .from("webhook_log")
+    .select("contato:body->contact->>id")
+    .eq("source", "unnichat")
+    .gte("created_at", new Date(agora - 6 * 3600_000).toISOString())
+    .lte("created_at", new Date(agora - ESPERA_BLACK_MS).toISOString())
+    .limit(3000);
+  const ids = [
+    ...new Set(((eventos ?? []) as { contato: string | null }[]).map((e) => e.contato).filter((x): x is string => Boolean(x))),
+  ];
+  if (!ids.length) return [];
+  const { data: comVendedor } = await supabase
+    .from("teo_conversas")
+    .select("contact_id, nome, black_vendedor")
+    .eq("estado", "humano")
+    .eq("ativo", true)
+    .eq("motivo_humano", "vendedor")
+    .not("black_passou_em", "is", null)
+    .in("contact_id", ids.slice(0, 500));
+  const feitos: string[] = [];
+  for (const p of comVendedor ?? []) {
+    const { count: emCall } = await supabase
+      .from("teo_calls")
+      .select("id", { count: "exact", head: true })
+      .eq("contact_id", p.contact_id)
+      .neq("status", "cancelada")
+      .gte("inicio", new Date(agora - 90 * 60_000).toISOString())
+      .lte("inicio", new Date(agora + 20 * 60_000).toISOString());
+    if (emCall) continue;
+    const msgs = await historico(supabase, p.contact_id).catch(() => null);
+    if (!msgs) continue;
+    const ultimaDoLead = [...msgs].reverse().find((m) => m.senderBy === "contact");
+    if (!ultimaDoLead) continue;
+    const t = new Date(ultimaDoLead.date).getTime();
+    if (agora - t < ESPERA_BLACK_MS || agora - t > 6 * 3600_000) continue;
+    const respondida = msgs.some(
+      (m) =>
+        new Date(m.date).getTime() > t &&
+        (ehDoVendedor(m) || (m.senderBy === "user" && m.origin === "unniApi" && TIPOS_DO_VENDEDOR.has(m.type)))
+    );
+    if (respondida) continue;
+    const { data: pegou } = await supabase
+      .from("teo_conversas")
+      .update({
+        estado: "em_conversa",
+        motivo_humano: null,
+        black_retomou_em: new Date().toISOString(),
+        proxima_checagem: null,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq("contact_id", p.contact_id)
+      .eq("estado", "humano")
+      .eq("motivo_humano", "vendedor")
+      .select("contact_id");
+    if (!pegou?.length) continue;
+    if (cfg.atendente_id) await unnichat(supabase, "POST", `/contact/${p.contact_id}/assign`, { attendantId: cfg.atendente_id });
+    await log(supabase, "black: téo retomou (vendedor parou de responder)", {
+      contact_id: p.contact_id,
+      nome: p.nome,
+      vendedor: p.black_vendedor,
+      lead_escreveu_em: ultimaDoLead.date,
+    });
+    feitos.push(`black retomou (vendedor parado) ${p.nome}`);
   }
   return feitos;
 }
