@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap">
 <style>
-/* Análise do roteiro que o time usa hoje: placar, a call como acontece, os números de 11 calls gravadas e os erros que se repetem. Mesmo visual do roteiro novo. */
+/* Análise do roteiro que o time usa hoje: placar, a call como acontece, os números de 11 calls gravadas e os erros que se repetem. */
 :root {
   color-scheme: dark;
   --bg: #0a0a0a;
@@ -108,7 +108,7 @@ h2 { font-family: var(--display); font-weight: 400; font-size: clamp(38px, 4.4vw
 .err p { margin: 0; font-size: 19px; color: var(--muted); line-height: 1.42; }
 .err blockquote { margin: 0; padding: 10px 14px; border-left: 3px solid var(--red-edge); background: rgba(255, 255, 255, 0.025); border-radius: 0 10px 10px 0; font-size: 18.5px; font-style: italic; color: var(--fg); }
 .err .fix { font-size: 18px; color: var(--fg); border-top: 1px solid var(--line); padding-top: 10px; }
-.err .fix::before { content: "No roteiro novo: "; font-family: var(--display); letter-spacing: 0.08em; color: var(--teal); }
+.err .fix::before { content: "O certo: "; font-family: var(--display); letter-spacing: 0.08em; color: var(--teal); }
 .err.wide { grid-column: 1 / -1; }
 
 /* tabelas */
@@ -150,17 +150,16 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
 </head>
 <body>
 
-<div class="band">ANÁLISE INTERNA · TIME COMERCIAL · <a href="/roteiro-sales-call-nova">VER O ROTEIRO NOVO</a></div>
+<div class="band">ANÁLISE INTERNA · TIME COMERCIAL</div>
 
 <header class="hero">
   <div class="wrap">
     <div class="brand">CANAL DO ANFITRIÃO</div>
     <div class="pills">
       <span class="pill">Como a call é feita hoje</span>
-      <a class="pill teal" href="/roteiro-sales-call-nova">Comparar com o roteiro novo →</a>
     </div>
     <h1>O roteiro<br><span class="r">de hoje</span></h1>
-    <p class="lede">O que acontece de verdade nas calls, montado a partir de <strong>14 calls gravadas</strong> (3 de 03/11 e 11 de 04 a 11/11) e das conversas de WhatsApp depois delas. O roteiro novo saiu em 04/11; nas calls seguintes ele ainda não apareceu.</p>
+    <p class="lede">O que acontece de verdade nas calls, montado a partir de <strong>14 calls gravadas</strong> (3 de 03/11 e 11 de 04 a 11/11) e das conversas de WhatsApp depois delas.</p>
     <div class="score" aria-label="Placar de 09 e 10/11">
       <div><b>19</b><span>calls marcadas em 09 e 10/11</span></div>
       <div><b class="r">9</b><span>faltaram (47%), nenhuma resgatada pelo sistema</span></div>
@@ -180,7 +179,7 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
       <li><span class="tempo">0–2 min</span><b>Abertura</b><span>"Sou do time comercial do Rômulo, vou entender seu cenário."</span></li>
       <li><span class="tempo">2–5 min</span><b>2 a 5 perguntas</b><span>Sobre o imóvel e a experiência. Ninguém pergunta meta, prazo ou o que preocupa.</span></li>
       <li class="bad"><span class="tempo">3–8 min</span><b>"Conhece o Rômulo?"</b><span>Vem o currículo: imóveis, locações, alunos. Com números diferentes a cada vendedor.</span></li>
-      <li class="bad"><span class="tempo">4–7 min</span><b>"Dois sentimentos"</b><span>"No fim você vai ter dois sentimentos…" Saiu do roteiro novo.</span></li>
+      <li class="bad"><span class="tempo">4–7 min</span><b>"Dois sentimentos"</b><span>"No fim você vai ter dois sentimentos…"</span></li>
       <li class="bad"><span class="tempo">15–30 min</span><b>Tour pelos módulos</b><span>Hospitalidade, PriceLabs, OwnerPro, IA, imposto, terceiros, AirCover. A comunidade aparece no fim, como bônus.</span></li>
       <li><span class="tempo">antes do preço</span><b>"Ficou alguma dúvida?"</b><span>Checagem genérica, sem resumo do caso do lead.</span></li>
       <li class="bad"><span class="tempo">21–37 min</span><b>Preço</b><span>Já com desconto e bônus, sem o lead ter pedido. Cada vendedor parte de um valor.</span></li>
@@ -194,10 +193,9 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
     <div class="legend"><span><i style="background: var(--red)"></i>vermelho = deveria acontecer e não acontece, ou não deveria e acontece</span></div>
     <div class="bars">
       <div class="bar want"><span class="lbl">Cita a garantia de 14 dias<small>a resposta mais forte pro "vou pensar" e pro cônjuge</small></span><div class="track"><div class="fill zero" style="width: 0%"></div></div><span class="num">0/11</span></div>
-      <div class="bar want"><span class="lbl">Faz as perguntas do roteiro novo<small>"me conta mais", rotular o problema, "o que você já tentou?"</small></span><div class="track"><div class="fill zero" style="width: 0%"></div></div><span class="num">0/11</span></div>
-      <div class="bar want"><span class="lbl">Mostra o trailer ou a mesinha de 3 pernas</span><div class="track"><div class="fill zero" style="width: 0%"></div></div><span class="num">0/11</span></div>
+      <div class="bar want"><span class="lbl">Aprofunda o caso do lead<small>"me conta mais", rotular o problema, "o que você já tentou?"</small></span><div class="track"><div class="fill zero" style="width: 0%"></div></div><span class="num">0/11</span></div>
       <div class="bar want"><span class="lbl">Usa o cupom de R$ 2.797, o degrau certo da escada</span><div class="track"><div class="fill bad" style="width: 11%"></div></div><span class="num">1/9</span></div>
-      <div class="bar avoid"><span class="lbl">Dá o curso de Booking de bônus<small>no roteiro, só se o lead pedir mais desconto depois do R$ 2.497</small></span><div class="track"><div class="fill bad" style="width: 78%"></div></div><span class="num">7/9</span></div>
+      <div class="bar avoid"><span class="lbl">Dá o curso de Booking de bônus<small>só deveria sair se o lead pedir mais desconto depois do R$ 2.497</small></span><div class="track"><div class="fill bad" style="width: 78%"></div></div><span class="num">7/9</span></div>
       <div class="bar avoid"><span class="lbl">Faz o tour pelos módulos</span><div class="track"><div class="fill bad" style="width: 67%"></div></div><span class="num">6/9</span></div>
       <div class="bar avoid"><span class="lbl">Desce para R$ 2.497 (desconto de R$ 500) sem objeção concreta</span><div class="track"><div class="fill bad" style="width: 44%"></div></div><span class="num">4/9</span></div>
       <div class="bar avoid"><span class="lbl">Pergunta "você conhece o Rômulo?"</span><div class="track"><div class="fill bad" style="width: 44%"></div></div><span class="num">4/9</span></div>
@@ -235,7 +233,7 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
       <article class="err">
         <header><h3>Apresenta antes de entender</h3><span class="sev alta">alto</span></header>
         <p>Duas a cinco perguntas sobre o imóvel e depois 15 a 30 minutos de módulos. O vendedor não sabe a meta, o prazo nem o medo do lead quando chega no preço, então não tem com o que ligar o preço ao caso dele.</p>
-        <p class="fix">Clarificar, rotular ("hoje você…, quer chegar em…, o que está no caminho é… É isso?") e o ciclo da dor antes de mostrar qualquer coisa.</p>
+        <p class="fix">Perguntar e resumir o caso ("hoje você…, quer chegar em…, o que está no caminho é… É isso?") antes de mostrar qualquer coisa.</p>
       </article>
       <article class="err">
         <header><h3>Condições que não existem</h3><span class="sev alta">alto</span></header>
@@ -247,12 +245,12 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
       <article class="err">
         <header><h3>O cônjuge fica de fora</h3><span class="sev media">médio</span></header>
         <p>O cônjuge aparece em 6 das 11 calls, quase sempre na saída: "vou ver com meu marido", "minha mulher está ocupada". Ninguém convidou o cônjuge para a call.</p>
-        <p class="fix">Chamar o cônjuge já na marcação. Se não veio, as seis falas da objeção 5, terminando na garantia.</p>
+        <p class="fix">Chamar o cônjuge já na marcação. Se não veio, tratar a objeção na hora e fechar com a garantia de 14 dias.</p>
       </article>
       <article class="err">
         <header><h3>Currículo do Rômulo no lugar da conversa</h3><span class="sev media">médio</span></header>
         <p>"Você conhece o Rômulo?" abre um bloco de números que muda a cada vendedor (80, 89 imóveis; 11 mil locações), e em 03/11 entraram números da empresa, que nunca podem ser citados.</p>
-        <p class="fix">Uma frase só, depois do trailer: "Começou em 2016 alugando um quartinho… hoje administra mais de 70 imóveis."</p>
+        <p class="fix">Uma frase só: "Começou em 2016 alugando um quartinho… hoje administra mais de 70 imóveis."</p>
       </article>
       <article class="err">
         <header><h3>"Vou pensar" sem pergunta e sem data</h3><span class="sev media">médio</span></header>
@@ -262,7 +260,7 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
       <article class="err">
         <header><h3>A comunidade vira bônus</h3><span class="sev media">médio</span></header>
         <p>A comunidade de WhatsApp com o Rômulo aparece entre os minutos 15 e 24, no fim da lista de módulos. É o que o YouTube não tem, e chega quando o lead já cansou.</p>
-        <p class="fix">Chamar o A5E de comunidade desde o começo e falar dela logo depois da mesinha.</p>
+        <p class="fix">Chamar o A5E de comunidade desde o começo e falar dela no começo da apresentação, não no fim.</p>
       </article>
       <article class="err wide">
         <header><h3>Quase metade falta, e ninguém resgata</h3><span class="sev alta">alto</span></header>
@@ -294,30 +292,6 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
       <div><b>Retorno com data</b><span>Em 5 das 9 calls a saída teve dia marcado (ex.: "amanhã às 10h, depois de falar com a esposa"). É assim que o lead volta.</span></div>
       <div><b>Pagamento explicado</b><span>Parcelamento em 10 de 11 calls e boleto em 6. Ninguém sai da call sem saber como pagaria.</span></div>
       <div><b>A IA como diferencial</b><span>A assistente que monta o plano de estudo e responde no grupo foi mostrada em 6 calls, ao vivo, e o lead reage bem.</span></div>
-    </div>
-  </section>
-
-  <section class="block" id="comparar">
-    <div><span class="kicker">Hoje e no roteiro novo</span><h2>O que <span class="t">muda</span></h2></div>
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th>Hoje</th><th>No roteiro novo</th></tr></thead>
-        <tbody>
-          <tr><td>2 a 5 perguntas sobre o imóvel</td><td>"O que te fez agendar?" e escuta; "me conta mais"</td></tr>
-          <tr><td>Nenhum resumo do caso</td><td>Rotular: onde está, meta e o que está no caminho, até ouvir "é isso"</td></tr>
-          <tr><td>"Conhece o Rômulo?" e currículo</td><td>Uma frase sobre o Rômulo depois do trailer</td></tr>
-          <tr><td>"Dois sentimentos"</td><td>"Acho que você vai gostar do que a gente tem. Posso te mostrar?"</td></tr>
-          <tr><td>Tour de 15 a 30 min pelos módulos</td><td>Trailer, mesinha de 3 pernas e comunidade, ligados ao caso do lead</td></tr>
-          <tr><td>R$ 2.497 + Booking de saída</td><td>R$ 2.997 primeiro; escada só com objeção</td></tr>
-          <tr><td>Garantia não citada</td><td>Garantia de 14 dias junto do preço</td></tr>
-          <tr><td>"Vou pensar" aceito</td><td>Três perguntas e o "o que você tem medo que aconteça?"</td></tr>
-          <tr><td>Proposta por WhatsApp depois</td><td>Link de pagamento durante a call e pedido do comprovante</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="cta">
-      <p>O roteiro novo, etapa por etapa, com as falas, a escada de preço e as 11 objeções.</p>
-      <a class="btn" href="/roteiro-sales-call-nova">Abrir o roteiro novo</a>
     </div>
   </section>
 
