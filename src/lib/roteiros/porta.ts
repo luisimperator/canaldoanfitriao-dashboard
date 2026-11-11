@@ -87,7 +87,9 @@ export function mostrar(request: NextRequest, titulo: string, caminho: string, c
   const cookie = request.cookies.get(COOKIE)?.value ?? "";
   if (cookie && iguais(cookie, marca(senha))) return html(conteudo);
   const errou = request.nextUrl.searchParams.has("erro");
-  return html(telaDeSenha(titulo, caminho, errou ? "Senha errada. Tente de novo." : null), 401);
+  // 200 (e não 401): é uma tela de login comum, e 401 sem WWW-Authenticate
+  // confunde verificadores e prévias de link.
+  return html(telaDeSenha(titulo, caminho, errou ? "Senha errada. Tente de novo." : null));
 }
 
 /** POST: confere a senha do formulário, grava o cookie e volta pra página. */
