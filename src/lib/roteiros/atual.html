@@ -80,6 +80,16 @@ h2 { font-family: var(--display); font-weight: 400; font-size: clamp(38px, 4.4vw
 .flow li.bad { border-color: var(--red-edge); background: var(--red-wash); }
 .flow li.bad::before { color: var(--red); }
 
+/* a call que vendeu */
+.flow li.good { border-color: var(--teal-edge); background: var(--teal-wash); }
+.flow li.good::before { color: var(--teal); }
+.score.win b { color: var(--teal); }
+.quotes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.quotes blockquote { margin: 0; padding: 14px 18px; border-left: 3px solid var(--teal-edge); background: var(--teal-wash); border-radius: 0 12px 12px 0; font-size: 19.5px; font-style: italic; color: var(--fg); line-height: 1.4; }
+.quotes cite { display: block; margin-top: 8px; font-family: var(--ui); font-style: normal; font-size: 12.5px; color: var(--faint); }
+.atencao { margin: 0; padding: 14px 18px; border-radius: 14px; border: 1px solid var(--amber-edge); background: var(--amber-wash); font-size: 18.5px; color: var(--muted); line-height: 1.42; }
+.atencao b { font-family: var(--display); font-weight: 400; letter-spacing: 0.08em; color: var(--amber); }
+
 /* barras de aderência */
 .bars { display: grid; gap: 10px; }
 .bar { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 70px; gap: 16px; align-items: center; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); }
@@ -120,7 +130,7 @@ tr:last-child td { border-bottom: 0; }
 td.no { color: var(--red); font-weight: 600; }
 td.ok { color: var(--teal); font-weight: 600; }
 
-.works { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.works { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .works div { padding: 16px 18px; border-radius: 14px; border: 1px solid var(--teal-edge); background: var(--teal-wash); display: grid; gap: 6px; align-content: start; min-width: 0; }
 .works b { font-family: var(--display); font-weight: 400; font-size: 24px; letter-spacing: 0.03em; line-height: 1; color: var(--teal); }
 .works span { font-size: 17.5px; color: var(--muted); line-height: 1.38; }
@@ -141,7 +151,7 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
   .score { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .score div:nth-child(3) { border-left: 0; }
   .score div:nth-child(n+3) { border-top: 1px solid var(--line); }
-  .errs, .flow { grid-template-columns: minmax(0, 1fr); }
+  .errs, .flow, .quotes { grid-template-columns: minmax(0, 1fr); }
   .bar { grid-template-columns: minmax(0, 1fr) 56px; }
   .bar .track { grid-column: 1 / -1; grid-row: 2; }
 }
@@ -157,20 +167,47 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
     <div class="brand">CANAL DO ANFITRIÃO</div>
     <div class="pills">
       <span class="pill">Como a call é feita hoje</span>
+      <a class="pill teal" href="#venda">A call que vendeu ↓</a>
     </div>
     <h1>O roteiro<br><span class="r">de hoje</span></h1>
-    <p class="lede">O que acontece de verdade nas calls, montado a partir de <strong>14 calls gravadas</strong> (3 de 03/11 e 11 de 04 a 11/11) e das conversas de WhatsApp depois delas.</p>
+    <p class="lede">O que acontece de verdade nas calls, montado a partir de <strong>15 calls gravadas</strong> (3 de 03/11 e 12 de 04 a 11/11) e das conversas de WhatsApp depois delas.</p>
     <div class="score" aria-label="Placar de 09 e 10/11">
       <div><b>19</b><span>calls marcadas em 09 e 10/11</span></div>
       <div><b class="r">9</b><span>faltaram (47%), nenhuma resgatada pelo sistema</span></div>
       <div><b>10</b><span>aconteceram</span></div>
       <div><b class="r">0</b><span>A5E ou Black vendidos na call (1 curso de Booking)</span></div>
     </div>
-    <p class="note">Em 11/11, até 13h: 2 calls aconteceram, sem venda na call. As vendas do dia vieram por mensagem.</p>
+    <p class="note">Em 11/11, até as 14h30: 3 calls gravadas, e a das 14h, do Flávio, fechou a Black na própria call (<a href="#venda">veja abaixo</a>). As outras vendas do dia vieram por mensagem.</p>
   </div>
 </header>
 
 <main class="wrap">
+
+  <section class="block" id="venda">
+    <div><span class="kicker">11/11, 14h · Flávio com Breno Lima</span><h2>A call que <span class="t">vendeu</span></h2></div>
+    <p class="intro">Black Friday Vitalícia pelo preço de tabela, em 12x no cartão (R$ 10.796,52). O lead chegou quente: veio da live, já pensava em comprar e tinha uma trava só, o medo de pagar R$ 8 mil e não se adaptar ao curso, que o Téo anotou na ficha antes da call. O que o Flávio fez com isso:</p>
+    <div class="score win" aria-label="A call em números">
+      <div><b>26</b><span>minutos de call</span></div>
+      <div><b>0</b><span>desconto ou bônus extra: preço de tabela</span></div>
+      <div><b>3</b><span>vezes a garantia de 14 dias, sempre ligada à trava do lead</span></div>
+      <div><b>21</b><span>minutos do link ao pagamento</span></div>
+    </div>
+    <ol class="flow">
+      <li class="good"><span class="tempo">0–2 min</span><b>Abre pelo lead</b><span>"Me passa um pouco mais do seu projeto, fica à vontade." O lead conta dos 5 apartamentos, do plano de ir para Brasília e da dúvida dele.</span></li>
+      <li class="good"><span class="tempo">2–4 min</span><b>Pergunta o que já tentou</b><span>"Algum curso foi do Rômulo?" e "qual oferta mais te chamou atenção?". Descobre o medo: pagar por conteúdo que ele já viu.</span></li>
+      <li class="good"><span class="tempo">4–14 min</span><b>Recomenda pelo caso</b><span>"O A5E é para quem começa; o seu caso é o Gigantes." Ainda é tour de módulos, mas cada um ligado à gestão para terceiros e a Brasília.</span></li>
+      <li class="good"><span class="tempo">15–17 min</span><b>Garantia na trava</b><span>O lead diz que tem medo de não se adaptar à didática. A resposta: 14 dias, o dobro do comum, 100% de volta.</span></li>
+      <li class="good"><span class="tempo">17–19 min</span><b>Comunidade</b><span>O lead diz que o grupo de WhatsApp é o que mais vale para ele. O Flávio aprofunda: 350 gestores e o Rômulo por perto, por 4 anos.</span></li>
+      <li class="good"><span class="tempo">20–21 min</span><b>Garantia de novo</b><span>"Se não for o que a gente conversou, fala direto comigo que eu aciono o reembolso." O lead relaxa.</span></li>
+      <li class="good"><span class="tempo">21–24 min</span><b>Pede o fechamento</b><span>"Fez sentido para você? Teria interesse?" Com o sim: "cartão ou boleto?".</span></li>
+      <li class="good"><span class="tempo">24 min em diante</span><b>Link na hora</b><span>O lead quer falar com a mãe antes. O link vai pelo WhatsApp mesmo assim, e 18 min depois: "Deu tudo certo?". Pago às 14h46.</span></li>
+    </ol>
+    <div class="quotes">
+      <blockquote>"A gente confia nisso, que a gente te dá 14 dias de garantia. A maioria é 7 dias, né? A gente deixa 14 dias ou a gente devolve 100% do seu investimento."<cite>Flávio, aos 15 minutos</cite></blockquote>
+      <blockquote>"Então assim eu fico bem mais tranquilo de experimentar, e acredito que vai dar tudo certo."<cite>Breno Lima, aos 20 minutos</cite></blockquote>
+    </div>
+    <p class="atencao"><b>Um deslize:</b> no fim, "esse investimento vai se pagar, você vai ver" é promessa de resultado. Não fazia falta: o lead já tinha decidido pela garantia.</p>
+  </section>
 
   <section class="block" id="fluxo">
     <div><span class="kicker">A call como acontece</span><h2>Oito partes, <span class="r">nesta ordem</span></h2></div>
@@ -188,18 +225,18 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
   </section>
 
   <section class="block" id="numeros">
-    <div><span class="kicker">11 calls gravadas de 04 a 11/11</span><h2>O que aparece <span class="r">e o que não aparece</span></h2></div>
-    <p class="intro">Contagem pelas falas do vendedor nas transcrições do Teams (9 calls de venda; as outras 2 foram de aluna com dúvida e uma gravação sem o nome do vendedor). Erro de transcrição pode mudar um número ou outro, não o quadro.</p>
+    <div><span class="kicker">12 calls gravadas de 04 a 11/11</span><h2>O que aparece <span class="r">e o que não aparece</span></h2></div>
+    <p class="intro">Contagem pelas falas do vendedor nas transcrições do Teams (10 calls de venda, 9 de A5E e 1 da Black; as outras 2 foram de aluna com dúvida e uma gravação sem o nome do vendedor). Erro de transcrição pode mudar um número ou outro, não o quadro.</p>
     <div class="legend"><span><i style="background: var(--red)"></i>vermelho = deveria acontecer e não acontece, ou não deveria e acontece</span></div>
     <div class="bars">
-      <div class="bar want"><span class="lbl">Cita a garantia de 14 dias<small>a resposta mais forte pro "vou pensar" e pro cônjuge</small></span><div class="track"><div class="fill zero" style="width: 0%"></div></div><span class="num">0/11</span></div>
-      <div class="bar want"><span class="lbl">Aprofunda o caso do lead<small>"me conta mais", rotular o problema, "o que você já tentou?"</small></span><div class="track"><div class="fill zero" style="width: 0%"></div></div><span class="num">0/11</span></div>
-      <div class="bar want"><span class="lbl">Usa o cupom de R$ 2.797, o degrau certo da escada</span><div class="track"><div class="fill bad" style="width: 11%"></div></div><span class="num">1/9</span></div>
-      <div class="bar avoid"><span class="lbl">Dá o curso de Booking de bônus<small>só deveria sair se o lead pedir mais desconto depois do R$ 2.497</small></span><div class="track"><div class="fill bad" style="width: 78%"></div></div><span class="num">7/9</span></div>
-      <div class="bar avoid"><span class="lbl">Faz o tour pelos módulos</span><div class="track"><div class="fill bad" style="width: 67%"></div></div><span class="num">6/9</span></div>
-      <div class="bar avoid"><span class="lbl">Desce para R$ 2.497 (desconto de R$ 500) sem objeção concreta</span><div class="track"><div class="fill bad" style="width: 44%"></div></div><span class="num">4/9</span></div>
-      <div class="bar avoid"><span class="lbl">Pergunta "você conhece o Rômulo?"</span><div class="track"><div class="fill bad" style="width: 44%"></div></div><span class="num">4/9</span></div>
-      <div class="bar avoid"><span class="lbl">Faz o combinado dos "dois sentimentos"</span><div class="track"><div class="fill bad" style="width: 33%"></div></div><span class="num">3/9</span></div>
+      <div class="bar want"><span class="lbl">Cita a garantia de 14 dias<small>a resposta mais forte pro "vou pensar" e pro cônjuge; a única call que citou foi a que vendeu</small></span><div class="track"><div class="fill bad" style="width: 8%"></div></div><span class="num">1/12</span></div>
+      <div class="bar want"><span class="lbl">Aprofunda o caso do lead<small>"me conta mais", rotular o problema, "o que você já tentou?"</small></span><div class="track"><div class="fill bad" style="width: 8%"></div></div><span class="num">1/12</span></div>
+      <div class="bar want"><span class="lbl">Usa o cupom de R$ 2.797, o degrau certo da escada<small>nas calls de A5E</small></span><div class="track"><div class="fill bad" style="width: 11%"></div></div><span class="num">1/9</span></div>
+      <div class="bar avoid"><span class="lbl">Dá o curso de Booking de bônus<small>nas calls de A5E; só deveria sair se o lead pedir mais desconto depois do R$ 2.497</small></span><div class="track"><div class="fill bad" style="width: 78%"></div></div><span class="num">7/9</span></div>
+      <div class="bar avoid"><span class="lbl">Faz o tour pelos módulos</span><div class="track"><div class="fill bad" style="width: 70%"></div></div><span class="num">7/10</span></div>
+      <div class="bar avoid"><span class="lbl">Desce para R$ 2.497 (desconto de R$ 500) sem objeção concreta<small>nas calls de A5E</small></span><div class="track"><div class="fill bad" style="width: 44%"></div></div><span class="num">4/9</span></div>
+      <div class="bar avoid"><span class="lbl">Pergunta "você conhece o Rômulo?"</span><div class="track"><div class="fill bad" style="width: 40%"></div></div><span class="num">4/10</span></div>
+      <div class="bar avoid"><span class="lbl">Faz o combinado dos "dois sentimentos"</span><div class="track"><div class="fill bad" style="width: 30%"></div></div><span class="num">3/10</span></div>
     </div>
   </section>
 
@@ -219,8 +256,8 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
         <p class="fix">O bônus é o último degrau da escada, não o primeiro.</p>
       </article>
       <article class="err">
-        <header><h3>A garantia nunca aparece</h3><span class="sev alta">alto</span></header>
-        <p>Zero em 11 calls. Em 03/11 ela só apareceu no WhatsApp, horas depois, quando o cônjuge já tinha achado caro. É o argumento que tira o risco da mesa.</p>
+        <header><h3>A garantia quase nunca aparece</h3><span class="sev alta">alto</span></header>
+        <p>Apareceu em 1 de 12 calls, justo na que vendeu: era a trava do lead, e ele pagou 21 minutos depois do link. Em 03/11 ela só apareceu no WhatsApp, horas depois, quando o cônjuge já tinha achado caro. É o argumento que tira o risco da mesa.</p>
         <p class="fix">"Você tem 14 dias de garantia. A lei dá 7, a gente dá 14: é o dobro. Se não for o que eu te disse, devolvemos 100%."</p>
       </article>
       <article class="err">
@@ -244,7 +281,7 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
       </article>
       <article class="err">
         <header><h3>O cônjuge fica de fora</h3><span class="sev media">médio</span></header>
-        <p>O cônjuge aparece em 6 das 11 calls, quase sempre na saída: "vou ver com meu marido", "minha mulher está ocupada". Ninguém convidou o cônjuge para a call.</p>
+        <p>O cônjuge aparece em 6 das 12 calls, quase sempre na saída: "vou ver com meu marido", "minha mulher está ocupada". Ninguém convidou o cônjuge para a call.</p>
         <p class="fix">Chamar o cônjuge já na marcação. Se não veio, tratar a objeção na hora e fechar com a garantia de 14 dias.</p>
       </article>
       <article class="err">
@@ -254,7 +291,7 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
       </article>
       <article class="err">
         <header><h3>"Vou pensar" sem pergunta e sem data</h3><span class="sev media">médio</span></header>
-        <p>Diante do "vou pensar", o vendedor aceita e manda proposta por WhatsApp. Em 3 das 9 calls de venda a saída foi sem data de retorno.</p>
+        <p>Diante do "vou pensar", o vendedor aceita e manda proposta por WhatsApp. Em 3 das 10 calls de venda a saída foi sem data de retorno.</p>
         <p class="fix">"Você acha que vai melhor com isso do que sem? O que você tem medo que aconteça?" e, se não fechar, retorno com dia e hora.</p>
       </article>
       <article class="err">
@@ -289,8 +326,9 @@ footer .wrap { padding-block: 24px 40px; font-family: var(--ui); font-size: 12.5
   <section class="block" id="funciona">
     <div><span class="kicker">O que já funciona</span><h2>Para <span class="t">manter</span></h2></div>
     <div class="works">
-      <div><b>Retorno com data</b><span>Em 5 das 9 calls a saída teve dia marcado (ex.: "amanhã às 10h, depois de falar com a esposa"). É assim que o lead volta.</span></div>
-      <div><b>Pagamento explicado</b><span>Parcelamento em 10 de 11 calls e boleto em 6. Ninguém sai da call sem saber como pagaria.</span></div>
+      <div><b>Link na própria call</b><span>Na call que vendeu, o Flávio perguntou "cartão ou boleto?", mandou o link antes de desligar e voltou 18 minutos depois com "Deu tudo certo?". O pagamento entrou em seguida.</span></div>
+      <div><b>Retorno com data</b><span>Em 5 das 10 calls de venda a saída teve dia marcado (ex.: "amanhã às 10h, depois de falar com a esposa"). É assim que o lead volta.</span></div>
+      <div><b>Pagamento explicado</b><span>Parcelamento em 10 de 12 calls e boleto em 7. Ninguém sai da call sem saber como pagaria.</span></div>
       <div><b>A IA como diferencial</b><span>A assistente que monta o plano de estudo e responde no grupo foi mostrada em 6 calls, ao vivo, e o lead reage bem.</span></div>
     </div>
   </section>
