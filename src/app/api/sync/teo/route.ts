@@ -247,8 +247,6 @@ const CHECKOUT_TEO = {
 function blocoBlack(o: {
   plantao: boolean;
   aluno: boolean;
-  /** e-mails (do cadastro ou mandados na conversa) já conferidos sem compra de curso */
-  emailsSemCompra?: string[];
   retomou: boolean;
   /** lead sem especialista: quem fecha a venda por aqui é o Téo (links com utm teo) */
   semEspecialista: boolean;
@@ -301,20 +299,21 @@ function blocoBlack(o: {
     "- Quem não é aluno: R$ 8.997 à vista ou 12x de R$ 899,71 no cartão (também Pix e saldo Eduzz). Boleto parcelado (com análise): 12x de R$ 949,71. Página: anfitriao5estrelas.com.br/pagamento-nao-alunos/",
     o.aluno
       ? "- Este lead É aluno (pelo cadastro): pra ele é R$ 4.997 à vista ou 12x de R$ 499,70, com o cupom BLACKFRIDAYALUNOS. Página: anfitriao5estrelas.com.br/pagamento-alunos/"
-      : [
-          "- Aluno tem condição especial, mas o cadastro deste lead não mostra compra de curso: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, peça o e-mail que ela usou na compra do curso; o sistema confere e, se achar, na sua próxima resposta este bloco já vem com a condição de aluno. Não diga que o especialista confirma.",
-          o.emailsSemCompra?.length
-            ? `  Já conferi e não há compra de curso nestes e-mails: ${o.emailsSemCompra.join(", ")}. Se ela disse que é aluna, diga isso com naturalidade e pergunte se comprou com outro e-mail; se não tiver outro, siga com a condição de quem não é aluno (e diga que, se lembrar de outro e-mail, é só mandar).`
-            : "",
-        ]
-          .filter(Boolean)
-          .join("\n"),
+      : // Os e-mails já conferidos são deste lead: vão em avisoEmailsSemCompra(),
+        // fora deste bloco, pra ele continuar igual entre leads (cache).
+        "- Aluno tem condição especial, mas o cadastro deste lead não mostra compra de curso: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, peça o e-mail que ela usou na compra do curso; o sistema confere e, se achar, na sua próxima resposta este bloco já vem com a condição de aluno. Não diga que o especialista confirma.",
     "- Página da Black: anfitriao5estrelas.com.br/black-friday-historica/",
     o.semEspecialista || o.vendaTeo ? `- ${linksTeo}` : "",
     "Você não sabe: quando o carrinho fecha, a garantia da Black e detalhes da entrega da IA. Não invente nada disso: o especialista confirma.",
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+/** Aviso só deste lead (fica fora do bloco da Black, que vai em cache). */
+function avisoEmailsSemCompra(emails: string[]): string | null {
+  if (!emails.length) return null;
+  return `Black, condição de aluno: já conferi e não há compra de curso nestes e-mails: ${emails.join(", ")}. Se ela disse que é aluna, diga isso com naturalidade e pergunte se comprou com outro e-mail; se não tiver outro, siga com a condição de quem não é aluno (e diga que, se lembrar de outro e-mail, é só mandar).`;
 }
 
 // Teste de venda direta: a cada N leads que vão pra call (calls marcadas desde
@@ -1278,6 +1277,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
 
     let abrir = false;
     let retomar: string | undefined;
+    let acompanhamento = false;
     const ocioso = ultima ? Date.now() - new Date(ultima.date).getTime() : Infinity;
     if (c.estado === "encerrado") {
       // Encerrado por falta de resposta: só volta se a pessoa escrever.
@@ -1369,6 +1369,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         const a = await acompanhar(supabase, c, cfg, telefone, ultima, janelaAberta);
         if (!a.retomar) return a.status;
         retomar = a.retomar;
+        acompanhamento = true;
       } else {
         if (
           ultima?.type === "flow" &&
@@ -1425,7 +1426,6 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           ? blocoBlack({
               plantao: plantaoBlack(),
               aluno: alunoPorTag || Boolean(compraDeCurso),
-              emailsSemCompra: compraDeCurso ? [] : emailsDoLead,
               retomou: Boolean(c.black_retomou_em),
               semEspecialista: !especialista,
               vendaTeo,
@@ -1434,9 +1434,11 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       ]
         .filter(Boolean)
         .join("\n\n"),
+      avisoDoLead: blackAtiva(cfg) && !compraDeCurso ? avisoEmailsSemCompra(emailsDoLead) : null,
       ficha: c.ficha,
       abrir,
       retomar,
+      acompanhamento,
       especialista: especialista ? primeiroNomeVendedor(especialista) : null,
       horariosLivres: (await horariosLivres(supabase, cfg, especialista, c.contact_id)).map(
         (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})${l.junto ? " *" : ""}`
@@ -1467,6 +1469,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         nome: c.nome,
         vendedor: c.black_vendedor ?? null,
         humano: res.humano ?? null,
+        uso: res.uso ?? null,
       });
       return "devolveu ao vendedor";
     }
@@ -1527,6 +1530,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       recebida: ultimaDoLead?.message ?? null,
       enviadas: res.mensagens,
       humano,
+      uso: res.uso ?? null,
     });
     return humano ? `humano (${humano.motivo})` : nota;
   } catch (e) {
