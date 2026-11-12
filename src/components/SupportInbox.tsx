@@ -189,7 +189,7 @@ export function SupportInbox() {
       {ampliada && <Lightbox src={ampliada} onFechar={() => setAmpliada(null)} />}
 
       {/* Lista de conversas */}
-      <div className="flex max-h-[38vh] flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] lg:max-h-none lg:h-full">
+      <div className="flex max-h-[38vh] flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface lg:max-h-none lg:h-full">
         <div className="border-b border-slate-200 dark:border-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
           Conversas ({conversas.length})
         </div>
@@ -227,7 +227,7 @@ export function SupportInbox() {
                     </span>
                   )}
                   {!c.ia_ativa && (
-                    <span className="rounded bg-violet-100 dark:bg-violet-500/15 px-1 text-[10px] font-semibold text-violet-700 dark:text-violet-300">
+                    <span className="rounded bg-violet-100 dark:bg-violet-500/15 px-1 text-[10px] font-semibold text-violet-700 dark:text-zinc-100">
                       humano
                     </span>
                   )}
@@ -244,7 +244,7 @@ export function SupportInbox() {
       </div>
 
       {/* Thread */}
-      <div className="flex h-[65vh] flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] lg:h-full">
+      <div className="flex h-[65vh] flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface lg:h-full">
         {!ativa || !conversa ? (
           <div className="flex flex-1 items-center justify-center p-6 text-sm text-slate-500 dark:text-zinc-400">
             Escolha uma conversa à esquerda.
@@ -389,7 +389,7 @@ export function SupportInbox() {
                     <button
                       onClick={enviar}
                       disabled={enviando || !texto.trim()}
-                      className="rounded-lg bg-slate-900 dark:bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                      className="rounded-lg bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                     >
                       {enviando ? "..." : "Enviar"}
                     </button>

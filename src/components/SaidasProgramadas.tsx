@@ -206,7 +206,7 @@ export function SaidasProgramadas({
         <button
           onClick={adicionar}
           disabled={busy}
-          className="rounded-lg bg-slate-900 dark:bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-violet-500 disabled:opacity-60"
+          className="rounded-lg bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-white disabled:opacity-60"
         >
           {busy ? "Salvando..." : "+ Agendar saída"}
         </button>

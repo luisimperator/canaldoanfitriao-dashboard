@@ -13,7 +13,7 @@ export default function Loading() {
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-4">
+          <div key={i} className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-4">
             <div className="h-3 w-20 rounded bg-slate-100 dark:bg-white/[0.07]" />
             <div className="mt-3 h-6 w-24 rounded bg-slate-200 dark:bg-white/10" />
           </div>
@@ -22,11 +22,11 @@ export default function Loading() {
 
       {/* Blocos de gráfico/tabela */}
       <div className="grid lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-4">
+        <div className="lg:col-span-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-4">
           <div className="h-4 w-40 rounded bg-slate-100 dark:bg-white/[0.07]" />
           <div className="mt-4 h-56 rounded-lg bg-slate-100 dark:bg-white/[0.07]" />
         </div>
-        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-4">
+        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-4">
           <div className="h-4 w-32 rounded bg-slate-100 dark:bg-white/[0.07]" />
           <div className="mt-4 h-56 rounded-lg bg-slate-100 dark:bg-white/[0.07]" />
         </div>

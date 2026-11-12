@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 // Alterna claro/escuro aplicando a classe "dark" no <html>. A escolha fica em
 // localStorage ("theme"); sem escolha, vale o prefers-color-scheme do aparelho
 // (aplicado antes da hidratação por um script inline no layout, sem flash).
-export function ThemeToggle({ className = "" }: { className?: string }) {
-  const [dark, setDark] = useState<boolean | null>(null);
+function assinarTema(aviso: () => void) {
+  const obs = new MutationObserver(aviso);
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => obs.disconnect();
+}
 
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-  }, []);
+export function ThemeToggle({ className = "" }: { className?: string }) {
+  // Lê a classe do <html> direto (e acompanha mudanças); no servidor, null.
+  const dark = useSyncExternalStore<boolean | null>(
+    assinarTema,
+    () => document.documentElement.classList.contains("dark"),
+    () => null,
+  );
 
   function toggle() {
     const next = !document.documentElement.classList.contains("dark");
@@ -20,7 +27,6 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     } catch {
       /* modo anônimo etc. */
     }
-    setDark(next);
   }
 
   return (
@@ -28,7 +34,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       onClick={toggle}
       aria-label="Alternar tema claro/escuro"
       title="Tema claro/escuro"
-      className={`rounded-md px-2 py-1.5 text-base leading-none text-slate-400 hover:bg-slate-800 hover:text-white ${className}`}
+      className={`rounded-full px-2 py-1.5 text-base leading-none hover:bg-[var(--nav-hover)] ${className}`}
     >
       {dark === null ? "◐" : dark ? "☀️" : "🌙"}
     </button>

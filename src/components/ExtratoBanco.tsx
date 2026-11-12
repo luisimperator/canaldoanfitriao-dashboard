@@ -125,7 +125,7 @@ export function ExtratoBanco({
             placeholder="Buscar (ex.: eduzz, aluguel, pix...)"
             className="w-48 sm:w-64 rounded-lg border border-slate-300 dark:border-white/15 px-3 py-1.5 text-sm"
           />
-          <button className="rounded-lg bg-slate-900 dark:bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-violet-500">
+          <button className="rounded-lg bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-white">
             Buscar
           </button>
         </form>

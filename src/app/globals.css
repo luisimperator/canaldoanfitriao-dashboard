@@ -4,9 +4,24 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --chart-grid: #e2e8f0;
+  /* Painel (dia): off-white quente, cards brancos, tinta quase preta; coral e
+     teal do logo do Canal do Anfitrião como destaque. */
+  --background: #f2f3f1;
+  --foreground: #121417;
+  --surface: #ffffff;
+  --surface-2: #f6f7f6;
+  --line: #e4e7e4;
+  --ink: #121417;
+  --ink-2: #5f676d;
+  --brand: #ef3e5c;
+  --accent: #0a9497;
+  --nav: #ffffff;
+  --nav-ink: #121417;
+  --nav-muted: #7b8388;
+  --nav-hover: #f2f3f1;
+  --nav-active: #121417;
+  --nav-active-ink: #ffffff;
+  --chart-grid: #e7e9e6;
   /* Painel Calls: aconteceu (azul) × faltou (vermelho), validados pra
      daltonismo; cinza = ainda sem resultado (em apuração / agendada). */
   --calls-ok: #2a78d6;
@@ -30,9 +45,23 @@
 
 /* Modo escuro na vibe "OS": navy-violeta profundo, texto zinc. */
 .dark {
-  --background: #0b0a13;
-  --foreground: #e4e4e7;
-  --chart-grid: rgba(255, 255, 255, 0.08);
+  /* Painel (noite): quase preto, cards grafite, pílula ativa branca. */
+  --background: #060708;
+  --foreground: #eef1f1;
+  --surface: #111415;
+  --surface-2: #181c1d;
+  --line: rgba(255, 255, 255, 0.07);
+  --ink: #eef1f1;
+  --ink-2: #8d9598;
+  --brand: #ff5571;
+  --accent: #2bc4bd;
+  --nav: #0d1011;
+  --nav-ink: #e6eaea;
+  --nav-muted: #6f777a;
+  --nav-hover: rgba(255, 255, 255, 0.05);
+  --nav-active: #f4f6f6;
+  --nav-active-ink: #0b0d0e;
+  --chart-grid: rgba(255, 255, 255, 0.07);
   --calls-ok: #3987e5;
   --calls-comprou: #1baf7a;
   --calls-falta: #e66767;
@@ -55,6 +84,13 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-brand: var(--brand);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
 }
 
@@ -65,7 +101,7 @@ body {
 
 /* recharts no escuro: tooltip/legend têm cores fixas por padrão. */
 .dark .recharts-default-tooltip {
-  background: #1a1726 !important;
+  background: var(--surface-2) !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
 .dark .recharts-tooltip-label,

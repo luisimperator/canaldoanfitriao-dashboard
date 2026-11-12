@@ -49,7 +49,7 @@ export default async function LinksDeletadosPage() {
             return (
               <div
                 key={lk.slug}
-                className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4"
+                className="bg-white dark:bg-surface rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4"
               >
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-slate-900 dark:text-zinc-100">

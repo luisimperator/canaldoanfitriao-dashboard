@@ -93,7 +93,7 @@ export default async function CrmPage() {
                     return (
                       <div
                         key={lead.id}
-                        className="rounded-lg bg-white dark:bg-[#15121f] border border-slate-200 dark:border-white/10 p-2.5"
+                        className="rounded-lg bg-white dark:bg-surface border border-slate-200 dark:border-white/10 p-2.5"
                       >
                         <div className="flex items-center gap-1.5">
                           <span

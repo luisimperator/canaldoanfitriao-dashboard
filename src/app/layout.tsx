@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#121417",
 };
 
 export default async function RootLayout({
@@ -60,7 +60,7 @@ export default async function RootLayout({
         <PwaRegister />
         <div className="flex min-h-screen flex-col lg:flex-row">
           <Sidebar tabs={visibleTabs} email={access.authed ? access.email : null} />
-          <main className="w-full min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8 max-w-7xl">
+          <main className="w-full min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-9 max-w-[1440px]">
             {children}
           </main>
         </div>

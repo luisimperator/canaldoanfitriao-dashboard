@@ -60,7 +60,7 @@ export function FiltroTags({
         aria-expanded={aberto}
         className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
           tiradas.size > 0
-            ? "border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+            ? "border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-zinc-100"
             : "border-slate-200 dark:border-white/10 text-slate-500 dark:text-zinc-400 hover:text-slate-800"
         }`}
       >
@@ -68,7 +68,7 @@ export function FiltroTags({
         <span aria-hidden>▾</span>
       </button>
       {aberto && (
-        <div className="absolute left-0 z-20 mt-1 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] shadow-lg p-2">
+        <div className="absolute left-0 z-20 mt-1 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface shadow-lg p-2">
           <input
             type="search"
             value={busca}

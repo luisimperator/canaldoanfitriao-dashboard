@@ -104,7 +104,7 @@ export default async function LinksPage() {
             return (
               <div
                 key={lk.slug}
-                className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4 flex flex-col sm:flex-row gap-4"
+                className="bg-white dark:bg-surface rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4 flex flex-col sm:flex-row gap-4"
               >
                 <div className="shrink-0">
                   <QrCode value={short} size={96} filename={`qr-${lk.slug}.png`} />

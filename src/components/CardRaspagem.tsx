@@ -83,7 +83,7 @@ export function CardRaspagem() {
   const ultimaTransferencia = ultimas.find((u) => u.valor != null);
 
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-4 sm:p-5">
+    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
@@ -100,7 +100,7 @@ export function CardRaspagem() {
         <button
           onClick={raspar}
           disabled={raspando || configurada === false}
-          className="shrink-0 rounded-lg bg-slate-900 dark:bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-violet-500 disabled:opacity-50"
+          className="shrink-0 rounded-lg bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-white disabled:opacity-50"
         >
           {raspando ? "Raspando…" : "Raspar agora"}
         </button>

@@ -280,7 +280,7 @@ export function CashCurveChart({
 
       {hover && (
         <div
-          className="pointer-events-none absolute z-10 w-56 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1d1628] p-3 shadow-xl"
+          className="pointer-events-none absolute z-10 w-56 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface-2 p-3 shadow-xl"
           style={{ left: Math.min(Math.max(xOf(hover.dia) - 112, 0), width - 228), top: 0 }}
         >
           <div className="text-xs font-semibold text-slate-900 dark:text-zinc-100">

@@ -64,7 +64,7 @@ function DicaDia({
   const apuradas = ok + d.faltas;
   const linhas = SERIES.filter((s) => d[s.key] > 0);
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] px-3 py-2 text-xs shadow-sm min-w-40">
+    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface px-3 py-2 text-xs shadow-sm min-w-40">
       <div className="font-semibold text-slate-900 dark:text-zinc-100 mb-1">{d.rotulo}</div>
       {linhas.length === 0 && <div className="text-slate-400 dark:text-zinc-500">Sem calls</div>}
       {linhas.map((s) => (

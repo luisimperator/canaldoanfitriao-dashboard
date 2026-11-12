@@ -175,7 +175,7 @@ export function TemplatePicker({
           <button
             onClick={enviar}
             disabled={!prontoParaEnviar || enviando}
-            className="rounded-lg bg-slate-900 dark:bg-violet-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="rounded-lg bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
             {enviando ? "Enviando…" : "Enviar template"}
           </button>

@@ -131,7 +131,7 @@ export default async function VisaoGeralPage({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-500 dark:text-zinc-400">Período</span>
-          <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-0.5">
+          <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-0.5">
             {[
               { label: "Este mês", href: "/", ativo: !temPeriodo || ehMesAtual },
               {
@@ -146,7 +146,7 @@ export default async function VisaoGeralPage({
                 scroll={false}
                 className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
                   o.ativo
-                    ? "bg-slate-900 dark:bg-violet-600 text-white"
+                    ? "bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 text-white"
                     : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
                 }`}
               >

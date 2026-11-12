@@ -199,7 +199,7 @@ export function UsersManager({
                   <div className="text-sm font-medium text-slate-800 dark:text-zinc-200 flex items-center gap-2">
                     {u.email}
                     {u.isAdmin && (
-                      <span className="rounded-full bg-slate-900 dark:bg-violet-600 px-2 py-0.5 text-[10px] font-semibold text-white">ADMIN</span>
+                      <span className="rounded-full bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-2 py-0.5 text-[10px] font-semibold text-white">ADMIN</span>
                     )}
                     {u.email === currentEmail && <span className="text-[10px] text-slate-400 dark:text-zinc-500">(você)</span>}
                   </div>
