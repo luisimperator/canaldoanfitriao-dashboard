@@ -5,6 +5,8 @@
 
 export interface CaseCofre {
   id: string;
+  /** case (história com antes e depois), elogio (aluno ou cliente elogiando o Rômulo e a comunidade) ou autoridade (gente grande do mercado elogiando) */
+  tipo: "case" | "elogio" | "autoridade";
   nome: string;
   quem: string | null;
   titulo: string;
@@ -28,6 +30,15 @@ export interface CaseCofre {
 }
 
 export const GRUPOS = [
+  {
+    chave: "tipo",
+    titulo: "Tipo",
+    valores: {
+      case: "História com resultado",
+      elogio: "Elogio / depoimento",
+      autoridade: "Autoridade do mercado",
+    },
+  },
   {
     chave: "objecoes",
     titulo: "Objeção do lead",
@@ -177,7 +188,11 @@ export const SINONIMOS: Record<string, string[]> = {
   sozinho: ["sozinho-youtube"],
   medo: ["medo-de-errar"],
   golpe: ["confianca"],
-  confianca: ["confianca"],
+  confianca: ["confianca", "autoridade"],
+  elogio: ["elogio"],
+  depoimento: ["elogio"],
+  airbnb: ["autoridade"],
+  autoridade: ["autoridade"],
   simples: ["imovel-simples", "simples"],
   gestao: ["gestor", "escala-equipe"],
   terceiros: ["gestor", "captar-imoveis"],

@@ -1,0 +1,4163 @@
+[
+ {
+  "id": "leticia-tiete-de-15-reais-a-30-imoveis",
+  "tipo": "case",
+  "nome": "Letícia Câmara",
+  "quem": "ex-dona de confeitaria em Mossoró (RN) que quebrou, foi motorista de Uber e chegou a São Paulo com R$ 15; hoje é gestora de 30 imóveis, cerca de 70% em sublocação",
+  "titulo": "Chegou a SP com R$ 15, sublocou um quarto de pensão e hoje fatura R$ 100 mil a R$ 140 mil/mês com 30 imóveis",
+  "antes": "Sem dinheiro para caução nem fiador, convenceu o dono de uma pensão na Zona Norte, perto do Tietê, a alugar só um quarto para ela rodar no Airbnb e ganhar a confiança dele",
+  "depois": "Em um ano e meio estava com o prédio inteiro (10 quartos), que custa cerca de R$ 20 mil/mês e fatura R$ 40 mil a R$ 45 mil com 90% a 100% de ocupação; no total são 30 imóveis, R$ 1,2 milhão no ano passado e projeção de R$ 2 milhões neste ano",
+  "numeros": [
+   "Prédio: custo de ~R$ 20 mil/mês x faturamento de R$ 40 mil a R$ 45 mil",
+   "Ocupação de 90% a 100%",
+   "Na pousada onde trabalhava, um quarto fazia R$ 2.500; o melhor quarto dela bateu R$ 5.500 em abril",
+   "30 imóveis: R$ 100 mil a R$ 140 mil/mês; R$ 1,2 milhão no ano passado"
+  ],
+  "citacao": "Na minha operação inteira eu fiz 2 milhões em menos de 2 anos.",
+  "aluno": "gigantes",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "sublocacao",
+   "gestor",
+   "sem-dinheiro"
+  ],
+  "imovel": [
+   "quarto",
+   "predio-inteiro",
+   "capital",
+   "simples"
+  ],
+  "dores": [
+   "precificacao",
+   "captar-imoveis",
+   "escala-equipe",
+   "operacao-limpeza"
+  ],
+  "objecoes": [
+   "sem-imovel",
+   "sozinho-youtube",
+   "preco"
+  ],
+  "resultados": [
+   "faturamento",
+   "ocupacao",
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que não tem imóvel nem dinheiro, ou que acha que já sabe tudo sozinho. Fala: 'A Letícia chegou em São Paulo com R$ 15, sublocou um quarto de pensão e hoje tem 30 imóveis; mesmo faturando milhões ela entrou no Gigantes porque diz que no meio dos grandes enxerga o óbvio.'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELA FATURA R$45 MIL COM UMA CASA NO TIETÊ",
+   "url": "https://www.youtube.com/watch?v=0HiB5ja8TNU",
+   "data": "2026-08-20"
+  },
+  "trecho": {
+   "inicio": "00:47:04",
+   "fim": "00:49:07",
+   "texto": "Letícia Câmara: Eu pago pelo prédio, né? Então 15 mil reais com os custos ele vai pra média de 20. (...) Rômulo Villela: (...) Qual é o seu faturamento médio mensal desse pedinho aqui? 40? Letícia Câmara: 40, 45, mais ou menos isso (...) Por exemplo, maio agora, abril, foi o mês que eu mais faturei, foi 45 mil. Caramba. É um faturamento que até me impressiona (...) se eu percebo que eu subi de vez, o algoritmo derruba o meu anúncio. Então eu não posso aumentar o valor dele de uma vez, porque ele derruba."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:04:44",
+    "fim": "00:06:03",
+    "sobre": "A negociação sem caução nem fiador: propôs alugar um quarto só para o dono conhecer o trabalho dela"
+   },
+   {
+    "inicio": "00:08:03",
+    "fim": "00:08:37",
+    "sobre": "De 1 quarto ao prédio inteiro em um ano e meio"
+   },
+   {
+    "inicio": "01:02:51",
+    "fim": "01:03:28",
+    "sobre": "Números gerais: 30 imóveis, R$ 100 mil a R$ 140 mil/mês, R$ 1,2 milhão no ano passado e projeção de R$ 2 milhões"
+   }
+  ]
+ },
+ {
+  "id": "caio-mirante-do-vale-kombi",
+  "tipo": "case",
+  "nome": "Caio",
+  "quem": "trabalha no mercado financeiro, mora no interior de São Paulo e administra à distância 3 apartamentos vizinhos no Mirante do Vale, centro de São Paulo (SP)",
+  "titulo": "Comprou 3 apartamentos pelo preço de um, botou uma Kombi dentro e chegou a R$ 25 mil num mês",
+  "antes": "Em 2021, na pandemia, comprou sem visitar 3 apartamentos vizinhos numa escritura só por R$ 583 mil; a meta era só cobrir o custo de manter as 3 unidades em uns 3 meses",
+  "depois": "Transformou apartamentos comuns em ambientes temáticos (Kombi comprada por R$ 800, motos na parede, bar secreto) gastando pouco; diária de uns R$ 400, cerca de R$ 18 mil/mês em média (R$ 6 mil por unidade) e pico de R$ 25 mil num mês de Fórmula 1",
+  "numeros": [
+   "R$ 583 mil pelas 3 unidades (menos de R$ 200 mil cada)",
+   "Pico de R$ 25 mil num mês de Fórmula 1, somando as 3",
+   "R$ 71 mil no semestre sem o bar; ~R$ 110 mil com ele (≈ R$ 18 mil/mês, R$ 6 mil por unidade)",
+   "Kombi de R$ 800; diária de uns R$ 400"
+  ],
+  "citacao": "Chegou no mês bom, pra mês de Fórmula 1 em São Paulo, chegou a dar 25 mil reais, as 3 somadas ali",
+  "aluno": "a5e",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "poucos-imoveis",
+   "investidor",
+   "mora-longe"
+  ],
+  "imovel": [
+   "tematico",
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "reforma-mobilia",
+   "algoritmo-ocupacao",
+   "avaliacoes"
+  ],
+  "objecoes": [
+   "imovel-longe",
+   "imovel-simples",
+   "tempo"
+  ],
+  "resultados": [
+   "faturamento",
+   "diaria"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que tem apartamento 'comum' igual a centenas no mesmo prédio, que trabalha em outra coisa ou mora longe do imóvel. Fala: 'O Caio é do mercado financeiro, mora no interior e, com uma Kombi de R$ 800 dentro do apartamento, chegou a R$ 25 mil num mês com 3 unidades.'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELE COMPROU TRÊS APARTAMENTOS PELO PREÇO DE UM E FEZ R$25.000/MÊS NO AIRBNB",
+   "url": "https://www.youtube.com/watch?v=_AzeqSY__nU",
+   "data": "2026-07-24"
+  },
+  "trecho": {
+   "inicio": "00:46:46",
+   "fim": "00:47:54",
+   "texto": "Caio: A pessoa da sua equipe pediu para levantar e eu mandei o número na linha. Ele foi 71 mil no semestre, mas esse aqui já não estava incluso. (...) Rômulo Villela: Então, se a gente está falando de 110, não é que você está falando? 110 dividido por 6, dá 18 mil em média por mês. Caio: Dá 6 mil por unidade. Rômulo Villela: Cada um dividido por 3, é 6 mil brutos. Caio: Já foi melhor, como eu disse. E a minha intenção é voltar a galgar aqueles preços para ele voltar um dia a menos 10 mil por unidade. (...) a Kombi eu paguei 800 reais, a moto eu paguei 500 reais, a outra moto, aquela comprei já pronto, eu paguei 3 mil."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:08:36",
+    "fim": "00:09:32",
+    "sobre": "R$ 583 mil pelas três, já reformadas e mobiliadas, e o pico de R$ 25 mil num mês de Fórmula 1"
+   },
+   {
+    "inicio": "00:16:07",
+    "fim": "00:17:39",
+    "sobre": "Diária de uns R$ 400; nos dias fracos (segunda a quarta) aluga os 3 espaços para 2 fotógrafos pelo preço de uma diária"
+   },
+   {
+    "inicio": "00:44:19",
+    "fim": "00:44:52",
+    "sobre": "Não mora em São Paulo e trabalha no mercado financeiro: para ele é investimento e renda extra"
+   }
+  ]
+ },
+ {
+  "id": "luciana-rentwise-80-imoveis-sp",
+  "tipo": "case",
+  "nome": "Luciana (com os filhos Henrique e Beatriz)",
+  "quem": "mãe solo de 4 filhos, ex-gerente de marca (CLT) numa importadora; toca a gestora RentWise com dois filhos em São Paulo (SP)",
+  "titulo": "Mãe que alugava a própria casa montou com os filhos uma gestora de 80 imóveis e R$ 1,5 milhão de GMV",
+  "antes": "Mãe solo e CLT que, desde 2016, alugava a própria casa por temporada e ia para a casa da mãe para fechar as contas; a gestora só pegou o primeiro cliente em julho de 2024",
+  "depois": "Fechou 2024 com 19 imóveis e cerca de R$ 150 mil; 2025 com 53 imóveis e R$ 1,5 milhão de GMV; no 1º tri de 2026 são 80 unidades em 3 prédios, receita de cerca de R$ 100 mil/mês e margem de 30% a 33%",
+  "numeros": [
+   "19 imóveis e cerca de R$ 150 mil no 1º ano (2º sem. de 2024)",
+   "53 imóveis e R$ 1,5 milhão de GMV em 2025",
+   "80 unidades no 1º tri de 2026, projeção de R$ 3,5 milhões de GMV",
+   "Receita da empresa de cerca de R$ 100 mil/mês, margem de 30% a 33%"
+  ],
+  "citacao": "No segundo ano, que foi 2025, a gente teve um GMV de 1.5 milhões e terminamos o ano com 53 imóveis.",
+  "aluno": "gigantes",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "gestor",
+   "casal-familia",
+   "clt-largou"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "capital",
+   "praia"
+  ],
+  "dores": [
+   "escala-equipe",
+   "operacao-limpeza",
+   "captar-imoveis"
+  ],
+  "objecoes": [
+   "sem-imovel",
+   "preco"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que quer virar gestor, empreender em família ou não tem imóvel próprio. Fala: 'A Luciana alugava a própria casa pra fechar as contas; entrou no Gigantes, chamou os filhos e em menos de 2 anos foi de 19 para 80 imóveis...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELA FATURA R$ 1,5 MILHÃO/ANO NO AIRBNB",
+   "url": "https://www.youtube.com/watch?v=3eCiQuEm834",
+   "data": "2026-06-26"
+  },
+  "trecho": {
+   "inicio": "01:01:54",
+   "fim": "01:03:22",
+   "texto": "Rômulo: E aí voltando na ideia dos números, hoje com 80 imóveis, qual que é o faturamento geral que vocês vendem hoje em reservas? Beatriz: (...) A gente começou no segundo semestre de 2024, e no primeiro ano a gente terminou com 19 imóveis nesse prédio, e a gente teve um faturamento de 150 mil. (...) No segundo ano, que foi 2025, a gente teve um GMV de 1.5 milhões e terminamos o ano com 53 imóveis. E esse ano é uma stipulação, mas se eu não pegar mais nenhuma praça, a gente vai chegar a bater 3.5 milhões de GMV. (...) Henrique: A gente está com uma receita mensal da empresa por volta de 100 e pouco. E a gente tem uma margem de lucro por volta dos 30, 33%."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:02:29",
+    "fim": "00:04:00",
+    "sobre": "Luciana conta que era CLT, mãe solo de 4 filhos, e alugava o próprio apartamento desde 2016 para ter renda extra"
+   },
+   {
+    "inicio": "00:05:29",
+    "fim": "00:06:23",
+    "sobre": "do primeiro cliente em julho de 2024 a 19 unidades em dezembro, 53 em 2025 e 80 no 1º tri de 2026"
+   },
+   {
+    "inicio": "01:07:04",
+    "fim": "01:08:44",
+    "sobre": "por que entrou no Gigantes ('até então eu me sentia amadora') e como a família usou o curso para abrir e profissionalizar a empresa"
+   }
+  ]
+ },
+ {
+  "id": "nat-ubatuba-17-imoveis",
+  "tipo": "case",
+  "nome": "Natália (Nat)",
+  "quem": "largou 15 anos de carreira na Embraer; mora em Ubatuba (SP) com o marido e 2 filhos pequenos",
+  "titulo": "Largou a Embraer e foi de uma garagem adaptada a 17 imóveis na praia",
+  "antes": "Garagem embaixo de casa adaptada em 2021, sem ar nem tela, só pra pagar condomínio e IPTU; em 2023 a casinha fez R$ 33 mil no ano",
+  "depois": "A mesma casinha foi para R$ 70 mil em 2024 e R$ 85 mil no ano seguinte só com precificação (meta de R$ 95 mil); hoje cuida de 17 imóveis que faturaram R$ 397 mil no último ano e vive 100% da temporada",
+  "numeros": [
+   "R$ 33 mil → R$ 70 mil → R$ 85 mil/ano na mesma casinha",
+   "Média de R$ 7.200/mês na casinha",
+   "Taxa pet de R$ 250 rendeu quase R$ 10 mil no ano",
+   "17 imóveis, R$ 397 mil no último ano"
+  ],
+  "citacao": "Olha, de 33 para 70 foi precificação, foi aprender a precificar",
+  "aluno": "gigantes",
+  "cidade": "Ubatuba",
+  "uf": "SP",
+  "perfil": [
+   "clt-largou",
+   "um-imovel",
+   "gestor",
+   "casal-familia"
+  ],
+  "imovel": [
+   "praia",
+   "casa",
+   "simples"
+  ],
+  "dores": [
+   "precificacao",
+   "baixa-temporada",
+   "avaliacoes"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "imovel-simples"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que tem 1 imóvel simples na praia, sofre com baixa temporada ou tem medo de precificar. Fala: 'A Nat tinha uma garagem adaptada em Ubatuba; a mesma casinha foi de R$ 33 mil para R$ 70 mil no ano só aprendendo a precificar...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELA LARGOU O CLT E FOI FAZER AIRBNB NA PRAIA (HOJE ELA TEM 17)",
+   "url": "https://www.youtube.com/watch?v=XsSB4Heyb_Q",
+   "data": "2026-06-15"
+  },
+  "trecho": {
+   "inicio": "00:22:42",
+   "fim": "00:24:05",
+   "texto": "Nat: (...) no finalzinho de 2023 Eu falei, deixa estudar isso aqui, deixa eu fazer um negócio direito Aí eu comecei a ver que eu tava dobrando faturamente, em 2003 a gente fez 33 mil reais aqui, no ano Aqui com a casinha do jeito que ela está, idêntico. Rômulo: Em 2000 e? 23. Nat: Em 23 mil, certo. Em 24 a gente fez 70, mais que dobrou. O ano passado fizemos 85, e esse ano a gente vai aprimorando, esse ano eu estou ali mirando em 95. Rômulo: O que você acha que está fazendo diferença? (...) Nat: Olha, de 33 para 70 foi precificação, foi aprender a precificar, entender o mercado (...)"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:12:54",
+    "fim": "00:13:25",
+    "sobre": "taxa pet de R$ 250 por estadia rendeu quase R$ 10 mil no ano"
+   },
+   {
+    "inicio": "00:28:56",
+    "fim": "00:30:13",
+    "sobre": "largou 15 anos de carreira na Embraer: 'quando você vê o Pix pingando na conta'"
+   },
+   {
+    "inicio": "00:32:32",
+    "fim": "00:33:18",
+    "sobre": "somando os 17 imóveis, faturou R$ 397 mil no último ano"
+   }
+  ]
+ },
+ {
+  "id": "lais-ubatuba-pool-15-imoveis",
+  "tipo": "case",
+  "nome": "Laís",
+  "quem": "arquiteta da construtora da família em Ubatuba (SP), gestora de 15 imóveis",
+  "titulo": "Depois do Gigantes parou de só baixar preço, delegou à assistente e repassou R$ 60 mil num mês de alta",
+  "antes": "Fazia sozinha a gestão de 4 unidades da família e 2 de um investidor; quando não alugava, simplesmente baixava o preço",
+  "depois": "15 imóveis em Ubatuba, incluindo 9 estúdios num pool; com o Gigantes passou a usar descontos de forma estratégica e passou para a assistente atendimento, aceite de reservas e ajuste de preço; na alta repassou cerca de R$ 60 mil aos investidores do pool (estimativa de ~R$ 12 mil bruto por estúdio)",
+  "numeros": [
+   "de 6 para 15 imóveis",
+   "~R$ 60 mil de repasse num mês de alta (9 estúdios, taxa de 18%)",
+   "~R$ 12 mil bruto por estúdio na alta (estimativa do Rômulo)",
+   "pior mês: ~R$ 4 mil de repasse por unidade"
+  ],
+  "citacao": "Eu acreditava que não estou alugado o apartamento, eu vou baixar o preço. E eu entendi que não é simplesmente isso.",
+  "aluno": "gigantes",
+  "cidade": "Ubatuba",
+  "uf": "SP",
+  "perfil": [
+   "gestor",
+   "casal-familia"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "praia"
+  ],
+  "dores": [
+   "precificacao",
+   "automacao-tempo",
+   "escala-equipe",
+   "baixa-temporada"
+  ],
+  "objecoes": [
+   "tempo",
+   "sozinho-youtube"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis",
+   "tempo-livre"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que já tem experiência (até anos) e acha que não precisa de curso, ou que baixa o preço quando não aluga. Fala: 'A Laís fazia temporada havia 9 anos em Ubatuba; no Gigantes aprendeu a não só baixar preço, delegou à assistente e repassou R$ 60 mil num mês de alta...'.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "R$60 MIL EM UM MÊS NO LITORAL DE SÃO PAULO",
+   "url": "https://www.youtube.com/watch?v=LtPOSnTOy6U",
+   "data": "2026-06-05"
+  },
+  "trecho": {
+   "inicio": "00:44:11",
+   "fim": "00:45:48",
+   "texto": "Laís: Bom, eu fazia a gestão das unidades da minha família. Rômulo Villela: Que eram quantas? Laís: Que eram... a gente tinha quatro. Aí entregamos um prédio e também um investidor de outro prédio que me procurou para fazer o projeto de arquitetura das unidades dele e ele ia colocar para fazer a locação. (...) Quando apareceu esse condomínio aqui com a ideia do pool, eu falei, poxa, não sei nove, eu já não consigo sozinha. E também falei, vou precisar de mais conhecimento (...) e aí eu cheguei até o Gigantes, na temporada, e aí comecei aqui, quando eu logo comprei, comecei a devorar as aulas e tudo, e foi assim, muito interessante, e aí comecei."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:47:35",
+    "fim": "00:48:19",
+    "sobre": "a virada na precificação: parou de só baixar preço e passou a usar descontos estratégicos"
+   },
+   {
+    "inicio": "00:29:35",
+    "fim": "00:30:40",
+    "sobre": "repasse de cerca de R$ 60 mil na alta (9 estúdios, taxa de 18%); Rômulo estima ~R$ 12 mil bruto por estúdio"
+   },
+   {
+    "inicio": "00:42:27",
+    "fim": "00:43:53",
+    "sobre": "15 imóveis e a assistente assumindo atendimento, aceite de reservas, preço e mínimo de diárias"
+   }
+  ]
+ },
+ {
+  "id": "rodrigo-casa-angra-7-para-24-mil",
+  "tipo": "case",
+  "nome": "Rodrigo (01 Suítes)",
+  "quem": "saiu de 17 anos no mercado financeiro; sócio da 01 Suítes em São Paulo (SP); tem a casa da família em Angra dos Reis (RJ)",
+  "titulo": "A casa do avô em Angra que ele ia vender foi de R$ 7-8 mil para R$ 20-24 mil por mês depois do curso",
+  "antes": "Casa de 60 anos do avô em Angra, caindo aos pedaços, que ele ia vender por ser custo fixo; operava de forma amadora (overbooking, preço errado, ano novo alugado 'por nada'); fazia R$ 7-8 mil por mês contra R$ 4,5-5 mil de custos fixos",
+  "depois": "A esposa reformou a casa e, depois do curso (fotos, descrição, tempo de resposta e precificação), o faturamento foi para R$ 20-24 mil por mês na média",
+  "numeros": [
+   "R$ 7-8 mil → R$ 20-24 mil por mês",
+   "custos fixos de R$ 4,5-5 mil"
+  ],
+  "citacao": "eu fazia 7 mil, 8 mil reais por mês na média [...] Depois do curso, esse negócio foi pra 20, 24, 23, na média.",
+  "aluno": "aluno",
+  "cidade": "Angra dos Reis",
+  "uf": "RJ",
+  "perfil": [
+   "um-imovel",
+   "clt-largou",
+   "casal-familia"
+  ],
+  "imovel": [
+   "casa",
+   "praia"
+  ],
+  "dores": [
+   "precificacao",
+   "anuncio-fotos",
+   "algoritmo-ocupacao"
+  ],
+  "objecoes": [
+   "preco",
+   "medo-de-errar",
+   "sozinho-youtube"
+  ],
+  "resultados": [
+   "faturamento"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que tem 1 casa de praia que só paga as contas, pensa em vender ou opera 'no feeling'. Fala: 'O Rodrigo ia vender a casa do avô em Angra; fazia R$ 7 a 8 mil por mês e, depois do curso, foi para R$ 20 a 24 mil...'. Ótimo para a objeção de preço.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "R$ 283.000 POR MÊS NO AIRBNB | 60 IMÓVEIS GERENCIADOS COM LAVANDERIA PRÓPRIA",
+   "url": "https://www.youtube.com/watch?v=h-qJicLdQcI",
+   "data": "2026-05-21"
+  },
+  "trecho": {
+   "inicio": "00:18:00",
+   "fim": "00:19:24",
+   "texto": "Rodrigo (01 Suítes): uma baita vista e a minha esposa não me deixou eu viajei e ela foi para a Anga ela quebrou parede ela fez tudo ela reformou (...) Quando eu fui fazer o curso, cara, o antes e o depois da casa de Angra, aprendendo a controlar, a precificar, é colossal a diferença. Assim, eu fazia 7 mil, 8 mil reais por mês na média, meus custos fixos da casa lá em Angra, gira em torno de 4,5 mil, 5 mil. Eu pagava os custos que dava algum dia aí. Depois do curso, esse negócio foi pra 20, 24, 23, na média. Rômulo Villela: O que você acha que mudou? O que você acha que você fez, que eu não fazia? Rodrigo (01 Suítes): Cara, tudo, tudo. Fotos, descrição, tempo de resposta, precificação errada. Eu errava as datas festivas e alugava um ano novo por nada."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:16:24",
+    "fim": "00:17:07",
+    "sobre": "a casa de 60 anos do avô estava caindo e ele ia vender; operava de forma amadora, com overbooking"
+   },
+   {
+    "inicio": "00:19:24",
+    "fim": "00:19:51",
+    "sobre": "quando junta os 'mini pontos profissionais', o negócio escala diferente no algoritmo"
+   }
+  ]
+ },
+ {
+  "id": "rafael-rodrigo-01-suites-60-imoveis",
+  "tipo": "case",
+  "nome": "Rafael e Rodrigo (01 Suítes)",
+  "quem": "sócios que se conheceram no grupo do curso; Rodrigo saiu de 17 anos no mercado financeiro; gestores na Vila Olímpia, São Paulo (SP)",
+  "titulo": "Se conheceram no grupo do curso e hoje fazem a gestão de 60 imóveis com GMV de R$ 283 mil por mês",
+  "antes": "Rafael comprou a primeira unidade num hotel depois de estudar onde investir; Rodrigo tinha acabado de sair do mercado financeiro; cada um sublocava por conta própria",
+  "depois": "Abriram a 01 Suítes: 60 imóveis (10% próprios, 30% sublocados, 60% de terceiros), 15 flats num mesmo hotel, lavanderia própria a 500 m de 80% das unidades; GMV de ~R$ 283 mil por mês e receita de ~R$ 80 mil, com margem de R$ 20-30 mil",
+  "numeros": [
+   "60 imóveis",
+   "GMV de ~R$ 283 mil/mês",
+   "receita de ~R$ 80 mil/mês e margem de R$ 20-30 mil",
+   "flat próprio reformado: média de R$ 9,5-10 mil/mês",
+   "apê de cliente na Flórida: US$ 3 mil → até US$ 7.500/mês"
+  ],
+  "citacao": "a gente fez junto o curso, ali deu muito insight, muito caminho",
+  "aluno": "aluno",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "gestor",
+   "investidor",
+   "sublocacao",
+   "clt-largou"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "capital"
+  ],
+  "dores": [
+   "escala-equipe",
+   "operacao-limpeza",
+   "precificacao",
+   "captar-imoveis"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "confianca"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead investidor ou de mercado financeiro que quer montar uma gestora, ou que acha que vai fazer tudo sozinho. Fala: 'O Rafael e o Rodrigo se conheceram no grupo do curso e hoje têm 60 imóveis e R$ 283 mil por mês em reservas...'. Para a virada de um imóvel só, use o case da casa em Angra.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "R$ 283.000 POR MÊS NO AIRBNB | 60 IMÓVEIS GERENCIADOS COM LAVANDERIA PRÓPRIA",
+   "url": "https://www.youtube.com/watch?v=h-qJicLdQcI",
+   "data": "2026-05-21"
+  },
+  "trecho": {
+   "inicio": "00:02:12",
+   "fim": "00:03:47",
+   "texto": "Rafael (01 Suítes): Aqui é o hotel que a gente começou a operar. (...) o hotel tem aproximadamente 300 unidades aí, nós estamos operando 15. Eu optei por entrar nesse mercado, fui atrás de corretor de imóvel, entrei no curso e comecei a estudar onde seria um bom investimento, que seria uma alta taxa de ocupação. E aqui tinha uma oportunidade boa, foi onde eu comprei a primeira unidade, conheci o Rodrigo no seu curso lá no WhatsApp. Rodrigo (01 Suítes): Eu tinha acabado de sair de uma carreira de 17 anos no mercado financeiro (...) Deu, liga, a gente fez junto o curso, ali deu muito insight, muito caminho (...) E depois a gente vai aprendendo e crescendo, a gente vai batendo agora 60 unidades"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:35:23",
+    "fim": "00:36:23",
+    "sobre": "GMV de R$ 283 mil por mês, receita de 80 e poucos mil e custos de 55 a 60 mil"
+   },
+   {
+    "inicio": "00:26:11",
+    "fim": "00:26:51",
+    "sobre": "flat próprio fatura de R$ 6,5 mil a R$ 15 mil por mês (média de R$ 9,5-10 mil)"
+   },
+   {
+    "inicio": "00:19:51",
+    "fim": "00:22:10",
+    "sobre": "apê de cliente na Flórida: de US$ 3 mil para US$ 6-7,5 mil por mês com AirDNA, PriceLabs e a precificação do curso"
+   }
+  ]
+ },
+ {
+  "id": "vittor-lu-abc-70-imoveis",
+  "tipo": "case",
+  "nome": "Vittor e Lu (Luciane)",
+  "quem": "casal que largou a carreira CLT (Vittor tinha 20 anos de carreira, passou pela BRF; Lu é formada em Direito e foi secretária); gestores no ABC paulista (SP)",
+  "titulo": "Largaram o CLT depois do Gigantes e hoje fazem a gestão de 70 imóveis com R$ 200-250 mil em reservas por mês",
+  "antes": "Vittor com 20 anos de carreira CLT; o negócio rodava em paralelo desde 2019, de forma amadora",
+  "depois": "70 imóveis de terceiros (30 num único prédio em São Bernardo, via parceria com a construtora); R$ 200 a 250 mil em reservas por mês; a empresa fatura R$ 70-80 mil por mês com margem de cerca de 30%",
+  "numeros": [
+   "70 imóveis sob gestão",
+   "R$ 200-250 mil em reservas por mês",
+   "empresa fatura R$ 70-80 mil/mês, margem ~30%",
+   "construtora cedeu 10 unidades → 30 no mesmo prédio"
+  ],
+  "citacao": "Mas o Gigantes alavancou muito a nossa decisão. Ele que deu o meio que impulsionou.",
+  "aluno": "gigantes",
+  "cidade": "São Bernardo do Campo",
+  "uf": "SP",
+  "perfil": [
+   "clt-largou",
+   "casal-familia",
+   "gestor"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "praia"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "escala-equipe",
+   "operacao-limpeza",
+   "precificacao"
+  ],
+  "objecoes": [
+   "preco",
+   "medo-de-errar",
+   "sem-imovel"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead CLT com medo de largar a segurança, ou que não tem imóvel e quer fazer gestão. Fala: 'O Vittor tinha 20 anos de carreira CLT; depois do Gigantes ele e a Lu largaram tudo e hoje cuidam de 70 imóveis, com R$ 200 a 250 mil em reservas por mês...'. A Lu conta que guardaram o dinheiro suado para o curso.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "R$ 250.000 EM RESERVAS POR MÊS COM AIRBNB (ELES ADMINISTRAM 70 IMÓVEIS)",
+   "url": "https://www.youtube.com/watch?v=c5uF06yPMEo",
+   "data": "2026-05-14"
+  },
+  "trecho": {
+   "inicio": "00:23:02",
+   "fim": "00:24:21",
+   "texto": "Vittor: Porque você pensa, pô, 20 anos de carreira, pós-graduação, experiência, um monte de coisa. Vou jogar isso tudo para trás e começar do zero outra coisa. E aí, aquele momento. Mas o que a gente faz? Eu fui muito na questão da falsa segurança. Quando a gente é no CLT, a gente acha que está seguro. (...) porque o nosso negócio já está em paralelo rodando. Já tinha uma receita entrando ali, claro, de uma forma armadora. E aí em quatro meses eu consegui mudar minha mente e voltar totalmente aqui para o negócio. Foi aí onde a gente escreveu o curso gigantes da temporada. A gente se profissionalizar, aprender as técnicas, comprar um sistema, comprar um funcionário (...) e aí a gente virou a empresa que a gente tem hoje. Você acha que isso fez diferença? Fez diferença, toda diferença."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:25:29",
+    "fim": "00:26:14",
+    "sobre": "Lu: o Gigantes impulsionou a decisão; guardaram o dinheiro suado para o curso"
+   },
+   {
+    "inicio": "01:12:44",
+    "fim": "01:13:16",
+    "sobre": "empresa fatura de R$ 70 a 80 mil por mês (a transcrição diz '70, 80 dólares') com margem de cerca de 30%"
+   },
+   {
+    "inicio": "00:03:30",
+    "fim": "00:04:22",
+    "sobre": "o dono da construtora viu o uniforme num bar, cedeu 10 unidades e o café da manhã com proprietários levou a 30 no mesmo prédio"
+   }
+  ]
+ },
+ {
+  "id": "luiz-kitnets-guarulhos-payback",
+  "tipo": "case",
+  "nome": "Luiz",
+  "quem": "aposentado de 62 anos que construiu 14 kitnets num terreno de esquina em Guarulhos (SP), com ajuda da esposa e do filho",
+  "titulo": "Aposentado de 62 anos construiu 14 kitnets e no Airbnb fatura o dobro do aluguel fixo",
+  "antes": "Terreno de esquina que era um lixão; prédio pensado para aluguel fixo, com payback projetado em 10 anos",
+  "depois": "10 kitnets no aluguel fixo e 4 no Airbnb com autoatendimento; o conjunto fatura de R$ 18 a 20 mil/mês, cada unidade no Airbnb rende R$ 3.300 a 3.500 contra R$ 1.700 do maior aluguel fixo, e o payback caiu para cerca de 6 anos e 8 meses",
+  "numeros": [
+   "R$ 18 a 20 mil/mês com as 14 kitnets",
+   "Airbnb: R$ 3.300 a 3.500 por unidade x R$ 1.700 do maior aluguel fixo",
+   "Payback do prédio: 10 anos → 6 anos e 8 meses",
+   "Investimento de R$ 1,3 milhão fora o terreno"
+  ],
+  "citacao": "eu tinha feito um payback do prédio inteiro em até 10 anos, ele já caiu pra 7, 6 anos, 8 meses",
+  "aluno": "a5e",
+  "cidade": "Guarulhos",
+  "uf": "SP",
+  "perfil": [
+   "50-mais",
+   "investidor",
+   "casal-familia"
+  ],
+  "imovel": [
+   "kitnet",
+   "predio-inteiro",
+   "simples"
+  ],
+  "dores": [
+   "automacao-tempo",
+   "financeiro-imposto",
+   "operacao-limpeza"
+  ],
+  "objecoes": [
+   "imovel-simples",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "faturamento",
+   "retorno-rapido"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead mais velho/aposentado, investidor ou com imóvel simples no aluguel tradicional. Fala: 'O Luiz tem 62 anos e 14 kitnets em Guarulhos; a kitnet no Airbnb rende o dobro do maior aluguel fixo dele e o payback caiu de 10 para menos de 7 anos...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELE FATURA R$ 20.000 COM KITNETS EM GUARULHOS | AIRBNB + ALUGUEL FIXO",
+   "url": "https://www.youtube.com/watch?v=B48o0EmUkm8",
+   "data": "2026-04-23"
+  },
+  "trecho": {
+   "inicio": "00:18:41",
+   "fim": "00:20:22",
+   "texto": "Rômulo: (...) Você consegue dar uma noção, assim, de faturamento somente dessas unidades de Airbnb, você colocou o dobro do normal (...)? Luiz: (...) então se a gente olhar só duas faturou para também 6.700 a duas duas foi pedindo 3, quase 3,5, 3,3, o meu maior custo de um imóvel hoje é 1,700, ou seja, ele praticamente se dobrou. Rômulo: O seu maior faturamento é 1,700 de um indígena fixo que paga o gastamento (...) Luiz: E detalhe, você tem mais faturamento, menos gasolina, menos gasolina, menos consumo de energia. Porque o cara que está morando, ele consegue expor muito mais quantidade. O cara que vem só como temporada, ele faz um graça isso."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:46:34",
+    "fim": "00:47:30",
+    "sobre": "payback do prédio caiu de 10 anos para cerca de 6 anos e 8 meses com o Airbnb"
+   },
+   {
+    "inicio": "00:13:51",
+    "fim": "00:15:40",
+    "sobre": "aposentado aos 62, aprendeu a comprar terreno e achou a esquina que era um lixão"
+   },
+   {
+    "inicio": "00:05:11",
+    "fim": "00:05:49",
+    "sobre": "com 4 ou 5 unidades a receita já paga uma pessoa para a limpeza"
+   }
+  ]
+ },
+ {
+  "id": "lais-prime-studios-moema-60-unidades",
+  "tipo": "case",
+  "nome": "Laís (Prime Studios)",
+  "quem": "ex-dona de casa que começou aos 24 anos, em 2020; gestora em Moema, Zona Sul de São Paulo (SP)",
+  "titulo": "De dona de casa limpando o próprio estúdio a 60 unidades e R$ 200-300 mil por mês em Moema",
+  "antes": "Ficou 3 anos parada em casa; dois imóveis da família deram problema no aluguel fixo (reembolso de R$ 1 mil para uma reforma de R$ 20 mil); em 2020 ela mesma limpava o primeiro estúdio, mobiliado com o mais barato",
+  "depois": "60 unidades (20 próprias) em Moema e região, com R$ 200 a 300 mil por mês em reservas; cobra 15-17%; capta comprando uma unidade em cada prédio (5 próprias geraram 15 sob gestão num prédio; 2 geraram quase 20 em outro); fez o Gigantes",
+  "numeros": [
+   "60 unidades, 20 próprias",
+   "R$ 200-300 mil por mês em reservas",
+   "1º mês no Airbnb: pagou tudo e sobrou R$ 1.500",
+   "estúdio: ~R$ 6 mil bruto e repasse de R$ 4-4,5 mil"
+  ],
+  "citacao": "Tanto que eu fiz o curso do Gigantes e depois renovei só para poder ficar no grupo de WhatsApp.",
+  "aluno": "gigantes",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "iniciante",
+   "gestor",
+   "investidor",
+   "casal-familia"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "capital"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "precificacao",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "imovel-simples"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis",
+   "retorno-rapido",
+   "liberdade"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que teve problema com aluguel fixo/QuintoAndar, que começa do zero ou que quer captar proprietários. Fala: 'A Laís era dona de casa, limpava ela mesma o primeiro estúdio; no primeiro mês já pagou tudo e sobrou R$ 1.500. Hoje são 60 unidades e R$ 200 a 300 mil por mês...'.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELA FATURA R$300.000 POR MÊS NO AIRBNB",
+   "url": "https://www.youtube.com/watch?v=i84WPHOduWI",
+   "data": "2026-04-09"
+  },
+  "trecho": {
+   "inicio": "00:05:41",
+   "fim": "00:07:53",
+   "texto": "Laís (Prime Studios): 2020. Pandemia. Aí deu certo. Aí eu mesma limpava o imóvel, então eu bloqueava, o asprez saía, eu ia lá e limpava, às vezes eu limpava de madrugada quando ele podia me levar (...) Aí nós reformamos, fizemos o Airbnb também, colocamos tudo Shopee da vida Porque era o mais barato pra ver E ele falou assim, vou tirar três meses, eu seguro tudo Esses três meses, condomínio, PT, tudo que você tem, então vamos ver se dá retorno No primeiro mês, já pagou tudo e sobrou R$1500 no bolso (...) Mas assim, eu nunca fui atrás de cliente Nunca procurei cliente (...) E aí tava lá no prédio, encontrava um, encontrava outro, você tá fazendo os meus, e dá certo"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:04:08",
+    "fim": "00:05:39",
+    "sobre": "as duas experiências ruins no aluguel fixo pelo QuintoAndar antes de ir para o Airbnb"
+   },
+   {
+    "inicio": "00:51:50",
+    "fim": "00:52:17",
+    "sobre": "movimento de R$ 200 a 300 mil por mês somando todos os imóveis"
+   },
+   {
+    "inicio": "00:49:25",
+    "fim": "00:50:34",
+    "sobre": "fez o Gigantes e renovou só para ficar no grupo de WhatsApp"
+   }
+  ]
+ },
+ {
+  "id": "thalita-praia-grande-800-mil",
+  "tipo": "case",
+  "nome": "Thalita Mancini",
+  "quem": "psicóloga por 15 anos na saúde mental em Santo André; virou gestora de Airbnb na Praia Grande (SP) morando no ABC, a uns 50 min; fez o Anfitrião 5 Estrelas e depois o Gigantes da Temporada",
+  "titulo": "Psicóloga salvou o apê da avó com o Airbnb e chegou a R$ 800 mil/ano com 27 imóveis no litoral",
+  "antes": "Em 2021 a família queria se desfazer do apartamento antigo da avó no Boqueirão (com infiltração); ela trabalhava como psicóloga e nunca tinha feito Airbnb",
+  "depois": "Começou com 2 imóveis e foi de R$ 15 mil (2021) para R$ 118 mil (2022, 5 imóveis), R$ 192 mil (2023), R$ 420 mil (2024, 22 imóveis) e R$ 800 mil (2025); hoje tem 27 imóveis em operação e é Superhost desde janeiro de 2022, com 870 avaliações",
+  "numeros": [
+   "R$ 15 mil (2021, 2 imóveis) → R$ 800 mil (2025)",
+   "27 imóveis em operação + 3 entrando até abril",
+   "R$ 300 mil em 2026 até meados de março; meta de R$ 1 milhão",
+   "apê vista mar: R$ 3,5–4 mil/mês na baixa e mais de R$ 15 mil na alta",
+   "Superhost desde jan/2022, 870 avaliações"
+  ],
+  "citacao": "E em 2024, eu acho que esse foi o ano da virada, que a gente pulou para 420 mil. (…) E aí em 2025 que a gente bateu 800 mil.",
+  "aluno": "a5e",
+  "cidade": "Praia Grande",
+  "uf": "SP",
+  "perfil": [
+   "clt-largou",
+   "um-imovel",
+   "gestor",
+   "mora-longe",
+   "casal-familia"
+  ],
+  "imovel": [
+   "praia",
+   "apartamento"
+  ],
+  "dores": [
+   "baixa-temporada",
+   "captar-imoveis",
+   "escala-equipe",
+   "operacao-limpeza"
+  ],
+  "objecoes": [
+   "imovel-longe",
+   "sem-imovel",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis",
+   "liberdade",
+   "avaliacoes-superhost"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que tem (ou herdou) imóvel na praia, que mora longe do imóvel ou que quer virar gestor no litoral. Fala: 'A Thalita era psicóloga, a família ia vender o apê da avó na Praia Grande; ela estudou, entrou no Anfitrião 5 Estrelas e foi de R$ 15 mil para R$ 800 mil por ano...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "R$800.000 FAZENDO AIRBNB NO LITORAL (PRAIA GRANDE)",
+   "url": "https://www.youtube.com/watch?v=JBcCfOH1bHI",
+   "data": "2026-04-02"
+  },
+  "trecho": {
+   "inicio": "00:41:19",
+   "fim": "00:42:12",
+   "texto": "Rômulo: Com dois imóveis, com dois imóveis, né Thalita: Aí em 2022 a gente já tinha faturado, faturamento bruto, né, 118 mil No ano todo? No ano todo, certo Com cinco imóveis Com cinco Aí em 2023 a gente já foi pra 192 mil E em 2024, eu acho que esse foi o ano da virada, que a gente pulou para 420 mil. Com o ano inteiro. Com quantos imóveis? Com 22 imóveis. E aí em 2025 que a gente bateu 800 mil. E esse ano de 2026 a gente já bateu 300 mil. Rômulo: Na largada. Estamos em meio de março aqui. Thalita: Já bateu 300 mil. E a ideia é chegar no nosso primeiro milhão. Rômulo: Será chega? Eu acho que chega, hein? Eu acho que chega. Já que está torcendo aí."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:04:21",
+    "fim": "00:06:56",
+    "sobre": "como começou: o apê da avó que a mãe queria vender, os estudos pelo Canal do Anfitrião e a inscrição no Anfitrião 5 Estrelas"
+   },
+   {
+    "inicio": "00:22:35",
+    "fim": "00:23:09",
+    "sobre": "apartamento vista mar fatura R$ 3,5–4 mil na baixa temporada e passa de R$ 15 mil na alta"
+   },
+   {
+    "inicio": "00:55:54",
+    "fim": "00:56:16",
+    "sobre": "870 avaliações e Superhost desde janeiro de 2022, sem nunca perder o selo"
+   }
+  ]
+ },
+ {
+  "id": "hewelin-jundiai-chales",
+  "tipo": "case",
+  "nome": "Hewelin",
+  "quem": "engenheira civil de Jundiaí (SP) que dividiu a própria casa em dois chalés românticos; também é gestora de 12 estúdios em Jundiaí e de 5 unidades no Mirante do Vale, em São Paulo",
+  "titulo": "Engenheira transformou parte da casa em 2 chalés que fazem R$ 8 mil a R$ 10 mil/mês cada e largou as obras",
+  "antes": "Morava sozinha numa casa com espaço sobrando; tinha dúvida se ia alugar e começou cobrando R$ 390 a diária",
+  "depois": "Gastou cerca de R$ 35 mil por chalé; teve reserva no dia seguinte ao anúncio, hoje cobra R$ 550 e cada chalé fatura de R$ 8 mil a R$ 10 mil em mês bom (uns R$ 4 mil na baixa); parou com as obras e hoje vive só das locações",
+  "numeros": [
+   "Diária de R$ 390 no início → R$ 550 hoje (15% de desconto de segunda a quarta)",
+   "Cada chalé: R$ 8 mil a R$ 10 mil em mês bom, uns R$ 6 mil em mês médio e R$ 4 mil na baixa",
+   "Cerca de R$ 35 mil de investimento por chalé",
+   "12 estúdios que administra em Jundiaí: média de R$ 40 mil/mês, com 20% de taxa de gestão"
+  ],
+  "citacao": "Eu postei o anúncio, no outro dia já tinha reserva. Aí depois começou, mas não parou mais.",
+  "aluno": "aluno",
+  "cidade": "Jundiaí",
+  "uf": "SP",
+  "perfil": [
+   "poucos-imoveis",
+   "gestor",
+   "clt-largou"
+  ],
+  "imovel": [
+   "chale-campo",
+   "casa",
+   "interior",
+   "studio-compacto"
+  ],
+  "dores": [
+   "precificacao",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "momento-obra"
+  ],
+  "resultados": [
+   "faturamento",
+   "diaria",
+   "liberdade"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que tem espaço sobrando em casa ou terreno no interior, está em obra ou tem medo de não alugar. Fala: 'A Hewelin dividiu a própria casa em Jundiaí em 2 chalés com uns R$ 35 mil cada; teve reserva no dia seguinte e cada um faz até R$ 10 mil em mês bom.' Ela acabou de entrar na mentoria, então o resultado ainda não é do curso.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "R$20.000 POR MÊS COM AIRBNB NO INTERIOR DE SÃO PAULO (ELA ADMINISTRA 22 IMÓVEIS NO TOTAL)",
+   "url": "https://www.youtube.com/watch?v=RJV1QiGAj08",
+   "data": "2026-03-26"
+  },
+  "trecho": {
+   "inicio": "00:06:51",
+   "fim": "00:08:20",
+   "texto": "Rômulo Villela: Quanto que rende esse cháu é aqui? (...) De 8 a 10 mil reais por outro Mês Hewelin: No mês bom Cada um né (...) Hewelin: Ah, férias de meio de ano? Julho? Aham, é dezembro, mês bom (...) Rômulo Villela: (...) Ah, são uns 6 mil (...) Hewelin: (...) Eu gastei em torno de 35 mil com a mobília, a banheira tudo"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:12:07",
+    "fim": "00:13:04",
+    "sobre": "Medo de não alugar: começou cobrando R$ 390 e teve reserva no dia seguinte"
+   },
+   {
+    "inicio": "00:34:34",
+    "fim": "00:36:50",
+    "sobre": "Faturamento geral: chalés, 12 estúdios em Jundiaí (~R$ 40 mil/mês) e unidades no Mirante do Vale"
+   },
+   {
+    "inicio": "00:27:21",
+    "fim": "00:28:06",
+    "sobre": "Largou a engenharia e hoje vive só das locações: 'o rendimento tá sendo bom'"
+   }
+  ]
+ },
+ {
+  "id": "wando-99-anfitrioes-40-imoveis",
+  "tipo": "case",
+  "nome": "Wando Nascimento",
+  "quem": "dono da 99 Anfitriões, gestor em São Paulo (SP); antes tinha uma empresa de marketing digital",
+  "titulo": "Anunciou o próprio apê na pandemia e virou gestor de 40 imóveis",
+  "antes": "Tinha uma empresa de marketing digital e pôs no Airbnb o apê onde morava, no começo da pandemia; saía de casa com a esposa para hospedar",
+  "depois": "Assumiu 5 apês de vizinhos só com o conteúdo gratuito do canal; com o Anfitrião 5 Estrelas e o Gigantes chegou a 40 imóveis, largou o outro negócio e a empresa fatura de R$ 30 a 60 mil/mês",
+  "numeros": [
+   "Anunciou numa quinta e na sexta já tinha reserva",
+   "5 → 40 imóveis depois do Anfitrião 5 Estrelas e do Gigantes",
+   "Empresa fatura de R$ 30 a 60 mil/mês (cerca de R$ 500 mil/ano)",
+   "Sofá-cama: estúdio de R$ 5,5–6 mil para até R$ 7,5 mil/mês"
+  ],
+  "citacao": "Depois foi que eu passei a fazer o curso do Anfitrião 5 Estrelas, foi aí que de 5 imóveis eu hoje tenho 40 imóveis.",
+  "aluno": "a5e",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "um-imovel",
+   "gestor",
+   "clt-largou"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "escala-equipe",
+   "reforma-mobilia",
+   "operacao-limpeza"
+  ],
+  "objecoes": [
+   "sozinho-youtube",
+   "sem-imovel"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "faturamento",
+   "liberdade"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que acha que dá pra aprender só no YouTube ou que quer virar gestor. Fala: 'O Wando chegou a 5 imóveis só com vídeo gratuito; depois do Anfitrião 5 Estrelas foi de 5 para 40...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELE COMEÇOU FAZENDO AIRBNB NA PRÓPRIA CASA E HOJE TEM 40 IMÓVEIS NA PLATAFORMA",
+   "url": "https://www.youtube.com/watch?v=Sw5eKbjLwqc",
+   "data": "2025-08-07"
+  },
+  "trecho": {
+   "inicio": "00:09:41",
+   "fim": "00:10:44",
+   "texto": "Wando: Daquele prédio, é. Então eu já nem morava mais lá (...) Mas eu não conhecia sobre o mercado. Rômulo: Vamos montar o imóvel, vamos precificar. Wando: Vamos precificar, não é nada, zero. Foi aí. Comecei a pesquisar e encontrei você. Com o seu vídeo no YouTube de algumas coisas gratuitas que tinha lá, eu já consegui configurar muitas coisas (...) e eu consegui fazer pelo menos esses 5 imóveis ali, mais ou menos, né, só com conteúdo gratuito. Depois foi que eu passei a fazer o curso do Anfitrião 5 Estrelas, foi aí que de 5 imóveis eu hoje tenho 40 imóveis. Passei pelo Anfitrião 5 Estrelas, passei pelo Gigantes da Temporada (...) E aí foi que eu abandonei o outro negócio e fiquei só com isso."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:07:25",
+    "fim": "00:08:40",
+    "sobre": "anunciou o apê onde morava numa quinta e na sexta já tinha reserva; passava dias na casa da sogra"
+   },
+   {
+    "inicio": "00:21:44",
+    "fim": "00:22:34",
+    "sobre": "com sofá-cama o estúdio sai de R$ 5,5–6 mil para até R$ 7,5 mil/mês sem precisar baixar preço"
+   },
+   {
+    "inicio": "00:35:16",
+    "fim": "00:36:38",
+    "sobre": "empresa fatura de R$ 30 a 60 mil/mês e 49% do custo vai para limpeza"
+   }
+  ]
+ },
+ {
+  "id": "vini-velame-clt-73-imoveis-sp",
+  "tipo": "case",
+  "nome": "Vinícius Velame (Vini)",
+  "quem": "formado em comércio exterior, 10 anos na mesma empresa (CLT); fundador da V-House Temporada, gestora no centro de São Paulo",
+  "titulo": "Saiu da CLT quando o Airbnb empatou com o salário e hoje administra cerca de 73 imóveis",
+  "antes": "CLT havia 10 anos em comércio exterior; comprou um apartamento perto do metrô para fazer Airbnb e começou com receio, 'de forma totalmente despretensiosa'",
+  "depois": "Quando o que tirava no Airbnb empatou com o salário, saiu da empresa (setembro de 2023) e abriu a V-House; hoje administra cerca de 73 imóveis, com a esposa no financeiro e ele fora do atendimento",
+  "numeros": [
+   "Airbnb igualou o salário de 10 anos de CLT → saiu em set/2023",
+   "cerca de 73 imóveis administrados",
+   "num prédio foi de 18 para 30 unidades só com indicação de zelador e porteiro"
+  ],
+  "citacao": "Não foi algo tipo, pô, eu estou fazendo três vezes mais o meu salário. Chegou uma hora que empatou e eu falei, bom, é agora.",
+  "aluno": "gigantes",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "clt-largou",
+   "gestor",
+   "investidor",
+   "casal-familia"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "escala-equipe",
+   "automacao-tempo",
+   "captar-imoveis",
+   "financeiro-imposto"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "tempo"
+  ],
+  "resultados": [
+   "liberdade",
+   "numero-de-imoveis"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead CLT com salário bom que tem medo de largar o emprego, ou com quem quer virar gestor. Fala: 'O Vini ficou 10 anos em comércio exterior; ele só saiu quando o Airbnb empatou com o salário, e hoje administra uns 73 imóveis...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELES LARGARAM A CLT PARA VIVER DE AIRBNB | GESTORES DE TEMPORADA",
+   "url": "https://www.youtube.com/watch?v=DfnmktBnGpU",
+   "data": "2025-07-24"
+  },
+  "trecho": {
+   "inicio": "00:00:00",
+   "fim": "00:01:00",
+   "texto": "Vinícius: (…) E aí chegou um momento que eu tinha comprado um imóvel em 2017, que em 2016 eu fiz uma viagem pra Curitiba, fiquei em Airbnb, achei genial essa ideia e falei, bom, vou comprar um apartamento também próximo do metro lá em São Paulo, faz Airbnb. Eu fiquei com receio, mas aí eu entrei com esse imóvel no Airbnb. E aí vendo o negócio de locação de temporada e o Airbnb dando certo, eu pensei, opa, talvez aqui seja essa ponte que eu tenho que atravessar. Então eu entendi isso, chegou um momento que eu falei, bom, tento sair da empresa, eu tirava de salário na empresa onde eu trabalhava, era o que eu tava fazendo mais ou menos no Airbnb."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:17:02",
+    "fim": "00:23:12",
+    "sobre": "versão completa da virada (fala longa, ~6 min): o medo de ser desligado aos 55 anos, o empate com o salário e a saída em setembro de 2023"
+   },
+   {
+    "inicio": "00:50:29",
+    "fim": "00:51:29",
+    "sobre": "a esposa, Rafa, assumiu o financeiro e o fechamento com proprietários, e ele foi para estratégia e comercial"
+   },
+   {
+    "inicio": "01:12:22",
+    "fim": "01:12:52",
+    "sobre": "no prédio concentrado foi de 18 para 30 unidades só com indicação boca a boca"
+   }
+  ]
+ },
+ {
+  "id": "tata-predio-jabaquara-25-unidades",
+  "tipo": "case",
+  "nome": "Tarcísio (Tatá)",
+  "quem": "vem da construção de imóveis para venda; demoliu uma casa dos anos 1970 no Jabaquara, em São Paulo (SP), e ergueu um prédio de 25 unidades, 8 delas no Airbnb e no Booking.com",
+  "titulo": "Construiu um prédio de 25 unidades e, depois do curso, encheu 60 dias de calendário no primeiro mês",
+  "antes": "Uma casinha dos anos 1970 de uns 120 m² num terreno de cerca de R$ 440 mil; era a primeira vez que construía para alugar em vez de vender",
+  "depois": "Abriu os anúncios em abril e em maio tinha 60 dias de calendário cheio; em 10 meses foram 700 hospedagens e 500 avaliações (só duas notas 4); os lofts fazem em média R$ 5.500/mês com 90% de ocupação e o short stay soma R$ 38 mil a R$ 40 mil por mês",
+  "numeros": [
+   "60 dias de calendário cheio um mês depois de abrir os anúncios",
+   "700 hospedagens e 500 avaliações em 10 meses, só 2 notas 4",
+   "Lofts: média de R$ 5.500/mês com 90% de ocupação; estúdios R$ 4.000 a R$ 4.500",
+   "Short stay: R$ 38 mil a R$ 40 mil/mês; investimento total de ~R$ 2,9 milhões"
+  ],
+  "citacao": "a gente abriu os primeiros anúncios em abril, quando era maio, a gente estava com 60 dias já de calendário cheio.",
+  "aluno": "a5e",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "investidor",
+   "gestor"
+  ],
+  "imovel": [
+   "predio-inteiro",
+   "studio-compacto",
+   "capital"
+  ],
+  "dores": [
+   "avaliacoes",
+   "algoritmo-ocupacao",
+   "operacao-limpeza",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "preco",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "ocupacao",
+   "faturamento",
+   "avaliacoes-superhost"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead investidor ou construtor que vai lançar várias unidades e quer começar certo. Fala: 'O Tatá entrou na turma do Anfitrião 5 Estrelas antes de abrir o prédio; um mês depois já tinha 60 dias de calendário cheio e hoje os lofts fazem R$ 5.500 por mês com 90% de ocupação.'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELE CONSTRUIU UM PRÉDIO E COLOCOU NO AIRBNB: 25 IMÓVEIS",
+   "url": "https://www.youtube.com/watch?v=xDFIGKqt7lQ",
+   "data": "2025-05-08"
+  },
+  "trecho": {
+   "inicio": "00:57:45",
+   "fim": "00:59:40",
+   "texto": "Tarcísio (Tatá): Hoje a média está em torno de 5.500. Somando todos os 5 lofts. (...) Eu tenho um loft lá que chega até 7 por mês, eu tenho um loft que é 5. Então na média, com uma taxa de ocupação de 90% (...) E os estúdios aí, ele fica por volta de 4, 4, 500, uns 3 estúdios, né? (...) O Loft tem entre 30 e 35% mais de faturamento Que foi mais ou menos o quanto custou a mais pra gente de obra, de construção (...) E aí se você for somar aí A nossa média mensal Gira em torno de 38 a 40 mil por mês Líquido com short stake Só com short stake"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "01:05:23",
+    "fim": "01:06:09",
+    "sobre": "O curso: entrou na turma de fevereiro antes de abrir; 'ajudou demais', em maio já tinha 60 dias de calendário cheio"
+   },
+   {
+    "inicio": "00:07:56",
+    "fim": "00:08:34",
+    "sobre": "700 hospedagens e 500 avaliações em 10 meses com 8 unidades, só duas notas 4"
+   },
+   {
+    "inicio": "00:53:12",
+    "fim": "00:56:10",
+    "sobre": "Investimento: cerca de R$ 2,9 milhões no total, terreno de ~R$ 440 mil e obra abaixo de R$ 2.500/m²"
+   }
+  ]
+ },
+ {
+  "id": "mateus-filho-divino-rio-carnaval",
+  "tipo": "case",
+  "nome": "Mateus (filho do Divino Ipolito)",
+  "quem": "ex-jogador de futebol profissional, 25 anos, que assumiu a gestão por temporada dos apartamentos da família no Rio de Janeiro (RJ)",
+  "titulo": "Ex-jogador de futebol aprendeu a precificar datas fortes: Carnaval saiu de R$ 2.500 por 5 noites para R$ 1.300 por dia",
+  "antes": "Largou o futebol porque gastava mais do que ganhava; no primeiro Carnaval, sem experiência, vendeu 5 noites por R$ 2.500 um dia depois de publicar o anúncio",
+  "depois": "No ano seguinte fechou o Carnaval a cerca de R$ 1.300 por dia (uns R$ 6.500 recebidos em 7 dias, já sem a comissão da plataforma) e fez R$ 4.500 em 5 dias de Ano Novo; toca a temporada da família e deu a entrada no próprio imóvel, que vai pagando com o aluguel",
+  "numeros": [
+   "Carnaval: 5 noites por R$ 2.500 → ~R$ 1.300 por dia no ano seguinte",
+   "~R$ 6.500 recebidos em 7 dias de Carnaval, já sem a comissão da plataforma",
+   "Ano Novo: R$ 4.500 em 5 dias num apartamento de 1 quarto no Centro"
+  ],
+  "citacao": "cinco noites por dois e quinhentos. (...) esse ano fechou as mil e trezentos já pro ano que vem. Por dia. Por dia do carnaval.",
+  "aluno": "aluno",
+  "cidade": "Rio de Janeiro",
+  "uf": "RJ",
+  "perfil": [
+   "clt-largou",
+   "casal-familia",
+   "poucos-imoveis"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "precificacao",
+   "automacao-tempo"
+  ],
+  "objecoes": [
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "diaria",
+   "faturamento",
+   "numero-de-imoveis"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead jovem ou que está mudando de carreira, ou com quem tem imóvel em cidade de eventos (Carnaval, Réveillon) e cobra barato. Fala: 'O Mateus, ex-jogador, vendeu o primeiro Carnaval por R$ 2.500 em 5 noites; depois do curso fechou a R$ 1.300 por dia.'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "VIVENDO DA RENDA DE 17 IMÓVEIS | ALUGUEL TRADICIONAL E AIRBNB",
+   "url": "https://www.youtube.com/watch?v=UURwRcb9va0",
+   "data": "2024-11-21"
+  },
+  "trecho": {
+   "inicio": "00:39:11",
+   "fim": "00:41:12",
+   "texto": "Mateus: É, assim, hoje em dia a gente já vê que não foi tão boa assim, porque a gente não tinha tanta noção. (...) a primeira reserva feita foi no carnaval. (...) acho que foram cinco dias, deu R$2.500,00. E aí a gente fez assim, poxa, valeu, foi bom. (...) Rômulo Villela: Mas mesmo assim, né? Por cinco noites, quatro noites, por dois e quinhentos? Mateus: É, cinco noites por dois e quinhentos. (...) esse ano fechou as mil e trezentos já pro ano que vem. Por dia. Por dia do carnaval. (...) Mateus: 5 dias, 5 dias, com total de reservas que foram 7 dias, deu de recebimento 6, 500 e alguma coisa. Já tirando a porcentagem da plata."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:21:19",
+    "fim": "00:23:22",
+    "sobre": "Do futebol à gestão: jogou até os 23, viu que gastava mais do que ganhava e passou a tocar a temporada da família"
+   },
+   {
+    "inicio": "00:23:30",
+    "fim": "00:24:28",
+    "sobre": "Terceiro imóvel: deu a entrada com dinheiro emprestado do pai e vai pagando com o imóvel já rodando"
+   },
+   {
+    "inicio": "00:41:19",
+    "fim": "00:42:40",
+    "sobre": "Sazonalidade no Rio: R$ 4.500 em 5 dias de Ano Novo num apartamento de 1 quarto no Centro"
+   }
+  ]
+ },
+ {
+  "id": "tati-estudio-vila-mariana-reserva-no-mesmo-dia",
+  "tipo": "case",
+  "nome": "Thatiane Santos (Tati)",
+  "quem": "comissária de bordo, formada em administração; comprou na planta um estúdio na Vila Mariana, em São Paulo (SP)",
+  "titulo": "Comissária de bordo publicou o primeiro anúncio e teve reserva no mesmo dia",
+  "antes": "Estúdio comprado na planta, entregue vazio; tinha medo de errar no preço, nas fotos e de não conseguir responder hóspede enquanto voa",
+  "depois": "Montou o estúdio (cerca de R$ 50 mil fora o imóvel), publicou em 25/11 sem a oferta de 20% e recebeu a primeira reserva no mesmo dia (o título fala em 1 hora depois); já estava reservada até 17/02",
+  "numeros": [
+   "Primeira reserva no mesmo dia da publicação, sem a oferta de 20%",
+   "Publicou em 25/11 e já estava reservada até 17/02",
+   "Diária de R$ 189 no dia de semana",
+   "Cerca de R$ 50 mil para montar, fora o imóvel (previa R$ 35 mil)"
+  ],
+  "citacao": "Eu fiz o anúncio de 25 de novembro (...) E a primeira reserva eu fiz o mesmo dia. (...) Na hora que eu fui olhar eu falei, como assim? Tinha uma reserva.",
+  "aluno": "a5e",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "iniciante",
+   "um-imovel",
+   "investidor"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "capital"
+  ],
+  "dores": [
+   "anuncio-fotos",
+   "precificacao",
+   "automacao-tempo",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "tempo",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "retorno-rapido",
+   "ocupacao",
+   "diaria"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead iniciante que tem medo de precificar ou acha que não tem tempo (trabalha fora). Fala: 'A Tati é comissária de bordo, vive voando; publicou o estúdio com o que aprendeu no curso e a primeira reserva chegou no mesmo dia...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "Publicou o anúncio no Airbnb e 1 hora depois já teve reserva",
+   "url": "https://www.youtube.com/watch?v=ZVge0dg8tM0",
+   "data": "2022-12-07"
+  },
+  "trecho": {
+   "inicio": "00:28:51",
+   "fim": "00:30:42",
+   "texto": "Tati: É, na verdade tá em torno de R$ 190 no dia de semana. Eu coloco R$ 189, né, pra poder ficar aquela que o oito ainda chama mais R$ 199. (...) Rômulo: E aí, com esse preço, não sei se você ativou no começo aquela oferta especial de 20% pra atrair as reservas. Não, não, não. Tati: Eu tirei. Eu falei não olhar os 20%. Aí o que eu fiz? Eu falei vou sentir. E aí veio a primeira reserva já dos 4 dias, só que veio pra semana seguinte, né, o final de semana seguinte (...) aí eu apliquei uma oferta, que aí eu fiz manual (...) E aí, o cara ficou a semana inteira"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:20:21",
+    "fim": "00:24:38",
+    "sobre": "fala longa sobre os medos antes de publicar; no fim: anúncio em 25/11, agenda reservada até 17/02 e a primeira reserva chegou enquanto ela tomava banho"
+   },
+   {
+    "inicio": "00:51:59",
+    "fim": "00:53:09",
+    "sobre": "gastou cerca de R$ 50 mil para deixar rodando, fora o apartamento, tudo anotado em planilha"
+   },
+   {
+    "inicio": "00:13:16",
+    "fim": "00:16:25",
+    "sobre": "como decidiu entre revender, alugar no tradicional ou montar para temporada"
+   }
+  ]
+ },
+ {
+  "id": "isa-casal-sp-50-imoveis",
+  "tipo": "case",
+  "nome": "Isa (Isabela) e o companheiro",
+  "quem": "casal em São Paulo (SP): ele vem do esporte, ela trabalhou em hotel e trancou a faculdade",
+  "titulo": "Casal começou pelo próprio prédio e chegou a 50 imóveis com curso, mentoria e grupo",
+  "antes": "Viam a administração mal feita no prédio onde moravam e ofereceram o serviço a uma proprietária do condomínio, sem experiência em temporada",
+  "depois": "50 imóveis sob gestão espalhados por São Paulo; dizem que não seria possível sem o conhecimento do curso, da mentoria e do grupo de WhatsApp",
+  "numeros": [
+   "50 imóveis sob gestão"
+  ],
+  "citacao": "A gente está com 50 imóveis agora Intentando devagar porque realmente é muito difícil E acho que não seria possível Sem todo o conhecimento",
+  "aluno": "aluno",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "casal-familia",
+   "gestor",
+   "iniciante"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "escala-equipe"
+  ],
+  "objecoes": [
+   "conjuge-socio",
+   "sem-imovel"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "A",
+  "como_usar": "Use com casal que quer começar junto, com quem não tem imóvel próprio ou quando um dos dois tem dúvida. Fala: 'Esse casal começou oferecendo gestão para uma vizinha de prédio, fez curso e mentoria, e hoje tem 50 imóveis. Ele conta que o Rômulo virou o voto de Minerva nas discussões do casal...'.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "00:29:22",
+   "fim": "00:31:47",
+   "texto": "Companheiro da Isa: (...) A gente viu uma oportunidade e um desafio. (...) o pessoal fazia muito mal feito. Daí teve um momento na discussão do grupo, eu falei com a Isa, vamos falar com essa proprietária? E fomos. A gente já foi começando a dia seguinte, já entrando no canal no YouTube e encontrando o Romulo. (...) E depois, no meio do processo, entrei no grupo, a gente entrou no grupo, fez curso, a gente fez mentoria com ele, que auxiliou pra caramba. Aliás, como casal, sempre tem as complicações. Alguém quer gastar mais, alguém quer gastar menos. (...) A gente está com 50 imóveis agora Intentando devagar porque realmente é muito difícil E acho que não seria possível Sem todo o conhecimento, todas as discussões, todas as falas Também no grupo do WhatsApp e as conversas"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:32:01",
+    "fim": "00:33:02",
+    "sobre": "Isa: veio da hotelaria, viu a oportunidade no próprio prédio e o foco em qualidade para proprietários mal atendidos"
+   }
+  ]
+ },
+ {
+  "id": "webert-salvador-leilao-6-apartamentos",
+  "tipo": "case",
+  "nome": "Webert Menezes",
+  "quem": "advogado em Salvador (BA), que mantém a advocacia como atividade principal",
+  "titulo": "Comprou um apê em leilão com sócios, refez o anúncio na live do Rômulo e chegou a 6 apartamentos",
+  "antes": "Um apartamento comprado em leilão com sócios no bairro da Vitória, em Salvador, sem saber o que fazer com ele; anúncio montado com as fotos da arquiteta",
+  "depois": "Fez o curso, o Rômulo revisou o anúncio numa live (fotos, descrição) e o imóvel passou a alugar; vieram mais, e hoje são cerca de 6 apartamentos entre Salvador e São Paulo, como renda extra",
+  "numeros": [
+   "de 1 para cerca de 6 apartamentos"
+  ],
+  "citacao": "Eu mudei as coisas depois da live. E desse primeiro, aí apareceu mais um, e mais um, e mais um",
+  "aluno": "aluno",
+  "cidade": "Salvador",
+  "uf": "BA",
+  "perfil": [
+   "investidor",
+   "poucos-imoveis"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "anuncio-fotos"
+  ],
+  "objecoes": [
+   "tempo",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead profissional liberal que quer renda extra sem largar a carreira, ou que comprou imóvel (inclusive em leilão) e não sabe o que fazer. Fala: 'O Webert é advogado, comprou um apê em leilão, o Rômulo refez o anúncio dele numa live e hoje ele tem uns 6...'. Nome com grafia incerta na transcrição (Webert/Ebert).",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "00:48:53",
+   "fim": "00:50:43",
+   "texto": "Webert: Então compramos o curso, fizemos o curso E começamos a participar Por coincidência, logo depois que nós adquirimos, teve aquela primeira live do mês (...) Então eu peguei as fotos que a arquiteta tinha entregado antes e depois (...) Pode olhar meu anúncio? Beleza, olha, cara Eu mudava aqui uma coisinha Eu trocava essas fotos Eu trocava essa descrição Eu trocava isso Não, umas coisinhas Ele trocou tudo, na verdade. (...) Eu mudei as coisas depois da live. E desse primeiro, aí apareceu mais um, e mais um, e mais um, e em Salvador, e em São Paulo, aquele que nós começamos. Ok? Funcionou aí. Hoje mais ou menos são seis, né?"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:48:18",
+    "fim": "00:48:53",
+    "sobre": "como o apartamento foi comprado em leilão com sócios, no circuito do carnaval de Salvador"
+   },
+   {
+    "inicio": "00:50:59",
+    "fim": "00:51:39",
+    "sobre": "segue na advocacia; a temporada virou renda extra"
+   }
+  ]
+ },
+ {
+  "id": "beth-16-para-45-imoveis",
+  "tipo": "case",
+  "nome": "Beth",
+  "quem": "publicitária com 20 anos de trade marketing, de Piracicaba e São Pedro (SP); hoje mora em Belo Horizonte",
+  "titulo": "Entrou no curso com 16 imóveis e um ano depois tinha 45, captando clientes até onde se hospeda",
+  "antes": "Na pandemia alugou a própria casa em São Pedro; quando conheceu o Rômulo, um ano e um mês antes, tinha 16 imóveis",
+  "depois": "45 imóveis (1 próprio, 1 sublocado, o resto de terceiros) em São Pedro e região, Itatiba, Guarujá, São Lourenço, Urubici e Manaus, tudo à distância; Superhost; largou o mercado corporativo",
+  "numeros": [
+   "16 → 45 imóveis em cerca de 1 ano"
+  ],
+  "citacao": "quando eu conheci o Rômulo Eu estava com 16 imóveis, hoje eu estou com 45 imóveis",
+  "aluno": "aluno",
+  "cidade": "São Pedro",
+  "uf": "SP",
+  "perfil": [
+   "gestor",
+   "clt-largou",
+   "mora-longe",
+   "um-imovel"
+  ],
+  "imovel": [
+   "casa",
+   "chale-campo",
+   "interior"
+  ],
+  "dores": [
+   "captar-imoveis"
+  ],
+  "objecoes": [
+   "imovel-longe",
+   "tempo"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "avaliacoes-superhost",
+   "liberdade"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que quer captar proprietários, administra à distância ou quer largar o corporativo. Fala: 'A Beth era publicitária, entrou no curso com 16 imóveis e um ano depois estava com 45, tudo à distância...'. Fala longa (quase 4 min): o 16 → 45 vem no primeiro terço; a dica de captar dando feedback a anfitriões onde se hospeda vem no fim.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "01:37:02",
+   "fim": "01:40:52",
+   "texto": "Beth: (...) na pandemia, comecei a alugar minha casa (...) sou publicitária Trabalhei na área de trade marketing por 20 anos (...) E aí uma corretora me sugeriu começar a administrar de terceiros (...) E estou há quatro anos administrando O Rômulo comecei em fevereiro, o ano passado Então faz um ano e um mês (...) Mas nesse tempo, quando eu conheci o Rômulo Eu estava com 16 imóveis, hoje eu estou com 45 imóveis (...) Ah, então, daí, aqui no curso que eu estou online, foi muito bom para mim, de captação de clientes. (...) Então eu vou em Airbnb, chego lá, ruim, aí dou feedback, eu pergunto se quer, antes. (...) E também larguei o mercado corporativo, desapeguei, CLT, tô feliz."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "01:40:57",
+    "fim": "01:41:35",
+    "sobre": "casas de veraneio sem enxoval, faxineiras parceiras, tudo à distância"
+   }
+  ]
+ },
+ {
+  "id": "danilo-barbeiro-ubatuba-18-mil",
+  "tipo": "case",
+  "nome": "Danilo",
+  "quem": "barbeiro por 18 anos no Grajaú, São Paulo (SP); hoje sócio de uma importadora de relógios",
+  "titulo": "Barbeiro comprou um apê em Ubatuba, fez o curso e em 2 meses entraram uns R$ 18 mil",
+  "antes": "Barbeiro há 18 anos, sempre pagou aluguel e sonhava viver de renda de aluguel; para ganhar R$ 1 mil tinha que cortar uns vinte cabelos",
+  "depois": "Com a noiva comprou um apartamento em Ubatuba e fez o curso; em 2 meses entraram uns R$ 18 mil e eles adiantaram parcelas; com os sócios comprou mais apartamentos no Guarujá, que ele administra, e tem cobertura com diária de R$ 1 mil",
+  "numeros": [
+   "~R$ 18 mil em 2 meses",
+   "diária de R$ 1 mil na cobertura",
+   "1 apê em Ubatuba + 2 no Guarujá com sócios"
+  ],
+  "citacao": "Com dois meses a gente tinha feito acho que uns 18 mil reais, que tinha entrado, a gente até adiantou umas parcelas",
+  "aluno": "aluno",
+  "cidade": "Ubatuba",
+  "uf": "SP",
+  "perfil": [
+   "iniciante",
+   "casal-familia",
+   "investidor",
+   "poucos-imoveis"
+  ],
+  "imovel": [
+   "praia",
+   "apartamento"
+  ],
+  "dores": [],
+  "objecoes": [
+   "preco",
+   "conjuge-socio",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "faturamento",
+   "retorno-rapido",
+   "diaria",
+   "numero-de-imoveis"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead iniciante, sem experiência em imóveis, que vai financiar um apê na praia ou cuja parceira prefere comprar para morar. Fala: 'O Danilo era barbeiro, comprou um apê em Ubatuba, fez o curso e em dois meses tinham entrado uns R$ 18 mil...'. Fala longa (7 min): os R$ 18 mil vêm no primeiro terço; a comparação diária x cortes de cabelo vem logo depois.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "02:08:36",
+   "fim": "02:16:04",
+   "texto": "Danilo: Boa tarde, me chamo Danilo Sou Tom Paulo, moro aqui no Gajau Eu sou barbeiro, eu tinha uma barbearia há 18 anos Meu sonho foi sempre trabalhar com imóveis (...) Nisso o banco deu ok, o custo do Rômulo saiu, eu quis fazer, aí casou tudo certinho. Com dois meses a gente tinha feito acho que uns 18 mil reais, que tinha entrado, a gente até adiantou umas parcelas e ela foi feliz da vida. (...) Pra eu ganhar mil reais, tipo assim, eu tinha que cuidar lá, tipo, vinte cabelos Hoje a gente, tipo assim Eu tenho a cobertura lá, eu já tinha mil reais a diário (...) Fiz o seu curso de sublocação"
+  },
+  "outros_trechos": []
+ },
+ {
+  "id": "guilherme-bancario-300-porcento",
+  "tipo": "case",
+  "nome": "Guilherme",
+  "quem": "bancário em Campinas (SP), família de Minas Gerais; antes comprava e vendia milhas",
+  "titulo": "Bancário fez o curso, montou apês em SP e os pais passaram a receber 300% do aluguel convencional",
+  "antes": "Buscava renda extra com milhas; comprou um apartamento no Brás, em São Paulo",
+  "depois": "Fez o curso, montou a rede de fornecedores e comprou mais unidades; a esposa, que foi demitida, passou a tocar 3 apartamentos em SP; o apê dos pais em BH entrou na gestão e, mesmo tirando a taxa, eles recebem 300% do que recebiam no convencional; vai para 4 em SP + 1 em BH",
+  "numeros": [
+   "pais recebem 300% do aluguel convencional, já descontada a taxa",
+   "4 imóveis em SP + 1 em BH"
+  ],
+  "citacao": "O de Belo Horizonte, a gente tira a taxa de administração [...] e meus pais ainda recebem 300% do que recebiam no convencional.",
+  "aluno": "aluno",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "casal-familia",
+   "poucos-imoveis",
+   "investidor"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "reforma-mobilia",
+   "operacao-limpeza"
+  ],
+  "objecoes": [
+   "tempo",
+   "momento-obra"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead CLT que quer renda extra, que comprou na planta ou que tem imóvel da família no aluguel tradicional. Fala: 'O Guilherme é bancário, fez o curso, a esposa hoje toca 3 apês em SP e os pais dele recebem 300% do que recebiam no aluguel convencional...'.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "02:34:07",
+   "fim": "02:36:19",
+   "texto": "Guilherme: Coincidentemente era lá onde o Romo tem o apartamento dele Conheci o Romo, fiz o curso Mandei vários directs pegando os fornecedores Eu acho um empreiteiro, marceneiro, fotógrafo (...) Apareceu uma oportunidade num outro imóvel E aí eu falei, vamos encarar, vamos pegar o segundo (...) Quando entregaram o empreendimento, minha esposa tinha sido demitida, eu falava, já tem um serviço pra ela, já toca já três apartamentos. (...) Nisso um imóvel dos meus pais em BH também desocupou (...) O de Belo Horizonte, a gente tira a taxa de administração e meus pais ainda recebem 300% do que recebiam no convencional."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "02:33:13",
+    "fim": "02:34:07",
+    "sobre": "bancário em Campinas, buscava renda extra com milhas e comprou um apartamento no Brás"
+   }
+  ]
+ },
+ {
+  "id": "moises-bertioga-quarto-16-imoveis",
+  "tipo": "case",
+  "nome": "Moisés",
+  "quem": "profissional de TI que trocou São Paulo por Bertioga (SP); muito ativo no grupo da comunidade",
+  "titulo": "Começou alugando um quarto e, 6 meses depois de entrar na turma, chegou a 16 imóveis no verão",
+  "antes": "Alugava um quarto da própria casa (com o gato Tabelião) só para ter um dinheiro a mais para a cerveja",
+  "depois": "Começou para valer há 6 meses, quando entrou na 10ª turma do curso; chegou a administrar 16 imóveis no verão e, com o curso, dispensou proprietários e ficou com 10",
+  "numeros": [
+   "de 1 quarto para 16 imóveis no verão",
+   "hoje 10 imóveis, depois de dispensar proprietários"
+  ],
+  "citacao": "Para valer mesmo, eu comecei a fazer há seis meses, mais ou menos quando eu entrei na décima turma do curso. E era comecinho de verão, né? Eu cheguei a administrar 16 imóveis no verão.",
+  "aluno": "aluno",
+  "cidade": "Bertioga",
+  "uf": "SP",
+  "perfil": [
+   "iniciante",
+   "gestor"
+  ],
+  "imovel": [
+   "quarto",
+   "praia"
+  ],
+  "dores": [
+   "captar-imoveis"
+  ],
+  "objecoes": [
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "A",
+  "como_usar": "Use com lead que mora no litoral, começou com um quarto ou quer sair da cidade grande. Fala: 'O Moisés alugava um quarto da casa em Bertioga; seis meses depois de entrar na turma já administrava 16 imóveis...'. Ele também conta que o curso o ajudou a dispensar proprietários ruins.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "02:49:26",
+   "fim": "02:52:35",
+   "texto": "Moisés: (...) eu sou TI de formação. Há uns dois anos eu moro em Birtioga (...) Eu comecei fazendo Airbnb, era só um quarto também, tipo o Rômulo (...) Comecei a fazer única e exclusivamente para ter um dinheiro a mais e ir tomar uma cerveja. (...) Para valer mesmo, eu comecei a fazer há seis meses, mais ou menos quando eu entrei na décima turma do curso. E era comecinho de verão, né? Eu cheguei a administrar 16 imóveis no verão. Aí, com o desenrolado do curso, eu demiti alguns proprietários. Então, hoje eu faço só de dez."
+  },
+  "outros_trechos": []
+ },
+ {
+  "id": "anna-yan-bras-1-a-11-imoveis",
+  "tipo": "case",
+  "nome": "Anna Santos e Yan Nascimento",
+  "quem": "casal e sócios que vieram do e-commerce; operam no Brás, em São Paulo (SP), com imóveis próprios e sublocados",
+  "titulo": "Casal foi de 1 para 11 apartamentos em 2 anos aumentando a capacidade e clonando unidades",
+  "antes": "Primeiro apartamento de 2 quartos no Brás, mobiliado parcelado no cartão: faturou R$ 4.848 no 1º mês, mas a média caiu para R$ 4.200 no 1º semestre de 2023, com cerca de 400 concorrentes no mesmo endereço",
+  "depois": "Aumentaram a capacidade de 4 para 7 hóspedes e a média de faturamento subiu 57%; clonando unidades e sublocando, foram de 3 para 11 unidades em 8 meses (hoje são 12)",
+  "numeros": [
+   "Média de R$ 4.200 → +57% depois de passar de 4 para 7 hóspedes",
+   "Diária média de R$ 327 para R$ 477 (+45%) com taxa de hóspede adicional numa reserva de 6 diárias",
+   "De 3 para 11 unidades em 8 meses; hoje 12"
+  ],
+  "citacao": "o faturamento do segundo semestre foi devido a essa alteração, que a gente conseguiu aumentar essa média em 57%, que deu uma boa diferença só em adicionar, aumentar a capacidade.",
+  "aluno": "nao-informado",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "casal-familia",
+   "sublocacao",
+   "gestor",
+   "um-imovel"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "precificacao",
+   "algoritmo-ocupacao",
+   "escala-equipe",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "sem-imovel",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "faturamento",
+   "diaria",
+   "numero-de-imoveis"
+  ],
+  "forca": "B",
+  "como_usar": "Use com casal que quer começar junto, com quem tem apartamento em prédio cheio de concorrentes ou quer crescer com sublocação. Fala: 'A Anna e o Yan viram o faturamento cair para R$ 4.200; só aumentando a capacidade subiram a média em 57% e foram de 3 para 11 unidades em 8 meses.' Palestra do 4º Encontro (área de membros).",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "06 - Anna Santos e Yan Nascimento Anfitriões e empreendedores na temporada - Do 1 aos 11 apartamentos em 2 anos",
+   "url": "https://vimeo.com/1214100448",
+   "data": "2026-07-18"
+  },
+  "trecho": {
+   "inicio": "00:20:45",
+   "fim": "00:23:19",
+   "texto": "Yan Nascimento: (...) Bom, com essa nossa sacada de clonar as unidades, principalmente trabalhando junto com a sublocação, nós fomos de 3 unidades para 11 em uma janela de 8 meses. De maio do ano passado até janeiro desse ano. E esse crescimento, ele ampliou, claro, o nosso resultado. Mas ao passo que ele ampli esse resultado, ele vai ampliar o seu erro também. (...) a gente estava saindo de um cenário onde nós mesmos fazíamos limpeza, onde nós mesmos fazíamos manutenção (...) E de repente a gente estava com 11. Então foi um salto do operacional para a fase da gestão em um período muito pequeno."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:11:20",
+    "fim": "00:11:43",
+    "sobre": "Yan: aumentar a capacidade subiu a média de faturamento em 57%"
+   },
+   {
+    "inicio": "00:01:45",
+    "fim": "00:11:20",
+    "sobre": "Anna conta o primeiro apartamento: R$ 4.848 no 1º mês, queda para R$ 4.200 e a troca de 4 para 7 hóspedes (trecho longo; os números vêm depois de uns 3 minutos)"
+   },
+   {
+    "inicio": "00:23:54",
+    "fim": "00:35:38",
+    "sobre": "Yan explica como vender o calendário (dias órfãos, descontos); no fim, casos reais com diária média de R$ 327 para R$ 477"
+   }
+  ]
+ },
+ {
+  "id": "larissa-tribruxo-porto-alegre-tematico",
+  "tipo": "case",
+  "nome": "Larissa",
+  "quem": "publicitária insatisfeita com a profissão; criou o Refúgio Tribruxo, casa temática de Harry Potter na casa da família em Porto Alegre (RS), e mora no andar de cima",
+  "titulo": "Montou uma casa temática de Harry Potter com a rescisão e hoje vive só do Airbnb",
+  "antes": "Em 2018, insatisfeita como publicitária; a casa da família estava parada e precisando de reforma, e ela não tinha dinheiro: usou a rescisão, vendeu a câmera profissional e reformou móveis usados que ganhou",
+  "depois": "Desde fevereiro de 2019 a casa roda no Airbnb com diária mínima de R$ 460 para 2 pessoas (limpeza inclusa) e R$ 100 por pessoa extra; precisa de 6 diárias por mês, a média é 8 e o pico foi 14; hoje a renda dela vem só dali",
+  "numeros": [
+   "diária mínima de R$ 460 para 2 pessoas (com limpeza) + R$ 100 por pessoa extra",
+   "6 diárias/mês = mínimo; média de 8; pico de 14 nas férias de inverno"
+  ],
+  "citacao": "eu só peguei a minha rescisão do meu trabalho, vendi minha câmera profissional Vendi umas coisas e muito devagarinho ia comprar umas coisas, ganhei muitos móveis usados",
+  "aluno": "nao-informado",
+  "cidade": "Porto Alegre",
+  "uf": "RS",
+  "perfil": [
+   "clt-largou",
+   "um-imovel",
+   "sem-dinheiro",
+   "iniciante"
+  ],
+  "imovel": [
+   "tematico",
+   "casa",
+   "capital"
+  ],
+  "dores": [
+   "reforma-mobilia",
+   "precificacao",
+   "baixa-temporada"
+  ],
+  "objecoes": [
+   "imovel-simples"
+  ],
+  "resultados": [
+   "liberdade",
+   "ocupacao",
+   "diaria"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que quer fazer um imóvel temático/diferente ou que acha que precisa de muito dinheiro para montar. Fala: 'A Larissa montou uma casa de Harry Potter em Porto Alegre com a rescisão e móveis usados, e hoje vive só disso...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "TOUR PELO AIRBNB TEMÁTICO DO HARRY POTTER: APRENDA COM A ANFITRIÃ",
+   "url": "https://www.youtube.com/watch?v=_dSK23zkloU",
+   "data": "2025-11-15"
+  },
+  "trecho": {
+   "inicio": "00:16:27",
+   "fim": "00:17:11",
+   "texto": "Larissa: Mas é bem exceção Porque foi férias de inverno, tá? Aí, julho também foi 13, acho Junho, aliás, foi 13 Mas assim, 6 é o mínimo, pra ser feliz Rômulo: Você entende que vale a pena não ter esse projeto? Larissa: É, assim, não tem opção Eu acho que não ia existir, ia mudar até dar certo, sabe? Porque eu realmente faço isso muito por amor Mas pra eu poder sustentar aqui e me sustentar, 6 é o mínimo 8 já fica mais bacaninha e que é a média assim, 8 Rômulo: 8 por mês né? Ou seja, um mínimo de 6, uma média de 8 E um pico assim legal de 14 diários por mês, por exemplo"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:05:03",
+    "fim": "00:05:38",
+    "sobre": "montou sem reforma estrutural, com a rescisão, a venda da câmera e móveis usados reformados por ela"
+   },
+   {
+    "inicio": "00:13:27",
+    "fim": "00:14:29",
+    "sobre": "precificação: R$ 460 mínimo para 2 em dia de semana, fim de semana mais caro e R$ 100 por pessoa extra"
+   },
+   {
+    "inicio": "00:18:24",
+    "fim": "00:18:43",
+    "sobre": "hoje a fonte de renda dela é só a casa temática"
+   }
+  ]
+ },
+ {
+  "id": "leila-toca-hobbit-nova-prata",
+  "tipo": "case",
+  "nome": "Leila e o marido (Condado de Prata)",
+  "quem": "casal fã de Tolkien; ela é fotógrafa e ele trabalha com construção civil há 26 anos; Nova Prata (RS)",
+  "titulo": "Casal construiu à mão duas tocas Hobbit no interior do RS e lota os fins de semana",
+  "antes": "Em 2019 a ideia era só uma fachada fake para ensaios fotográficos, sem pensar em hospedagem",
+  "depois": "Duas tocas no Airbnb desde 2021, diária a partir de R$ 743, fins de semana sempre cheios, férias com reserva todo dia e 55 diárias em janeiro de 2025 mesmo bloqueando datas de propósito; a maioria das reservas vem do Instagram",
+  "numeros": [
+   "Diária a partir de R$ 743 para 2 pessoas",
+   "55 diárias em janeiro de 2025 nas duas tocas",
+   "Foto da obra inacabada teve 2.680 comentários numa noite",
+   "Hobbit Day: 320 ingressos esgotados em cerca de 10 dias"
+  ],
+  "citacao": "entre as duas tocas, a gente teve 55 hospedagens, acho que foi. 55 diárias.",
+  "aluno": "nao-informado",
+  "cidade": "Nova Prata",
+  "uf": "RS",
+  "perfil": [
+   "casal-familia"
+  ],
+  "imovel": [
+   "tematico",
+   "chale-campo",
+   "interior"
+  ],
+  "dores": [
+   "algoritmo-ocupacao",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "ocupacao",
+   "diaria"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem imóvel no interior, longe de destino óbvio, ou quer criar algo diferente/temático. Fala: 'Um casal no interior do RS construiu uma toca Hobbit com as próprias mãos e hoje cobra R$ 743 a diária e lota os fins de semana...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "TOUR PELA TOCA HOBBIT DO AIRBNB, NO INTERIOR DO RS",
+   "url": "https://www.youtube.com/watch?v=r2noeVOxKv4",
+   "data": "2025-10-09"
+  },
+  "trecho": {
+   "inicio": "00:58:03",
+   "fim": "00:59:06",
+   "texto": "Leila: Nesse ano de 2025, o mês de janeiro foi um mês bem voltado. Então, entre as duas tocas, a gente teve 55 hospedagens, acho que foi. 55 diárias. Rômulo: Só em janeiro. Convidado (anfitrião): E a gente trancou de propósito, porque verão a grama cresce rápido, a cada oito dias tem que cortar esse um hectare de grama (...) Então, a gente trancava de propósito. Se fosse querer deixar livre, tinha enchido as duas o mês inteiro. (...) E como não temos empregados, é a minha sogra que faz isso, a Leila, meu sogro (...) Porque o povo vê que não é uma coisa comercial, é uma coisa familiar"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:06:24",
+    "fim": "00:08:12",
+    "sobre": "foto da obra crua no grupo Tolkien Brasil teve 2.680 comentários numa noite e virou a decisão de hospedar"
+   },
+   {
+    "inicio": "00:55:45",
+    "fim": "00:56:47",
+    "sobre": "diária a partir de R$ 743; fins de semana sempre cheios e todos os dias nas férias"
+   },
+   {
+    "inicio": "00:57:00",
+    "fim": "00:57:28",
+    "sobre": "maioria das reservas vem das redes sociais e da categoria UAU, e fecha pelo Airbnb"
+   }
+  ]
+ },
+ {
+  "id": "mateus-sanches-vilinha-boituva-10-unidades",
+  "tipo": "case",
+  "nome": "Mateus Sanches",
+  "quem": "empresário de reparação automotiva que recebeu uma casa de 300 m² em Boituva (SP) como parte do pagamento na venda da empresa; não mora no imóvel e a gestão é feita junto com a equipe do Rômulo",
+  "titulo": "Transformou uma casa que ninguém comprava em 10 mini apartamentos que faturaram R$ 48 mil no mês",
+  "antes": "Casa de 300 m² que entrou por R$ 650 mil na venda da empresa e não saía por esse valor; no aluguel fixo renderia no máximo R$ 3 mil por mês",
+  "depois": "Investiu cerca de R$ 500 mil (total de ~R$ 1,2 milhão) e dividiu em 10 unidades com check-in 100% remoto; fez de R$ 35 mil a R$ 39,4 mil/mês de janeiro a maio de 2025 e R$ 48 mil no último mês, com cerca de 100 check-ins por mês",
+  "numeros": [
+   "Aluguel fixo: no máximo R$ 3 mil/mês → R$ 48 mil no último mês com 10 unidades",
+   "Jan a mai/2025: R$ 35 mil a R$ 39,4 mil/mês",
+   "Investimento total de ~R$ 1,2 milhão (casa de R$ 650 mil + ~R$ 500 mil de obra e mobília)",
+   "Cerca de 100 check-ins/mês; na primeira página do Airbnb em 80% das buscas"
+  ],
+  "citacao": "Quanto essa vilinha faturou? No último mês nós tivemos um faturamento de 48 mil reais.",
+  "aluno": "nao-informado",
+  "cidade": "Boituva",
+  "uf": "SP",
+  "perfil": [
+   "um-imovel",
+   "mora-longe"
+  ],
+  "imovel": [
+   "casa",
+   "interior",
+   "kitnet",
+   "studio-compacto"
+  ],
+  "dores": [
+   "automacao-tempo",
+   "precificacao",
+   "algoritmo-ocupacao",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "imovel-longe",
+   "preco"
+  ],
+  "resultados": [
+   "faturamento",
+   "ocupacao"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem casa grande parada ou mal alugada no interior, ou com medo de investir tudo de uma vez (ele mobiliou só 5 unidades primeiro). Fala: 'O Mateus tinha uma casa em Boituva que no aluguel daria R$ 3 mil; dividiu em 10 unidades e no último mês faturou R$ 48 mil.' Ele é cliente de gestão do Rômulo, não aluno. A palestra dele no 3º Encontro também está no Cofre.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELE TRANSFORMOU UMA CASA EM 10 APARTAMENTOS E COLOCOU NO AIRBNB",
+   "url": "https://www.youtube.com/watch?v=Mzx3koCyRrc",
+   "data": "2025-07-31"
+  },
+  "trecho": {
+   "inicio": "01:31:55",
+   "fim": "01:33:43",
+   "texto": "Rômulo Villela: total, porque juntando o que você falou antes, deu ali 1 milhão e 200 vamos colocar, pra tirar 45, 48 mil, isso bruto é uma baita de uma rentabilidade (...) Mateus Sanches: mas eu acho que pelo tempo a gente pensa que um negócio começa a tomar forma depois do segundo ano se a gente pensar nisso daqui eu posso dizer que é um caso de sucesso (...) nós estamos ainda terminando o primeiro ano sendo que metade do primeiro ano foi com 5 unidades então não gerou prejuízo nenhum gerou muito lucro"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "01:25:36",
+    "fim": "01:26:30",
+    "sobre": "Rômulo lê o faturamento mês a mês: R$ 38 mil (jan/25), R$ 35 mil, R$ 39,4 mil, R$ 36,6 mil, R$ 39 mil e quase R$ 50 mil em junho com eventos e preço dinâmico"
+   },
+   {
+    "inicio": "00:02:42",
+    "fim": "00:06:03",
+    "sobre": "Origem: casa de R$ 650 mil recebida na venda da empresa; aluguel fixo daria no máximo R$ 3 mil e kitnet mensal dava trabalho demais"
+   },
+   {
+    "inicio": "00:13:48",
+    "fim": "00:16:06",
+    "sobre": "Testou primeiro mobiliando só as 5 unidades piores e menores; as 5 de cima ele já pagou parcelado porque sabia que iam se pagar"
+   }
+  ]
+ },
+ {
+  "id": "judson-copan-90-apartamentos-estudio-15-mil",
+  "tipo": "case",
+  "nome": "Judson",
+  "quem": "gestor com cerca de 90 apartamentos de Airbnb no Edifício Copan, centro de São Paulo, com loja-recepção e lavanderia próprias",
+  "titulo": "Começou com 30 e chegou a 90 apartamentos no Copan; estúdio de 28 m² reformado fatura R$ 15 mil/mês",
+  "antes": "Começou com 30 apartamentos no Copan; o estúdio de 28 m² já estava no Airbnb, mas era 'um Airbnb mais simples', sem reforma",
+  "depois": "Hoje são cerca de 90 apartamentos no mesmo prédio; a reforma temática triplicou o rendimento do estúdio, que fatura em média R$ 15 mil bruto por mês; num apartamento sublocado ele paga R$ 2 mil de aluguel e lucra uns R$ 5 mil por mês",
+  "numeros": [
+   "30 → ~90 apartamentos no Copan",
+   "estúdio de 28 m²: reforma triplicou o rendimento, média de R$ 15 mil bruto/mês",
+   "sublocação: R$ 2 mil de aluguel, ~R$ 5 mil de lucro/mês, contrato mínimo de 5 anos"
+  ],
+  "citacao": "foi uma reforma cara, mas que triplicou o rendimento, pois a média é R$15.000,00 bruto",
+  "aluno": "nao-informado",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "gestor",
+   "sublocacao"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "apartamento",
+   "capital",
+   "tematico"
+  ],
+  "dores": [
+   "reforma-mobilia",
+   "escala-equipe",
+   "operacao-limpeza",
+   "avaliacoes"
+  ],
+  "objecoes": [
+   "imovel-simples",
+   "sem-imovel"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis",
+   "avaliacoes-superhost"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem estúdio pequeno e acha que não dá pra cobrar mais, ou que pensa em sublocar. Fala: 'O Judson tem um estúdio de 28 m² no Copan que era um Airbnb simples; depois da reforma o faturamento triplicou e hoje dá R$ 15 mil por mês...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "R$15.000 NO AIRBNB SÓ COM UM APARTAMENTO DE 28m² (ELE TEM 90)",
+   "url": "https://www.youtube.com/watch?v=z2mz5HBIfZI",
+   "data": "2025-07-17"
+  },
+  "trecho": {
+   "inicio": "00:28:48",
+   "fim": "00:29:26",
+   "texto": "Rômulo: E aí vocês reformaram desse jeito? Judson: Exatamente. Ele já existia com o Airbnb, mas ele não era reformado, ele era um Airbnb mais simples. (…) E aí foi feita essa reforma, uma reforma de bastante investimento, foi uma reforma cara, mas que triplicou o rendimento, pois a média é R$15.000,00 bruto por mais que entra no tratamento. Rômulo: Por um apartamento do 100, de 28,00 mais por hora. Judson: Não existe, só aqui mesmo."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:43:35",
+    "fim": "00:44:34",
+    "sobre": "sublocação: paga R$ 2 mil de aluguel, lucra uns R$ 5 mil por mês e exige contrato de pelo menos 5 anos para pagar a reforma"
+   },
+   {
+    "inicio": "00:00:00",
+    "fim": "00:00:26",
+    "sobre": "começou com 30 apartamentos e hoje são 90: 'Eu tripliquei'"
+   },
+   {
+    "inicio": "00:37:16",
+    "fim": "00:37:58",
+    "sobre": "um dos apartamentos tem quase 300 comentários e, até pouco tempo, nenhum abaixo de 5 estrelas"
+   }
+  ]
+ },
+ {
+  "id": "icaro-nepa-bar-bixiga-12-mil",
+  "tipo": "case",
+  "nome": "Ícaro",
+  "quem": "ator que trabalha com audiovisual; dono do Nepá, um bar no Bixiga (Bela Vista, São Paulo) anunciado no Airbnb",
+  "titulo": "Bar que não deu certo virou 'bar pra chamar de seu' no Airbnb e fatura R$ 12 mil/mês",
+  "antes": "Tentou funcionar como bar convencional (shows de quinta a domingo, risoto no almoço) e não rolou; diz que quebrou a cara e ficou endividado",
+  "depois": "Anunciou o espaço no Airbnb como experiência exclusiva: R$ 1.500 para até 20 pessoas no fim de semana, alugado 2 a 3 vezes por semana, cerca de R$ 12 mil por mês só pelo Airbnb",
+  "numeros": [
+   "R$ 1.500 por noite para até 20 pessoas",
+   "2 a 3 locações por semana",
+   "~R$ 12 mil/mês só pelo Airbnb"
+  ],
+  "citacao": "Até achar esse modelo de negócio, cara, me ferrei, não. Até que eu comecei a estudar alocações temáticas, e ver que era melhor ficar fechado, e alugar",
+  "aluno": "nao-informado",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "um-imovel"
+  ],
+  "imovel": [
+   "tematico",
+   "capital"
+  ],
+  "dores": [
+   "anuncio-fotos",
+   "avaliacoes",
+   "precificacao"
+  ],
+  "objecoes": [
+   "imovel-simples",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "faturamento",
+   "diaria"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem um espaço 'estranho' (garagem, ponto comercial, espaço de eventos) e acha que não serve para o Airbnb. Fala: 'O Ícaro tinha um bar que não deu certo; transformou numa experiência no Airbnb e tira uns R$ 12 mil por mês...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELE ANUNCIOU UM BAR NO AIRBNB | R$ 12.000 DE FATURAMENTO POR MÊS",
+   "url": "https://www.youtube.com/watch?v=WIAzt4Z0iRc",
+   "data": "2025-06-10"
+  },
+  "trecho": {
+   "inicio": "00:16:51",
+   "fim": "00:18:41",
+   "texto": "Rômulo: E aí quantas vezes você aluga assim, tipo um mês assim? Ícaro: Eu alugo geralmente 3 vezes né, por semana (…) em média é de 3 a 2 vezes por semana Rômulo: (…) Se você aluga 3 vezes duas vezes vai, você tem ali 6 mil reais por mês Ícaro: Sim, só que o Airbnb eu levanto uns 12 É mesmo? Caraca E é uma garagem né (…) Ícaro: Se você alugar uma vez já tá parado. Não, não é fácil assim não, eu quebrei a cara, me falei duas ou três vezes, fiquei endividado até arrumar um bar. (…) Até achar esse modelo de negócio, cara, me ferrei, não. Até que eu comecei a estudar alocações temáticas, e ver que era melhor ficar fechado, e alugar, perfeito? (…) uma dica, valoriza seu trabalho."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:01:47",
+    "fim": "00:02:54",
+    "sobre": "a origem: o bar convencional não deu certo e virou hospedagem temática"
+   },
+   {
+    "inicio": "00:25:57",
+    "fim": "00:26:27",
+    "sobre": "atrai hóspedes pelo Instagram e com tráfego pago na Meta"
+   },
+   {
+    "inicio": "00:32:18",
+    "fim": "00:33:04",
+    "sobre": "um mimo de R$ 30–35 (vodka ou espumante) é 'garantia de 5 estrelas'"
+   }
+  ]
+ },
+ {
+  "id": "anna-yan-casal-zero-a-tres-imoveis",
+  "tipo": "case",
+  "nome": "Anna Santos e Yan Nascimento",
+  "quem": "casal de 28 anos com empresa no ramo alimentício; moravam em Guarulhos (SP)",
+  "titulo": "Casal tirou do bolso só a entrada e foi de zero a três imóveis no Airbnb",
+  "antes": "Toda a renda vinha de um só negócio; estavam em dúvida entre abrir uma adega ou comprar um apartamento financiado, com medo de dar 'um tiro no escuro'",
+  "depois": "Três apartamentos no Airbnb, comprando um por ano com móveis e material parcelados no cartão e pagos pelas reservas; agora parcelam em 6 vezes para comprar um a cada 6 meses e querem chegar a uns 10 para se aposentar antes dos 35",
+  "numeros": [
+   "Só a entrada (uns R$ 27 mil) saiu do bolso",
+   "0 → 3 imóveis, um por ano",
+   "Capacidade de 4 para 7 hóspedes num apê de 35 m²",
+   "Meta: um imóvel a cada 6 meses, chegar a uns 10"
+  ],
+  "citacao": "o nosso investimento inicial, o único investimento que saiu do nosso bolso foi a entrada. A entrada do apartamento.",
+  "aluno": "nao-informado",
+  "cidade": null,
+  "uf": "SP",
+  "perfil": [
+   "casal-familia",
+   "iniciante",
+   "investidor",
+   "poucos-imoveis",
+   "sem-dinheiro"
+  ],
+  "imovel": [
+   "apartamento"
+  ],
+  "dores": [
+   "reforma-mobilia",
+   "financeiro-imposto",
+   "operacao-limpeza"
+  ],
+  "objecoes": [
+   "conjuge-socio",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "retorno-rapido"
+  ],
+  "forca": "B",
+  "como_usar": "Use com casal que quer começar junto ou com lead que acha que precisa de muito dinheiro. Fala: 'A Anna e o Yan tiraram do bolso só a entrada do apê, parcelaram os móveis no cartão e pagaram com as reservas; hoje têm três...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "CRESCENDO DE ZERO A TRÊS IMÓVEIS NO AIRBNB COMO CASAL- COM ANNA DO AIRBNB E YAN",
+   "url": "https://www.youtube.com/watch?v=5uA-SMCiCQo",
+   "data": "2025-02-13"
+  },
+  "trecho": {
+   "inicio": "00:13:20",
+   "fim": "00:14:28",
+   "texto": "Yan: Mas assim, isso é uma dica que eu acho muito legal de dar, o nosso investimento inicial, o único investimento que saiu do nosso bolso foi a entrada. A entrada do apartamento. Foi uns 20 mil, 30 mil. Foi uns 30 mil. Acho que foi 27, se não me engano. (...) Porque geladeira, cama, mobília, tinta, material de construção, tudo a gente passou parcelado no cartão. 10 vezes, 12 vezes. E a partir do momento que ia alugando, já ia dando para pagar as faturas. (...) Depois desse prazo que você terminou de pagar o seu cartão (...) vai sobrar uma venda maior. Que é você conseguir investir no próximo e assim por diante, né?"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:16:05",
+    "fim": "00:16:31",
+    "sobre": "agora parcelam em 6 vezes para comprar o próximo imóvel a cada 6 meses"
+   },
+   {
+    "inicio": "00:08:44",
+    "fim": "00:10:00",
+    "sobre": "estudaram a concorrência num condomínio com uns 400 Airbnbs e subiram a capacidade de 4 para 7 hóspedes com sofá-cama"
+   },
+   {
+    "inicio": "00:18:12",
+    "fim": "00:18:23",
+    "sobre": "meta de se aposentar antes dos 35 com os apartamentos"
+   }
+  ]
+ },
+ {
+  "id": "divino-ipolito-17-imoveis-estudio-sp",
+  "tipo": "case",
+  "nome": "Divino Ipolito",
+  "quem": "empresário do setor de engenharia, mineiro que vive no Rio de Janeiro (RJ) desde 1986; tem 17 imóveis e um estúdio em São Paulo administrado pelo Canal do Anfitrião",
+  "titulo": "Dono de 17 imóveis comprou um estúdio na planta sem saber o que fazer e hoje roda no Airbnb com desgaste mínimo",
+  "antes": "Investidor de aluguel tradicional que comprava imóveis degradados; comprou em 2018 um estúdio de 19 m² na planta em São Paulo sem saber o que fazer com ele e nem sabia o que era Airbnb",
+  "depois": "Fez o projeto idêntico ao do Rômulo no mesmo prédio; o estúdio roda há 38 meses com desgaste muito pequeno ('não some nada'); fez o curso e comprou um apartamento pronto na Lapa (Rio) para começar a alugar logo",
+  "numeros": [
+   "17 imóveis no total",
+   "Estúdio de 19 m² rodando há 38 meses com desgaste muito pequeno",
+   "Casa no Méier comprada por R$ 150 mil + R$ 150 mil de reforma (eram dois apartamentos)"
+  ],
+  "citacao": "o desgaste é muito pequeno, né, questão de sumir coisas lá, não some nada, e tá rodando, e tá tudo muito bem.",
+  "aluno": "aluno",
+  "cidade": "Rio de Janeiro",
+  "uf": "RJ",
+  "perfil": [
+   "50-mais",
+   "investidor",
+   "mora-longe",
+   "casal-familia"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "imovel-longe",
+   "confianca"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead investidor mais velho, acostumado com aluguel tradicional, com medo de desgaste ou de deixar o imóvel em outra cidade. Fala: 'O Divino tem 17 imóveis; o estúdio dele em São Paulo roda há mais de 3 anos com desgaste mínimo, e ele fica no Rio.' Não traz faturamento: combine com o case do filho dele, Mateus, no mesmo vídeo.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "VIVENDO DA RENDA DE 17 IMÓVEIS | ALUGUEL TRADICIONAL E AIRBNB",
+   "url": "https://www.youtube.com/watch?v=UURwRcb9va0",
+   "data": "2024-11-21"
+  },
+  "trecho": {
+   "inicio": "00:32:06",
+   "fim": "00:33:49",
+   "texto": "Divino Ipolito: Começamos em agosto, aí vai rodar, né? (...) então são 38 meses. Por aí, né? 38 meses. Uma coisa importante também, que muita gente tem medo (...) mas a princípio o apartamento tá, basicamente que a gente entregou lá em 2021, ele, o desgaste é muito pequeno, né, questão de sumir coisas lá, não some nada, e tá rodando, e tá tudo muito bem. Aí você pegou, rodou esse aí, depois veio e tal, acabei fazendo curso com você, né, e lá no Rio aí a gente pegou um apartamento lá"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:08:42",
+    "fim": "00:12:33",
+    "sobre": "A estratégia: comprar o que ninguém quer em boa localização ('o imóvel você pode reformar (...) mas você não pode mudar a rua') até chegar a 17 imóveis"
+   },
+   {
+    "inicio": "00:16:29",
+    "fim": "00:21:00",
+    "sobre": "Casa abandonada no Méier comprada por R$ 150 mil, que na verdade eram dois apartamentos, com mais R$ 150 mil de reforma"
+   },
+   {
+    "inicio": "00:31:25",
+    "fim": "00:32:06",
+    "sobre": "Rômulo conta que o estúdio do Divino tem projeto idêntico ao dele, no mesmo prédio"
+   }
+  ]
+ },
+ {
+  "id": "romulo-3-apartamentos-10-mil-mes-sp",
+  "tipo": "case",
+  "nome": "Rômulo Villela",
+  "quem": "anfitrião e gestor; mostra três apartamentos de 2 quartos que administra em São Paulo (SP)",
+  "titulo": "Três apartamentos de 2 quartos em São Paulo que faturam pelo menos R$ 10 mil por mês, todo mês",
+  "antes": "Bairros bem diferentes: Vila Madalena (nobre), Brás (bairro onde ninguém sonha em morar) e Liberdade, num prédio só com porteiro e elevador, que teve os aluguéis suspensos porque o condomínio restringiu",
+  "depois": "Vila Madalena (60 m²): média de R$ 13.388/mês com 80% a 90% de ocupação; Brás (~50 m², prédio com piscina): cerca de R$ 10.500; Liberdade (100 m²): média de R$ 11.600, e a ação contra o condomínio foi ganha na justiça",
+  "numeros": [
+   "Vila Madalena, 60 m²: média de R$ 13.388/mês (mar a ago/2024), pico de R$ 16.794",
+   "Brás, ~50 m²: cerca de R$ 10.500/mês",
+   "Liberdade, 100 m²: média de R$ 11.600/mês (jul a dez/2023)"
+  ],
+  "citacao": "Eu vou mostrar pra vocês nesse vídeo 3 imóveis que faturam consistentemente em média 10 mil reais por mês",
+  "aluno": "romulo",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "gestor"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "condominio-legislacao",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "imovel-simples",
+   "confianca"
+  ],
+  "resultados": [
+   "faturamento",
+   "ocupacao"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem ou quer comprar apartamento de 2 quartos em capital e pergunta quanto dá para faturar, ou que tem problema com condomínio. Fala: 'O Rômulo mostra três 2 quartos em São Paulo que faturam pelo menos R$ 10 mil por mês, até num bairro que ninguém sonha em morar.' Não é antes/depois: é prova de consistência.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "MEUS ANÚNCIOS DO AIRBNB QUE FATURAM MAIS DE 10 MIL POR MÊS",
+   "url": "https://www.youtube.com/watch?v=DuKs2dFw930",
+   "data": "2024-10-24"
+  },
+  "trecho": {
+   "inicio": "00:08:02",
+   "fim": "00:09:03",
+   "texto": "Rômulo Villela: Então, nesse primeiro imóvel que eu vou mostrar pra vocês, é um imóvel que fica na Vila Madalena, (...) ele fica no 14º andar, é um imóvel de mais ou menos 60 metros quadrados. (...) temos um resultado de março de 2024, 13.447 reais, abril, 16.000 reais, 16.794 reais (...) Fechando todo mês ali com a taxa de ocupação ali entre 80 e 90%, às vezes até um pouquinho mais, (...) Uma média nesses seis meses que eu separei de 13.388 reais, tá?"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:10:00",
+    "fim": "00:10:36",
+    "sobre": "Brás: média de R$ 10.500, num bairro mais barato e com rentabilidade próxima da Vila Madalena"
+   },
+   {
+    "inicio": "00:11:31",
+    "fim": "00:12:09",
+    "sobre": "Liberdade: o condomínio restringiu, a ação foi ganha na justiça; média de R$ 11.600"
+   },
+   {
+    "inicio": "00:13:06",
+    "fim": "00:13:28",
+    "sobre": "Mesmo bairro, projeto diferente: no Brás, um 2 quartos sem piscina não cobra metade do que cobra o do prédio-resort"
+   }
+  ]
+ },
+ {
+  "id": "lili-aposentada-4-apartamentos-sp",
+  "tipo": "case",
+  "nome": "Liliane Gomes (Lili)",
+  "quem": "pedagoga, 32 anos como coordenadora de educação infantil; aposentou-se em 2022 vivendo da renda dos apartamentos em São Paulo (perto da Faria Lima) e tem imóveis também em Santos",
+  "titulo": "Coordenadora de escola que se aposentou vivendo dos apartamentos no Airbnb",
+  "antes": "Comprou o primeiro apartamento na planta sem ter dinheiro, só com o salário; no aluguel tradicional recebia R$ 2.000 e pagava R$ 1.800 de prestação, 'no pau a pau'",
+  "depois": "Com 4 apartamentos no Airbnb, cada um fatura cerca de R$ 8 mil brutos e deixa R$ 4 a 5 mil líquidos já tirando parcela, condomínio e IPTU (R$ 16 a 20 mil/mês); testou viver só do Airbnb guardando o salário inteiro e pediu demissão",
+  "numeros": [
+   "Aluguel tradicional: R$ 2.000 de aluguel x R$ 1.800 de prestação",
+   "Airbnb: ~R$ 8 mil brutos e R$ 4–5 mil líquidos por apartamento",
+   "4 apartamentos = R$ 16–20 mil líquidos/mês",
+   "Santos: comprou por R$ 220 mil, reformou com ~R$ 50 mil e vendeu por R$ 420 mil"
+  ],
+  "citacao": "Faz de conta que eu vivo só de Airbnb. E aí deu certo.",
+  "aluno": "nao-informado",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "clt-largou",
+   "50-mais",
+   "investidor",
+   "poucos-imoveis",
+   "sem-dinheiro",
+   "casal-familia"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital",
+   "praia"
+  ],
+  "dores": [
+   "financeiro-imposto",
+   "operacao-limpeza",
+   "avaliacoes"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "conjuge-socio"
+  ],
+  "resultados": [
+   "faturamento",
+   "liberdade",
+   "numero-de-imoveis",
+   "retorno-rapido"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead CLT ou perto da aposentadoria que quer viver de renda de imóvel, ou que aluga no tradicional e só empata com a parcela. Fala: 'A Lili era coordenadora de escola, alugava no tradicional e só empatava com a prestação; no Airbnb cada apê deixa R$ 4 a 5 mil líquidos e ela se aposentou...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "DÁ PRA VIVER TRANQUILO SÓ DE AIRBNB? VEJA!",
+   "url": "https://www.youtube.com/watch?v=P7iaFWHxCDY",
+   "data": "2024-09-27"
+  },
+  "trecho": {
+   "inicio": "00:50:51",
+   "fim": "00:51:40",
+   "texto": "Lili: Isso. Eu estava com quatro apartamentos. O apartamento, ele dá um lucro líquido aí, sei lá, 5 mil, 4 mil. Então ele já fez um volume bom. Rômulo: Vezes quatro. Então a gente está falando de 16, hein? Entre 16 e 20 mil. Lili: Isso, 16 e 20. E aí eu juntei lá a reserva de emergência. Um lucro líquido tirando as parcelas. Tirando as parcelas. Rômulo: Presta atenção. Ou seja, você faça mais do que isso. Sim, sim. Então de 8 mil você tira 2 mil de parcela, condomínio, IPTU, sobra 4,5. Isso, isso, perfeito. Porque as pessoas vão perguntar isso, ah, mas espera aí, 5 mil, mas tem que tirar parcela aí. Não, se você já ganha o bruto, 8 mil, aí tem custos natural."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:29:52",
+    "fim": "00:31:47",
+    "sobre": "na pandemia mandou o salário inteiro para a reserva de emergência e testou viver só do Airbnb antes de pedir demissão"
+   },
+   {
+    "inicio": "00:13:10",
+    "fim": "00:14:05",
+    "sobre": "no aluguel tradicional a prestação era R$ 1.800 e o aluguel R$ 2.000: 'não me rendia'"
+   },
+   {
+    "inicio": "00:16:29",
+    "fim": "00:17:18",
+    "sobre": "publicou o anúncio e a primeira reserva entrou no mesmo dia; o dinheiro 'fez diferença na minha vida'"
+   }
+  ]
+ },
+ {
+  "id": "felipe-banlaki-brazilian-corner-95-imoveis",
+  "tipo": "case",
+  "nome": "Felipe Banlaki",
+  "quem": "fundador da Brazilian Corner, gestora em São Paulo; administrador, ex-consultor do Sebrae, morou na França e na Austrália",
+  "titulo": "Sem ter apartamento, bateu de prédio em prédio para sublocar o primeiro e chegou a 95 imóveis e R$ 8 milhões por ano",
+  "antes": "Gerenciava da Austrália um apartamento sublocado em Paris; de volta ao Brasil não tinha imóvel nenhum, foi de portaria em portaria até sublocar o primeiro apê na rua Piauí e fazia tudo sozinho (móveis, elétrica, limpeza, lavanderia na casa da mãe)",
+  "depois": "95 imóveis (75% sublocados), cerca de 50 funcionários CLT, faturamento de mais ou menos R$ 8 milhões por ano, quase 30 mil reservas e diária média uns 30% acima do mercado",
+  "numeros": [
+   "95 imóveis (75% sublocados)",
+   "~R$ 8 milhões por ano",
+   "50 funcionários",
+   "quase 30 mil reservas",
+   "diária ~30% acima do mercado"
+  ],
+  "citacao": "Eu não tenho apartamento, eu não tenho nada. Eu falei, bom, lá na França eu já faço a sublocação, então eu vou fazer a sublocação aqui.",
+  "aluno": "nao-informado",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "gestor",
+   "sublocacao",
+   "mora-longe"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "escala-equipe",
+   "operacao-limpeza",
+   "condominio-legislacao",
+   "avaliacoes"
+  ],
+  "objecoes": [
+   "sem-imovel",
+   "imovel-longe"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis",
+   "diaria"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que não tem imóvel e acha que precisa comprar um para começar, ou que pensa em escalar com sublocação. Fala: 'O Felipe não tinha nada, bateu de portaria em portaria até alguém alugar para ele sublocar; hoje são 95 imóveis e R$ 8 milhões por ano...'. Transcrição em blocos longos: no vídeo, a busca de porta em porta fica perto de 00:06:00 e os números perto de 00:42:30 (horários dos tópicos).",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "GESTÃO PROFISSIONAL PARA + DE 100 IMÓVEIS NO AIRBNB | 1º Encontro de Anfitriões 5 Estrelas",
+   "url": "https://www.youtube.com/watch?v=zxBnltrHj2o",
+   "data": "2024-03-20"
+  },
+  "trecho": {
+   "inicio": "00:37:53",
+   "fim": "00:49:23",
+   "texto": "Felipe Banlaki: (...) Eu faço muita sublocação assim que eu comecei. (...) 75% dos meus móveis são sublocados. (...) Então com o faturamento a gente tem mais ou menos 8 milhões ao ano. Quanto ou 18? 8 milhões ao ano. 50 funcionários, a gente tem hoje 95 imóveis. Tem três cidades diferentes, a gente tem desde Mariporã, Rio de Janeiro, Campo de Jardão e alguns lugares na praia. (...) E tem aí essas quase 30 mil reservas. Eu coloquei umas fotos aqui, eu fiquei procurando. Esse aqui é o meu primeiro imóvel lá em Paris."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:00:00",
+    "fim": "00:32:41",
+    "sobre": "trajetória completa: Paris gerido da Austrália, de porta em porta em São Paulo, o primeiro apê na rua Piauí e o padrão exigido dos proprietários (bloco único de 32 min; ver tópicos 00:02:30 a 00:16:00)"
+   }
+  ]
+ },
+ {
+  "id": "eliana-itatiba-chacara-40-avaliacoes-5-estrelas",
+  "tipo": "case",
+  "nome": "Eliana Jordão",
+  "quem": "anfitriã de 66 anos, aluna do Anfitrião 5 Estrelas; chácara da família num condomínio em Itatiba (SP), a cerca de 100 km de São Paulo",
+  "titulo": "Aos 66 anos, cuida de tudo pelo celular e tem 40 avaliações, todas 5 estrelas",
+  "antes": "Começou em 2019 sozinha, 'pesquisando a página dos outros', com a casa que construiu com o marido há mais de 30 anos e que ficou vazia quando os filhos cresceram",
+  "depois": "Superhost desde agosto de 2019, com 40 avaliações todas 5 estrelas, check-in autônomo e diárias de uns R$ 1.000 na semana, R$ 1.280 no fim de semana e R$ 2.750 no Carnaval; faz tudo pelo celular e diz que o grupo da turma acabou com a solidão",
+  "numeros": [
+   "40 avaliações, todas 5 estrelas",
+   "Superhost desde agosto de 2019",
+   "diária ~R$ 1.000 na semana, R$ 1.280 no fim de semana, R$ 2.750 no Carnaval"
+  ],
+  "citacao": "O pessoal que não entrou no curso, entre. Faça esse curso. Entre, faça parte disso.",
+  "aluno": "a5e",
+  "cidade": "Itatiba",
+  "uf": "SP",
+  "perfil": [
+   "um-imovel",
+   "50-mais",
+   "casal-familia",
+   "mora-longe"
+  ],
+  "imovel": [
+   "chale-campo",
+   "casa",
+   "interior"
+  ],
+  "dores": [
+   "avaliacoes",
+   "precificacao",
+   "automacao-tempo"
+  ],
+  "objecoes": [
+   "sozinho-youtube",
+   "tempo",
+   "imovel-longe"
+  ],
+  "resultados": [
+   "avaliacoes-superhost",
+   "diaria"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead mais velho que acha que não leva jeito com tecnologia, ou com quem quer fazer sozinho pelo YouTube. Fala: 'A Eliana tem 66 anos, faz tudo pelo celular e tem 40 avaliações, todas 5 estrelas; ela mesma diz que começou sozinha e que o curso e o grupo mudaram o jogo...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "Como se manter sempre com 5 Estrelas ⭐ no Airbnb",
+   "url": "https://www.youtube.com/watch?v=J6K3t_Lybqo",
+   "data": "2022-12-09"
+  },
+  "trecho": {
+   "inicio": "00:21:43",
+   "fim": "00:23:24",
+   "texto": "Eliana: (…) Mas você está sempre presente. Você está sempre respondendo. Não tem dia, não tem horário. Então, assim, é muito dinâmico, isso é muito legal. O pessoal que não entrou no curso, entre. Faça esse curso. Entre, faça parte disso. (…) Rômulo: a sua experiência, né, como uma pessoa mais velha, você sentiu algum tipo de dificuldade para mexer? Porque essa pessoa fala, ah, não, eu não entendo de tecnologia Acho que não é pra mim, meu tempo já passou (…) Eliana: Não, não existe tempo É super fácil, eu faço tudo pelo celular, incrível Até pra assistir o curso, tudo que eu vou fazer, não preciso nem usar o computador"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:04:12",
+    "fim": "00:06:26",
+    "sobre": "como começou sozinha em 2019 e o conselho: fazer curso com quem conhece, '80% do caminho andado'"
+   },
+   {
+    "inicio": "00:15:51",
+    "fim": "00:18:08",
+    "sobre": "o 'segredo' das 40 avaliações 5 estrelas: tratar bem, ser prática e não exagerar nos mimos"
+   },
+   {
+    "inicio": "00:18:50",
+    "fim": "00:20:00",
+    "sobre": "o grupo de WhatsApp da turma: 'eu não me sinto mais sozinha'"
+   }
+  ]
+ },
+ {
+  "id": "carlao-chacara-interior-sp-roi",
+  "tipo": "case",
+  "nome": "Carlão",
+  "quem": "amigo de escola do Rômulo; dono de chácara de aluguel no interior de São Paulo, a cerca de 1h30 da capital (a primeira era em Porto Feliz)",
+  "titulo": "Ia vender a chácara por causa das despesas; o aluguel pagou as contas e hoje a nova chácara rende quase 2% ao mês",
+  "antes": "Pensava em vender a chácara de 6 mil m² em Porto Feliz porque dava muita despesa (caseiro, piscina, manutenção) e quase não era usada",
+  "depois": "Com o aluguel a chácara pagava as contas (uns R$ 5 mil/mês até nos meses fracos), ele esperou a proposta certa e vendeu por R$ 720 mil; comprou outra por R$ 420 mil, investiu mais de R$ 80 mil e tira uns R$ 8 mil por mês, contra ~R$ 15 mil por ano se deixasse R$ 500 mil num fundo",
+  "numeros": [
+   "primeira chácara: ~R$ 5 mil/mês nos meses fracos; diária de R$ 1.000, R$ 1.300–1.400 em feriado prolongado, R$ 1.800–2.000 no fim de ano",
+   "vendeu por R$ 720 mil",
+   "nova chácara: R$ 420 mil + R$ 80 mil de reforma",
+   "~R$ 8 mil/mês ≈ quase 2% ao mês sobre R$ 500 mil",
+   "Superhost com 23 avaliações 5 estrelas"
+  ],
+  "citacao": "Se você pegasse 500 mil reais e colocasse no fundo, se deixasse por um ano, você ganhava 15 mil reais, ou seja, não compensava.",
+  "aluno": "nao-informado",
+  "cidade": null,
+  "uf": "SP",
+  "perfil": [
+   "investidor",
+   "um-imovel"
+  ],
+  "imovel": [
+   "chale-campo",
+   "casa",
+   "interior"
+  ],
+  "dores": [
+   "precificacao",
+   "reforma-mobilia",
+   "baixa-temporada"
+  ],
+  "objecoes": [],
+  "resultados": [
+   "faturamento",
+   "diaria",
+   "avaliacoes-superhost"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem chácara ou casa de campo parada dando despesa e pensa em vender, ou que compara imóvel com aplicação financeira. Fala: 'O Carlão ia vender a chácara porque só dava gasto; alugando, ela se pagou, ele vendeu bem e a nova rende quase 2% ao mês...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "ELE COMPROU UMA CHÁCARA E TÁ BOMBANDO NO AIRBNB",
+   "url": "https://www.youtube.com/watch?v=CxEP18nLdW8",
+   "data": "2022-04-07"
+  },
+  "trecho": {
+   "inicio": "00:35:24",
+   "fim": "00:36:18",
+   "texto": "Rômulo: Se a gente for pegar meio milhão, 500 mil, nem que você ganhe 10 mil. Carlão: Se você pegasse 500 mil reais, não é que acontece a chave. Se você pegasse 500 mil reais e colocasse no fundo, se deixasse por um ano, você ganhava 15 mil reais, ou seja, não compensava. Rômulo: (…) Você poderia dizer que dá pra tirar 10 mil reais, juntando altas e baixas, consegui tirar uns 10 mil por mês. (…) Carlão: Eu quero um pouco mais baixo, uns 8 mil por mês. Rômulo: Mesmo que seja 8 mil, 10% de 500 mil da 50, 5% dá 25, dá quase 2%. Quase 2% por mês. Carlão: O investimento é muito bom. É o investimento que eu, se tivesse, puder, eu vou comprar outro e vou volar."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:07:14",
+    "fim": "00:07:51",
+    "sobre": "estava pensando em vender, mas com o aluguel pagando as contas segurou a chácara até chegar a proposta certa"
+   },
+   {
+    "inicio": "00:12:10",
+    "fim": "00:13:27",
+    "sobre": "nos meses fracos, só com sábado e domingo, tirava uns R$ 5 mil por mês e a chácara pagava as contas"
+   },
+   {
+    "inicio": "00:32:48",
+    "fim": "00:33:26",
+    "sobre": "negociou de R$ 460 mil para R$ 420 mil e investiu mais de R$ 80 mil para deixar a chácara do jeito dele"
+   }
+  ]
+ },
+ {
+  "id": "romulo-imovel-divida-quase-leilao",
+  "tipo": "case",
+  "nome": "Rômulo Villela",
+  "quem": "anfitrião e gestor; captou o imóvel de um proprietário com dívida de condomínio para alugar por contrato e operar no Airbnb",
+  "titulo": "Pegou um imóvel parado há 10 anos e quase indo a leilão; em um mês já estava alugando",
+  "antes": "Imóvel de cerca de R$ 150 mil, herdado e parado havia 10 anos, quase indo a leilão por uma dívida de condomínio de R$ 11 mil",
+  "depois": "Propôs ao dono um contrato de aluguel sem trabalho nenhum para ele, com 2 meses de carência em troca de fazer a cozinha e o box; resolveu tudo em 1 mês, já alugava no segundo e o dono quitou a dívida do condomínio",
+  "numeros": [
+   "Imóvel de ~R$ 150 mil quase a leilão por R$ 11 mil de dívida",
+   "2 meses de carência; reforma em 1 mês e aluguel a partir do 2º mês"
+  ],
+  "citacao": "estava quase indo para a leilão esse imóvel, por uma dívida de 11 mil reais. (...) em um mês eu resolvi o imóvel e já comecei a alugar.",
+  "aluno": "romulo",
+  "cidade": null,
+  "uf": null,
+  "perfil": [
+   "sublocacao"
+  ],
+  "imovel": [
+   "apartamento"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "sem-imovel"
+  ],
+  "resultados": [
+   "retorno-rapido"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que não tem imóvel e quer começar com sublocação, ou que não sabe como achar proprietário. Fala: 'O Rômulo achou um imóvel parado há 10 anos, quase indo a leilão por R$ 11 mil de dívida; negociou 2 meses de carência e no segundo mês já estava alugando.' Vídeo curto, sem faturamento.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "QUASE foi a LEILÃO: Como transformei um imóvel com DÍVIDA em AIRBNB",
+   "url": "https://www.youtube.com/watch?v=Hwqo5jsBB4U",
+   "data": "2021-10-08"
+  },
+  "trecho": {
+   "inicio": "00:01:15",
+   "fim": "00:02:50",
+   "texto": "Rômulo Villela: E aí o imóvel, olha que engraçado, estava parado por 10 anos. Porque o cara tinha ganhado de herança. (...) E aí eu fui lá e dei uma solução pra ele Me anuga esse imóvel, não precisa fazer nada Só faz um contrato comigo E aí eu propus pra ele dois meses de aluguel Isento (...) Eu só precisei fazer uma cozinha (...) Porque em um mês eu resolvi o imóvel e já comecei a alugar. (...) E aí o que aconteceu? Ele pagou a dívida do condomínio, ele tem agora uma renda"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:00:00",
+    "fim": "00:00:46",
+    "sobre": "Como achou o dono: dívida de condomínio como sinal de quem precisa de renda e contato pela administradora"
+   }
+  ]
+ },
+ {
+  "id": "romulo-tv-apartamento-avo",
+  "tipo": "case",
+  "nome": "Rômulo Villela",
+  "quem": "formado em Rádio e TV, trabalhou cerca de 10 anos em rádio e TV (SBT, TV Gazeta) antes de viver de temporada",
+  "titulo": "Largou 10 anos de TV: começou alugando o próprio quarto e reformou o apê da avó por R$ 20 mil",
+  "antes": "Carreira em TV; alugava o próprio quarto no Airbnb; o apartamento de 40 m² da avó no centro estava deteriorado e com dívida de inquilino",
+  "depois": "Investiu R$ 20 mil em reforma e mobília, recuperou em pouco mais de um ano e dividia o lucro meio a meio com a avó (a metade dela equivalia a um aluguel normal); com o faturamento conhecido, calculou quanto podia pagar e partiu para a sublocação no mesmo prédio",
+  "numeros": [
+   "R$ 20 mil de reforma e mobília num apê de 40 m²",
+   "payback em pouco mais de 1 ano",
+   "a metade da avó = um aluguel tradicional"
+  ],
+  "citacao": "Um apartamento de 40 metros quadrados. 20 mil reais. Eu recuperei isso em um ano e pouco.",
+  "aluno": "romulo",
+  "cidade": null,
+  "uf": null,
+  "perfil": [
+   "clt-largou",
+   "iniciante",
+   "sublocacao"
+  ],
+  "imovel": [
+   "quarto",
+   "apartamento",
+   "simples"
+  ],
+  "dores": [
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "sem-imovel",
+   "imovel-simples",
+   "conjuge-socio"
+  ],
+  "resultados": [
+   "retorno-rapido",
+   "liberdade"
+  ],
+  "forca": "B",
+  "como_usar": "Use para criar conexão com a história do próprio Rômulo, com lead que tem imóvel velho da família ou que não tem imóvel. Fala: 'O Rômulo saiu da TV, começou alugando o quarto e reformou o apê da avó por R$ 20 mil, que se pagou em pouco mais de um ano...'.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "Depois de 10 ANOS em TV: Larguei TUDO para viver de AIRBNB",
+   "url": "https://www.youtube.com/watch?v=6BBUNSqRV1U",
+   "data": "2021-08-18"
+  },
+  "trecho": {
+   "inicio": "00:12:58",
+   "fim": "00:13:49",
+   "texto": "Rômulo Villela: Por exemplo, eu investi 20 mil reais nessa reforma imobilha. Não é muito. Se você for reformar, para imobiliar, para arrumar, tudo que quer arrumar de um apartamento velho, é pouco. Um apartamento de 40 metros quadrados. 20 mil reais. Eu recuperei isso em um ano e pouco. Demorou um pouquinho para eu recuperar. Só que ela, a minha avó, já estava recebendo o dinheiro Que era metade combinado, que era metade pra ela e metade pra mim pra eu me pagar E a metade dela era equivalente a um aluguel normal (...) E aí, pô, tinha mês, vai, que a gente fazia 4 mil, 5 mil, tira os custos, só pra, sei lá, 3 mil reais"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:03:34",
+    "fim": "00:04:17",
+    "sobre": "na TV Gazeta conheceu o Airbnb viajando e começou alugando o próprio quarto"
+   },
+   {
+    "inicio": "00:04:46",
+    "fim": "00:05:40",
+    "sobre": "o apê da avó no centro: misto comercial/residencial, deteriorado e com dívida de inquilino"
+   },
+   {
+    "inicio": "00:13:49",
+    "fim": "00:14:06",
+    "sobre": "usou o faturamento conhecido para calcular o aluguel máximo e sublocar outro apê no mesmo prédio"
+   }
+  ]
+ },
+ {
+  "id": "vitor-menna-gramado-11-imoveis",
+  "tipo": "case",
+  "nome": "Vitor Menna",
+  "quem": "CEO da Vamos Gramado, corretor; natural de Uruguaiana (RS), gestor em Gramado (RS)",
+  "titulo": "Começou alugando o próprio quarto e hoje faz gestão completa de 11 imóveis em Gramado",
+  "antes": "Em 2016 alugava o próprio quarto em Uruguaiana e ia dormir no quarto da irmã",
+  "depois": "Depois de trabalhar numa imobiliária de temporada em Gramado, pegou um imóvel para anunciar, passou a administrar e cresceu por indicação até 11 imóveis com gestão completa; diz que um 2 dormitórios bem montado rende uns R$ 80 mil líquidos por ano ao proprietário",
+  "numeros": [
+   "11 imóveis sob gestão",
+   "~R$ 80 mil líquidos/ano num 2 dormitórios (pouco mais de R$ 6.600/mês)",
+   "furto de R$ 30 mil ressarcido pelo Airbnb"
+  ],
+  "citacao": "Eu trocava, ia dormir no quarto da minha irmã e alugava o meu quarto.",
+  "aluno": "nao-informado",
+  "cidade": "Gramado",
+  "uf": "RS",
+  "perfil": [
+   "iniciante",
+   "gestor"
+  ],
+  "imovel": [
+   "quarto",
+   "apartamento",
+   "interior"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "baixa-temporada"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "sem-imovel"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "faturamento"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead da Serra Gaúcha, com quem quer começar pequeno (até um quarto) ou com quem tem medo de dano/roubo. Fala: 'O Vitor começou alugando o próprio quarto e hoje cuida de 11 imóveis em Gramado; teve um furto de R$ 30 mil e o Airbnb ressarciu em poucos dias...'. Live antiga (2020).",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "Aluguel por temporada em GRAMADO: o SEGREDO para FATURAR no AIRBNB",
+   "url": "https://www.youtube.com/watch?v=390BiPr8XCU",
+   "data": "2020-11-14"
+  },
+  "trecho": {
+   "inicio": "00:03:25",
+   "fim": "00:05:13",
+   "texto": "Vitor Menna: Uruguaiana é 700 quilômetros aqui de Gramado, que é a minha cidade natal. (...) Em 2018, eu vim para Gramado, trabalhar em uma imobiliária, temporada (...) Quando eu saí da imobiliária que eu trabalhava, eu comecei Peguei um imóvel só para administrar, que era de um proprietário Que ele queria que eu só fizesse o anúncio para ele E eu montei, acabei montando o anúncio E posteriormente acabei administrando o imóvel Para ele, fazendo toda a logística Aí depois alguns amigos me procuraram também Para a gente anunciar os imóveis dele E aí a gente foi só crescendo, crescendo, tive que contratar plataformas Melhorar e hoje a gente está aí cuidando de 11 imóveis"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:02:31",
+    "fim": "00:03:21",
+    "sobre": "começou em 2016 alugando o próprio quarto em Uruguaiana"
+   },
+   {
+    "inicio": "00:36:00",
+    "fim": "00:37:31",
+    "sobre": "R$ 80 mil líquidos por ano dá pouco mais de R$ 6.600 por mês num 2 dormitórios (a frase dos R$ 80 mil fecha a fala que começa em 00:32:30)"
+   },
+   {
+    "inicio": "00:24:01",
+    "fim": "00:26:17",
+    "sobre": "furto de R$ 30 mil feito por hóspede e ressarcido pelo Airbnb"
+   }
+  ]
+ },
+ {
+  "id": "monica-jose-ape-parado-4-dias",
+  "tipo": "case",
+  "nome": "Mônica e José",
+  "quem": "casal que mora no interior e tem um apartamento de 83 m² no centro de São Paulo (SP), perto do Minhocão; contrataram a gestão do Rômulo",
+  "titulo": "Apê parado na pandemia foi montado em 4 dias e reservado no dia seguinte",
+  "antes": "Apartamento vazio desde que o inquilino saiu na pandemia, sem conseguir alugar no tradicional (o título fala em 5 meses parado)",
+  "depois": "Com orientações do Rômulo, montaram os 83 m² em 4 dias e, sob a gestão dele, o imóvel foi reservado no dia seguinte ao anúncio, numa estadia de 20 dias",
+  "numeros": [
+   "83 m² montados em 4 dias",
+   "Reserva de 20 dias logo no dia seguinte ao anúncio"
+  ],
+  "citacao": "em quatro dias ela entregou um imóvel de 83 metros quadrados, completamente pronto pra fazer.",
+  "aluno": "romulo",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "mora-longe",
+   "casal-familia",
+   "um-imovel"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "imovel-longe",
+   "momento-obra"
+  ],
+  "resultados": [
+   "retorno-rapido",
+   "ocupacao"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem imóvel vazio no aluguel tradicional, mora longe dele ou acha que montar vai demorar. Fala: 'A Mônica e o José moram no interior; o apê deles em SP estava parado, montaram em 4 dias e no dia seguinte já veio uma reserva de 20 dias...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "PARADO HÁ 5 MESES: A transformação desse APÊ GIGANTE em apenas 4 DIAS para o AIRBNB",
+   "url": "https://www.youtube.com/watch?v=S3MSjDuy2dY",
+   "data": "2020-11-11"
+  },
+  "trecho": {
+   "inicio": "00:18:12",
+   "fim": "00:19:07",
+   "texto": "Rômulo: Fala pessoal, o incrível que pareça, se você votou que ele foi anulado no dia seguinte, acertou. Eu mesmo não esperava que ele fosse anulado tão rápido, mas inclusive esse foi um imóvel que ficou pronto por quatro dias. A proprietária falou que ia fazer, eu dei uns fotos pra ela, em quatro dias ela entregou um imóvel de 83 metros quadrados, completamente pronto pra fazer. (...) Mas eu fiquei bem surpreso e feliz, né, claro. (...) Em uma reserva de 20 dias que a gente recebeu para entrar amanhã."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:04:53",
+    "fim": "00:05:13",
+    "sobre": "Rômulo achou que levaria de 15 dias a um mês e em 4 dias o imóvel estava irreconhecível"
+   },
+   {
+    "inicio": "00:14:40",
+    "fim": "00:15:04",
+    "sobre": "moram no interior, não sabiam como fazer à distância e acharam o Rômulo no YouTube"
+   },
+   {
+    "inicio": "00:17:10",
+    "fim": "00:17:34",
+    "sobre": "o apartamento estava alugado e ficou vazio com a pandemia"
+   }
+  ]
+ },
+ {
+  "id": "marcos-schmidt-floripa-pandemia-estadias-longas",
+  "tipo": "case",
+  "nome": "Marcos Schmidt",
+  "quem": "fundador da Anfitriões de Aluguel, gestora com 63 imóveis de terceiros em Florianópolis (SC)",
+  "titulo": "Reservas caíram de R$ 158 mil para R$ 58 mil em 5 dias e ele virou o jogo com estadias longas",
+  "antes": "Em março de 2020 as reservas do mês caíram de R$ 158 mil para R$ 58 mil em 5 dias e abril ficou praticamente zerado",
+  "depois": "Com mínimo de 5 noites, foco em estadias longas seguindo a central de ajuda do Airbnb, internet melhor e descontos para 28+ noites, o faturamento médio por imóvel em maio subiu 56%",
+  "numeros": [
+   "Reservas do mês: R$ 158 mil → R$ 58 mil em 5 dias",
+   "+56% no faturamento médio por imóvel em maio, com estadias longas",
+   "63 imóveis sob gestão"
+  ],
+  "citacao": "esse ano com a pandemia e as reservas longas, a gente aumentou o nosso faturamento médio por propriedade em 56%.",
+  "aluno": "nao-informado",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "perfil": [
+   "gestor"
+  ],
+  "imovel": [
+   "praia",
+   "capital"
+  ],
+  "dores": [
+   "baixa-temporada",
+   "precificacao",
+   "algoritmo-ocupacao"
+  ],
+  "objecoes": [],
+  "resultados": [
+   "faturamento"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem medo de baixa temporada ou de crise. Fala: 'Na pandemia, um gestor de Floripa viu as reservas caírem de R$ 158 mil para R$ 58 mil em 5 dias; mudou a estratégia para estadias longas e aumentou o faturamento médio por imóvel em 56% no mês mais fraco...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "O mercado de AIRBNB em FLORIPA | com Marcos Schmidt",
+   "url": "https://www.youtube.com/watch?v=a9bbfwO1FdE",
+   "data": "2020-10-09"
+  },
+  "trecho": {
+   "inicio": "00:23:35",
+   "fim": "00:26:40",
+   "texto": "Marcos: (...) Aí a gente botou uma restrição de tempo mínimo de reserva até cinco noites. Porque a gente pensou, não, a gente não quer o cara do fim de semana (...) E aí mais começou um fenômeno para nós aqui, aqui, que é um fenômeno mundial, que são as reservas, as estadias longas. (...) eu comecei, três vezes por dia, eu estava vendo a central de ajuda do Airbnb para ver o que os caras vêm falar. (...) a gente começou a perceber que o Airbnb foi lá e abriu uma aba para estadias longas. (...) E deu certo. E aí foi bem interessante, porque o mês de maio, que tipicamente é o nosso mês do ano, esse ano com a pandemia e as reservas longas, a gente aumentou o nosso faturamento médio por propriedade em 56%."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:20:21",
+    "fim": "00:23:28",
+    "sobre": "reservas do mês caíram de R$ 158 mil para R$ 58 mil em 5 dias e abril ficou zerado"
+   },
+   {
+    "inicio": "00:35:18",
+    "fim": "00:38:47",
+    "sobre": "estratégias: upgrade de internet, descontos para 28+ noites, piso mínimo com o proprietário e anúncios destacando área externa"
+   },
+   {
+    "inicio": "00:06:08",
+    "fim": "00:06:25",
+    "sobre": "63 imóveis sob gestão, assumindo contratos toda semana"
+   }
+  ]
+ },
+ {
+  "id": "gestor-floripa-pandemia-56",
+  "tipo": "case",
+  "nome": "Gestor de Florianópolis (nome não informado)",
+  "quem": "gestor de imóveis de temporada em Florianópolis (SC), entrevistado numa live de 2020",
+  "titulo": "No pior mês do ano, em plena pandemia, aumentou 56% o faturamento médio por imóvel com estadias longas",
+  "antes": "Início da pandemia, muita oferta e pouca demanda; maio é tipicamente o pior mês do ano em Floripa",
+  "depois": "Acompanhou a central de ajuda e as lives do Airbnb, adaptou o portfólio às estadias longas e negociou com cada proprietário o valor mínimo para dar descontos; maio teve alta de 56% no faturamento médio por propriedade e junho, de 12%",
+  "numeros": [
+   "+56% de faturamento médio por propriedade em maio (pior mês do ano)",
+   "+12% em junho"
+  ],
+  "citacao": "mês de maio, que tipicamente é o nosso pior mês do ano, [...] a gente aumentou o nosso faturamento médio por propriedade em 56%.",
+  "aluno": "nao-informado",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "perfil": [
+   "gestor"
+  ],
+  "imovel": [
+   "praia",
+   "capital"
+  ],
+  "dores": [
+   "baixa-temporada",
+   "algoritmo-ocupacao",
+   "precificacao"
+  ],
+  "objecoes": [
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "faturamento"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead preocupado com baixa temporada ou crise. Fala: 'Um gestor de Floripa, no pior mês do ano e em plena pandemia, aumentou 56% o faturamento médio por imóvel só se adaptando às estadias longas...'. O nome dele não aparece na transcrição; vídeo curto de 2020.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "No PIOR mês do ano em Floripa as reservas AUMENTARAM + de 50% na PANDEMIA",
+   "url": "https://www.youtube.com/watch?v=15rdAjjrPvI",
+   "data": "2020-09-29"
+  },
+  "trecho": {
+   "inicio": "00:00:00",
+   "fim": "00:01:20",
+   "texto": "Gestor de Florianópolis: E eu lembro que a gente estava em casa, meio que naquele margem de o que a gente vai fazer, e eu comecei, três vezes por dia, eu estava vendo a central de ajuda do Airbnb para ver o que os caras iam falar. Todas as lives do Brian Ches que eu vi, e a gente começou a perceber que o Airbnb foi lá e abriu uma aba para esses dias longas. Começou a investir nisso. (...) E deu certo. E aí foi bem interessante, porque mês de maio, que tipicamente é o nosso pior mês do ano, esse ano, com a pandemia e as erras longas, a gente aumentou o nosso faturamento médio por propriedade em 56%. (...) Eu literalmente liguei, entrei em contato com todos os nossos clientes e proprietários, um por um, para explicar a situação"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:01:20",
+    "fim": "00:01:58",
+    "sobre": "junho com alta de 12%, julho decepcionante e agosto voltando bem"
+   },
+   {
+    "inicio": "00:02:55",
+    "fim": "00:04:26",
+    "sobre": "novo perfil de hóspede: moradores locais buscando casas com área externa e gente de home office indo para a praia"
+   }
+  ]
+ },
+ {
+  "id": "marcos-schmidt-floripa-corretor-63-imoveis",
+  "tipo": "case",
+  "nome": "Marcos Schmidt",
+  "quem": "ex-corretor e gerente de vendas de imobiliária; fundador da Anfitriões de Aluguel em Florianópolis (SC)",
+  "titulo": "Corretor transformou o 'patinho feio' da venda em Airbnb e montou gestora com 63 imóveis",
+  "antes": "Em dezembro de 2014, ainda corretor, virou anfitrião de um apê no centro de Floripa sem garagem e sem elevador, difícil de vender",
+  "depois": "O apê funcionou muito bem no Airbnb, clientes começaram a pedir ajuda e em agosto de 2018 ele fundou com o sócio João a Anfitriões de Aluguel; em 2020 já administrava 63 imóveis, com contratos novos toda semana",
+  "numeros": [
+   "1 apê sem garagem nem elevador (2014) → 63 imóveis sob gestão (2020)"
+  ],
+  "citacao": "era um apartamento que seria um patinho feio da venda, vamos dizer, né? Porque ele não tinha vaga de garagem, não tinha elevador",
+  "aluno": "nao-informado",
+  "cidade": "Florianópolis",
+  "uf": "SC",
+  "perfil": [
+   "um-imovel",
+   "gestor",
+   "clt-largou"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital",
+   "simples"
+  ],
+  "dores": [
+   "captar-imoveis"
+  ],
+  "objecoes": [
+   "imovel-simples"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que acha o próprio imóvel ruim (sem garagem, sem elevador) ou que é corretor e quer entrar na gestão. Fala: 'O Marcos era corretor em Floripa; o apê que ninguém queria comprar, sem garagem e sem elevador, funcionou muito bem no Airbnb e virou uma gestora de 63 imóveis...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "De corretor a anfitrião: hoje ele administra mais de 60 imóveis por temporada em Floripa.",
+   "url": "https://www.youtube.com/watch?v=23rpmmsBpzg",
+   "data": "2020-08-30"
+  },
+  "trecho": {
+   "inicio": "00:01:08",
+   "fim": "00:02:33",
+   "texto": "Marcos: E aí, nos últimos anos que eu estava na imobiliária, em dezembro de 2014, para ser bem específico, surgiu a oportunidade de eu ser anfitrião de um apartamento no centro de Florianópolis. E um apartamento que, se eu fosse pensar no mercado imobiliário, era um apartamento que seria um patinho feio da venda, vamos dizer, né? Porque ele não tinha vaga de garagem, não tinha elevador, a localização era boa, mas seria um apartamento difícil de vender, por ter essas características. E no Airbnb começou a funcionar muito bem. (...) levou só uns 4 anos para eu entender que tinha bastante gente procurando pelo serviço (...) que foi a empresa que eu fundei com o meu sócio, o João e lá dois anos atrás, em agosto de 2018"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:02:59",
+    "fim": "00:03:11",
+    "sobre": "hoje com 63 imóveis na administração, assumindo contratos toda semana"
+   }
+  ]
+ },
+ {
+  "id": "romulo-de-um-quarto-a-11-imoveis",
+  "tipo": "case",
+  "nome": "Rômulo Villela",
+  "quem": "anfitrião em São Paulo (SP); começou alugando um quarto livre da própria casa",
+  "titulo": "Começou alugando um quarto livre em casa e em 3 anos chegou a 11 imóveis administrados",
+  "antes": "Um quarto livre na casa onde morava, num bairro de São Paulo sem turismo e com pouca concorrência; a primeira reserva, fechada por fora da plataforma, deu errado",
+  "depois": "Em 3 anos, mais de 300 estadias; reformou um imóvel da família que estava largado e com dívidas de inquilinos, passou para imóvel inteiro e começou a cuidar de imóveis de terceiros: 11 imóveis administrados",
+  "numeros": [
+   "De 1 quarto a 11 imóveis administrados em 3 anos",
+   "Mais de 300 estadias somando todos os anúncios"
+  ],
+  "citacao": "eu comecei um quarto livre de casa (...) e hoje já estou com 11 imóveis administradores por mim.",
+  "aluno": "romulo",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "iniciante",
+   "um-imovel",
+   "gestor"
+  ],
+  "imovel": [
+   "quarto",
+   "capital"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead iniciante que só tem um quarto ou um imóvel parado e acha que é pouco para começar. Fala: 'O próprio Rômulo começou alugando um quarto livre em casa; em 3 anos já cuidava de 11 imóveis.' Vídeo de 2019: bom para a história de origem, não para números atuais.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "De UM quarto a 11 imóveis, como tudo começou!",
+   "url": "https://www.youtube.com/watch?v=sdXvX1USMac",
+   "data": "2019-05-14"
+  },
+  "trecho": {
+   "inicio": "00:00:09",
+   "fim": "00:00:40",
+   "texto": "Rômulo Villela: Eu estou comemorando aí 3 anos desde que eu comecei a fazer Airbnb aqui, na minha vídeo de residência. Muitas coisas aconteceram, foram mais de 300 estadias, juntando todos os anúncios, né? Então eu comecei um quarto livre de casa, e aí eu peguei um imóvel inteiro da família, depois peguei outro, depois mais um, depois mais um, comecei a cuidar para outras pessoas também, e hoje já estou com 11 imóveis administradores por mim."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:03:48",
+    "fim": "00:04:18",
+    "sobre": "Pesquisou o bairro, viu pouca concorrência e decidiu testar se o problema era a região ou quem anunciava mal"
+   },
+   {
+    "inicio": "00:04:23",
+    "fim": "00:05:20",
+    "sobre": "A primeira reserva, fechada por fora da plataforma, deu errado: não negocie fora do Airbnb e não se traumatize"
+   },
+   {
+    "inicio": "00:05:43",
+    "fim": "00:06:11",
+    "sobre": "Reformou um imóvel da família largado e com dívidas de inquilinos e passou para imóvel inteiro"
+   }
+  ]
+ },
+ {
+  "id": "diego-vila-velha-quase-40-imoveis",
+  "tipo": "case",
+  "nome": "Diego",
+  "quem": "ex-gerente de uma construtora que cuidava de 350 corretores; gestor em Vila Velha (ES)",
+  "titulo": "Convenceu a construtora a fazer um prédio para temporada e largou o emprego para gerir quase 40 imóveis",
+  "antes": "Gerente de construtora; convenceu o dono a fazer um prédio 100% voltado para temporada e viu que os compradores iam precisar de apoio",
+  "depois": "Abriu uma empresa para atender os clientes da construtora, o negócio cresceu tão rápido que ele saiu da construtora e foi de 1, 2, 3 apartamentos para quase 40",
+  "numeros": [
+   "de 1 para quase 40 imóveis sob gestão"
+  ],
+  "citacao": "Aí foi, de um, dois, três apartamentos, hoje a gente tem quase 40",
+  "aluno": "nao-informado",
+  "cidade": "Vila Velha",
+  "uf": "ES",
+  "perfil": [
+   "gestor",
+   "clt-largou"
+  ],
+  "imovel": [
+   "apartamento"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "escala-equipe"
+  ],
+  "objecoes": [
+   "sem-imovel"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead corretor, construtor ou que trabalha no mercado imobiliário e não tem imóvel próprio. Fala: 'O Diego era gerente de construtora, começou atendendo os compradores de um prédio e hoje cuida de quase 40 imóveis...'. Ele mesmo comenta que crescer rápido cobra qualidade de vida.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "00:04:43",
+   "fim": "00:05:47",
+   "texto": "Diego: Boa tarde a todos, sou o Diego, sou de La Vella, no Espírito Santo E eu comecei a esse negócio que era gerente de uma construtora Que cuidava de 350 corretores (...) Aí a gente abriu uma empresa pra atender os clientes da construtora, e o negócio cresceu tão rápido que eu pedi permissão da construtora, e fiquei só nesse negócio. Aí foi, de um, dois, três apartamentos, hoje a gente tem quase 40, e tá pensando em se diminuir pra 20 pra voltar a ter a caridade de vida, que é uma coisa de doido isso."
+  },
+  "outros_trechos": []
+ },
+ {
+  "id": "diogo-serra-negra-10-imoveis-5-meses",
+  "tipo": "case",
+  "nome": "Diogo",
+  "quem": "aluno da Turma 10; gestor em Serra Negra (SP), cidade turística do interior",
+  "titulo": "Em 5 meses saiu do zero para 10 imóveis numa cidade turística do interior",
+  "antes": "Começou há cerca de 5 meses, sem experiência em temporada",
+  "depois": "10 imóveis (só estúdios) em Serra Negra, começando a pegar chácaras; diz que o curso, as aulas e o grupo ajudaram bastante",
+  "numeros": [
+   "10 imóveis em 5 meses"
+  ],
+  "citacao": "Hoje eu estou com 10 imóveis, tudo lá na cidade, é uma cidade turística [...] mas o curso em si me ajudou bastante",
+  "aluno": "aluno",
+  "cidade": "Serra Negra",
+  "uf": "SP",
+  "perfil": [
+   "iniciante",
+   "gestor"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "interior"
+  ],
+  "dores": [
+   "captar-imoveis"
+  ],
+  "objecoes": [
+   "tempo",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead iniciante de cidade turística do interior ou que acha que não vai ter tempo de acompanhar tudo. Fala: 'O Diogo, da Turma 10, começou há 5 meses e já tem 10 imóveis em Serra Negra. Ele diz que nem sempre consegue estar presente, mas as aulas e o grupo ajudam...'. Menção curta.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "00:06:51",
+   "fim": "00:07:48",
+   "texto": "Diogo: Boa tarde, eu sou o Diogo, sou de Serra Negra, interior de São Paulo. Comecei há pouquíssimo tempo, sou da Turma 10. Estou cinco meses aí trabalhando com isso, adorei, estou adorando na verdade essa vivência. Hoje eu estou com 10 imóveis, tudo lá na cidade, é uma cidade turística, e já estou com bastante contato para pegar outros tipos de imóveis. Hoje eu tenho só estúdios, estou começando a pegar chácaras, que com certeza aí eu vou ter outro tipo de público, mas o curso em si me ajudou bastante, o grupo Moisés. (...) Eu não consigo toda hora estar presente, mas tem me ajudado bastante, tanto as aulas, o YouTube, Instagram, tudo o material seu aí."
+  },
+  "outros_trechos": []
+ },
+ {
+  "id": "cidinha-rifaina-fins-de-semana-alugados",
+  "tipo": "case",
+  "nome": "Cidinha",
+  "quem": "assistente social aposentada que ainda trabalha na prefeitura de Franca (SP); tem 1 imóvel em Rifaina (SP), na divisa com Minas",
+  "titulo": "Tirou o enxoval, mexeu no preço da semana e do fim de semana e passou a alugar todos os fins de semana",
+  "antes": "Preço não competitivo e lavanderia cara na cidade pequena para manter o enxoval; se sentia 'peixe fora d'água'",
+  "depois": "Numa mentoria com o Rômulo, deixou de oferecer enxoval, baixou a diária durante a semana e subiu um pouco no fim de semana; hoje tem todos os fins de semana alugados e pensa em comprar o segundo imóvel para a aposentadoria",
+  "numeros": [],
+  "citacao": "E agora eu tenho todos os finais de semana alugados",
+  "aluno": "aluno",
+  "cidade": "Rifaina",
+  "uf": "SP",
+  "perfil": [
+   "um-imovel",
+   "50-mais"
+  ],
+  "imovel": [
+   "interior"
+  ],
+  "dores": [
+   "precificacao",
+   "operacao-limpeza"
+  ],
+  "objecoes": [
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "ocupacao"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead mais velho, com 1 imóvel em cidade pequena turística, que não aluga bem ou tem medo de mexer no preço. Fala: 'A Cidinha é assistente social aposentada, tinha um imóvel em Rifaina que não alugava; ajustou o preço numa mentoria com o Rômulo e hoje aluga todo fim de semana...'. Não tem número em reais.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "00:09:02",
+   "fim": "00:10:04",
+   "texto": "Rômulo Villela: E aí você teve uma situação que você não estava conseguindo adorar E aí o que você acha que mexeu ali e começou a dar certo? Cidinha: Sim, aí eu falei com o Romulo E numa mentoria aí a gente conseguiu ajustar o preço Meu preço não estava competitivo E eu consegui ajustar, eu ajustei a questão do enxoval Que eu tinha o enxoval para oferecer Mas na minha cidade estava muito complicado o custo de lavanderia (...) A gente não oferece o enxoval, mas você mexe no preço Daí a gente calculou uma diária menor durante a semana Uma diária um pouquinho maior no final de semana E agora eu tenho todos os finais de semana alugados"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:07:53",
+    "fim": "00:09:02",
+    "sobre": "apresentação: aposentada que ainda trabalha, quer renda para quando parar e já pensa no segundo imóvel"
+   }
+  ]
+ },
+ {
+  "id": "roberta-rio-hotel-familia-bombou",
+  "tipo": "case",
+  "nome": "Roberta",
+  "quem": "arquiteta e designer de interiores no Rio de Janeiro (RJ)",
+  "titulo": "Pôs no Airbnb o hotel da família que estava quase falindo e ele bombou",
+  "antes": "O hotel histórico da família na Glória, com 58 quartos, estava só com mensalistas, à venda e quase falindo",
+  "depois": "Com o que aprendeu nos vídeos do Rômulo anunciou os quartos como estúdios e o hotel bombou; tomou gosto e hoje, com 1 ano e 3 meses na área, tem 4 imóveis em Copacabana e no Leme",
+  "numeros": [
+   "hotel de 58 quartos",
+   "4 imóveis com 1 ano e 3 meses na temporada"
+  ],
+  "citacao": "Eu coloquei no Airbnb, super certo O hotel estava quase falindo assim Bombou",
+  "aluno": "nao-informado",
+  "cidade": "Rio de Janeiro",
+  "uf": "RJ",
+  "perfil": [
+   "casal-familia",
+   "poucos-imoveis"
+  ],
+  "imovel": [
+   "quarto",
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "anuncio-fotos",
+   "escala-equipe"
+  ],
+  "objecoes": [
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "ocupacao",
+   "numero-de-imoveis"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem pousada, hotel ou imóvel da família parado ou só com mensalista. Fala: 'A Roberta pegou o hotel do pai, que estava quase falindo, colocou os quartos no Airbnb e bombou...'. Ela também fala da dificuldade de delegar.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "00:15:31",
+   "fim": "00:16:24",
+   "texto": "Roberta: Então, sou do Rio de Janeiro No momento estou com quatro imóveis Três em Copacabana e um Leme Que são bairros vizinhos E sou arquiteto e designer de interiores De formação também E aí na pandemia tive uma experiência com o hotel AIA Que foi algo completamente novo assim na minha vida De um ano mais ou menos E aí nos vídeos do Romulo Aprendi a colocar os Era como se fosse estúdios, na verdade Apesar de ser hotel Os quartos eram estúdios Eu coloquei no Airbnb, super certo O hotel estava quase falindo assim Bombou E aí eu tomei gosto também pela coisa (...)"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:16:43",
+    "fim": "00:17:55",
+    "sobre": "o hotel só tinha mensalista e estava à venda; no Airbnb passou a bombar; 1 ano e 3 meses na área e 4 imóveis"
+   }
+  ]
+ },
+ {
+  "id": "margarete-pipa-28-apartamentos",
+  "tipo": "case",
+  "nome": "Margarete",
+  "quem": "veio da indústria em São Paulo e, perto de se aposentar, mudou para a Praia da Pipa (RN); teve pousada e foi gerente de condomínio",
+  "titulo": "De gerente do condomínio a 28 apartamentos geridos no mesmo condomínio na Praia da Pipa",
+  "antes": "Gerente do condomínio; topou cuidar do imóvel de uma única proprietária, fazendo ela mesma a limpeza",
+  "depois": "Largou a gerência do condomínio; hoje cuida de 28 apartamentos no mesmo condomínio e começou em outros condomínios e resorts, com escritório próprio e o marido na lavanderia; diz que o negócio é rentável",
+  "numeros": [
+   "de 1 para 28 apartamentos no mesmo condomínio"
+  ],
+  "citacao": "Hoje, dentro desse condomínio, hoje eu tenho 28 apartamentos lá dentro, eu cuido no mesmo prédio, no mesmo condomínio.",
+  "aluno": "aluno",
+  "cidade": "Praia da Pipa",
+  "uf": "RN",
+  "perfil": [
+   "gestor",
+   "50-mais",
+   "casal-familia",
+   "clt-largou"
+  ],
+  "imovel": [
+   "praia",
+   "apartamento"
+  ],
+  "dores": [
+   "operacao-limpeza",
+   "captar-imoveis",
+   "escala-equipe"
+  ],
+  "objecoes": [
+   "tempo"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead mais velho, que mora na praia ou que acha que não tem tempo para estudar. Fala: 'A Margarete era gerente de condomínio na Pipa, pegou um apartamento e hoje cuida de 28 no mesmo condomínio...'. Atenção: ela diz que comprou o curso mas ainda não fez as aulas; o que usa muito é o grupo.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "00:33:18",
+   "fim": "00:35:35",
+   "texto": "Margarete: Faz oito anos que eu moro no Rio Grande do Norte Especialmente na Praia da Pipa Quando eu cheguei lá, eu sou da indústria aqui em São Paulo Fui embora, na margem de estar aposentado (...) aí eu fiz o gerente do condomínio onde eu tô hoje (...) aí uma proprietária conseguiu me convencer a cuidar de imóvel dela (...) no começo da limpeza quem fazia Eu, porque eu sou muito chato com limpeza (...) chegou uma hora que eu falei, não dá mais ser gerente do condomínio. E vi também a rendabilidade, né? Aí falei, vou começar a se mexer com isso. Aí comecei. Hoje, dentro desse condomínio, hoje eu tenho 28 apartamentos lá dentro, eu cuido no mesmo prédio, no mesmo condomínio."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:36:24",
+    "fim": "00:40:39",
+    "sobre": "comprou o curso, acompanha pelo grupo; marido assumiu a lavanderia; empresa Summerflex e expansão para Baía Formosa"
+   }
+  ]
+ },
+ {
+  "id": "estela-paraty-30-casas-alto-padrao",
+  "tipo": "case",
+  "nome": "Estela",
+  "quem": "gestora de casas de alto padrão em Paraty (RJ)",
+  "titulo": "De uns 10 para 30 anúncios de casas de alto padrão em Paraty, com diária de até R$ 2 mil",
+  "antes": "Tinha uns 10 imóveis quando conheceu o Vini; fazia faxina, logística e lavanderia",
+  "depois": "30 anúncios de casas de proprietários exigentes, só no Airbnb, com assistente virtual em BH e a mãe cuidando das manchas do enxoval; diária mais cara de R$ 2 mil e um pacote de R$ 31 mil de um único hóspede",
+  "numeros": [
+   "de uns 10 para 30 anúncios",
+   "diária de até R$ 2 mil",
+   "pacote de R$ 31 mil"
+  ],
+  "citacao": "A mais cara hoje tá dois mil. Uma diária. Tem um pacote que já fecha um pacote aí de trinta e um mil reais.",
+  "aluno": "nao-informado",
+  "cidade": "Paraty",
+  "uf": "RJ",
+  "perfil": [
+   "gestor",
+   "casal-familia"
+  ],
+  "imovel": [
+   "casa",
+   "praia"
+  ],
+  "dores": [
+   "automacao-tempo",
+   "escala-equipe"
+  ],
+  "objecoes": [
+   "tempo"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "diaria"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem casa grande ou de alto padrão no litoral, ou que acha que não dá para delegar. Fala: 'A Estela cuida de 30 casas em Paraty, tem diária de R$ 2 mil e treinou uma assistente que mora em BH...'.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "01:03:26",
+   "fim": "01:04:45",
+   "texto": "Estela: Ela mora em BH, a minha assistente. Ela não conhece o Paraty. (...) Mas ela foi um mês de treinamento e ela... Deu certo. O Vini, tava vendo a minha cara aqui que ele me conhece. Eu conheci o Vini quando eu tinha... Você tinha quantos? Dez imóveis só, acho. E eu também tinha uns dez também. (...) Rômulo Villela: (...) Qual que é uma diária boa lá que você tira em Paraty? Estela: A mais cara? Pode ser. A mais cara hoje tá dois mil. Uma diária. Tem um pacote que já fecha um pacote aí de trinta e um mil reais. Uma estadia de um hóspede só que vem na Noruega ficar numa casa sozinha."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:58:49",
+    "fim": "00:59:31",
+    "sobre": "só casas em Paraty, faxineira de confiança, 30 casas hoje"
+   },
+   {
+    "inicio": "01:00:53",
+    "fim": "01:01:52",
+    "sobre": "30 anúncios, gestão sozinha com assistente virtual e a mãe na lavanderia"
+   }
+  ]
+ },
+ {
+  "id": "luana-bruno-maceio-20-imoveis",
+  "tipo": "case",
+  "nome": "Luana e Bruno",
+  "quem": "casal de Maceió (AL); ela era confeiteira, ele tem uma empresa familiar",
+  "titulo": "Ex-confeiteira largou os bolos e hoje administra 20 imóveis de terceiros em Maceió",
+  "antes": "Tinham 3 apartamentos próprios; um deles, simples, de escada e sem elevador, foi destruído por inquilino no aluguel anual; ela era contra colocar na temporada",
+  "depois": "Reformado, o apartamento passou a alugar direto; venderam 2 imóveis, os compradores pediram para eles seguirem administrando e, no boca a boca, chegaram a 20 unidades de terceiros; Luana largou a confeitaria",
+  "numeros": [
+   "de 3 imóveis próprios para 20 unidades de terceiros"
+  ],
+  "citacao": "E aí, acabei deixando a confeitaria para administrar os imóveis, e hoje administro 20 unidades.",
+  "aluno": "nao-informado",
+  "cidade": "Maceió",
+  "uf": "AL",
+  "perfil": [
+   "casal-familia",
+   "gestor",
+   "clt-largou"
+  ],
+  "imovel": [
+   "apartamento",
+   "simples",
+   "capital"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "operacao-limpeza",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "conjuge-socio",
+   "imovel-simples",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead cujo cônjuge desconfia, com imóvel simples ou que teve problema com inquilino. Fala: 'O Bruno começou contra a vontade da Luana, num apê simples, de escada, que um inquilino tinha destruído. Hoje ela largou a confeitaria e administra 20 imóveis...'.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "01:14:47",
+   "fim": "01:16:23",
+   "texto": "Luana: Olá, boa tarde, eu sou Luana de Maceió e meu marido Bruno, administro 20 imóveis não são próprios, são de terceiros, mas nós começamos com imóveis próprios, tínhamos 3 apartamentos e aí acabamos vendendo 2, porque a gente comprou uma oportunidade e apareceram pessoas interessadas, a gente vendeu e as pessoas que compraram esses apartamentos, a gente anunciava por temporada, eles acabaram pedindo (...) que a gente seguia se administrando para eles. E aí, fomos no boca a boca, um que indicou o outro (...) O Bruno tomava conta, eu era confeiteira, nada a ver. Fazia bolos e doces. E aí, acabei deixando a confeitaria para administrar os imóveis, e hoje administro 20 unidades."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "01:17:10",
+    "fim": "01:19:11",
+    "sobre": "Bruno: começou contra a vontade dela; apê simples, de escada, destruído por inquilino, reformado e alugando direto"
+   }
+  ]
+ },
+ {
+  "id": "luciana-vitacon-13-unidades",
+  "tipo": "case",
+  "nome": "Luciana (e o marido Júlio)",
+  "quem": "gerente de projetos com 25 anos de mundo corporativo (supply chain); São Paulo (SP)",
+  "titulo": "Assumiu o próprio estúdio quando a gestora entregava mal e foi de 1 para 13 unidades",
+  "antes": "Comprou um estúdio da Vitacon em 2018 para renda passiva; a gestora do prédio estava 'detonando' e ela pensou em entregar o imóvel",
+  "depois": "Assumiu a gestão no home office, um vizinho do prédio a procurou e, depois de sair da corporação em junho, passou a captar proprietários a partir de setembro; está com 13 unidades e meta de 20 em um ano, com o marido no operacional",
+  "numeros": [
+   "de 1 para 13 unidades",
+   "meta de 20 unidades em 1 ano"
+  ],
+  "citacao": "eu tenho uma meta em um ano, isso aqui tem que chegar em 20 unidades, se chegar no mundo corporativo. E eu tô nessa meta, tô com 13",
+  "aluno": "nao-informado",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "investidor",
+   "clt-largou",
+   "casal-familia",
+   "gestor"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "capital"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "reforma-mobilia"
+  ],
+  "objecoes": [
+   "tempo",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "B",
+  "como_usar": "Use com investidor de estúdio que está insatisfeito com a gestora ou com quem está no corporativo. Fala: 'A Luciana tinha um estúdio da Vitacon mal administrado, assumiu ela mesma e hoje está com 13 unidades...'. Ela cita o grupo, mas não diz que é aluna.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "01:28:25",
+   "fim": "01:30:40",
+   "texto": "Luciana: (...) gosto muito do que eu faço, o ambiente é muito tóxico pra mim do mundo corporativo. E aí, gente, saí em junho, tava numa reforma gigante, meu apartamento (...) E aí, com isso, em setembro, a partir de setembro, alguns outros proprietários me procuraram. E aí, comecei a falar, quer saber, eu tenho uma meta em um ano, isso aqui tem que chegar em 20 unidades, se chegar no mundo corporativo. E eu tô nessa meta, tô com 13 (...) Eu faço 80% porque eu sou muito centralizador aí, e o Júlio me ajuda, ele fica com a pior parte, que é operacional"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "01:25:50",
+    "fim": "01:27:13",
+    "sobre": "comprou o estúdio da Vitacon em 2018; a gestora do prédio entregava mal e ela pensou em devolver"
+   }
+  ]
+ },
+ {
+  "id": "rosangela-paulo-praia-grande-10-apartamentos",
+  "tipo": "case",
+  "nome": "Rosângela e Paulo Massa",
+  "quem": "casal de Praia Grande (SP): ela é formada em jornalismo; ele é arquiteto e foi construtor por 18 anos",
+  "titulo": "Ele fechou a construtora na pandemia, ela começou pelo apê do sogro e hoje são 10 apartamentos",
+  "antes": "Paulo tocava uma construtora com 43 funcionários e a saúde não aguentava; compraram um apartamento para testar ('qualquer coisa a gente vende')",
+  "depois": "Deu certo, compraram outro e o sogro tirou do aluguel fixo o apartamento em frente à praia e virou o primeiro cliente; levou uns 6 meses para vir o segundo cliente e hoje são 10 apartamentos, além do house flipping do Paulo",
+  "numeros": [
+   "10 apartamentos",
+   "uns 6 meses até o 2º cliente"
+  ],
+  "citacao": "ele falou, Rosângela, foi a melhor coisa que eu fiz na minha vida, muito obrigada, eu falei, obrigado pro senhor, na verdade ele foi o meu primeiro cliente.",
+  "aluno": "nao-informado",
+  "cidade": "Praia Grande",
+  "uf": "SP",
+  "perfil": [
+   "casal-familia",
+   "gestor",
+   "investidor",
+   "clt-largou"
+  ],
+  "imovel": [
+   "apartamento",
+   "praia"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "anuncio-fotos"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "confianca"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead do litoral que tem imóvel da família no aluguel fixo ou que acha difícil conquistar a confiança do primeiro proprietário. Fala: 'O sogro da Rosângela tirou o apê do aluguel fixo e disse que foi a melhor coisa que fez na vida; hoje eles têm 10...'.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "02:07:04",
+   "fim": "02:08:22",
+   "texto": "Rosângela: Enquanto eu puder fazer, eu vou fazer. Nós acabamos pegando um apartamento, comprando um apartamento porque era diferente da nossa casa e vamos testar, vamos. Pegamos um preço legal, qualquer coisa a gente vende. E aí deu super certo, apareceu a oportunidade e compramos outro. Aí meu sogro tinha um apartamento em frente à praia, nós somos praia grande, esqueci de falar. (...) também era o lugar fixo, né, e tradicional. E ele falou, não, pode pegar arroz, ele falou, Rosângela, foi a melhor coisa que eu fiz na minha vida, muito obrigada, eu falei, obrigado pro senhor, na verdade ele foi o meu primeiro cliente. E agora nós estamos com 10 (...) demorei pelo menos uns 6 meses pra ter o segundo, aí o terceiro"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "01:34:11",
+    "fim": "01:36:29",
+    "sobre": "Paulo Massa: construtor por 18 anos com 43 funcionários, fechou a construtora na pandemia, estudou 8 meses e hoje faz house flipping; 10 apartamentos"
+   }
+  ]
+ },
+ {
+  "id": "michele-jefferson-natal-4-5x-aluguel",
+  "tipo": "case",
+  "nome": "Michele e Jefferson",
+  "quem": "casal de servidores públicos no Ceará; ela administra à distância os kitnets dos pais em Natal (RN)",
+  "titulo": "Tirou os kitnets dos pais do aluguel tradicional e passou a faturar 4 a 5 vezes mais no Airbnb",
+  "antes": "Os pais tinham 9 apartamentos em Natal para a aposentadoria, no aluguel tradicional a R$ 600 e ficando vazios; ela levou 1 ano e meio para convencê-los",
+  "depois": "Começaram com um; hoje ela administra à distância 4 dos 9 no Airbnb, faturando 4 a 5 vezes o aluguel tradicional; o casal comprou o próprio apartamento em Canoa Quebrada (CE) em 2021 e tem mais um sublocado",
+  "numeros": [
+   "aluguel tradicional de R$ 600 → 4 a 5 vezes isso no Airbnb",
+   "4 dos 9 apartamentos dos pais no Airbnb"
+  ],
+  "citacao": "atualmente lá em Natal os apartamentos deles É 600 reais, um aluguel tradicional A gente consegue 4, 5 vezes no Airbnb Faturar",
+  "aluno": "nao-informado",
+  "cidade": "Natal",
+  "uf": "RN",
+  "perfil": [
+   "casal-familia",
+   "mora-longe",
+   "poucos-imoveis"
+  ],
+  "imovel": [
+   "kitnet",
+   "apartamento",
+   "praia"
+  ],
+  "dores": [
+   "precificacao",
+   "operacao-limpeza"
+  ],
+  "objecoes": [
+   "conjuge-socio",
+   "imovel-longe",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "faturamento"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que tem imóvel da família no aluguel tradicional, pais resistentes ('vai virar motel') ou imóvel em outra cidade. Fala: 'A Michele levou um ano e meio para convencer os pais; o kitnet que rendia R$ 600 no tradicional fatura 4 a 5 vezes mais no Airbnb...'. Fala longa (4 min): a comparação com os R$ 600 vem na segunda metade.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "01:52:09",
+   "fim": "01:56:12",
+   "texto": "Michele: Boa tarde a todos, meu nome é Michele (...) E meus pais tinham uns kitnets lá em Natal E eu, sempre eles reclamam pra mim, né Que tinha, o apartamento tava vago, sem ninguém, eles alugavam no tradicional (...) A gente começou com um, atualmente, eu administro quatro deles Eles tem nove, quatro no Airbnb e cinco no tradicional (...) Porque eu fico administrando a distância, e lá o operacional fica com eles (...) atualmente lá em Natal os apartamentos deles É 600 reais, um aluguel tradicional A gente consegue 4, 5 vezes no Airbnb Faturar, então, por que não, né? (...) Aí a gente comprou em 2021 a pandemia Em Camão Quebrada, a gente comprou o primeiro apartamento lá"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "01:56:29",
+    "fim": "01:57:34",
+    "sobre": "Jefferson: os pais fizeram 9 apartamentos para a aposentadoria e ela levou 1 ano e meio para convencê-los a sair do tradicional"
+   },
+   {
+    "inicio": "01:57:39",
+    "fim": "02:00:58",
+    "sobre": "Jefferson: tirou as economias do mercado financeiro para comprar o apê em Canoa Quebrada e deu certo"
+   }
+  ]
+ },
+ {
+  "id": "julson-copan-ipad-largou-tribunal",
+  "tipo": "case",
+  "nome": "Júlson",
+  "quem": "ex-servidor do judiciário que fazia temporada como hobby; administra imóveis no Copan, São Paulo (SP)",
+  "titulo": "Começou trocando 30 dias no próprio apê por um iPad e largou o tribunal para viver de gestão no Copan",
+  "antes": "Servidor público do tribunal; em 2014 trocou 30 dias no seu apartamento de 28 m² por um iPad, depois sublocou apartamentos vazios dos vizinhos convencendo os donos com o holerite",
+  "depois": "Na pandemia o Copan bombou com influenciadores; criou um Instagram que hoje tem 60 mil seguidores, a empresa já foi capa da Veja e há um ano ele largou o funcionalismo para trabalhar só com administração de imóveis",
+  "numeros": [
+   "Instagram com 60 mil seguidores",
+   "começou com 1 apartamento de 28 m² em 2014"
+  ],
+  "citacao": "Hoje, faz um ano que eu falei, tá, deixa, não dá mais pra continuar sendo funcionário público Eu larguei e trabalho só com administração de imóveis",
+  "aluno": "nao-informado",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "clt-largou",
+   "sublocacao",
+   "gestor",
+   "um-imovel"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "capital"
+  ],
+  "dores": [
+   "captar-imoveis"
+  ],
+  "objecoes": [
+   "sem-imovel",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "liberdade"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead servidor público ou com emprego estável que acha arriscado largar, ou com quem não tem imóvel (sublocação). Fala: 'O Júlson era do tribunal, começou alugando o próprio apê de 28 m², sublocou os vizinhos e há um ano largou o funcionalismo para viver de gestão no Copan...'.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "02:27:52",
+   "fim": "02:30:25",
+   "texto": "Júlson: Aí vieram os influencers digitais Começaram a postar a minha marca por aí Eu descobri que eu tinha que criar Um Instagram que eu não tinha até então Criei um Instagram Hoje esse Instagram tem 60 mil seguidores Eu administro o RedMir do Copan Que é uma empresa Que hoje já foi capa da Veja (...) Hoje, faz um ano que eu falei, tá, deixa, não dá mais pra continuar sendo funcionário público Eu larguei e trabalho só com administração de imóveis E tenho vivido os desafios e experiências de Ser um anfitrião Airbnb, agora de uma forma profissional"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "02:22:07",
+    "fim": "02:27:50",
+    "sobre": "a história do iPad em 2014, a sublocação dos apartamentos vazios dos vizinhos e o susto (que durou 15 dias) no começo da pandemia"
+   }
+  ]
+ },
+ {
+  "id": "eli-farmaceutica-10-para-30",
+  "tipo": "case",
+  "nome": "Eli",
+  "quem": "ex-representante de laboratório da indústria farmacêutica; gestor na Zona Norte de São Paulo (SP)",
+  "titulo": "Fazia Airbnb escondido da empresa, foi de 10 para 30 imóveis em um ano e saiu da CLT",
+  "antes": "Representante farmacêutico na CLT; tinha 10 imóveis e escondia a atividade (bloqueava no Instagram quem era da empresa)",
+  "depois": "30 unidades em um ano (próprias, sublocadas e de terceiros), saiu da CLT, está abrindo empresa e diz ter liberdade de tempo, geográfica e financeira",
+  "numeros": [
+   "10 → 30 imóveis em 1 ano"
+  ],
+  "citacao": "De um ano pra cá, eu subi pra 30 imóveis Eu tinha 10 naquela época E fazia tudo escondido, né?",
+  "aluno": "nao-informado",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "clt-largou",
+   "gestor",
+   "sublocacao"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "escala-equipe"
+  ],
+  "objecoes": [
+   "tempo",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "liberdade",
+   "tempo-livre"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead CLT que faz (ou quer fazer) Airbnb em paralelo e tem medo de sair. Fala: 'O Eli fazia tudo escondido da empresa, foi de 10 para 30 imóveis em um ano, saiu da CLT e hoje consegue levar a filha na escola...'.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "02:46:53",
+   "fim": "02:48:01",
+   "texto": "Rômulo Villela: Antes, só pra complementar, Eli, faz um ano mais ou menos que a gente fez o outro encontro, né? Sim. Quanto você tava naquela época? Acho que você tinha 10 imóveis. (...) Eli: De um ano pra cá, eu subi pra 30 imóveis Eu tinha 10 naquela época E fazia tudo escondido, né? Eu não podia ter Instagram Eu não podia falar que eu fazia B&B (...) Porque a indústria farmacêutica É vez com maus olhos, né? Você tem uma segunda atividade (...) Duas empresas saíram lá do prédio E aí, do nada Já caiu 10 apartamentos pra fazer"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "02:43:14",
+    "fim": "02:46:53",
+    "sobre": "saída da CLT na semana anterior, 30 unidades, e a emoção de levar a filha na escola: liberdade geográfica e financeira"
+   },
+   {
+    "inicio": "02:48:01",
+    "fim": "02:49:09",
+    "sobre": "a reunião de bermuda com a lavanderia: 'agora sou cliente'"
+   }
+  ]
+ },
+ {
+  "id": "vinicius-velame-kitnets-zona-leste",
+  "tipo": "case",
+  "nome": "Vinicius Velame",
+  "quem": "ex-profissional de comércio exterior (10 anos), hoje dono de uma administradora de imóveis em São Paulo (SP)",
+  "titulo": "Kitnet na periferia sem portaria faturou R$ 3.800 no 1º mês, contra R$ 1.500-1.800 no aluguel fixo",
+  "antes": "Era contra colocar no Airbnb as 7 kitnets que o pai montou numa casa de 1960 na Zona Leste, sem portaria e a 15 minutos de carro do metrô; a expectativa no aluguel fixo era de R$ 1.500 a R$ 1.800 por kitnet",
+  "depois": "A primeira kitnet fez R$ 3.800 no primeiro mês; entraram uma por mês até 5 na temporada, com locker de senha e câmeras; um imóvel perto do Expo Center Norte fez R$ 18 mil brutos num mês de eventos; largou a CLT em setembro de 2023 e cresceu 15 a 20 unidades até dezembro",
+  "numeros": [
+   "R$ 3.800 no 1º mês x R$ 1.500-1.800 no fixo",
+   "5 kitnets na temporada",
+   "R$ 18 mil brutos em novembro num imóvel perto do Expo Center Norte",
+   "15 a 20 unidades novas entre setembro e dezembro de 2023"
+  ],
+  "citacao": "E aí no Airbnb no primeiro mês que a gente começou Deu R$3.800, e aí meu pai falou, tá vendo?",
+  "aluno": "nao-informado",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "clt-largou",
+   "gestor",
+   "sublocacao",
+   "casal-familia"
+  ],
+  "imovel": [
+   "kitnet",
+   "simples",
+   "capital"
+  ],
+  "dores": [
+   "automacao-tempo",
+   "captar-imoveis"
+  ],
+  "objecoes": [
+   "imovel-simples",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "faturamento",
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "B",
+  "como_usar": "Use com lead que acha que o imóvel dele é simples demais, fica na periferia ou longe do metrô. Fala: 'O Vinicius achava que as kitnets do pai na Zona Leste não iam alugar; a primeira fez R$ 3.800 no primeiro mês, mais que o dobro do aluguel fixo...'. Fala longa (13 min): no vídeo, a kitnet de R$ 3.800 fica perto de 00:06:30 e o locker perto de 00:08:30 (horários dos tópicos). Ele diz que não era aluno.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Palestra Vinicius Velame - Kitnet em periferia vale a pena? (2º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1023413201",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "00:01:22",
+   "fim": "00:14:41",
+   "texto": "Vinicius Velame: (...) e a primeira unidade que a gente colocou no Airbnb na época a gente imaginava que o aluguel dela fixo ia ser em torno de R$1.500, R$1.800, porque ela já tava semi-amobiliada (...) E aí no Airbnb no primeiro mês que a gente começou Deu R$3.800, e aí meu pai falou, tá vendo? Falei que ia dar certo, eu falei pra ele, calma, é uma só Não vai dar tão certo assim eu acho ainda E aí a gente colocou a segunda unidade (...) E aí eu tive que admitir que ele estava certo, foi muito bem (...) a gente fez quase 20 mil reais bruto nesse imóvel, foi 18 mil reais"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:25:51",
+    "fim": "00:29:04",
+    "sobre": "condomínio de estúdios na Luz: tapetes amarelos na porta viraram vitrine e trouxeram 15 a 20 unidades entre setembro e dezembro de 2023"
+   },
+   {
+    "inicio": "00:14:45",
+    "fim": "00:25:44",
+    "sobre": "primeira reserva, limpeza feita por ele, primeiras sublocações e a saída do comércio exterior em setembro de 2023"
+   }
+  ]
+ },
+ {
+  "id": "danilo-ribeirao-preto-7-unidades-familia",
+  "tipo": "case",
+  "nome": "Danilo",
+  "quem": "ex-professor de Ribeirão Preto (SP); há 5 anos administra 7 unidades próprias da família; participante do 4º Encontro Anfitrião 5 Estrelas",
+  "titulo": "Ex-professor que administra 7 imóveis da família decidiu começar a gerir para terceiros",
+  "antes": "Era professor; começou vendo os vídeos do Rômulo e só administrava imóveis da família (pais, sogra, prima), com receio de gerir para outras pessoas",
+  "depois": "Trocou a carreira de professor pela administração de imóveis há 5 anos, tem 7 unidades próprias e saiu do Encontro decidido a administrar para terceiros e se atualizar nos sistemas",
+  "numeros": [
+   "7 unidades próprias da família",
+   "5 anos na administração de imóveis"
+  ],
+  "citacao": "Eu era professor, eu sou formado, e saí da minha formação e hoje parti para esse lado de administração de imóveis.",
+  "aluno": "nao-informado",
+  "cidade": "Ribeirão Preto",
+  "uf": "SP",
+  "perfil": [
+   "clt-largou",
+   "gestor",
+   "casal-familia"
+  ],
+  "imovel": [
+   "interior"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "automacao-tempo"
+  ],
+  "objecoes": [
+   "sozinho-youtube",
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "C",
+  "como_usar": "Use com lead que já cuida de imóveis da família e tem receio de pegar imóveis de terceiros. Fala: 'O Danilo era professor, começou vendo os vídeos do Rômulo, hoje cuida de 7 unidades da família e decidiu partir pra terceiros...'",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "4º Encontro Anfitrião 5 Estrelas — 15 - Considerações finais e bate - papo com a plateia",
+   "url": "https://vimeo.com/1214103435",
+   "data": "2026-07-18"
+  },
+  "trecho": {
+   "inicio": "00:07:10",
+   "fim": "00:08:37",
+   "texto": "Danilo: (…) Administro pra minha família, meus pais. (…) Então eu tenho um pouco esse receio de administrar para outras pessoas, que é uma responsabilidade muito grande. Então hoje eu estou vendo aqui pessoas com 400, 300, e eu com 7 unidades próprias, estou assim. E eu já tenho 5 anos na carreira de administração de imóveis, que é uma carreira. Eu era professor, eu sou formado, e saí da minha formação e hoje parti para esse lado de administração de imóveis. (…) Eu comecei através de você, vendo todos os seus vídeos, para tirar um tanto de dúvidas. Então hoje eu quebrei um pouco esse paradigma de tentar administrar os imóveis para terceiros, para pessoas."
+  },
+  "outros_trechos": []
+ },
+ {
+  "id": "romulo-estudio-19m-bras-2-mil-liquido",
+  "tipo": "case",
+  "nome": "Rômulo Villela",
+  "quem": "o próprio Rômulo; estúdio de 19 m² no Brás (São Paulo), comprado na planta para renda",
+  "titulo": "O estúdio de 19 m² do Rômulo: cerca de R$ 2.000 a R$ 2.200 por mês na temporada",
+  "antes": "Comprou o estúdio na planta em 2017, exclusivamente para renda, e só começou a alugar por diária em agosto de 2021",
+  "depois": "Em 2022 teve média de R$ 2.000 a R$ 2.200 por mês na temporada (média líquida, controlada no Owner Pro); montou o imóvel para servir também ao aluguel tradicional, com geladeira e mais armários",
+  "numeros": [
+   "média de R$ 2.000–2.200/mês em 2022 num estúdio de 19 m²"
+  ],
+  "citacao": "Então aí vocês vão ver que eu tenho um faturamento médio, como vocês estão vendo, de mais ou menos 2.000, 2.200 reais",
+  "aluno": "romulo",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "investidor",
+   "um-imovel"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "capital"
+  ],
+  "dores": [
+   "financeiro-imposto",
+   "precificacao"
+  ],
+  "objecoes": [
+   "medo-de-errar"
+  ],
+  "resultados": [
+   "faturamento"
+  ],
+  "forca": "C",
+  "como_usar": "Use com lead que tem ou quer comprar estúdio compacto e tem medo de depender só da temporada. Fala: 'O próprio Rômulo tem um estúdio de 19 m² no Brás que dá uns R$ 2 mil por mês e foi montado pra também poder ir pro aluguel tradicional...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "Vou tirar meu Studio de 19 m² do Airbnb?",
+   "url": "https://www.youtube.com/watch?v=j-QWa08HN-I",
+   "data": "2023-10-05"
+  },
+  "trecho": {
+   "inicio": "00:05:33",
+   "fim": "00:06:19",
+   "texto": "Rômulo: Então eu vou compartilhar com vocês aí alguns números do meu estúdio de 19 metros quadrados referente ao ano de 2022. Então aí vocês vão ver que eu tenho um faturamento médio, como vocês estão vendo, de mais ou menos 2.000, 2.200 reais, vai depender do período que você pega esse intervalo, pode variar, às vezes você tem um ano melhor, às vezes você tem um ano que é um pouquinho menos, e eu não me oponho, por exemplo, a possibilidade de conseguir um interesse fixo me pagando 2.000, 2.100 reais, por exemplo, porque se a minha média mensal líquida, com a temporada, no ano, tirando as altas e as baixas, (…) você tem essa média."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:04:46",
+    "fim": "00:05:13",
+    "sobre": "lição da pandemia: estúdios compactos foram os primeiros afetados, por isso preparou o imóvel para os dois modelos"
+   },
+   {
+    "inicio": "00:08:22",
+    "fim": "00:08:54",
+    "sobre": "aceitaria ganhar um pouco menos no tradicional em troca de bem menos trabalho"
+   }
+  ]
+ },
+ {
+  "id": "diogo-estadia-carioca-70-imoveis",
+  "tipo": "case",
+  "nome": "Diogo Figueiredo",
+  "quem": "advogado e corretor, CEO da Estadia Carioca, no Rio de Janeiro (RJ); já teve locadora de vídeo e site de compra coletiva",
+  "titulo": "Começou com o apê da família no Leblon e virou administradora de mais de 70 imóveis",
+  "antes": "Apartamento da família no Leblon colocado na temporada de olho na Copa do Mundo, ainda no Aluguel Temporada, sem Wi-Fi e sem cabide",
+  "depois": "Vieram o segundo imóvel, vizinhos, amigos e família por indicação; criou a Estadia Carioca (turismo e imobiliária), vende experiências como upsell e saiu de um quarto de casa para uma loja própria; o título do vídeo fala em mais de 70 imóveis administrados",
+  "numeros": [
+   "Mais de 70 imóveis administrados (dado do título do vídeo)"
+  ],
+  "citacao": "não tinha nem cabide no primeiro apartamento que eu aluguei, sabe? Eu fui aprendendo assim, fazendo, né?",
+  "aluno": "nao-informado",
+  "cidade": "Rio de Janeiro",
+  "uf": "RJ",
+  "perfil": [
+   "um-imovel",
+   "gestor"
+  ],
+  "imovel": [
+   "apartamento",
+   "capital"
+  ],
+  "dores": [
+   "captar-imoveis",
+   "escala-equipe"
+  ],
+  "objecoes": [
+   "medo-de-errar",
+   "imovel-simples"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "C",
+  "como_usar": "Use com lead que acha que precisa começar perfeito ou que quer virar gestor a partir de um imóvel. Fala: 'O Diogo começou com o apê da família no Leblon, sem Wi-Fi nem cabide, e foi crescendo por indicação...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "De DONO DE LOCADORA de vídeo a ADMINISTRADOR de mais de 70 imóveis no AIRBNB",
+   "url": "https://www.youtube.com/watch?v=Xoek_UfR23s",
+   "data": "2020-11-10"
+  },
+  "trecho": {
+   "inicio": "00:01:52",
+   "fim": "00:03:33",
+   "texto": "Diogo: E assim, o Alugas de Temporada entrou na minha vida. Engraçado que nunca quis empreender nesse ramo, entendeu? Foi uma coisa que aconteceu assim, do nada a gente tem um apartamento no Leblon. E a gente tinha, assim, faltava alguns anos pra Copa do Mundo. (...) E aí a gente decidiu testar esse negócio de temporada. (...) Você não alugava Wi-Fi, enfim, não tinha nem cabide no primeiro apartamento que eu aluguei, sabe? Eu fui aprendendo assim, fazendo, né? (...) a gente tem outro apartamento que tava alugado e a quando ele desalugou a gente foi colocar ele na temporada tamb e a o vizinho descobriu enfim v amigos e a fam (...) e eu decidi profissionalizar isso"
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:04:47",
+    "fim": "00:05:31",
+    "sobre": "a operação saiu de um quarto da casa para uma loja própria, com equipe maior, pouco antes da pandemia"
+   }
+  ]
+ },
+ {
+  "id": "romulo-sala-comercial-sublocacao-centro-sp",
+  "tipo": "case",
+  "nome": "Rômulo Villela",
+  "quem": "o próprio Rômulo; sala comercial num edifício misto do centro de São Paulo, perto do Copan",
+  "titulo": "Sublocou uma sala comercial e transformou num estúdio de Airbnb gastando pouco",
+  "antes": "Sala comercial onde trabalhavam os administradores do condomínio, com cozinha minúscula e banheiro de escritório",
+  "depois": "Conseguiu a sala por sublocação, mostrando o apartamento que já operava no mesmo prédio, e transformou num estúdio para até 3 hóspedes, com decoração barata; administra 3 imóveis nesse edifício",
+  "numeros": [
+   "3 imóveis administrados no mesmo edifício",
+   "estúdio para até 3 hóspedes"
+  ],
+  "citacao": "Ou seja, é uma sublocação. Você pega o imóvel de alguém, de proprietário, e você subloca.",
+  "aluno": "romulo",
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "perfil": [
+   "sublocacao"
+  ],
+  "imovel": [
+   "studio-compacto",
+   "capital",
+   "simples"
+  ],
+  "dores": [
+   "reforma-mobilia",
+   "captar-imoveis"
+  ],
+  "objecoes": [
+   "sem-imovel",
+   "imovel-simples"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "C",
+  "como_usar": "Use com lead que não tem imóvel próprio e quer começar por sublocação, ou que tem um espaço pequeno e sem cara de casa. Fala: 'O Rômulo pegou uma sala comercial do próprio condomínio, propôs sublocar e transformou num estúdio de Airbnb...'",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "Como eu TRANSFORMEI um imóvel COMERCIAL em RESIDENCIAL para Airbnb",
+   "url": "https://www.youtube.com/watch?v=yENYnWT0gQo",
+   "data": "2020-04-30"
+  },
+  "trecho": {
+   "inicio": "00:01:25",
+   "fim": "00:02:29",
+   "texto": "Rômulo: Mas aqui é uma sala comercial, inclusive, dos próprios administradores do condomínio, do prédio, eles trabalhavam aqui nessa sala (…) Nesse meio tempo eu já conhecia os administradores e fiz uma proposta para eles explicando o que eu já fazia com outro imóvel. (…) Eu achei esses proprietários e falei que eu já fazia aqui no mesmo prédio, esse tipo de locação, etc. E eu estava buscando outros imóveis para fazer a mesma coisa que eu fazia lá embaixo. Ou seja, é uma sublocação. Você pega o imóvel de alguém, de proprietário, e você subloca. (…) Então eu expliquei para eles, beijos lá embaixo, para mostrar que o negócio era sério, não era nem um louco propondo coisas estranhas."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:13:57",
+    "fim": "00:14:08",
+    "sobre": "são três imóveis que ele administra no mesmo edifício"
+   }
+  ]
+ },
+ {
+  "id": "romulo-apartamento-piloto-12-meses",
+  "tipo": "case",
+  "nome": "Rômulo Villela",
+  "quem": "anfitrião; abre a planilha do seu apartamento piloto, onde testa tudo primeiro",
+  "titulo": "Apartamento piloto do Rômulo: R$ 47,5 mil faturados e R$ 27 mil de lucro em 12 meses",
+  "antes": "Imóvel avaliado em cerca de R$ 300 mil, anunciado no Airbnb, no Booking.com e em outras plataformas",
+  "depois": "De agosto/2018 a julho/2019 faturou R$ 47.583 brutos, teve cerca de R$ 20.400 de despesas e R$ 27.111 de lucro líquido: 9,04% no ano sobre o valor do imóvel, média de R$ 2.259 por mês",
+  "numeros": [
+   "R$ 47.583 de faturamento bruto em 12 meses",
+   "R$ 27.111 de lucro líquido (despesas de ~R$ 20.400)",
+   "Lucro de 9,04% no ano sobre um imóvel de R$ 300 mil; R$ 2.259,28/mês em média"
+  ],
+  "citacao": "o total que eu tive de faturamento foi R$47.583. (...) E eu tive aqui um lucro de R$27.111.",
+  "aluno": "romulo",
+  "cidade": null,
+  "uf": null,
+  "perfil": [
+   "um-imovel"
+  ],
+  "imovel": [
+   "apartamento"
+  ],
+  "dores": [
+   "financeiro-imposto"
+  ],
+  "objecoes": [
+   "confianca"
+  ],
+  "resultados": [
+   "faturamento"
+  ],
+  "forca": "C",
+  "como_usar": "Use com lead que confunde faturamento com lucro ou quer ver números reais de um imóvel só. Fala: 'O Rômulo abriu a planilha do apartamento piloto: R$ 47,5 mil faturados e R$ 27 mil de lucro em 12 meses.' Dados de 2018/2019: use como exemplo de controle financeiro, não como referência atual de faturamento.",
+  "fonte": {
+   "tipo": "youtube",
+   "titulo": "Quanto eu FATUREI no Airbnb nos últimos 12 meses",
+   "url": "https://www.youtube.com/watch?v=45iKFN46uNk",
+   "data": "2019-09-24"
+  },
+  "trecho": {
+   "inicio": "00:04:16",
+   "fim": "00:04:53",
+   "texto": "Rômulo Villela: Então se você for ver aqui, nesse resumão aqui, o total que eu tive de faturamento foi R$47.583. Então esse foi o meu faturamento bruto, tudo que eu ganhei. Eu falo quase R$50.000 para facilitar a conta. E aqui em despesa eu tive R$20.400 e pouco, que inclui o quê? Condomínio, luz, energia, luz, energia igual, internet, limpeza, tudo que envolve uma casa, um imóvel que você paga todas as contas e tudo mais. E eu tive aqui um lucro de R$27.111."
+  },
+  "outros_trechos": [
+   {
+    "inicio": "00:08:42",
+    "fim": "00:10:22",
+    "sobre": "Rentabilidade: lucro de 9,04% no ano sobre o valor de R$ 300 mil, média de R$ 2.259,28 por mês"
+   },
+   {
+    "inicio": "00:05:39",
+    "fim": "00:06:00",
+    "sobre": "Sazonalidade: dezembro foi o melhor mês; janeiro e fevereiro caíram bastante"
+   }
+  ]
+ },
+ {
+  "id": "gabriele-valeria-curitiba-3-imoveis",
+  "tipo": "case",
+  "nome": "Gabriele e Valéria",
+  "quem": "sócias gaúchas que moram na região de Curitiba (PR); Gabriele é administradora e segue na CLT, Valéria veio da enfermagem",
+  "titulo": "Começaram 'de brincadeira' com o imóvel de uma delas e já vão para o terceiro",
+  "antes": "Colocaram o apartamento da Valéria para alugar como uma brincadeira",
+  "depois": "Deu certo, não pararam de alugar e estão indo para o terceiro imóvel; compraram o curso para saber se era sorte ou competência; Valéria já largou tudo",
+  "numeros": [
+   "indo para o 3º imóvel"
+  ],
+  "citacao": "A gente está indo para o terceiro imóvel, mas começou assim com uma brincadeira.",
+  "aluno": "aluno",
+  "cidade": "Curitiba",
+  "uf": "PR",
+  "perfil": [
+   "poucos-imoveis",
+   "iniciante",
+   "clt-largou"
+  ],
+  "imovel": [
+   "apartamento"
+  ],
+  "dores": [],
+  "objecoes": [
+   "medo-de-errar",
+   "tempo"
+  ],
+  "resultados": [
+   "numero-de-imoveis",
+   "liberdade"
+  ],
+  "forca": "C",
+  "como_usar": "Use com lead que ainda está na CLT e tem medo de largar, ou que acha que deu certo por sorte. Fala: 'A Gabriele e a Valéria começaram de brincadeira, compraram o curso para ver se era sorte ou competência; uma ainda está na CLT e a outra já largou...'. Prova fraca, sem valores.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "01:12:48",
+   "fim": "01:14:18",
+   "texto": "Gabriele: Olá, boa tarde, meu nome é Gabriele Eu vim com a Valéria, os apartamentos são nossos, a gente administra. (...) A gente está indo para o terceiro imóvel, mas começou assim com uma brincadeira. Então, tipo, a gente foi o imóvel da Valéria, botamos lá, vamos alugar, vamos. E aí começou a dar certo, começou a dar certo, e não paramos de alugar. (...) eu sou administradora de profissão e ainda sigo no ramo com o CLT. (...) aí começamos a estudar, compramos o curso Romo, e estamos aqui para aprender (...) Valéria: (...) Eu vim na enfermagem, né, caí de paraquedas"
+  },
+  "outros_trechos": []
+ },
+ {
+  "id": "larissa-lencois-maranhenses-a-distancia",
+  "tipo": "case",
+  "nome": "Larissa",
+  "quem": "maranhense de São Luís que mora em São Paulo e administra à distância",
+  "titulo": "Mora em São Paulo e administra à distância casas nos Lençóis Maranhenses",
+  "antes": "Colocou no Airbnb um imóvel que o pai tinha nos Lençóis Maranhenses",
+  "depois": "Já está na segunda casa e indo para a terceira, administrando à distância",
+  "numeros": [
+   "2 casas, indo para a 3ª"
+  ],
+  "citacao": "Eu venho com muita frequência pra cá e administro a distância mesmo",
+  "aluno": "nao-informado",
+  "cidade": "Lençóis Maranhenses",
+  "uf": "MA",
+  "perfil": [
+   "mora-longe",
+   "poucos-imoveis"
+  ],
+  "imovel": [
+   "casa"
+  ],
+  "dores": [],
+  "objecoes": [
+   "imovel-longe"
+  ],
+  "resultados": [
+   "numero-de-imoveis"
+  ],
+  "forca": "C",
+  "como_usar": "Use só como exemplo rápido para a objeção 'meu imóvel é longe'. Fala: 'A Larissa mora em São Paulo e cuida à distância de casas nos Lençóis Maranhenses, já indo para a terceira...'. Menção curta.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "01:11:17",
+   "fim": "01:12:22",
+   "texto": "Larissa: Meu nome é Larissa, sou de São Luís. (...) Tenho dois imóveis nos Leções Maranhenses. Morar em São Paulo, aqui em São Paulo, e voltei pra lá na pandemia. (...) e eu tive a ideia de colocar um imóvel que tinha meu pai preparado pra cá. E já tô na segunda casa, e vou agora pra terceira casa. (...) Rômulo Villela: (...) Então você administra a distância Mas você mora aqui ou mora lá? Eu tenho apartamento aqui em São Paulo Larissa: Eu venho com muita frequência pra cá e administro a distância mesmo"
+  },
+  "outros_trechos": []
+ },
+ {
+  "id": "lilian-paris-estudio-sao-caetano",
+  "tipo": "case",
+  "nome": "Lilian Minami",
+  "quem": "terapeuta holística que mora há quase 19 anos em Paris",
+  "titulo": "Administra de Paris um estúdio em São Caetano do Sul",
+  "antes": "Dois apartamentos no aluguel tradicional e um estúdio que ela usaria quando viesse ao Brasil",
+  "depois": "Pôs o estúdio no Airbnb: responde todas as mensagens de Paris, com 5 horas de fuso, e tem uma pessoa local que faz o presencial",
+  "numeros": [],
+  "citacao": "Então ela é a parte que eu não posso fazer Mas o resto eu faço tudo de lá",
+  "aluno": "nao-informado",
+  "cidade": "São Caetano do Sul",
+  "uf": "SP",
+  "perfil": [
+   "mora-longe",
+   "um-imovel"
+  ],
+  "imovel": [
+   "studio-compacto"
+  ],
+  "dores": [
+   "automacao-tempo"
+  ],
+  "objecoes": [
+   "imovel-longe"
+  ],
+  "resultados": [],
+  "forca": "C",
+  "como_usar": "Use só para a objeção 'moro longe do imóvel'. Fala: 'Tem aluna que mora em Paris e cuida do estúdio em São Caetano: ela responde as mensagens e tem uma pessoa lá para o presencial...'. Não tem resultado em números.",
+  "fonte": {
+   "tipo": "encontro",
+   "titulo": "Histórias dos participantes do encontro (1º Encontro de Anfitriões)",
+   "url": "https://vimeo.com/1018401235",
+   "data": null
+  },
+  "trecho": {
+   "inicio": "02:36:50",
+   "fim": "02:38:20",
+   "texto": "Lilian: Eu sou a Lilian, sou terapia holística E eu moro há quase 19 anos Em Paris, na França E eu tenho dois apartamentos de um dormitório Antigo e um estúdio em São Caetano do Sul Então os dois apartamentos tradicionais E o estúdio eu coloquei no Airbnb (...) Rômulo Villela: E aí você administra lá de Paris? (...) Lilian: Eu respondo todas as mensagens Então o fuso horário é 5 horas E aí eu coloco até 11 horas da noite Então até as 11 horas eu estou respondendo E eu tenho uma pessoa que mora lá Que faz todo o presencial (...) Então ela é a parte que eu não posso fazer Mas o resto eu faço tudo de lá"
+  },
+  "outros_trechos": []
+ }
+]

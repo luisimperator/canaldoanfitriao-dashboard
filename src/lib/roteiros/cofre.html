@@ -44,6 +44,7 @@ mark { background: #ffe6a8; color: inherit; border-radius: 3px; padding: 0 1px; 
 
 .top { background: var(--teal); color: #fff; padding: max(12px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) 12px max(20px, env(safe-area-inset-left, 0px)); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .top img { height: 44px; width: auto; display: block; }
+.top img.icone { width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
 .top h1 { margin: 0; font-family: var(--title); font-weight: 600; font-size: 22px; line-height: 1.1; }
 .top h1 small { display: block; font-family: var(--body); font-weight: 500; font-size: 13.5px; color: rgba(255, 255, 255, 0.82); }
 .top nav { margin-left: auto; display: flex; gap: 8px; }
@@ -76,7 +77,11 @@ mark { background: #ffe6a8; color: inherit; border-radius: 3px; padding: 0 1px; 
 .chip.zero { opacity: 0.45; }
 .grupo.objecoes .chip[aria-pressed="true"] { background: var(--coral); border-color: var(--coral); }
 .grupo.objecoes .chip[aria-pressed="true"] small { color: #ffd2da; }
-.toggle-filtros { display: none; }
+.btn.toggle-filtros { display: none; }
+.grupo.extra { display: none; }
+body.mais-filtros .grupo.extra { display: grid; }
+.mais { justify-self: start; border: 0; background: transparent; color: var(--teal); font-weight: 700; font-size: 14px; padding: 2px 0; }
+.mais:hover { text-decoration: underline; }
 
 .status { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 4px 0 12px; font-size: 14.5px; color: var(--muted); }
 .status b { color: var(--ink); font-family: var(--title); font-weight: 600; }
@@ -167,7 +172,7 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 20px calc(28px + env(safe
   .top nav { margin-left: 0; }
   .campo input { height: 54px; font-size: 17px; padding-right: 86px; }
   .campo .atalho { display: none; }
-  .toggle-filtros { display: inline-flex; justify-self: start; }
+  .btn.toggle-filtros { display: inline-flex; justify-self: start; }
   .filtros { display: none; }
   body.filtros-on .filtros { display: grid; }
   .grupo { grid-template-columns: minmax(0, 1fr); gap: 4px; }
@@ -181,7 +186,7 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 20px calc(28px + env(safe
 </head>
 <body>
 <header class="top">
-  <img src="/marca/a5e-logo.webp" alt="Anfitrião 5 Estrelas" width="480" height="183">
+  <img src="/marca/cda-icone.png" alt="Canal do Anfitrião" width="192" height="192" class="icone">
   <h1>Cofre de Cases<small id="sub">histórias reais pra usar na call</small></h1>
   <nav aria-label="Ferramentas do time">
     <a href="/roteiro-sales-call-nova">Roteiro</a>
@@ -290,7 +295,7 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 20px calc(28px + env(safe
       [norm([c.antes, c.depois, c.citacao, c.como_usar].join(' ')), 2],
       [norm([c.trecho && c.trecho.texto, (c.outros_trechos || []).map(function (o) { return o.sobre; }).join(' '), c.fonte && c.fonte.titulo].join(' ')), 1]
     ];
-    c._ord = { A: 0, B: 1, C: 2 }[c.forca] || 3;
+    c._ord = c.forca === 'A' ? 0 : c.forca === 'B' ? 1 : c.forca === 'C' ? 2 : 3;
   });
 
   var filtros = {}; // chave -> {valor: true}
@@ -368,8 +373,12 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 20px calc(28px + env(safe
         if (!n && !on) return '';
         return '<button type="button" class="chip' + (n ? '' : ' zero') + '" data-f="' + g.chave + '" data-v="' + esc(v) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(g.valores[v]) + ' <small>' + n + '</small></button>';
       }).join('');
-      return chips ? '<div class="grupo ' + g.chave + '"><span>' + esc(g.titulo) + '</span><div class="chips">' + chips + '</div></div>' : '';
+      var extra = g.chave !== 'tipo' && g.chave !== 'objecoes';
+      return chips ? '<div class="grupo ' + g.chave + (extra ? ' extra' : '') + '"><span>' + esc(g.titulo) + '</span><div class="chips">' + chips + '</div></div>' : '';
     }).join('');
+    var ativosExtra = GRUPOS.some(function (g) { return g.chave !== 'tipo' && g.chave !== 'objecoes' && filtros[g.chave] && Object.keys(filtros[g.chave]).length; });
+    if (ativosExtra) document.body.classList.add('mais-filtros');
+    html += '<button type="button" class="mais" id="mais-filtros">' + (document.body.classList.contains('mais-filtros') ? '− Menos filtros' : '+ Mais filtros: perfil, imóvel, problema, prova, quem é') + '</button>';
     $('filtros').innerHTML = html;
   }
 
@@ -388,6 +397,7 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 20px calc(28px + env(safe
   $('limpar').addEventListener('click', function () { q = ''; $('q').value = ''; filtros = {}; desenha(); salvaUrl(); $('q').focus(); });
   document.querySelectorAll('.dica button').forEach(function (b) { b.addEventListener('click', function () { q = b.dataset.q; $('q').value = q; desenha(); salvaUrl(); }); });
   $('filtros').addEventListener('click', function (e) {
+    if (e.target.closest('#mais-filtros')) { document.body.classList.toggle('mais-filtros'); desenhaFiltros(); return; }
     var b = e.target.closest('.chip'); if (!b) return;
     var ch = b.dataset.f, v = b.dataset.v;
     filtros[ch] = filtros[ch] || {};

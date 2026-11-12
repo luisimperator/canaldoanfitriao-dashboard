@@ -57,6 +57,11 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/calculadora" || pathname.startsWith("/marca/")) {
     return NextResponse.next();
   }
+  // Cofre de Cases e o chat dele: senha própria (a dos roteiros), conferida na
+  // rota (src/lib/roteiros/porta.ts).
+  if (pathname === "/cofre" || pathname.startsWith("/cofre/")) {
+    return NextResponse.next();
+  }
   // Redirect curto dos QR codes/links: público (é escaneado por qualquer um,
   // antes de virar lead). Valida o slug por conta própria.
   if (pathname.startsWith("/r/")) {
