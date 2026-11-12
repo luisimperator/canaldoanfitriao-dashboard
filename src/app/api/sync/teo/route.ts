@@ -1414,7 +1414,12 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       // O lead escreveu depois da última mensagem do Téo? Conta mesmo que uma
       // automação do Unnichat tenha mandado algo depois (ex.: o lead clica em
       // "Confirmar" e a automação manda a pesquisa por cima).
-      const ultimaDoTeo = [...reais].reverse().find((m) => m.senderBy === "user" && m.origin !== "automation");
+      // Nota interna (ficha, "📅 Call marcada") não é resposta: se o envio
+      // falhou depois da nota (Unnichat 502), o lead continua esperando
+      // (Claudia, 11/11: a nota da call fazia o Téo achar que já tinha respondido).
+      const ultimaDoTeo = [...reais]
+        .reverse()
+        .find((m) => m.senderBy === "user" && m.origin !== "automation" && m.type !== "note");
       const pendente =
         Boolean(ultimaDoLead) &&
         ultimaDoLead!.id !== c.ultima_msg_tratada &&
