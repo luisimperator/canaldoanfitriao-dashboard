@@ -4,337 +4,365 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#24757f">
-<title>Calculadora de Ganhos · Anfitrião 5 Estrelas</title>
+<meta name="theme-color" content="#0a4c52">
+<title>Calculadora de Ganhos · Canal do Anfitrião</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Raleway:wght@400;500;600;700&family=Barlow:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Damion&family=Nunito:wght@600;700;800;900&family=Poppins:wght@500;600;700;800&display=swap">
 <style>
-/* Calculadora de Ganhos no seu imóvel. Feita pra ficar em tela cheia na call e
-   na visita técnica: tudo cabe numa tela (sem rolar) a partir de 1280×720.
-   Visual do site do Anfitrião 5 Estrelas: coral #E23D59, teal #24757F,
-   Poppins nos números e títulos, Raleway no texto. */
+/* Calculadora de Ganhos no seu imóvel (Canal do Anfitrião). Feita pra tela
+   cheia na call e na visita técnica: à esquerda, a marca e o resultado
+   grande (o que o lead precisa ver); à direita, o card com os controles, em
+   contadores e botões de escolha (melhores no toque que slider). Tudo cabe
+   numa tela a partir de 1280×720. Cores do logo: coral → teal. */
 :root {
   color-scheme: light;
-  --bg: #f6f6f6;
-  --card: #ffffff;
-  --ink: #333333;
-  --ink-2: #4a4a4a;
-  --muted: #69727d;
-  --line: #e6e6e6;
-  --coral: #e23d59;
-  --coral-dark: #c92e49;
-  --coral-wash: #fdeef1;
-  --teal: #24757f;
-  --teal-2: #2a8995;
-  --teal-light: #aadbe1;
-  --teal-deep: #1b5d65;
-  --title: "Poppins", "Raleway", system-ui, sans-serif;
-  --body: "Raleway", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --label: "Barlow", "Raleway", system-ui, sans-serif;
+  --coral: #f2405a;
+  --coral-2: #e02e4a;
+  --coral-3: #b81f3a;
+  --coral-wash: #fff1f3;
+  --coral-line: #ffd3da;
+  --teal: #0a9497;
+  --teal-deep: #073f44;
+  --ink: #2c2230;
+  --ink-2: #6b5a63;
+  --muted: #9a8a92;
+  --line: #f1e6e9;
+  --title: "Poppins", "Nunito", system-ui, sans-serif;
+  --ui: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); -webkit-font-smoothing: antialiased; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 100vh; min-height: 100dvh; }
+body { margin: 0; font-family: var(--ui); color: #fff; -webkit-font-smoothing: antialiased; background: var(--teal-deep); overflow: hidden; }
 button, input { font: inherit; color: inherit; }
-button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--teal-light); outline-offset: 2px; border-radius: 10px; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid #ffd3da; outline-offset: 3px; border-radius: 12px; }
 
-/* barra do topo */
-.top { background: var(--teal); color: #fff; padding: max(10px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) 10px max(20px, env(safe-area-inset-left, 0px)); display: flex; align-items: center; gap: 18px; }
-.top img { height: clamp(34px, 5.2vh, 52px); width: auto; display: block; }
-.top h1 { margin: 0; font-family: var(--title); font-weight: 600; font-size: clamp(18px, 2.6vh, 26px); line-height: 1.1; }
-.top h1 small { display: block; font-family: var(--body); font-weight: 500; font-size: clamp(12px, 1.6vh, 15px); color: rgba(255, 255, 255, 0.8); }
-.top .sp { flex: 1; }
-.modo { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, 0.18); }
-.modo button { border: 0; background: transparent; color: rgba(255, 255, 255, 0.85); padding: 7px 14px; border-radius: 999px; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; }
-.modo button[aria-pressed="true"] { background: #fff; color: var(--teal); }
-.icone { border: 1px solid rgba(255, 255, 255, 0.4); background: transparent; color: #fff; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; }
-.icone:hover { background: rgba(255, 255, 255, 0.12); }
+/* fundo: teal profundo com a estrela do logo em coral, grande e cortada */
+.fundo { position: fixed; inset: 0; z-index: 0; overflow: hidden; background:
+  radial-gradient(1200px 800px at 15% 110%, rgba(242, 64, 90, 0.35), transparent 60%),
+  radial-gradient(900px 700px at 0% 0%, rgba(10, 148, 151, 0.45), transparent 60%),
+  linear-gradient(135deg, #0b5d63 0%, #073f44 55%, #062f33 100%); }
+.fundo svg { position: absolute; }
+.fundo .estrela-a { width: 1100px; left: -260px; bottom: -330px; opacity: 0.22; }
+.fundo .estrela-b { width: 420px; left: 40%; top: -200px; opacity: 0.05; }
 
-/* corpo: entradas à esquerda, resultado à direita */
-.palco { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(14px, 2vw, 28px); padding: clamp(14px, 2.4vh, 28px) max(20px, env(safe-area-inset-right, 0px)) clamp(10px, 1.6vh, 18px) max(20px, env(safe-area-inset-left, 0px)); min-height: 0; }
-.col { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: clamp(12px, 2vh, 20px); min-height: 0; }
-.card { background: var(--card); border-radius: 22px; padding: clamp(16px, 2.6vh, 28px) clamp(18px, 2vw, 30px); box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06); border: 1px solid var(--line); display: grid; gap: clamp(10px, 1.8vh, 18px); }
-.tag { justify-self: start; font-family: var(--title); font-weight: 600; font-size: clamp(12px, 1.6vh, 14px); color: #fff; background: var(--coral); padding: 5px 12px; border-radius: 8px; }
-.tag.teal { background: var(--teal); }
-.campos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1.4vw, 18px); }
+.palco { position: relative; z-index: 1; height: 100vh; height: 100dvh; display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: clamp(20px, 3vw, 56px); align-items: center; padding: clamp(18px, 3.4vh, 40px) clamp(20px, 3.6vw, 64px) clamp(18px, 3.4vh, 40px) clamp(24px, 4.6vw, 88px); }
+
+/* lado da marca */
+.marca { display: grid; gap: clamp(8px, 1.8vh, 24px); align-content: center; min-width: 0; }
+.logo { width: clamp(96px, 15vh, 190px); height: auto; display: block; }
+.rotulo { font-weight: 800; letter-spacing: 0.32em; text-transform: uppercase; font-size: clamp(12px, 1.6vh, 16px); color: rgba(255, 255, 255, 0.78); }
+.marca h1 { margin: 0; font-family: var(--title); font-weight: 700; font-size: clamp(26px, 4.6vh, 54px); line-height: 1.06; letter-spacing: -0.015em; max-width: 14ch; }
+.marca h1 em { font-style: normal; color: #ffb3bf; }
+.resultado { display: grid; gap: 4px; margin-top: clamp(4px, 1vh, 12px); }
+.grande { font-family: var(--title); font-weight: 800; font-size: clamp(60px, 13.5vh, 168px); line-height: 0.92; letter-spacing: -0.035em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.grande .mais { color: var(--coral); }
+.grande .rs { font-size: 0.42em; letter-spacing: -0.01em; vertical-align: 0.62em; margin-right: 0.08em; }
+.por { font-weight: 800; font-size: clamp(18px, 3vh, 32px); color: rgba(255, 255, 255, 0.85); line-height: 1.1; }
+.fatos { display: flex; flex-wrap: nowrap; gap: clamp(8px, 1.2vh, 12px); margin-top: clamp(6px, 1.6vh, 18px); }
+.fato { display: grid; padding: clamp(7px, 1.2vh, 14px) clamp(10px, 1vw, 18px); border-radius: 16px; background: rgba(255, 255, 255, 0.09); border: 1px solid rgba(255, 255, 255, 0.16); backdrop-filter: blur(6px); min-width: 0; }
+.fato b { font-family: var(--title); font-weight: 700; font-size: clamp(16px, 2.8vh, 30px); white-space: nowrap; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.fato span { font-size: clamp(12px, 1.6vh, 15px); font-weight: 700; color: rgba(255, 255, 255, 0.72); }
+.fato.destaque { background: var(--coral); border-color: var(--coral); box-shadow: 0 10px 30px rgba(242, 64, 90, 0.35); }
+.fato.destaque span { color: rgba(255, 255, 255, 0.92); }
+.barras { display: grid; gap: 8px; max-width: 560px; margin-top: clamp(4px, 1.4vh, 16px); }
+.barra { display: grid; grid-template-columns: clamp(92px, 9vw, 130px) minmax(0, 1fr) auto; gap: 12px; align-items: center; font-size: clamp(12px, 1.7vh, 15px); font-weight: 800; color: rgba(255, 255, 255, 0.8); }
+.trilho { height: clamp(10px, 1.6vh, 16px); border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; display: flex; }
+.trilho i { display: block; height: 100%; transition: width 0.6s cubic-bezier(.2, .8, .2, 1); }
+.trilho .base { background: rgba(255, 255, 255, 0.7); }
+.trilho .extra { background: var(--coral); }
+.barra b { font-family: var(--title); font-weight: 600; font-variant-numeric: tabular-nums; color: #fff; white-space: nowrap; }
+.teclas { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-size: clamp(12px, 1.6vh, 15px); font-weight: 800; color: rgba(255, 255, 255, 0.7); margin-top: clamp(2px, 1vh, 12px); }
+kbd { font-family: var(--ui); font-weight: 900; font-size: 0.86em; color: #fff; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.35); border-bottom-width: 3px; border-radius: 7px; padding: 1px 7px; margin-right: 6px; }
+
+/* card dos controles, com moldura coral */
+.moldura { padding: clamp(8px, 1.2vh, 14px); border-radius: 34px; background: linear-gradient(160deg, var(--coral) 0%, var(--coral-2) 55%, var(--coral-3) 100%); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35); min-width: 0; }
+.card { background: #fff; color: var(--ink); border-radius: 26px; padding: clamp(18px, 3vh, 34px) clamp(18px, 2.4vw, 40px); display: grid; gap: clamp(12px, 2.2vh, 22px); }
+.linha-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.card h2 { margin: 0; font-family: var(--title); font-weight: 700; font-size: clamp(20px, 3.2vh, 32px); color: var(--ink); line-height: 1.1; }
+.card h2 small { display: block; font-family: var(--ui); font-weight: 700; font-size: clamp(12px, 1.6vh, 15px); color: var(--muted); }
+.segmento { display: inline-flex; padding: 4px; border-radius: 14px; background: var(--coral-wash); border: 1px solid var(--coral-line); gap: 2px; }
+.segmento button { border: 0; background: transparent; padding: clamp(6px, 1vh, 9px) clamp(10px, 1vw, 15px); border-radius: 10px; font-weight: 900; font-size: clamp(13px, 1.75vh, 16px); color: var(--ink-2); white-space: nowrap; transition: background 0.15s, color 0.15s; }
+.segmento button:hover { color: var(--coral-2); }
+.segmento button[aria-pressed="true"] { background: var(--coral-2); color: #fff; box-shadow: 0 4px 10px rgba(224, 46, 74, 0.3); }
+.campos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1.2vw, 16px); }
 .campo { display: grid; gap: 6px; min-width: 0; }
-.campo label { font-family: var(--label); font-weight: 600; font-size: clamp(11.5px, 1.5vh, 14px); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.campo .num { display: grid; grid-template-columns: 38px minmax(0, 1fr) 38px; align-items: center; border: 2px solid var(--line); border-radius: 16px; background: var(--bg); overflow: hidden; }
-.campo .num:focus-within { border-color: var(--teal); background: #fff; }
-.campo .num button { height: 100%; min-height: clamp(48px, 7vh, 66px); border: 0; background: transparent; font-size: 22px; font-weight: 600; color: var(--teal); cursor: pointer; }
-.campo .num button:hover { background: rgba(36, 117, 127, 0.08); }
-.campo input { width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; font-family: var(--title); font-weight: 600; font-size: clamp(22px, 3.6vh, 36px); font-variant-numeric: tabular-nums; padding: 0; }
-.campo input:focus { outline: none; }
-.campo .ajuda { font-size: clamp(11.5px, 1.5vh, 13.5px); color: var(--muted); min-height: 1.2em; }
+.campo label { font-weight: 900; font-size: clamp(13px, 1.8vh, 16px); color: var(--ink); }
+.stepper { display: grid; grid-template-columns: clamp(34px, 3vw, 46px) minmax(0, 1fr) clamp(34px, 3vw, 46px); align-items: center; height: clamp(54px, 8.6vh, 82px); border-radius: 18px; background: var(--coral-wash); border: 2px solid var(--coral-line); overflow: hidden; transition: border-color 0.15s, background 0.15s; }
+.stepper:focus-within { border-color: var(--coral); background: #fff; }
+.stepper button { height: 100%; border: 0; background: transparent; font-family: var(--title); font-weight: 600; font-size: clamp(22px, 3.4vh, 32px); color: var(--coral-2); line-height: 1; touch-action: manipulation; }
+.stepper button:hover { background: rgba(242, 64, 90, 0.08); }
+.stepper button:active { background: rgba(242, 64, 90, 0.16); }
+.stepper .valor { display: flex; align-items: baseline; justify-content: center; gap: 2px; min-width: 0; }
+.stepper .pre, .stepper .pos { font-family: var(--title); font-weight: 700; font-size: clamp(13px, 2vh, 18px); color: var(--coral-3); flex: none; }
+.stepper input { width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; font-family: var(--title); font-weight: 800; font-size: clamp(24px, 4.2vh, 42px); color: var(--coral-2); padding: 0; font-variant-numeric: tabular-nums; }
+.stepper input:focus { outline: none; }
+.ajuda { font-size: clamp(11.5px, 1.5vh, 13.5px); font-weight: 700; color: var(--muted); }
+.sep { height: 1px; background: var(--line); }
+.alavancas { display: grid; gap: clamp(10px, 1.8vh, 16px); }
+.alavanca { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: center; }
+.alavanca .nome { font-weight: 900; font-size: clamp(14px, 2vh, 18px); color: var(--ink); line-height: 1.2; }
+.alavanca .nome small { display: block; font-weight: 700; font-size: clamp(12px, 1.55vh, 14px); color: var(--muted); }
 body:not(.modo-b) .so-b { display: none !important; }
 body.modo-b .so-a { display: none !important; }
 
-/* alavancas */
-.alavancas { align-content: space-evenly; }
-.alavanca { display: grid; gap: 8px; }
-.alavanca .linha { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.alavanca .nome { font-weight: 600; font-size: clamp(15px, 2.3vh, 22px); }
-.alavanca .valor { font-family: var(--title); font-weight: 700; font-size: clamp(24px, 4.4vh, 46px); color: var(--coral); font-variant-numeric: tabular-nums; }
-input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 34px; background: transparent; cursor: pointer; }
-input[type="range"]::-webkit-slider-runnable-track { height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--coral) var(--p, 20%), #ececec var(--p, 20%)); }
-input[type="range"]::-moz-range-track { height: 10px; border-radius: 999px; background: #ececec; }
-input[type="range"]::-moz-range-progress { height: 10px; border-radius: 999px; background: var(--coral); }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: -10px; border-radius: 50%; background: #fff; border: 4px solid var(--coral); box-shadow: 0 4px 12px rgba(226, 61, 89, 0.35); }
-input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 4px solid var(--coral); }
-.marcas { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-top: -4px; }
+.cta { border: 0; width: 100%; border-radius: 20px; padding: clamp(14px, 2.4vh, 22px) 18px; background: var(--coral-2); color: #fff; font-family: var(--title); font-weight: 800; font-size: clamp(16px, 2.6vh, 26px); letter-spacing: 0.06em; text-transform: uppercase; box-shadow: 0 8px 0 var(--coral-3), 0 18px 30px rgba(184, 31, 58, 0.3); transition: transform 0.08s, box-shadow 0.08s, background 0.15s; margin-bottom: 8px; }
+.cta:hover { background: var(--coral); }
+.cta:active { transform: translateY(6px); box-shadow: 0 2px 0 var(--coral-3), 0 8px 16px rgba(184, 31, 58, 0.3); }
+.nota { font-size: clamp(11px, 1.45vh, 13px); font-weight: 700; color: var(--muted); text-align: center; margin-top: -4px; }
 
-/* resultado */
-.resultado { background: var(--teal); color: #fff; border-color: var(--teal); position: relative; overflow: hidden; align-content: space-between; }
-.resultado::after { content: ""; position: absolute; right: -120px; bottom: -160px; width: 420px; height: 420px; border-radius: 50%; border: 60px solid rgba(255, 255, 255, 0.05); pointer-events: none; }
-.resultado .tag { background: #fff; color: var(--teal); }
-.ganho { display: grid; gap: 2px; }
-.ganho .rot { font-family: var(--label); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; font-size: clamp(12px, 1.7vh, 15px); color: var(--teal-light); }
-.ganho .grande { font-family: var(--title); font-weight: 700; font-size: clamp(48px, 12vh, 136px); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.ganho .grande small { font-size: 0.34em; font-weight: 600; letter-spacing: 0; color: rgba(255, 255, 255, 0.82); }
-.ganho .ano { font-family: var(--title); font-weight: 600; font-size: clamp(20px, 3.8vh, 42px); font-variant-numeric: tabular-nums; }
-.ganho .ano b { font-weight: 600; }
-.ganho .ano span { color: var(--teal-light); font-weight: 500; font-size: 0.6em; }
-.barras { display: grid; gap: clamp(8px, 1.4vh, 12px); position: relative; z-index: 1; }
-.barra { display: grid; gap: 4px; }
-.barra .cab { display: flex; justify-content: space-between; gap: 12px; font-size: clamp(13px, 1.9vh, 17px); }
-.barra .cab b { font-family: var(--title); font-weight: 600; font-variant-numeric: tabular-nums; }
-.barra .trilho { height: clamp(18px, 3.4vh, 36px); border-radius: 8px; background: rgba(255, 255, 255, 0.12); overflow: hidden; display: flex; }
-.barra .base { background: rgba(255, 255, 255, 0.55); transition: width 0.6s ease; }
-.barra .extra { background: var(--coral); transition: width 0.6s ease; }
-.fatos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(8px, 1.2vw, 14px); position: relative; z-index: 1; }
-.fato { background: rgba(0, 0, 0, 0.16); border-radius: 16px; padding: clamp(12px, 2.2vh, 24px) clamp(14px, 1.4vw, 22px); display: grid; gap: 2px; }
-.fato .v { font-family: var(--title); font-weight: 700; font-size: clamp(22px, 4.2vh, 46px); line-height: 1.1; font-variant-numeric: tabular-nums; }
-.fato .r { font-size: clamp(12px, 1.7vh, 15px); color: rgba(255, 255, 255, 0.82); }
-.fato.destaque { background: var(--coral); }
-.fato.destaque .r { color: rgba(255, 255, 255, 0.92); }
+.tela { position: fixed; z-index: 3; top: max(14px, env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); border: 0; background: #fff; color: var(--ink); font-weight: 900; font-size: 14px; padding: 9px 16px; border-radius: 999px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
+.tela:hover { color: var(--coral-2); }
+.toast { position: fixed; z-index: 4; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(16px); background: #fff; color: var(--ink); font-weight: 900; padding: 11px 20px; border-radius: 999px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3); opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-.rodape { padding: 0 max(20px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); font-size: clamp(11px, 1.45vh, 13px); color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: space-between; }
-
-@media (max-width: 1000px), (max-aspect-ratio: 1/1) {
-  body { display: block; min-height: 0; }
-  .palco { grid-template-columns: minmax(0, 1fr); }
-  .top { flex-wrap: wrap; }
-  .top .sp { display: none; }
+@media (max-height: 860px) and (min-width: 1081px) { .teclas { display: none; } .rotulo { margin-top: -4px; } }
+@media (max-width: 1080px), (max-aspect-ratio: 1/1) {
+  body { overflow: auto; }
+  .palco { height: auto; min-height: 100vh; grid-template-columns: minmax(0, 1fr); align-items: start; padding: 72px 18px 28px; }
+  .teclas { display: none; }
 }
 @media (max-width: 640px) {
-  .modo { display: flex; width: 100%; }
-  .modo button { flex: 1; white-space: normal; line-height: 1.2; padding: 8px 10px; }
   .campos { grid-template-columns: minmax(0, 1fr); }
-  .fatos { grid-template-columns: minmax(0, 1fr); }
-  .icone.tela { display: none; }
+  .alavanca { grid-template-columns: minmax(0, 1fr); }
+  .segmento { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); width: 100%; }
+  .segmento button { white-space: normal; padding: 8px 4px; font-size: 13px; line-height: 1.15; }
+  .grande { font-size: 64px; }
+  .tela { display: none; }
+  .fatos { flex-wrap: wrap; }
 }
-@media (prefers-reduced-motion: reduce) { .barra .base, .barra .extra { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .trilho i, .cta, .segmento button { transition: none; } }
 </style>
 </head>
 <body>
-<header class="top">
-  <img src="/marca/a5e-logo.webp" alt="Anfitrião 5 Estrelas" width="480" height="183">
-  <h1>Calculadora de Ganhos<small>quanto o seu imóvel pode render a mais</small></h1>
-  <span class="sp"></span>
-  <div class="modo" role="group" aria-label="Situação do imóvel">
-    <button type="button" data-modo="a" aria-pressed="true">Já alugo por temporada</button>
-    <button type="button" data-modo="b" aria-pressed="false">Aluguel fixo ou ainda não alugo</button>
-  </div>
-  <button type="button" class="icone tela" id="tela" aria-label="Tela cheia">⛶ Tela cheia</button>
-</header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="estrela-forma">
+      <path d="M95.7 0 L103.5 23 L129 23.8 L113.5 35.2 Q95.7 25 77.5 35.2 L63 23.6 L88 23 Z"/>
+      <path d="M65 112.5 L127 112.5 Q128.6 112.5 129.2 114.2 L145 166 L96 135 L47 166 L62.8 114.2 Q63.4 112.5 65 112.5 Z"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="fundo" aria-hidden="true">
+  <svg class="estrela-a" viewBox="0 0 192 166"><use href="#estrela-forma" fill="#f2405a"/></svg>
+  <svg class="estrela-b" viewBox="0 0 192 166"><use href="#estrela-forma" fill="#ffffff"/></svg>
+</div>
+
+<button type="button" class="tela" id="tela" aria-label="Tela cheia">⛶ Tela cheia</button>
 
 <main class="palco">
-  <div class="col">
-    <section class="card" aria-labelledby="hoje">
-      <span class="tag teal" id="hoje"><span class="so-a">Seu imóvel hoje</span><span class="so-b">Seu imóvel</span></span>
+  <section class="marca" aria-live="polite">
+    <svg class="logo" viewBox="0 0 192 166" role="img" aria-label="Canal do Anfitrião">
+      <g fill="#fff">
+        <use href="#estrela-forma"/>
+        <text x="96" y="57" text-anchor="middle" font-family="Damion, 'Brush Script MT', cursive" font-size="25">Canal do</text>
+        <text x="96" y="104" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="500" font-size="45" letter-spacing="-1.5">Anfitrião</text>
+      </g>
+    </svg>
+    <div class="rotulo">Calculadora de ganhos</div>
+    <h1>Quanto o seu imóvel pode <em>render a mais</em></h1>
+    <div class="resultado">
+      <div class="grande" id="ganho-mes"><span class="mais">+</span><span class="rs">R$</span>0</div>
+      <div class="por">por mês, com o que você aprende</div>
+    </div>
+    <div class="fatos">
+      <div class="fato"><b id="ganho-ano">+R$ 0</b><span>por ano</span></div>
+      <div class="fato"><b id="tres-anos">+R$ 0</b><span>em 3 anos</span></div>
+      <div class="fato destaque"><b id="paga">—</b><span id="paga-r">de ganho extra pagam o investimento</span></div>
+    </div>
+    <div class="barras" aria-hidden="true">
+      <div class="barra"><span id="rot-hoje">Hoje</span><div class="trilho"><i class="base" id="b-hoje"></i></div><b id="fat-hoje">R$ 0</b></div>
+      <div class="barra"><span id="rot-novo">Com os ajustes</span><div class="trilho"><i class="base" id="b-novo-base"></i><i class="extra" id="b-novo-extra"></i></div><b id="fat-novo">R$ 0</b></div>
+    </div>
+    <div class="teclas"><span><kbd>F</kbd>tela cheia</span><span><kbd>Esc</kbd>sair</span><span><kbd>C</kbd>copiar simulação</span></div>
+  </section>
+
+  <section class="moldura">
+    <div class="card">
+      <div class="linha-topo">
+        <h2>O seu imóvel<small class="so-a">como está hoje</small><small class="so-b">na temporada</small></h2>
+        <div class="segmento" role="group" aria-label="Situação do imóvel">
+          <button type="button" data-modo="a" aria-pressed="true">Já alugo por temporada</button>
+          <button type="button" data-modo="b" aria-pressed="false">Aluguel fixo ou parado</button>
+        </div>
+      </div>
+
       <div class="campos">
         <div class="campo">
           <label for="diaria"><span class="so-a">Diária média</span><span class="so-b">Diária que espera</span></label>
-          <div class="num"><button type="button" data-passo="diaria:-10" aria-label="Diminuir a diária">−</button><input id="diaria" inputmode="numeric" autocomplete="off" value="250"><button type="button" data-passo="diaria:10" aria-label="Aumentar a diária">+</button></div>
-          <span class="ajuda">em R$, por noite</span>
+          <div class="stepper"><button type="button" data-passo="diaria:-10" aria-label="Diminuir a diária">−</button><div class="valor"><span class="pre">R$</span><input id="diaria" inputmode="numeric" autocomplete="off" value="250"></div><button type="button" data-passo="diaria:10" aria-label="Aumentar a diária">+</button></div>
+          <span class="ajuda">por noite</span>
         </div>
         <div class="campo">
-          <label for="noites"><span class="so-a">Noites ocupadas</span><span class="so-b">Noites que espera</span></label>
-          <div class="num"><button type="button" data-passo="noites:-1" aria-label="Menos noites">−</button><input id="noites" inputmode="numeric" autocomplete="off" value="15"><button type="button" data-passo="noites:1" aria-label="Mais noites">+</button></div>
-          <span class="ajuda">por mês (até 30)</span>
+          <label for="ocupacao"><span class="so-a">Taxa de ocupação</span><span class="so-b">Ocupação que espera</span></label>
+          <div class="stepper"><button type="button" data-passo="ocupacao:-5" aria-label="Menos ocupação">−</button><div class="valor"><input id="ocupacao" inputmode="numeric" autocomplete="off" value="50"><span class="pos">%</span></div><button type="button" data-passo="ocupacao:5" aria-label="Mais ocupação">+</button></div>
+          <span class="ajuda" id="noites-ajuda">15 noites por mês</span>
         </div>
-        <div class="campo">
+        <div class="campo so-a">
           <label for="imoveis">Imóveis</label>
-          <div class="num"><button type="button" data-passo="imoveis:-1" aria-label="Menos imóveis">−</button><input id="imoveis" inputmode="numeric" autocomplete="off" value="1"><button type="button" data-passo="imoveis:1" aria-label="Mais imóveis">+</button></div>
+          <div class="stepper"><button type="button" data-passo="imoveis:-1" aria-label="Menos imóveis">−</button><div class="valor"><input id="imoveis" inputmode="numeric" autocomplete="off" value="1"></div><button type="button" data-passo="imoveis:1" aria-label="Mais imóveis">+</button></div>
           <span class="ajuda">com números parecidos</span>
         </div>
-      </div>
-      <div class="campos so-b">
-        <div class="campo">
+        <div class="campo so-b">
           <label for="fixo">Aluguel fixo hoje</label>
-          <div class="num"><button type="button" data-passo="fixo:-100" aria-label="Diminuir o aluguel">−</button><input id="fixo" inputmode="numeric" autocomplete="off" value="1800"><button type="button" data-passo="fixo:100" aria-label="Aumentar o aluguel">+</button></div>
-          <span class="ajuda">em R$ por mês, por imóvel (0 se está parado ou em obra)</span>
+          <div class="stepper"><button type="button" data-passo="fixo:-100" aria-label="Diminuir o aluguel">−</button><div class="valor"><span class="pre">R$</span><input id="fixo" inputmode="numeric" autocomplete="off" value="1800"></div><button type="button" data-passo="fixo:100" aria-label="Aumentar o aluguel">+</button></div>
+          <span class="ajuda">por mês (0 se está parado)</span>
         </div>
       </div>
-    </section>
 
-    <section class="card alavancas" aria-labelledby="aprende">
-      <span class="tag" id="aprende">Com o que você aprende na comunidade</span>
-      <div class="alavanca">
-        <div class="linha"><label class="nome" for="mais-diaria">Diária mais alta (anúncio e preço certos)</label><span class="valor" id="v-mais-diaria">+10%</span></div>
-        <input type="range" id="mais-diaria" min="0" max="50" step="5" value="10">
-        <div class="marcas"><span>0%</span><span>+25%</span><span>+50%</span></div>
-      </div>
-      <div class="alavanca">
-        <div class="linha"><label class="nome" for="mais-noites">Noites a mais por mês (algoritmo e 5 estrelas)</label><span class="valor" id="v-mais-noites">+2</span></div>
-        <input type="range" id="mais-noites" min="0" max="15" step="1" value="2">
-        <div class="marcas"><span>0</span><span>+7</span><span>+15</span></div>
-      </div>
-    </section>
-  </div>
+      <div class="sep"></div>
 
-  <section class="card resultado" aria-live="polite" aria-labelledby="res">
-    <span class="tag" id="res">Quanto entra a mais</span>
-    <div class="ganho">
-      <span class="rot">Por mês</span>
-      <span class="grande" id="ganho-mes">+R$ 0</span>
-      <span class="ano"><b id="ganho-ano">+R$ 0</b> <span>por ano</span></span>
-    </div>
-    <div class="barras">
-      <div class="barra">
-        <div class="cab"><span id="rot-hoje">Hoje</span><b id="fat-hoje">R$ 0/mês</b></div>
-        <div class="trilho"><span class="base" id="b-hoje"></span></div>
+      <div class="alavancas">
+        <h2 style="font-size:clamp(17px,2.6vh,24px)">Com o que você aprende<small>anúncio, preço certo, algoritmo e 5 estrelas</small></h2>
+        <div class="alavanca">
+          <div class="nome">Diária mais alta<small>anúncio que converte e preço certo</small></div>
+          <div class="segmento" role="group" aria-label="Aumento da diária" id="seg-diaria">
+            <button type="button" data-v="0" aria-pressed="false">0%</button><button type="button" data-v="5" aria-pressed="false">+5%</button><button type="button" data-v="10" aria-pressed="true">+10%</button><button type="button" data-v="15" aria-pressed="false">+15%</button><button type="button" data-v="20" aria-pressed="false">+20%</button><button type="button" data-v="30" aria-pressed="false">+30%</button>
+          </div>
+        </div>
+        <div class="alavanca">
+          <div class="nome">Ocupação maior<small>algoritmo e avaliações</small></div>
+          <div class="segmento" role="group" aria-label="Aumento da ocupação" id="seg-ocupacao">
+            <button type="button" data-v="0" aria-pressed="false">0</button><button type="button" data-v="5" aria-pressed="true">+5 pts</button><button type="button" data-v="10" aria-pressed="false">+10 pts</button><button type="button" data-v="15" aria-pressed="false">+15 pts</button><button type="button" data-v="20" aria-pressed="false">+20 pts</button>
+          </div>
+        </div>
       </div>
-      <div class="barra">
-        <div class="cab"><span id="rot-novo">Com os ajustes</span><b id="fat-novo">R$ 0/mês</b></div>
-        <div class="trilho"><span class="base" id="b-novo-base"></span><span class="extra" id="b-novo-extra"></span></div>
-      </div>
-    </div>
-    <div class="fatos">
-      <div class="fato destaque"><span class="v" id="paga">—</span><span class="r" id="paga-r">pra ganhar de volta o investimento</span></div>
-      <div class="fato"><span class="v" id="tres-anos">+R$ 0</span><span class="r">a mais em 3 anos</span></div>
+
+      <button type="button" class="cta" id="copiar">Copiar simulação pro lead</button>
+      <div class="nota">Simulação com os números informados. Faturamento bruto, antes de taxas e custos. Não é promessa de resultado.</div>
     </div>
   </section>
 </main>
 
-<footer class="rodape">
-  <span>Simulação com os números informados: faturamento bruto, antes de taxas e custos. Não é promessa de resultado.</span>
-  <span id="inv-rot">Investimento considerado: R$ 2.997</span>
-</footer>
+<div class="toast" id="toast" role="status"></div>
 
 <script>
 (function () {
   var params = new URLSearchParams(location.search);
   var INVEST = Math.max(0, Number(params.get('investimento')) || 2997);
-  var el = function (id) { return document.getElementById(id); };
-  var campos = { diaria: el('diaria'), noites: el('noites'), imoveis: el('imoveis'), fixo: el('fixo') };
-  var limites = { diaria: [0, 100000], noites: [0, 30], imoveis: [1, 500], fixo: [0, 1000000] };
-  var maisDiaria = el('mais-diaria');
-  var maisNoites = el('mais-noites');
-  var modo = 'a';
-  var brl0 = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  var $ = function (id) { return document.getElementById(id); };
+  var campos = { diaria: $('diaria'), ocupacao: $('ocupacao'), imoveis: $('imoveis'), fixo: $('fixo') };
+  var limites = { diaria: [0, 100000], ocupacao: [0, 100], imoveis: [1, 500], fixo: [0, 1000000] };
+  var modo = 'a', maisDiaria = 10, maisOcup = 5;
+  var brl = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
   var reduz = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function numero(s) { var n = Number(String(s).replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '')); return isFinite(n) ? n : 0; }
   function lim(k, v) { var l = limites[k]; return Math.min(l[1], Math.max(l[0], Math.round(v))); }
   function ler(k) { return lim(k, numero(campos[k].value)); }
-  function moeda(v) { return brl0.format(Math.round(v)); }
-  function mostrarCampo(k) { campos[k].value = k === 'noites' || k === 'imoveis' ? String(ler(k)) : ler(k).toLocaleString('pt-BR'); }
+  function moeda(v) { return 'R$ ' + brl.format(Math.round(v)); }
+  function mostra(k) { campos[k].value = (k === 'diaria' || k === 'fixo') ? brl.format(ler(k)) : String(ler(k)); }
 
-  // carrega da URL (link da simulação pode ir pro lead depois da visita)
-  ['diaria', 'noites', 'imoveis', 'fixo'].forEach(function (k) { if (params.has(k)) campos[k].value = params.get(k); mostrarCampo(k); });
-  if (params.has('mais_diaria')) maisDiaria.value = params.get('mais_diaria');
-  if (params.has('mais_noites')) maisNoites.value = params.get('mais_noites');
+  ['diaria', 'ocupacao', 'imoveis', 'fixo'].forEach(function (k) { if (params.has(k)) campos[k].value = params.get(k); mostra(k); });
+  if (params.has('mais_diaria')) maisDiaria = Number(params.get('mais_diaria')) || 0;
+  if (params.has('mais_ocupacao')) maisOcup = Number(params.get('mais_ocupacao')) || 0;
   if (params.get('modo') === 'b') modo = 'b';
-  el('inv-rot').textContent = 'Investimento considerado: ' + moeda(INVEST);
 
-  // números animados (o "dinheirinho subindo")
-  var atuais = {};
-  function animar(id, alvo, fmt) {
-    var de = atuais[id] == null ? 0 : atuais[id];
-    atuais[id] = alvo;
-    var node = el(id);
-    if (reduz || de === alvo) { node.textContent = fmt(alvo); return; }
-    var t0 = null, dur = 650;
-    function passo(t) {
+  // o número grande sobe animado ("o dinheirinho subindo")
+  var atual = {};
+  function anima(id, alvo, fmt) {
+    var de = atual[id] == null ? 0 : atual[id];
+    atual[id] = alvo;
+    var el = $(id);
+    if (reduz || de === alvo) { el.innerHTML = fmt(alvo); return; }
+    var t0 = null, dur = 700;
+    (function passo(t) {
       if (t0 === null) t0 = t;
-      var k = Math.min(1, (t - t0) / dur);
-      var e = 1 - Math.pow(1 - k, 3);
-      node.textContent = fmt(de + (alvo - de) * e);
-      if (k < 1 && atuais[id] === alvo) requestAnimationFrame(passo);
-    }
-    requestAnimationFrame(passo);
+      var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.innerHTML = fmt(de + (alvo - de) * e);
+      if (k < 1 && atual[id] === alvo) requestAnimationFrame(passo);
+    })(performance.now());
   }
-
   function prazo(dias) {
     if (!isFinite(dias) || dias <= 0) return '—';
-    if (dias <= 60) return Math.ceil(dias) + (Math.ceil(dias) === 1 ? ' dia' : ' dias');
+    if (dias <= 60) { var d = Math.ceil(dias); return d + (d === 1 ? ' dia' : ' dias'); }
     var m = dias / 30;
     return (m < 10 ? m.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : Math.round(m)) + ' meses';
   }
+  function marca(seg, v) { seg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(Number(b.dataset.v) === v)); }); }
 
-  function calcular() {
-    var d = ler('diaria'), n = ler('noites'), i = ler('imoveis'), f = ler('fixo');
-    var pd = Number(maisDiaria.value) / 100, pn = Number(maisNoites.value);
-    var hoje, novo;
-    if (modo === 'a') {
-      hoje = d * n * i;
-      novo = d * (1 + pd) * Math.min(30, n + pn) * i;
-      el('rot-hoje').textContent = 'Hoje';
-      el('rot-novo').textContent = 'Com os ajustes';
-    } else {
-      hoje = f * i;
-      novo = d * (1 + pd) * Math.min(30, n + pn) * i;
-      el('rot-hoje').textContent = 'Aluguel fixo';
-      el('rot-novo').textContent = 'Na temporada, com o que aprende';
-    }
-    var ganho = Math.max(0, novo - hoje);
-    var perda = novo < hoje;
-    animar('ganho-mes', ganho, function (v) { return '+' + moeda(v); });
-    animar('ganho-ano', ganho * 12, function (v) { return '+' + moeda(v); });
-    animar('tres-anos', ganho * 36, function (v) { return '+' + moeda(v); });
-    el('fat-hoje').textContent = moeda(hoje) + '/mês';
-    el('fat-novo').textContent = moeda(novo) + '/mês';
-    var topo = Math.max(hoje, novo, 1);
-    el('b-hoje').style.width = (hoje / topo * 100) + '%';
-    el('b-novo-base').style.width = (Math.min(hoje, novo) / topo * 100) + '%';
-    el('b-novo-extra').style.width = (ganho / topo * 100) + '%';
-    var dias = ganho > 0 ? INVEST / (ganho / 30) : Infinity;
-    el('paga').textContent = perda ? 'Ajuste os números' : prazo(dias);
-    el('paga-r').textContent = perda ? 'nesses números a temporada fica abaixo do aluguel fixo' : 'de ganho extra pagam o investimento';
-    el('v-mais-diaria').textContent = '+' + maisDiaria.value + '%';
-    el('v-mais-noites').textContent = '+' + maisNoites.value;
-    [maisDiaria, maisNoites].forEach(function (r) { r.style.setProperty('--p', ((r.value - r.min) / (r.max - r.min) * 100) + '%'); });
-    var q = new URLSearchParams({ modo: modo, diaria: d, noites: n, imoveis: i, mais_diaria: maisDiaria.value, mais_noites: maisNoites.value });
-    if (modo === 'b') q.set('fixo', f);
+  function link() {
+    var q = new URLSearchParams({ modo: modo, diaria: ler('diaria'), ocupacao: ler('ocupacao'), mais_diaria: maisDiaria, mais_ocupacao: maisOcup });
+    if (modo === 'a') q.set('imoveis', ler('imoveis')); else q.set('fixo', ler('fixo'));
     if (params.has('investimento')) q.set('investimento', INVEST);
-    history.replaceState(null, '', location.pathname + '?' + q.toString());
+    return q;
   }
 
-  function aplicarModo(m) {
+  function calcula() {
+    var d = ler('diaria'), o = ler('ocupacao'), i = modo === 'a' ? ler('imoveis') : 1, f = ler('fixo');
+    var noites = o / 100 * 30, noitesNovo = Math.min(30, (o + maisOcup) / 100 * 30);
+    var novo = d * (1 + maisDiaria / 100) * noitesNovo * i;
+    var hoje = modo === 'a' ? d * noites * i : f;
+    var ganho = Math.max(0, novo - hoje), abaixo = novo < hoje;
+    $('noites-ajuda').textContent = (Math.round(noites * 10) / 10).toLocaleString('pt-BR') + ' noites por mês';
+    anima('ganho-mes', ganho, function (v) { return '<span class="mais">+</span><span class="rs">R$</span>' + brl.format(Math.round(v)); });
+    anima('ganho-ano', ganho * 12, function (v) { return '+' + moeda(v); });
+    anima('tres-anos', ganho * 36, function (v) { return '+' + moeda(v); });
+    $('rot-hoje').textContent = modo === 'a' ? 'Hoje' : 'Aluguel fixo';
+    $('rot-novo').textContent = modo === 'a' ? 'Com os ajustes' : 'Na temporada';
+    $('fat-hoje').textContent = moeda(hoje) + '/mês';
+    $('fat-novo').textContent = moeda(novo) + '/mês';
+    var topo = Math.max(hoje, novo, 1);
+    $('b-hoje').style.width = (hoje / topo * 100) + '%';
+    $('b-novo-base').style.width = (Math.min(hoje, novo) / topo * 100) + '%';
+    $('b-novo-extra').style.width = (ganho / topo * 100) + '%';
+    $('paga').textContent = abaixo ? 'Ajuste os números' : prazo(ganho > 0 ? INVEST / (ganho / 30) : Infinity);
+    $('paga-r').textContent = abaixo ? 'a temporada ficou abaixo do fixo' : 'de ganho extra pagam o investimento';
+    history.replaceState(null, '', location.pathname + '?' + link().toString());
+  }
+
+  function aplicaModo(m) {
     modo = m;
     document.body.classList.toggle('modo-b', m === 'b');
-    document.querySelectorAll('.modo button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.modo === m)); });
-    calcular();
+    document.querySelectorAll('[data-modo]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.modo === m)); });
+    calcula();
   }
 
   Object.keys(campos).forEach(function (k) {
-    campos[k].addEventListener('input', calcular);
-    campos[k].addEventListener('blur', function () { mostrarCampo(k); calcular(); });
+    campos[k].addEventListener('input', calcula);
+    campos[k].addEventListener('blur', function () { mostra(k); calcula(); });
     campos[k].addEventListener('focus', function () { campos[k].select(); });
   });
   document.querySelectorAll('[data-passo]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var p = b.dataset.passo.split(':');
-      campos[p[0]].value = lim(p[0], ler(p[0]) + Number(p[1]));
-      mostrarCampo(p[0]);
-      calcular();
-    });
+    var p = b.dataset.passo.split(':'), k = p[0], passo = Number(p[1]), t = null, r = null, repetiu = false;
+    function um() { campos[k].value = lim(k, ler(k) + passo); mostra(k); calcula(); }
+    b.addEventListener('click', function () { if (repetiu) { repetiu = false; return; } um(); });
+    // segurar o botão repete
+    b.addEventListener('pointerdown', function () { t = setTimeout(function () { repetiu = true; r = setInterval(um, 90); }, 450); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { b.addEventListener(ev, function () { clearTimeout(t); clearInterval(r); }); });
   });
-  [maisDiaria, maisNoites].forEach(function (r) { r.addEventListener('input', calcular); });
-  document.querySelectorAll('.modo button').forEach(function (b) { b.addEventListener('click', function () { aplicarModo(b.dataset.modo); }); });
+  $('seg-diaria').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; maisDiaria = Number(b.dataset.v); marca(this, maisDiaria); calcula(); });
+  $('seg-ocupacao').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; maisOcup = Number(b.dataset.v); marca(this, maisOcup); calcula(); });
+  document.querySelectorAll('[data-modo]').forEach(function (b) { b.addEventListener('click', function () { aplicaModo(b.dataset.modo); }); });
 
-  var tela = el('tela');
-  function rotTela() { tela.textContent = document.fullscreenElement ? '✕ Sair da tela cheia' : '⛶ Tela cheia'; }
-  tela.addEventListener('click', function () {
+  function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('on'); }, 1800); }
+  function copia() {
+    var url = location.origin + location.pathname + '?' + link().toString();
+    var ok = function () { toast('Link da simulação copiado'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(ok, function () { prompt('Copie o link:', url); });
+    else prompt('Copie o link:', url);
+  }
+  $('copiar').addEventListener('click', copia);
+
+  var tela = $('tela');
+  function telaCheia() {
     if (document.fullscreenElement) document.exitFullscreen();
     else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
-  });
-  document.addEventListener('fullscreenchange', rotTela);
+  }
+  tela.addEventListener('click', telaCheia);
+  document.addEventListener('fullscreenchange', function () { tela.textContent = document.fullscreenElement ? '✕ Sair da tela cheia' : '⛶ Tela cheia'; });
   if (!document.documentElement.requestFullscreen) tela.style.display = 'none';
+  document.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'INPUT' || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'f' || e.key === 'F') { e.preventDefault(); telaCheia(); }
+    if (e.key === 'c' || e.key === 'C') { e.preventDefault(); copia(); }
+  });
 
-  aplicarModo(modo);
+  marca($('seg-diaria'), maisDiaria);
+  marca($('seg-ocupacao'), maisOcup);
+  aplicaModo(modo);
 })();
 </script>
 </body>
