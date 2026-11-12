@@ -1090,6 +1090,9 @@ async function garantirTeo(supabase: SupabaseClient, c: Conversa, atendenteId: s
 // Acompanhamento de quem parou de responder: horas desde o começo do silêncio
 // (mesmo dia, D+1, D+3, D+7, D+21). Depois do último, mais 2 dias e a conversa
 // fica "encerrado" (sem_resposta); se a pessoa voltar a escrever, o Téo retoma.
+// Se num acompanhamento o Téo decide não mandar nada ([SEM_RESPOSTA]: a pessoa
+// recusou ou pediu pra não ser chamada), a conversa também fecha
+// (sem_interesse): os modelos das etapas seguintes não saem mais.
 const FOLLOWUP_HORAS_PADRAO = [3, 24, 72, 168, 504];
 const ENCERRAR_DEPOIS_MS = 48 * 3600_000;
 // Entre um acompanhamento e o próximo, no mínimo isto (pra quem já estava
@@ -1335,10 +1338,12 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     let acompanhamento = false;
     const ocioso = ultima ? Date.now() - new Date(ultima.date).getTime() : Infinity;
     if (c.estado === "encerrado") {
-      // Encerrado por falta de resposta: só volta se a pessoa escrever.
+      // Encerrado por falta de resposta ou porque a pessoa recusou: só volta se
+      // ela escrever de novo.
       const voltou = ultima?.senderBy === "contact" && ultima.id !== c.ultima_msg_tratada;
-      if (c.motivo_humano !== "sem_resposta" || !voltou) {
-        await adiar(supabase, c.contact_id, c.motivo_humano === "sem_resposta" ? 2 * 3600_000 : 24 * 3600_000);
+      const retomavel = c.motivo_humano === "sem_resposta" || c.motivo_humano === "sem_interesse";
+      if (!retomavel || !voltou) {
+        await adiar(supabase, c.contact_id, retomavel ? 2 * 3600_000 : 24 * 3600_000);
         return "encerrado";
       }
     }
@@ -1560,18 +1565,21 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       humano = { motivo: "limite", resumo: "O Téo chegou no limite de respostas desta conversa." };
     }
     const ficha = [c.ficha, res.ficha].filter(Boolean).join("\n") || null;
+    // Acompanhamento sem mensagem: o Téo viu que a pessoa recusou ou pediu pra
+    // não ser chamada. Fecha a conversa pra não sair o modelo da próxima etapa.
+    const recusou = Boolean(retomar) && !humano && res.mensagens.length === 0;
     await supabase
       .from("teo_conversas")
       .update({
-        estado: humano ? "humano" : "em_conversa",
-        motivo_humano: humano?.motivo ?? null,
+        estado: humano ? "humano" : recusou ? "encerrado" : "em_conversa",
+        motivo_humano: humano?.motivo ?? (recusou ? "sem_interesse" : null),
         ultima_msg_tratada: ultimaDoLead?.id ?? c.ultima_msg_tratada,
         ultima_resposta_em: new Date().toISOString(),
         respostas,
         ficha,
         erro: null,
         atualizado_em: new Date().toISOString(),
-        proxima_checagem: null,
+        proxima_checagem: recusou ? new Date(Date.now() + 2 * 3600_000).toISOString() : null,
         // Acompanhamento conta a etapa; resposta a quem escreveu zera o silêncio.
         ...(retomar
           ? { followup_etapa: (c.followup_etapa ?? 0) + 1, followup_em: new Date().toISOString() }
@@ -1597,7 +1605,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         : retomar
           ? res.mensagens.length
             ? `acompanhamento ${(c.followup_etapa ?? 0) + 1} (texto)`
-            : `acompanhamento ${(c.followup_etapa ?? 0) + 1} pulado`
+            : `acompanhamento ${(c.followup_etapa ?? 0) + 1} pulado (encerrado: sem interesse)`
           : "respondeu";
     await log(supabase, nota, {
       contact_id: c.contact_id,
