@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#24757f">
+<title>Calculadora de Ganhos · Anfitrião 5 Estrelas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Raleway:wght@400;500;600;700&family=Barlow:wght@400;600&display=swap">
+<style>
+/* Calculadora de Ganhos no seu imóvel. Feita pra ficar em tela cheia na call e
+   na visita técnica: tudo cabe numa tela (sem rolar) a partir de 1280×720.
+   Visual do site do Anfitrião 5 Estrelas: coral #E23D59, teal #24757F,
+   Poppins nos números e títulos, Raleway no texto. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f6;
+  --card: #ffffff;
+  --ink: #333333;
+  --ink-2: #4a4a4a;
+  --muted: #69727d;
+  --line: #e6e6e6;
+  --coral: #e23d59;
+  --coral-dark: #c92e49;
+  --coral-wash: #fdeef1;
+  --teal: #24757f;
+  --teal-2: #2a8995;
+  --teal-light: #aadbe1;
+  --teal-deep: #1b5d65;
+  --title: "Poppins", "Raleway", system-ui, sans-serif;
+  --body: "Raleway", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --label: "Barlow", "Raleway", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); -webkit-font-smoothing: antialiased; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 100vh; min-height: 100dvh; }
+button, input { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid var(--teal-light); outline-offset: 2px; border-radius: 10px; }
+
+/* barra do topo */
+.top { background: var(--teal); color: #fff; padding: max(10px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) 10px max(20px, env(safe-area-inset-left, 0px)); display: flex; align-items: center; gap: 18px; }
+.top img { height: clamp(34px, 5.2vh, 52px); width: auto; display: block; }
+.top h1 { margin: 0; font-family: var(--title); font-weight: 600; font-size: clamp(18px, 2.6vh, 26px); line-height: 1.1; }
+.top h1 small { display: block; font-family: var(--body); font-weight: 500; font-size: clamp(12px, 1.6vh, 15px); color: rgba(255, 255, 255, 0.8); }
+.top .sp { flex: 1; }
+.modo { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, 0.18); }
+.modo button { border: 0; background: transparent; color: rgba(255, 255, 255, 0.85); padding: 7px 14px; border-radius: 999px; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.modo button[aria-pressed="true"] { background: #fff; color: var(--teal); }
+.icone { border: 1px solid rgba(255, 255, 255, 0.4); background: transparent; color: #fff; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.icone:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* corpo: entradas à esquerda, resultado à direita */
+.palco { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(14px, 2vw, 28px); padding: clamp(14px, 2.4vh, 28px) max(20px, env(safe-area-inset-right, 0px)) clamp(10px, 1.6vh, 18px) max(20px, env(safe-area-inset-left, 0px)); min-height: 0; }
+.col { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: clamp(12px, 2vh, 20px); min-height: 0; }
+.card { background: var(--card); border-radius: 22px; padding: clamp(16px, 2.6vh, 28px) clamp(18px, 2vw, 30px); box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06); border: 1px solid var(--line); display: grid; gap: clamp(10px, 1.8vh, 18px); }
+.tag { justify-self: start; font-family: var(--title); font-weight: 600; font-size: clamp(12px, 1.6vh, 14px); color: #fff; background: var(--coral); padding: 5px 12px; border-radius: 8px; }
+.tag.teal { background: var(--teal); }
+.campos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1.4vw, 18px); }
+.campo { display: grid; gap: 6px; min-width: 0; }
+.campo label { font-family: var(--label); font-weight: 600; font-size: clamp(11.5px, 1.5vh, 14px); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.campo .num { display: grid; grid-template-columns: 38px minmax(0, 1fr) 38px; align-items: center; border: 2px solid var(--line); border-radius: 16px; background: var(--bg); overflow: hidden; }
+.campo .num:focus-within { border-color: var(--teal); background: #fff; }
+.campo .num button { height: 100%; min-height: clamp(48px, 7vh, 66px); border: 0; background: transparent; font-size: 22px; font-weight: 600; color: var(--teal); cursor: pointer; }
+.campo .num button:hover { background: rgba(36, 117, 127, 0.08); }
+.campo input { width: 100%; min-width: 0; border: 0; background: transparent; text-align: center; font-family: var(--title); font-weight: 600; font-size: clamp(22px, 3.6vh, 36px); font-variant-numeric: tabular-nums; padding: 0; }
+.campo input:focus { outline: none; }
+.campo .ajuda { font-size: clamp(11.5px, 1.5vh, 13.5px); color: var(--muted); min-height: 1.2em; }
+body:not(.modo-b) .so-b { display: none !important; }
+body.modo-b .so-a { display: none !important; }
+
+/* alavancas */
+.alavancas { align-content: space-evenly; }
+.alavanca { display: grid; gap: 8px; }
+.alavanca .linha { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.alavanca .nome { font-weight: 600; font-size: clamp(15px, 2.3vh, 22px); }
+.alavanca .valor { font-family: var(--title); font-weight: 700; font-size: clamp(24px, 4.4vh, 46px); color: var(--coral); font-variant-numeric: tabular-nums; }
+input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 34px; background: transparent; cursor: pointer; }
+input[type="range"]::-webkit-slider-runnable-track { height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--coral) var(--p, 20%), #ececec var(--p, 20%)); }
+input[type="range"]::-moz-range-track { height: 10px; border-radius: 999px; background: #ececec; }
+input[type="range"]::-moz-range-progress { height: 10px; border-radius: 999px; background: var(--coral); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: -10px; border-radius: 50%; background: #fff; border: 4px solid var(--coral); box-shadow: 0 4px 12px rgba(226, 61, 89, 0.35); }
+input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 4px solid var(--coral); }
+.marcas { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-top: -4px; }
+
+/* resultado */
+.resultado { background: var(--teal); color: #fff; border-color: var(--teal); position: relative; overflow: hidden; align-content: space-between; }
+.resultado::after { content: ""; position: absolute; right: -120px; bottom: -160px; width: 420px; height: 420px; border-radius: 50%; border: 60px solid rgba(255, 255, 255, 0.05); pointer-events: none; }
+.resultado .tag { background: #fff; color: var(--teal); }
+.ganho { display: grid; gap: 2px; }
+.ganho .rot { font-family: var(--label); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; font-size: clamp(12px, 1.7vh, 15px); color: var(--teal-light); }
+.ganho .grande { font-family: var(--title); font-weight: 700; font-size: clamp(48px, 12vh, 136px); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.ganho .grande small { font-size: 0.34em; font-weight: 600; letter-spacing: 0; color: rgba(255, 255, 255, 0.82); }
+.ganho .ano { font-family: var(--title); font-weight: 600; font-size: clamp(20px, 3.8vh, 42px); font-variant-numeric: tabular-nums; }
+.ganho .ano b { font-weight: 600; }
+.ganho .ano span { color: var(--teal-light); font-weight: 500; font-size: 0.6em; }
+.barras { display: grid; gap: clamp(8px, 1.4vh, 12px); position: relative; z-index: 1; }
+.barra { display: grid; gap: 4px; }
+.barra .cab { display: flex; justify-content: space-between; gap: 12px; font-size: clamp(13px, 1.9vh, 17px); }
+.barra .cab b { font-family: var(--title); font-weight: 600; font-variant-numeric: tabular-nums; }
+.barra .trilho { height: clamp(18px, 3.4vh, 36px); border-radius: 8px; background: rgba(255, 255, 255, 0.12); overflow: hidden; display: flex; }
+.barra .base { background: rgba(255, 255, 255, 0.55); transition: width 0.6s ease; }
+.barra .extra { background: var(--coral); transition: width 0.6s ease; }
+.fatos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(8px, 1.2vw, 14px); position: relative; z-index: 1; }
+.fato { background: rgba(0, 0, 0, 0.16); border-radius: 16px; padding: clamp(12px, 2.2vh, 24px) clamp(14px, 1.4vw, 22px); display: grid; gap: 2px; }
+.fato .v { font-family: var(--title); font-weight: 700; font-size: clamp(22px, 4.2vh, 46px); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fato .r { font-size: clamp(12px, 1.7vh, 15px); color: rgba(255, 255, 255, 0.82); }
+.fato.destaque { background: var(--coral); }
+.fato.destaque .r { color: rgba(255, 255, 255, 0.92); }
+
+.rodape { padding: 0 max(20px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); font-size: clamp(11px, 1.45vh, 13px); color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: space-between; }
+
+@media (max-width: 1000px), (max-aspect-ratio: 1/1) {
+  body { display: block; min-height: 0; }
+  .palco { grid-template-columns: minmax(0, 1fr); }
+  .top { flex-wrap: wrap; }
+  .top .sp { display: none; }
+}
+@media (max-width: 640px) {
+  .modo { display: flex; width: 100%; }
+  .modo button { flex: 1; white-space: normal; line-height: 1.2; padding: 8px 10px; }
+  .campos { grid-template-columns: minmax(0, 1fr); }
+  .fatos { grid-template-columns: minmax(0, 1fr); }
+  .icone.tela { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .barra .base, .barra .extra { transition: none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="/marca/a5e-logo.webp" alt="Anfitrião 5 Estrelas" width="480" height="183">
+  <h1>Calculadora de Ganhos<small>quanto o seu imóvel pode render a mais</small></h1>
+  <span class="sp"></span>
+  <div class="modo" role="group" aria-label="Situação do imóvel">
+    <button type="button" data-modo="a" aria-pressed="true">Já alugo por temporada</button>
+    <button type="button" data-modo="b" aria-pressed="false">Aluguel fixo ou ainda não alugo</button>
+  </div>
+  <button type="button" class="icone tela" id="tela" aria-label="Tela cheia">⛶ Tela cheia</button>
+</header>
+
+<main class="palco">
+  <div class="col">
+    <section class="card" aria-labelledby="hoje">
+      <span class="tag teal" id="hoje"><span class="so-a">Seu imóvel hoje</span><span class="so-b">Seu imóvel</span></span>
+      <div class="campos">
+        <div class="campo">
+          <label for="diaria"><span class="so-a">Diária média</span><span class="so-b">Diária que espera</span></label>
+          <div class="num"><button type="button" data-passo="diaria:-10" aria-label="Diminuir a diária">−</button><input id="diaria" inputmode="numeric" autocomplete="off" value="250"><button type="button" data-passo="diaria:10" aria-label="Aumentar a diária">+</button></div>
+          <span class="ajuda">em R$, por noite</span>
+        </div>
+        <div class="campo">
+          <label for="noites"><span class="so-a">Noites ocupadas</span><span class="so-b">Noites que espera</span></label>
+          <div class="num"><button type="button" data-passo="noites:-1" aria-label="Menos noites">−</button><input id="noites" inputmode="numeric" autocomplete="off" value="15"><button type="button" data-passo="noites:1" aria-label="Mais noites">+</button></div>
+          <span class="ajuda">por mês (até 30)</span>
+        </div>
+        <div class="campo">
+          <label for="imoveis">Imóveis</label>
+          <div class="num"><button type="button" data-passo="imoveis:-1" aria-label="Menos imóveis">−</button><input id="imoveis" inputmode="numeric" autocomplete="off" value="1"><button type="button" data-passo="imoveis:1" aria-label="Mais imóveis">+</button></div>
+          <span class="ajuda">com números parecidos</span>
+        </div>
+      </div>
+      <div class="campos so-b">
+        <div class="campo">
+          <label for="fixo">Aluguel fixo hoje</label>
+          <div class="num"><button type="button" data-passo="fixo:-100" aria-label="Diminuir o aluguel">−</button><input id="fixo" inputmode="numeric" autocomplete="off" value="1800"><button type="button" data-passo="fixo:100" aria-label="Aumentar o aluguel">+</button></div>
+          <span class="ajuda">em R$ por mês, por imóvel (0 se está parado ou em obra)</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card alavancas" aria-labelledby="aprende">
+      <span class="tag" id="aprende">Com o que você aprende na comunidade</span>
+      <div class="alavanca">
+        <div class="linha"><label class="nome" for="mais-diaria">Diária mais alta (anúncio e preço certos)</label><span class="valor" id="v-mais-diaria">+10%</span></div>
+        <input type="range" id="mais-diaria" min="0" max="50" step="5" value="10">
+        <div class="marcas"><span>0%</span><span>+25%</span><span>+50%</span></div>
+      </div>
+      <div class="alavanca">
+        <div class="linha"><label class="nome" for="mais-noites">Noites a mais por mês (algoritmo e 5 estrelas)</label><span class="valor" id="v-mais-noites">+2</span></div>
+        <input type="range" id="mais-noites" min="0" max="15" step="1" value="2">
+        <div class="marcas"><span>0</span><span>+7</span><span>+15</span></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card resultado" aria-live="polite" aria-labelledby="res">
+    <span class="tag" id="res">Quanto entra a mais</span>
+    <div class="ganho">
+      <span class="rot">Por mês</span>
+      <span class="grande" id="ganho-mes">+R$ 0</span>
+      <span class="ano"><b id="ganho-ano">+R$ 0</b> <span>por ano</span></span>
+    </div>
+    <div class="barras">
+      <div class="barra">
+        <div class="cab"><span id="rot-hoje">Hoje</span><b id="fat-hoje">R$ 0/mês</b></div>
+        <div class="trilho"><span class="base" id="b-hoje"></span></div>
+      </div>
+      <div class="barra">
+        <div class="cab"><span id="rot-novo">Com os ajustes</span><b id="fat-novo">R$ 0/mês</b></div>
+        <div class="trilho"><span class="base" id="b-novo-base"></span><span class="extra" id="b-novo-extra"></span></div>
+      </div>
+    </div>
+    <div class="fatos">
+      <div class="fato destaque"><span class="v" id="paga">—</span><span class="r" id="paga-r">pra ganhar de volta o investimento</span></div>
+      <div class="fato"><span class="v" id="tres-anos">+R$ 0</span><span class="r">a mais em 3 anos</span></div>
+    </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <span>Simulação com os números informados: faturamento bruto, antes de taxas e custos. Não é promessa de resultado.</span>
+  <span id="inv-rot">Investimento considerado: R$ 2.997</span>
+</footer>
+
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var INVEST = Math.max(0, Number(params.get('investimento')) || 2997);
+  var el = function (id) { return document.getElementById(id); };
+  var campos = { diaria: el('diaria'), noites: el('noites'), imoveis: el('imoveis'), fixo: el('fixo') };
+  var limites = { diaria: [0, 100000], noites: [0, 30], imoveis: [1, 500], fixo: [0, 1000000] };
+  var maisDiaria = el('mais-diaria');
+  var maisNoites = el('mais-noites');
+  var modo = 'a';
+  var brl0 = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  var reduz = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function numero(s) { var n = Number(String(s).replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '')); return isFinite(n) ? n : 0; }
+  function lim(k, v) { var l = limites[k]; return Math.min(l[1], Math.max(l[0], Math.round(v))); }
+  function ler(k) { return lim(k, numero(campos[k].value)); }
+  function moeda(v) { return brl0.format(Math.round(v)); }
+  function mostrarCampo(k) { campos[k].value = k === 'noites' || k === 'imoveis' ? String(ler(k)) : ler(k).toLocaleString('pt-BR'); }
+
+  // carrega da URL (link da simulação pode ir pro lead depois da visita)
+  ['diaria', 'noites', 'imoveis', 'fixo'].forEach(function (k) { if (params.has(k)) campos[k].value = params.get(k); mostrarCampo(k); });
+  if (params.has('mais_diaria')) maisDiaria.value = params.get('mais_diaria');
+  if (params.has('mais_noites')) maisNoites.value = params.get('mais_noites');
+  if (params.get('modo') === 'b') modo = 'b';
+  el('inv-rot').textContent = 'Investimento considerado: ' + moeda(INVEST);
+
+  // números animados (o "dinheirinho subindo")
+  var atuais = {};
+  function animar(id, alvo, fmt) {
+    var de = atuais[id] == null ? 0 : atuais[id];
+    atuais[id] = alvo;
+    var node = el(id);
+    if (reduz || de === alvo) { node.textContent = fmt(alvo); return; }
+    var t0 = null, dur = 650;
+    function passo(t) {
+      if (t0 === null) t0 = t;
+      var k = Math.min(1, (t - t0) / dur);
+      var e = 1 - Math.pow(1 - k, 3);
+      node.textContent = fmt(de + (alvo - de) * e);
+      if (k < 1 && atuais[id] === alvo) requestAnimationFrame(passo);
+    }
+    requestAnimationFrame(passo);
+  }
+
+  function prazo(dias) {
+    if (!isFinite(dias) || dias <= 0) return '—';
+    if (dias <= 60) return Math.ceil(dias) + (Math.ceil(dias) === 1 ? ' dia' : ' dias');
+    var m = dias / 30;
+    return (m < 10 ? m.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : Math.round(m)) + ' meses';
+  }
+
+  function calcular() {
+    var d = ler('diaria'), n = ler('noites'), i = ler('imoveis'), f = ler('fixo');
+    var pd = Number(maisDiaria.value) / 100, pn = Number(maisNoites.value);
+    var hoje, novo;
+    if (modo === 'a') {
+      hoje = d * n * i;
+      novo = d * (1 + pd) * Math.min(30, n + pn) * i;
+      el('rot-hoje').textContent = 'Hoje';
+      el('rot-novo').textContent = 'Com os ajustes';
+    } else {
+      hoje = f * i;
+      novo = d * (1 + pd) * Math.min(30, n + pn) * i;
+      el('rot-hoje').textContent = 'Aluguel fixo';
+      el('rot-novo').textContent = 'Na temporada, com o que aprende';
+    }
+    var ganho = Math.max(0, novo - hoje);
+    var perda = novo < hoje;
+    animar('ganho-mes', ganho, function (v) { return '+' + moeda(v); });
+    animar('ganho-ano', ganho * 12, function (v) { return '+' + moeda(v); });
+    animar('tres-anos', ganho * 36, function (v) { return '+' + moeda(v); });
+    el('fat-hoje').textContent = moeda(hoje) + '/mês';
+    el('fat-novo').textContent = moeda(novo) + '/mês';
+    var topo = Math.max(hoje, novo, 1);
+    el('b-hoje').style.width = (hoje / topo * 100) + '%';
+    el('b-novo-base').style.width = (Math.min(hoje, novo) / topo * 100) + '%';
+    el('b-novo-extra').style.width = (ganho / topo * 100) + '%';
+    var dias = ganho > 0 ? INVEST / (ganho / 30) : Infinity;
+    el('paga').textContent = perda ? 'Ajuste os números' : prazo(dias);
+    el('paga-r').textContent = perda ? 'nesses números a temporada fica abaixo do aluguel fixo' : 'de ganho extra pagam o investimento';
+    el('v-mais-diaria').textContent = '+' + maisDiaria.value + '%';
+    el('v-mais-noites').textContent = '+' + maisNoites.value;
+    [maisDiaria, maisNoites].forEach(function (r) { r.style.setProperty('--p', ((r.value - r.min) / (r.max - r.min) * 100) + '%'); });
+    var q = new URLSearchParams({ modo: modo, diaria: d, noites: n, imoveis: i, mais_diaria: maisDiaria.value, mais_noites: maisNoites.value });
+    if (modo === 'b') q.set('fixo', f);
+    if (params.has('investimento')) q.set('investimento', INVEST);
+    history.replaceState(null, '', location.pathname + '?' + q.toString());
+  }
+
+  function aplicarModo(m) {
+    modo = m;
+    document.body.classList.toggle('modo-b', m === 'b');
+    document.querySelectorAll('.modo button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.modo === m)); });
+    calcular();
+  }
+
+  Object.keys(campos).forEach(function (k) {
+    campos[k].addEventListener('input', calcular);
+    campos[k].addEventListener('blur', function () { mostrarCampo(k); calcular(); });
+    campos[k].addEventListener('focus', function () { campos[k].select(); });
+  });
+  document.querySelectorAll('[data-passo]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var p = b.dataset.passo.split(':');
+      campos[p[0]].value = lim(p[0], ler(p[0]) + Number(p[1]));
+      mostrarCampo(p[0]);
+      calcular();
+    });
+  });
+  [maisDiaria, maisNoites].forEach(function (r) { r.addEventListener('input', calcular); });
+  document.querySelectorAll('.modo button').forEach(function (b) { b.addEventListener('click', function () { aplicarModo(b.dataset.modo); }); });
+
+  var tela = el('tela');
+  function rotTela() { tela.textContent = document.fullscreenElement ? '✕ Sair da tela cheia' : '⛶ Tela cheia'; }
+  tela.addEventListener('click', function () {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+  });
+  document.addEventListener('fullscreenchange', rotTela);
+  if (!document.documentElement.requestFullscreen) tela.style.display = 'none';
+
+  aplicarModo(modo);
+})();
+</script>
+</body>
+</html>

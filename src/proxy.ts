@@ -52,6 +52,11 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/roteiro-sales-call-atual" || pathname === "/roteiro-sales-call-nova") {
     return NextResponse.next();
   }
+  // Calculadora de Ganhos (pública: só faz conta, vai pro lead na call e na
+  // visita técnica) e as imagens da marca que ela e os roteiros usam.
+  if (pathname === "/calculadora" || pathname.startsWith("/marca/")) {
+    return NextResponse.next();
+  }
   // Redirect curto dos QR codes/links: público (é escaneado por qualquer um,
   // antes de virar lead). Valida o slug por conta própria.
   if (pathname.startsWith("/r/")) {
