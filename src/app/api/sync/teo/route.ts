@@ -342,6 +342,44 @@ function avisoJaComprouBlack(compra: { origem: string; quando: string; email: st
   ].join(" ");
 }
 
+/**
+ * Call que este lead já tem marcada (a próxima). Sem isso, quando a confirmação
+ * falhava no envio (Unnichat 502), a rodada seguinte não sabia da call: tratava
+ * o horário dela como ocupado por outro e remarcava (Aline e Claudia, 11/11).
+ */
+async function callMarcadaDoLead(
+  supabase: SupabaseClient,
+  contactId: string
+): Promise<{ inicio: string; vendedor: string | null } | null> {
+  const { data } = await supabase
+    .from("teo_calls")
+    .select("inicio, vendedor")
+    .eq("contact_id", contactId)
+    .neq("status", "cancelada")
+    .gte("inicio", new Date().toISOString())
+    .order("inicio", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data ? { inicio: String(data.inicio), vendedor: (data.vendedor as string | null) ?? null } : null;
+}
+
+function avisoCallMarcada(call: { inicio: string; vendedor: string | null }): string {
+  const quando = new Date(call.inicio).toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const com = call.vendedor ? ` com ${primeiroNomeVendedor(call.vendedor)}` : "";
+  return [
+    `CALL JÁ MARCADA: este lead tem call ${quando} (horário de Brasília)${com}. Ela já está na agenda e o convite já foi pro e-mail dele.`,
+    "Se pela conversa ele ainda não recebeu a confirmação (por exemplo, a sua última mensagem não fala do horário marcado), confirme agora esse horário em uma mensagem curta.",
+    "Não marque outro horário e nunca diga que o horário foi preenchido: só chame marcar_call de novo se ele pedir pra mudar.",
+  ].join(" ");
+}
+
 /** Aviso só deste lead (fica fora do bloco da Black, que vai em cache). */
 function avisoEmailsSemCompra(emails: string[]): string | null {
   if (!emails.length) return null;
@@ -1442,6 +1480,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // Aluno pelo cadastro (tag) ou por compra de curso no e-mail do cadastro ou
     // num e-mail que o lead mandou na conversa (assim o Téo confirma sozinho).
     const alunoPorTag = lead.tags.some((t) => ALUNO_TAG.test(t.trim()));
+    const callMarcada = await callMarcadaDoLead(supabase, c.contact_id).catch(() => null);
     // Já comprou a Black? (e-mails do lead ou o telefone do WhatsApp)
     const jaComprouBlack = blackAtiva(cfg)
       ? await acharCompraDaBlack(supabase, emailsDaConversa(lead.email ?? null, msgs), c.telefone).catch(() => null)
@@ -1470,11 +1509,17 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       ]
         .filter(Boolean)
         .join("\n\n"),
-      avisoDoLead: jaComprouBlack
-        ? avisoJaComprouBlack(jaComprouBlack)
-        : blackAtiva(cfg) && !compraDeCurso
-          ? avisoEmailsSemCompra(emailsDoLead)
-          : null,
+      avisoDoLead:
+        [
+          callMarcada ? avisoCallMarcada(callMarcada) : null,
+          jaComprouBlack
+            ? avisoJaComprouBlack(jaComprouBlack)
+            : blackAtiva(cfg) && !compraDeCurso
+              ? avisoEmailsSemCompra(emailsDoLead)
+              : null,
+        ]
+          .filter(Boolean)
+          .join("\n\n") || null,
       ficha: c.ficha,
       abrir,
       retomar,
