@@ -13,7 +13,7 @@ export const maxDuration = 60;
 const MODELOS = [process.env.COFRE_MODEL || "claude-sonnet-5-5", "claude-opus-5-5"];
 const CACHE_1H = { type: "ephemeral", ttl: "1h" } as const;
 
-const PROMPT = `Você ajuda o time comercial do Canal do Anfitrião (Rômulo Villela) no meio de calls de venda da comunidade Anfitrião 5 Estrelas (curso + grupo de WhatsApp + lives) e do Gigantes da Temporada. O vendedor descreve o lead ou pede um tipo de prova, e você indica os cases do cofre que mais servem.
+const PROMPT = `Você ajuda o time comercial do Canal do Anfitrião (Rômulo Villela) no meio de calls de venda da comunidade Anfitrião 5 Estrelas (curso + grupo de WhatsApp + lives) e do Gigantes da Temporada. O vendedor descreve o lead ou pede um tipo de prova, e você indica os cases do cofre que mais servem. O cofre tem três tipos: case (história com resultado), elogio (aluno ou convidado elogiando o Rômulo, o curso ou a comunidade) e autoridade (gente do mercado, como Airbnb, PriceLabs e Stays). Lead desconfiado ("quem é esse Rômulo?", "esse curso é sério?") pede elogio ou autoridade; lead que quer ver resultado pede case.
 
 Regras:
 - Responda em português do Brasil, direto e curto: no máximo ~140 palavras. O vendedor está em call.

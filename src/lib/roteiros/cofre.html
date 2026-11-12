@@ -262,7 +262,7 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 20px calc(28px + env(safe
 
 <div class="toast" id="toast" role="status"></div>
 
-<footer>Como o cofre é organizado: cada case tem a objeção que ele ajuda a derrubar, o perfil de quem conta, o tipo de imóvel, o problema resolvido e o tipo de prova. A força diz o quanto ele pesa na call: A é aluno com número de antes e depois; B é história com número, mas de quem não é aluno (ou do Rômulo); C é menção curta.</footer>
+<footer>Como o cofre é organizado: tem histórias com resultado (cases), elogios de alunos e falas de autoridades do mercado (Airbnb, PriceLabs, Stays). Cada item tem a objeção que ele ajuda a derrubar, o perfil de quem fala, o tipo de imóvel, o problema resolvido e o tipo de prova. A força diz o quanto pesa na call. Nos cases: A é aluno com número de antes e depois; B é história com número, mas de quem não é aluno (ou do Rômulo); C é menção curta. Nos elogios: A é elogio específico de aluno com resultado ou de autoridade; B é elogio claro; C é menção de passagem.</footer>
 
 <script id="dados" type="application/json">__COFRE_DADOS__</script>
 <script>
@@ -346,6 +346,15 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 20px calc(28px + env(safe
     });
   }
 
+  var FORCA_ELOGIO = { A: 'Elogio específico, de quem pesa', B: 'Elogio claro', C: 'Menção de passagem' };
+  function forcaDica(c) { return (c.tipo === 'case' ? FORCA : FORCA_ELOGIO)[c.forca] || ''; }
+  function quemE(c) {
+    if (c.tipo === 'autoridade') return 'Autoridade';
+    var r = rot('aluno', c.aluno);
+    if (c.tipo !== 'elogio') return r;
+    return c.aluno === 'nao-informado' ? 'Elogio' : 'Elogio · ' + r;
+  }
+
   function card(c, toks) {
     var onde = [c.cidade, c.uf].filter(Boolean).join('/');
     var objs = (c.objecoes || []).map(function (v) { return '<span class="tag obj">' + esc(rot('objecoes', v)) + '</span>'; }).join('');
@@ -353,7 +362,7 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 20px calc(28px + env(safe
     var nums = (c.numeros || []).slice(0, 3).map(function (n) { return '<li>' + realca(n, toks) + '</li>'; }).join('');
     var yt = c.fonte.tipo === 'youtube' && ytId(c.fonte.url);
     return '<article class="case" id="c-' + esc(c.id) + '">' +
-      '<div class="topo"><span class="forca ' + esc(c.forca) + '" title="' + esc(FORCA[c.forca] || '') + '">' + esc(c.forca) + ' · ' + esc(rot('aluno', c.aluno)) + '</span><span class="onde">' + esc(onde) + '</span></div>' +
+      '<div class="topo"><span class="forca ' + esc(c.forca) + '" title="' + esc(forcaDica(c)) + '">' + esc(c.forca) + ' · ' + esc(quemE(c)) + '</span><span class="onde">' + esc(onde) + '</span></div>' +
       '<h3>' + realca(c.titulo, toks) + '</h3>' +
       '<p class="quem"><b>' + realca(c.nome, toks) + '</b>' + (c.quem ? ' · ' + realca(c.quem, toks) : '') + '</p>' +
       (nums ? '<ul class="nums">' + nums + '</ul>' : '') +
@@ -529,7 +538,8 @@ footer { max-width: 1480px; margin: 0 auto; padding: 0 20px calc(28px + env(safe
   $('abrir-chat').addEventListener('click', function () { document.body.classList.add('chat-on'); setTimeout(function () { $('pergunta').focus(); }, 50); });
   $('fechar-chat').addEventListener('click', function () { document.body.classList.remove('chat-on'); });
 
-  $('sub').textContent = CASES.length + ' histórias reais pra usar na call';
+  var nCases = CASES.filter(function (c) { return c.tipo === 'case'; }).length;
+  $('sub').textContent = nCases + ' histórias e ' + (CASES.length - nCases) + ' elogios reais pra usar na call';
   desenha();
 })();
 </script>
