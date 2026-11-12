@@ -1,10 +1,10 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Porta das páginas de roteiro (/roteiro-sales-call-atual e
-// /roteiro-sales-call-nova): ficam fora do login do painel e pedem só uma
+// Porta das páginas do time comercial (/roteiro-sales-call-atual,
+// /roteiro-sales-call-nova e /cofre): ficam fora do login do painel e pedem só uma
 // senha, guardada na variável ROTEIRO_SENHA da Vercel. Quem acerta ganha um
-// cookie de 30 dias que abre as duas páginas. Trocar a senha na Vercel
+// cookie de 30 dias que abre todas elas. Trocar a senha na Vercel
 // invalida os cookies antigos (o cookie é derivado da senha).
 
 const COOKIE = "roteiro_acesso";
@@ -90,6 +90,14 @@ export function mostrar(request: NextRequest, titulo: string, caminho: string, c
   // 200 (e não 401): é uma tela de login comum, e 401 sem WWW-Authenticate
   // confunde verificadores e prévias de link.
   return html(telaDeSenha(titulo, caminho, errou ? "Senha errada. Tente de novo." : null));
+}
+
+/** A pessoa já passou pela senha (cookie válido)? Usado pelas rotas de dados das páginas da porta (ex.: chat do Cofre de Cases). */
+export function liberado(request: NextRequest): boolean {
+  const senha = senhaConfigurada();
+  if (!senha) return false;
+  const cookie = request.cookies.get(COOKIE)?.value ?? "";
+  return Boolean(cookie) && iguais(cookie, marca(senha));
 }
 
 /** POST: confere a senha do formulário, grava o cookie e volta pra página. */
