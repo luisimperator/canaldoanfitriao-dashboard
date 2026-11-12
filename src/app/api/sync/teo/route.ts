@@ -568,13 +568,14 @@ async function taxasDeConversao(
   return new Map(nomes.map((n) => [n, Math.max(brutas.get(n) ?? media, 0.001)]));
 }
 
-// Quem pega a próxima call do dia: as calls do dia são divididas na proporção
-// da conversão. Vai quem tem a menor (calls no dia + 1) ÷ conversão; empate
-// fica com quem converte mais. Ex.: conversões 8,0%, 6,5% e 4,6% num dia de 5
-// calls dão 2, 2 e 1.
+// Quem pega a próxima call do dia: as calls do dia são divididas igualmente
+// (vai quem tem menos calls no dia) e a conversão só desempata, então a call
+// que sobra quando o dia não divide por 3 fica com quem converte mais. Ex.: 7
+// calls com conversões 9,3%, 7,9% e 4,2% dão 3, 2 e 2. (Até 12/11 a divisão
+// era na proporção da conversão; o Fernando pediu divisão igual.)
 function ordemDoDia(livres: string[], cargaNoDia: (v: string) => number, taxa: Map<string, number>): string[] {
   const t = (v: string) => taxa.get(v) ?? 0.001;
-  return [...livres].sort((a, b) => (cargaNoDia(a) + 1) / t(a) - (cargaNoDia(b) + 1) / t(b) || t(b) - t(a));
+  return [...livres].sort((a, b) => cargaNoDia(a) - cargaNoDia(b) || t(b) - t(a));
 }
 
 // O lead é do vendedor da primeira call que o Téo marcou pra ele: remarcação
