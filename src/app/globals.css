@@ -7,6 +7,11 @@
   --background: #f8fafc;
   --foreground: #0f172a;
   --chart-grid: #e2e8f0;
+  /* Painel Calls: aconteceu (azul) × faltou (vermelho), validados pra
+     daltonismo; cinza = ainda sem resultado (em apuração / agendada). */
+  --calls-ok: #2a78d6;
+  --calls-falta: #e34948;
+  --calls-espera: #b8b7ae;
 }
 
 /* Modo escuro na vibe "OS": navy-violeta profundo, texto zinc. */
@@ -14,6 +19,9 @@
   --background: #0b0a13;
   --foreground: #e4e4e7;
   --chart-grid: rgba(255, 255, 255, 0.08);
+  --calls-ok: #3987e5;
+  --calls-falta: #e66767;
+  --calls-espera: #5c5a66;
 }
 
 @theme inline {

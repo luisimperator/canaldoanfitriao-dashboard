@@ -529,10 +529,11 @@ function especialistaDaConversa(msgs: MsgUnnichat[], cfg: Config): string | null
   return dono;
 }
 
-// Fechamento em call de cada vendedor nos últimos 90 dias: das calls do Téo
-// que aconteceram (com gravação no Teams), quantas viraram venda paga (Eduzz
-// ou TMB) no e-mail do convite em até 7 dias (função teo_fechamento_em_call
-// do banco). Só desempata a divisão do dia, que é igual entre os vendedores.
+// Fechamento em call de cada vendedor nos últimos 90 dias, com a mesma régua
+// do Painel Calls (função teo_fechamento_em_call → painel_calls do banco): das
+// calls do Téo que aconteceram (gravação no Teams, nota #call do vendedor ou
+// marcação no painel), quantas viraram venda paga em até 48h, ligada pelo
+// e-mail, telefone ou nome. Só desempata a divisão do dia, que é igual entre os vendedores.
 // Até 12/11 era a conversão geral (vendas ÷ leads); o Fernando pediu a de call.
 const JANELA_FECHAMENTO_DIAS = 90;
 
@@ -1787,7 +1788,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         await anotar(
           supabase,
           k.contact_id,
-          `📞 Call agora às ${hora} com ${k.vendedor ?? "o especialista"} (marcada pelo Téo). 🎥 Ao entrar na sala do Teams, confira se está gravando; se não estiver, clique em Gravar e transcrever. Depois da call, o follow-up é seu: proposta e link logo em seguida.\n${k.resumo ?? ""}${conv?.ficha ? `\n\nFicha:\n${conv.ficha}` : ""}`
+          `📞 Call agora às ${hora} com ${k.vendedor ?? "o especialista"} (marcada pelo Téo). 🎥 Ao entrar na sala do Teams, confira se está gravando; se não estiver, clique em Gravar e transcrever. 📝 Se a call não for pela sala do Teams, deixe aqui uma nota começando com #call e o que rolou (ou #faltou, se o lead não apareceu): sem gravação e sem essa nota, a call conta como falta no Painel Calls. Depois da call, o follow-up é seu: proposta e link logo em seguida.\n${k.resumo ?? ""}${conv?.ficha ? `\n\nFicha:\n${conv.ficha}` : ""}`
         );
         await supabase
           .from("teo_conversas")

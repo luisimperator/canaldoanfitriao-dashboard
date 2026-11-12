@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { graphToken, vttParaTexto } from "@/lib/graph";
 import { pareceIngles, transcreverGravacoes, turnosDaTeams, type Gravacao } from "@/lib/transcrever-gravacao";
+import { historico, type MsgUnnichat } from "@/lib/teo";
+import { marcaDaNota, NOTA_ANTES_MS, NOTA_DEPOIS_MS, type Presenca } from "@/lib/calls-presenca";
 
 // Acervo das calls do Teams (tabela call_transcricoes), separado do Téo: guarda
 // a transcrição e as gravações de toda call da agenda do anfitriao@, pra
@@ -374,7 +376,78 @@ async function rodar() {
   const salvas = await buscar(supabase, g.auth, org);
   // A etapa pesada só entra com folga no tempo da função (maxDuration).
   const refeitas = Date.now() - inicio < 60_000 ? await refazer(supabase, g.auth, inicio) : [];
-  return NextResponse.json({ ok: true, novas, salvas, refeitas, ms: Date.now() - inicio });
+  const presencas = await lerNotas(supabase, inicio);
+  return NextResponse.json({ ok: true, novas, salvas, refeitas, presencas, ms: Date.now() - inicio });
+}
+
+// Presença pela nota do vendedor (#call / #faltou na conversa do lead no
+// Unnichat, ver src/lib/calls-presenca.ts). Olha as calls cuja janela da nota
+// está aberta: de 30 min antes do horário até 48h depois, ou até 30 min antes
+// da próxima call do mesmo lead. A marcação feita no Painel Calls (fonte
+// "painel") vale sobre a nota e não é tocada aqui. Para com 270 s de rodada:
+// o que sobrar entra na próxima (30 min).
+const NOTAS_ATE_MS = 270_000;
+
+async function lerNotas(supabase: SupabaseClient, inicioRodada: number): Promise<string[]> {
+  const agora = Date.now();
+  const { data } = await supabase
+    .from("teo_calls")
+    .select("id, contact_id, nome, inicio, vendedor, presenca, presenca_fonte, presenca_nota")
+    .neq("status", "cancelada")
+    .gte("inicio", new Date(agora - NOTA_DEPOIS_MS).toISOString())
+    .order("inicio");
+  const calls = data ?? [];
+  const feitos: string[] = [];
+  const conversas = new Map<string, MsgUnnichat[] | null>();
+  for (const k of calls) {
+    if (Date.now() - inicioRodada > NOTAS_ATE_MS) break;
+    const ini = new Date(k.inicio).getTime();
+    if (!k.contact_id || ini - NOTA_ANTES_MS > agora || k.presenca_fonte === "painel") continue;
+    const proxima = calls.find((x) => x.contact_id === k.contact_id && new Date(x.inicio).getTime() > ini);
+    const fim = Math.min(ini + NOTA_DEPOIS_MS, proxima ? new Date(proxima.inicio).getTime() - NOTA_ANTES_MS : Infinity);
+    if (!conversas.has(k.contact_id)) {
+      try {
+        conversas.set(k.contact_id, await historico(supabase, k.contact_id));
+      } catch (e) {
+        conversas.set(k.contact_id, null);
+        await log(supabase, "presença: conversa não abriu", {
+          contact_id: k.contact_id,
+          erro: e instanceof Error ? e.message.slice(0, 200) : String(e),
+        });
+      }
+    }
+    const msgs = conversas.get(k.contact_id);
+    if (!msgs) continue;
+    let achou: { presenca: Presenca; nota: string; em: string } | null = null;
+    for (const m of msgs) {
+      if (m.type !== "note") continue;
+      const t = new Date(m.date).getTime();
+      if (!(t >= ini - NOTA_ANTES_MS && t <= fim)) continue;
+      const marca = marcaDaNota(m.message);
+      if (marca) achou = { ...marca, em: m.date };
+    }
+    if (!achou) continue;
+    if (k.presenca === achou.presenca && k.presenca_fonte === "nota" && (k.presenca_nota ?? "") === achou.nota) continue;
+    await supabase
+      .from("teo_calls")
+      .update({
+        presenca: achou.presenca,
+        presenca_fonte: "nota",
+        presenca_nota: achou.nota || null,
+        presenca_em: new Date(achou.em).toISOString(),
+        presenca_por: k.vendedor ?? null,
+      })
+      .eq("id", k.id);
+    await log(supabase, "presença pela nota", {
+      teo_call_id: k.id,
+      nome: k.nome,
+      vendedor: k.vendedor,
+      presenca: achou.presenca,
+      nota: achou.nota,
+    });
+    feitos.push(`${k.nome ?? k.contact_id}: ${achou.presenca}`);
+  }
+  return feitos;
 }
 
 // GET: cron da Vercel (vercel.json). POST: disparo manual, já logado.
