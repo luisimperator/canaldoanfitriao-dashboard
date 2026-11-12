@@ -69,6 +69,8 @@ export interface UsoTeo {
 
 export interface ResultadoTeo {
   mensagens: string[];
+  /** O Téo respondeu [ENCERRAR]: num acompanhamento, a pessoa recusou ou pediu pra não ser chamada. */
+  encerrar?: boolean;
   humano: { motivo: string; resumo: string } | null;
   ficha: string | null;
   uso?: UsoTeo;
@@ -398,7 +400,7 @@ function dividir(reply: string): string[] {
   const partes = reply
     .split(/\n*\[BREAK\]\n*/i)
     .map((s) => s.trim())
-    .filter((s) => s && !/^\[?SEM[_ ]RESPOSTA\]?$/i.test(s))
+    .filter((s) => s && !/^\[?(SEM[_ ]RESPOSTA|ENCERRAR)\]?$/i.test(s))
     .slice(0, 3);
   return partes.map((p) => (p.length > 900 ? `${p.slice(0, 900)}…` : p));
 }
@@ -538,6 +540,7 @@ export async function rodarTeo(opts: {
       .trim();
     return {
       mensagens: texto ? dividir(texto) : [],
+      encerrar: /\[ENCERRAR\]/i.test(texto),
       humano,
       ficha: notas.length ? notas.join("\n") : null,
       uso,
