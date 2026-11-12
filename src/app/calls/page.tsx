@@ -7,7 +7,8 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { CallsPorDiaChart, PresencaBotoes } from "@/components/PainelCalls";
 import {
   diaBR,
-  funilDoTeo,
+  conversasQueMarcaram,
+  funilDoPeriodo,
   inicioDoDia,
   lerCalls,
   pct,
@@ -167,11 +168,12 @@ export default async function CallsPage({
   const vendedores = porVendedor(doPeriodo, vendedor ? [vendedor] : nomes);
   const antecedencia = porAntecedencia(doPeriodo);
   const horario = porHorario(doPeriodo);
-  const funil = funilDoTeo(
+  const funil = funilDoPeriodo(doPeriodo);
+  const coorte = conversasQueMarcaram(
     (conversas ?? []).map((c) => c.contact_id as string),
-    filtradas.filter((c) => Date.parse(c.inicio) >= t0),
-    !vendedor
+    todas.filter((c) => Date.parse(c.inicio) >= t0)
   );
+  const origens = Object.entries(r.receitaPorOrigem).sort((a, b) => b[1] - a[1]);
   const limiteAgenda = agora + AGENDA_DIAS * 86400_000;
   const proximas = filtradas.filter((c) => c.situacao === "futura" && Date.parse(c.inicio) <= limiteAgenda);
   const lista = doPeriodo.filter((c) => c.situacao !== "futura").reverse();
@@ -240,7 +242,13 @@ export default async function CallsPage({
         <KpiCard
           label="Receita das calls"
           value={brl(r.receita)}
-          hint={ticket !== null ? `ticket médio ${brl(ticket)}` : "nenhuma venda ainda"}
+          hint={
+            ticket === null
+              ? "nenhuma venda ainda"
+              : origens.length
+                ? `${origens.map(([o, v]) => `${o} ${brl(v)}`).join(" · ")}${origens.some(([o]) => o === "TMB") ? "" : " · TMB R$ 0"}`
+                : `ticket médio ${brl(ticket)}`
+          }
         />
         <KpiCard
           label="Duração média"
@@ -268,20 +276,18 @@ export default async function CallsPage({
         )}
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-4">
-        <Card title="Por vendedor" className="lg:col-span-3">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[620px]">
+      <Card title="Por vendedor" className="mb-4">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                   <th className={TH}>Vendedor</th>
-                  <th className={`${TH} text-right`}>Marcadas</th>
+                  <th className={`${TH} text-right hidden sm:table-cell`}>Marcadas</th>
                   <th className={`${TH} text-right`}>Aconteceram</th>
-                  <th className={`${TH} text-right`}>Faltas</th>
-                  <th className={`${TH} pl-4 w-32`}>Comparecimento</th>
+                  <th className={`${TH} text-right hidden sm:table-cell`}>Faltas</th>
+                  <th className={`${TH} pl-4 w-40 hidden md:table-cell`}>Comparecimento</th>
                   <th className={`${TH} text-right`}>Fechou</th>
-                  <th className={`${TH} text-right`}>Receita</th>
-                  <th className={`${TH} text-right`}>Duração</th>
+                  <th className={`${TH} text-right hidden sm:table-cell`}>Receita</th>
+                  <th className={`${TH} text-right hidden lg:table-cell`}>Duração</th>
                 </tr>
               </thead>
               <tbody>
@@ -292,12 +298,12 @@ export default async function CallsPage({
                         {l.vendedor}
                       </Link>
                     </td>
-                    <td className={`${TD} text-right tabular-nums text-slate-600 dark:text-zinc-400`}>{l.marcadas}</td>
+                    <td className={`${TD} text-right tabular-nums text-slate-600 dark:text-zinc-400 hidden sm:table-cell`}>{l.marcadas}</td>
                     <td className={`${TD} text-right tabular-nums font-medium text-slate-800 dark:text-zinc-200`}>
                       {l.aconteceram}
                     </td>
-                    <td className={`${TD} text-right tabular-nums text-slate-600 dark:text-zinc-400`}>{l.faltas}</td>
-                    <td className={`${TD} pl-4`}>
+                    <td className={`${TD} text-right tabular-nums text-slate-600 dark:text-zinc-400 hidden sm:table-cell`}>{l.faltas}</td>
+                    <td className={`${TD} pl-4 hidden md:table-cell`}>
                       <div className="tabular-nums text-xs text-slate-700 dark:text-zinc-300 mb-1">{pct(l.comparecimento)}</div>
                       <Medidor t={l.comparecimento} />
                     </td>
@@ -305,23 +311,23 @@ export default async function CallsPage({
                       {l.fechamento.ok}
                       <span className="text-xs text-slate-400 dark:text-zinc-500"> · {pct(l.fechamento)}</span>
                     </td>
-                    <td className={`${TD} text-right tabular-nums text-slate-700 dark:text-zinc-300`}>
+                    <td className={`${TD} text-right tabular-nums text-slate-700 dark:text-zinc-300 hidden sm:table-cell`}>
                       {l.receita ? brl(l.receita) : "—"}
                     </td>
-                    <td className={`${TD} text-right tabular-nums text-slate-600 dark:text-zinc-400`}>
+                    <td className={`${TD} text-right tabular-nums text-slate-600 dark:text-zinc-400 hidden lg:table-cell`}>
                       {l.duracaoMedia !== null ? `${num(l.duracaoMedia)} min` : "—"}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
           <p className="text-xs text-slate-400 dark:text-zinc-500 mt-3">
             Fechou: calls que aconteceram e viraram venda paga em até 48h. Comparecimento: aconteceram ÷ (aconteceram + faltas).
           </p>
-        </Card>
+      </Card>
 
-        <Card title="Funil do Téo" className="lg:col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4">
+        <Card title="Funil das calls">
           <div className="space-y-3">
             {funil.etapas.map((e, i) => {
               const anterior = i > 0 ? funil.etapas[i - 1].valor : null;
@@ -344,16 +350,17 @@ export default async function CallsPage({
             })}
           </div>
           <p className="text-xs text-slate-400 dark:text-zinc-500 mt-4">
-            {vendedor
-              ? `Leads de ${primeiroNome(vendedor)} cuja conversa com o Téo começou no período.`
-              : "Leads cuja conversa com o Téo começou no período."}{" "}
+            Leads{vendedor ? ` de ${primeiroNome(vendedor)}` : ""} com call no período (lead com mais de uma call conta uma vez).
             O % compara com a etapa anterior.
-            {funil.aindaVao ? ` Mais ${funil.aindaVao} com call ainda por acontecer ou em apuração.` : ""}
+            {funil.emApuracao ? ` Mais ${funil.emApuracao} com a call em apuração.` : ""}
           </p>
+          {!vendedor && coorte.conversas > 0 && (
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-2">
+              Conversas novas com o Téo no período: {num(coorte.conversas)}, e {num(coorte.marcaram)} delas marcaram call (
+              {pct(coorte.marcaram / coorte.conversas)}).
+            </p>
+          )}
         </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <Card title="Comparecimento pela antecedência">
           <Faixas faixas={antecedencia} vazio="Nenhuma call apurada no período." />
           <p className="text-xs text-slate-400 dark:text-zinc-500 mt-4">Do dia em que o lead marcou até o dia da call.</p>
@@ -388,16 +395,16 @@ export default async function CallsPage({
         {proximas.length === 0 ? (
           <p className="text-sm text-slate-400 dark:text-zinc-500">Nenhuma call agendada.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[560px]">
+          <div>
+            <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                   <th className={TH}>Hora</th>
                   <th className={TH}>Lead</th>
                   <th className={TH}>Vendedor</th>
-                  <th className={TH}>Marcou</th>
+                  <th className={`${TH} hidden sm:table-cell`}>Marcou</th>
                   <th className={TH}>Véspera</th>
-                  <th className={TH}>Lembrete</th>
+                  <th className={`${TH} hidden sm:table-cell`}>Lembrete</th>
                 </tr>
               </thead>
               <tbody>
@@ -416,7 +423,7 @@ export default async function CallsPage({
                       <td className={`${TD} tabular-nums text-slate-700 dark:text-zinc-300`}>{quandoBR(c.inicio).split(" ")[2]}</td>
                       <td className={`${TD} text-slate-800 dark:text-zinc-200`}>{c.nome ?? "—"}</td>
                       <td className={`${TD} text-slate-600 dark:text-zinc-400`}>{primeiroNome(c.vendedor)}</td>
-                      <td className={`${TD} text-slate-500 dark:text-zinc-400 tabular-nums`}>
+                      <td className={`${TD} text-slate-500 dark:text-zinc-400 tabular-nums hidden sm:table-cell`}>
                         {c.criadoEm ? quandoBR(c.criadoEm).split(" ").slice(1).join(" ") : "—"}
                       </td>
                       <td className={`${TD} text-xs`}>
@@ -426,7 +433,7 @@ export default async function CallsPage({
                           <span className="text-slate-400 dark:text-zinc-500">—</span>
                         )}
                       </td>
-                      <td className={`${TD} text-xs`}>
+                      <td className={`${TD} text-xs hidden sm:table-cell`}>
                         {c.lembreteEm ? (
                           <span className="text-slate-700 dark:text-zinc-300">✓ enviado</span>
                         ) : (
@@ -447,17 +454,17 @@ export default async function CallsPage({
         {lista.length === 0 ? (
           <p className="text-sm text-slate-400 dark:text-zinc-500">Nenhuma call já passada neste período.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[820px]">
+          <div>
+            <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-white/10">
                   <th className={TH}>Quando</th>
                   <th className={TH}>Lead</th>
-                  <th className={TH}>Vendedor</th>
+                  <th className={`${TH} hidden md:table-cell`}>Vendedor</th>
                   <th className={TH}>Situação</th>
-                  <th className={`${TH} text-right`}>Duração</th>
-                  <th className={TH}>Venda em 48h</th>
-                  <th className={TH}>Corrigir</th>
+                  <th className={`${TH} text-right hidden lg:table-cell`}>Duração</th>
+                  <th className={`${TH} hidden sm:table-cell`}>Venda em 48h</th>
+                  <th className={`${TH} hidden sm:table-cell`}>Corrigir</th>
                 </tr>
               </thead>
               <tbody>
@@ -466,32 +473,45 @@ export default async function CallsPage({
                     key={c.id}
                     className={`border-b border-slate-100 dark:border-white/[0.06] last:border-0 ${c.situacao === "cancelada" ? "opacity-60" : ""}`}
                   >
-                    <td className={`${TD} whitespace-nowrap tabular-nums text-slate-600 dark:text-zinc-400`}>{quandoBR(c.inicio)}</td>
-                    <td className={`${TD} text-slate-800 dark:text-zinc-200`}>{c.nome ?? "—"}</td>
-                    <td className={`${TD} whitespace-nowrap text-slate-600 dark:text-zinc-400`}>{primeiroNome(c.vendedor)}</td>
+                    <td className={`${TD} tabular-nums text-slate-600 dark:text-zinc-400`}>{quandoBR(c.inicio)}</td>
+                    <td className={`${TD} text-slate-800 dark:text-zinc-200`}>
+                      {c.nome ?? "—"}
+                      {c.vendaValor !== null && (
+                        <div className="sm:hidden text-xs font-semibold text-slate-900 dark:text-zinc-100 mt-0.5">
+                          {brl(c.vendaValor)} · {c.vendaProduto}
+                        </div>
+                      )}
+                    </td>
+                    <td className={`${TD} whitespace-nowrap text-slate-600 dark:text-zinc-400 hidden md:table-cell`}>{primeiroNome(c.vendedor)}</td>
                     <td className={TD}>
                       <Situacao c={c} />
                       <div className="text-[11px] text-slate-400 dark:text-zinc-500 mt-0.5">{comoSabemos(c)}</div>
                       {c.presencaNota && (
                         <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 max-w-xs">“{c.presencaNota}”</div>
                       )}
+                      {c.situacao !== "cancelada" && (
+                        <div className="sm:hidden mt-1.5">
+                          <PresencaBotoes id={c.id} situacao={c.situacao} fonte={c.fonte} />
+                        </div>
+                      )}
                     </td>
-                    <td className={`${TD} text-right tabular-nums text-slate-600 dark:text-zinc-400`}>
+                    <td className={`${TD} text-right tabular-nums text-slate-600 dark:text-zinc-400 hidden lg:table-cell`}>
                       {c.duracaoMin !== null ? `${num(c.duracaoMin)} min` : "—"}
                     </td>
-                    <td className={TD}>
+                    <td className={`${TD} hidden sm:table-cell`}>
                       {c.vendaValor !== null ? (
                         <>
                           <div className="tabular-nums font-semibold text-slate-900 dark:text-zinc-100">{brl(c.vendaValor)}</div>
                           <div className="text-[11px] text-slate-500 dark:text-zinc-400 max-w-56">
-                            {c.vendaProduto} · pelo {c.vendaPor}
+                            {c.vendaProduto}
+                            {c.vendaOrigem ? ` · ${c.vendaOrigem}` : ""} · pelo {c.vendaPor}
                           </div>
                         </>
                       ) : (
                         <span className="text-slate-300 dark:text-zinc-600">—</span>
                       )}
                     </td>
-                    <td className={TD}>
+                    <td className={`${TD} hidden sm:table-cell`}>
                       {c.situacao !== "cancelada" && <PresencaBotoes id={c.id} situacao={c.situacao} fonte={c.fonte} />}
                     </td>
                   </tr>
