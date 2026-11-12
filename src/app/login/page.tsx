@@ -48,7 +48,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex min-h-screen items-center justify-center bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-4">
+    <div className="fixed inset-0 z-30 flex min-h-screen items-center justify-center bg-[#121417] dark:bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <div className="text-xl font-bold text-white">Canal do Anfitrião</div>
