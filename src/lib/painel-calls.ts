@@ -29,6 +29,8 @@ export interface CallPainel {
   vendaProduto: string | null;
   vendaEm: string | null;
   vendaPor: string | null;
+  /** Eduzz, Asaas ou TMB (vazio enquanto a migração 0085 não está no banco) */
+  vendaOrigem: string | null;
   vesperaEm: string | null;
   lembreteEm: string | null;
   esperandoEm: string | null;
@@ -55,6 +57,7 @@ export function lerCalls(rows: Record<string, unknown>[] | null | undefined): Ca
     vendaProduto: texto(r.venda_produto),
     vendaEm: texto(r.venda_em),
     vendaPor: texto(r.venda_por),
+    vendaOrigem: texto(r.venda_origem),
     vesperaEm: texto(r.vespera_em),
     lembreteEm: texto(r.lembrete_em),
     esperandoEm: texto(r.esperando_em),
@@ -138,6 +141,8 @@ export interface Resumo {
   fechamento: Taxa;
   /** soma das vendas das calls que aconteceram */
   receita: number;
+  /** a mesma receita por plataforma (Eduzz, TMB, Asaas); vazio sem a origem */
+  receitaPorOrigem: Record<string, number>;
   duracaoMedia: number | null;
   duracaoBase: number;
   /** aconteceram fora da sala do Teams (nota #call ou marcação no painel) */
@@ -162,6 +167,10 @@ export function resumir(calls: CallPainel[]): Resumo {
     comparecimento: taxa(ok.length, ok.length + faltas.length),
     fechamento: taxa(vendidas.length, ok.length),
     receita: vendidas.reduce((s, c) => s + (c.vendaValor ?? 0), 0),
+    receitaPorOrigem: vendidas.reduce<Record<string, number>>((acc, c) => {
+      if (c.vendaOrigem) acc[c.vendaOrigem] = (acc[c.vendaOrigem] ?? 0) + (c.vendaValor ?? 0);
+      return acc;
+    }, {}),
     duracaoMedia: duracoes.length ? duracoes.reduce((s, d) => s + d, 0) / duracoes.length : null,
     duracaoBase: duracoes.length,
     foraDoTeams: ok.filter((c) => c.fonte === "nota" || c.fonte === "painel").length,
@@ -169,25 +178,37 @@ export function resumir(calls: CallPainel[]): Resumo {
   };
 }
 
+export interface Comprador {
+  nome: string;
+  valor: number;
+}
+
 export interface Dia {
   dia: string;
   rotulo: string;
+  /** aconteceram e viraram venda em até 48h (fica na base da barra) */
+  compraram: number;
+  /** aconteceram sem venda */
   aconteceram: number;
   faltas: number;
   semResultado: number;
   agendadas: number;
+  compradores: Comprador[];
 }
 
 export function porDia(calls: CallPainel[], de: string, ate: string): Dia[] {
   const mapa = new Map<string, Dia>();
   for (let d = de; d <= ate; d = somarDias(d, 1)) {
-    mapa.set(d, { dia: d, rotulo: rotuloDia(d), aconteceram: 0, faltas: 0, semResultado: 0, agendadas: 0 });
+    mapa.set(d, { dia: d, rotulo: rotuloDia(d), compraram: 0, aconteceram: 0, faltas: 0, semResultado: 0, agendadas: 0, compradores: [] });
     if (mapa.size > 400) break;
   }
   for (const c of calls) {
     const linha = mapa.get(diaBR(c.inicio));
     if (!linha) continue;
-    if (c.situacao === "aconteceu") linha.aconteceram++;
+    if (c.situacao === "aconteceu" && c.vendaValor !== null) {
+      linha.compraram++;
+      linha.compradores.push({ nome: c.nome ?? "—", valor: c.vendaValor });
+    } else if (c.situacao === "aconteceu") linha.aconteceram++;
     else if (c.situacao === "falta") linha.faltas++;
     else if (c.situacao === "apuracao" || c.situacao === "sem_dado") linha.semResultado++;
     else if (c.situacao === "futura") linha.agendadas++;
@@ -257,35 +278,38 @@ export interface EtapaFunil {
 }
 
 /**
- * Funil por lead, da coorte de conversas que o Téo começou no período:
- * conversas → marcaram call → a call aconteceu → compraram em até 48h depois.
- * `calls` são as calls desses leads (de qualquer data a partir do período).
- * Com vendedor escolhido, a etapa "conversas" sai (ela não é de um vendedor).
+ * Funil do período, por lead (a mesma régua dos KPIs): leads com call que já
+ * passou → a call aconteceu → compraram em até 48h depois de uma call que
+ * aconteceu. Canceladas e agendadas não entram. Lead com mais de uma call conta
+ * uma vez só.
  */
-export function funilDoTeo(
-  coorte: string[],
-  calls: CallPainel[],
-  comConversas: boolean
-): { etapas: EtapaFunil[]; aindaVao: number } {
-  const da = new Set(coorte);
+export function funilDoPeriodo(calls: CallPainel[]): { etapas: EtapaFunil[]; emApuracao: number } {
   const porLead = new Map<string, CallPainel[]>();
   for (const c of calls) {
-    if (!c.contactId || !da.has(c.contactId)) continue;
-    porLead.set(c.contactId, [...(porLead.get(c.contactId) ?? []), c]);
+    if (c.situacao === "cancelada" || c.situacao === "futura") continue;
+    const k = c.contactId ?? c.id;
+    porLead.set(k, [...(porLead.get(k) ?? []), c]);
   }
   const leads = [...porLead.values()];
   const aconteceu = leads.filter((l) => l.some((c) => c.situacao === "aconteceu"));
   const compraram = aconteceu.filter((l) => l.some((c) => c.situacao === "aconteceu" && c.vendaValor !== null));
-  const aindaVao = leads.filter(
-    (l) => !l.some((c) => c.situacao === "aconteceu") && l.some((c) => c.situacao === "futura" || c.situacao === "apuracao")
+  const emApuracao = leads.filter(
+    (l) => !l.some((c) => c.situacao === "aconteceu") && l.some((c) => c.situacao === "apuracao")
   ).length;
-  const etapas: EtapaFunil[] = [
-    ...(comConversas ? [{ rotulo: "Conversas com o Téo", valor: coorte.length }] : []),
-    { rotulo: "Marcaram call", valor: leads.length },
-    { rotulo: "A call aconteceu", valor: aconteceu.length },
-    { rotulo: "Compraram em até 48h", valor: compraram.length },
-  ];
-  return { etapas, aindaVao };
+  return {
+    etapas: [
+      { rotulo: "Leads com call", valor: leads.length },
+      { rotulo: "A call aconteceu", valor: aconteceu.length },
+      { rotulo: "Compraram em até 48h", valor: compraram.length },
+    ],
+    emApuracao,
+  };
+}
+
+/** Das conversas que o Téo começou no período, quantas marcaram call (qualquer data). */
+export function conversasQueMarcaram(coorte: string[], calls: CallPainel[]): { conversas: number; marcaram: number } {
+  const comCall = new Set(calls.map((c) => c.contactId).filter(Boolean) as string[]);
+  return { conversas: coorte.length, marcaram: coorte.filter((id) => comCall.has(id)).length };
 }
 
 export const pct = (t: Taxa | number | null, digitos = 0): string => {
