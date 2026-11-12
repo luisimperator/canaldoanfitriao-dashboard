@@ -588,7 +588,7 @@ async function horariosLivres(
   // Remarcação: as calls que o próprio lead já tem não ocupam a agenda pra ele
   // (a call nova substitui a antiga).
   contato: string | null = null
-): Promise<{ horario: string; vendedor: string; junto: number }[]> {
+): Promise<{ horario: string; vendedor: string }[]> {
   const time = (cfg.vendedores ?? []).map((v) => v.nome);
   const vendedores = especialista && time.includes(especialista) ? [especialista] : time;
   const todos = (cfg.horarios ?? []).filter(
@@ -617,23 +617,23 @@ async function horariosLivres(
     inicios.set(m.vendedor, lista);
   }
   const ocupado = (ts: number, v: string) => (inicios.get(v) ?? []).some((t) => Math.abs(t - ts) < INTERVALO_MS);
-  // Calls de outros vendedores que se sobrepõem a este horário (a call dura
-  // 30 min). Pode marcar junto, mas o Téo prefere os horários sem ninguém.
-  const DURACAO_MS = 30 * 60_000;
-  const junto = (ts: number) =>
-    (marcadas ?? []).filter((m) => Math.abs(new Date(m.inicio).getTime() - ts) < DURACAO_MS).length;
+  // Calls de vendedores diferentes podem acontecer no mesmo horário (cada um
+  // no seu computador): o Téo oferece os horários mais próximos, sem evitar
+  // sobreposição. (De 04/11 a 12/11 ele preferia horário sem call de outro
+  // vendedor e as calls do dia ficavam todas em fila; o Fernando pediu pra
+  // liberar.)
   const dia = (iso: string) => local(iso).slice(0, 10);
   const carga = new Map<string, number>();
   for (const m of marcadas ?? []) {
     if (m.vendedor) carga.set(`${dia(m.inicio)}|${m.vendedor}`, (carga.get(`${dia(m.inicio)}|${m.vendedor}`) ?? 0) + 1);
   }
-  const out: { horario: string; vendedor: string; junto: number }[] = [];
+  const out: { horario: string; vendedor: string }[] = [];
   for (const h of todos) {
     const ts = new Date(h).getTime();
     const livres = vendedores.filter((v) => !ocupado(ts, v));
     if (livres.length === 0) continue;
     const [escolhido] = ordemDoDia(livres, (v) => carga.get(`${dia(h)}|${v}`) ?? 0, taxa);
-    out.push({ horario: local(h), vendedor: escolhido, junto: junto(ts) });
+    out.push({ horario: local(h), vendedor: escolhido });
   }
   return out;
 }
@@ -1000,9 +1000,9 @@ async function marcarCall(
   const horario = args.horario.trim().slice(0, 16);
   const slot = livres.find((l) => l.horario === horario);
   const lista = (ls: typeof livres) =>
-    [...ls.filter((l) => !l.junto), ...ls.filter((l) => l.junto)]
+    ls
       .slice(0, 8)
-      .map((l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})${l.junto ? " *" : ""}`)
+      .map((l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`)
       .join(", ") || "nenhum";
   if (!slot) {
     return `Esse horário não está livre. Livres agora: ${lista(livres)}.`;
@@ -1515,7 +1515,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       acompanhamento,
       especialista: especialista ? primeiroNomeVendedor(especialista) : null,
       horariosLivres: (await horariosLivres(supabase, cfg, especialista, c.contact_id)).map(
-        (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})${l.junto ? " *" : ""}`
+        (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`
       ),
       marcarCall: (args) => marcarCall(supabase, c, cfg, especialista, args),
     });

@@ -446,10 +446,6 @@ export async function rodarTeo(opts: {
             ? `${opts.especialista} é o especialista deste lead (já tem call marcada ou já conversou com ele): a call é sempre com ${opts.especialista}, inclusive pra remarcar. Os horários abaixo já são só dessa pessoa. Nunca ofereça outro especialista; se nenhum horário servir, chame passar_para_humano (motivo call).\n`
             : ""
         }${
-          opts.horariosLivres.some((h) => h.endsWith(" *"))
-            ? "Horário com * já tem outra call no mesmo horário, com outro especialista. Ofereça os sem *; um com * só se o lead pedir exatamente esse horário.\n"
-            : ""
-        }${
           opts.horariosLivres.length ? opts.horariosLivres.join(", ") : "nenhum no momento: pergunte dia e período e passe pro time"
         }`,
         blocoLead(opts.lead),
