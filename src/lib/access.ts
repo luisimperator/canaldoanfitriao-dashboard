@@ -14,6 +14,7 @@ export const TABS: TabDef[] = [
   { href: "/", label: "Visão geral", icon: "◉", section: "Painel" },
   { href: "/gargalo", label: "Gargalo", icon: "⚑", section: "Painel" },
   { href: "/funil", label: "Funil de vendas", icon: "▼", section: "Comercial" },
+  { href: "/calls", label: "Painel Calls", icon: "☎", section: "Comercial" },
   { href: "/crm", label: "CRM", icon: "▦", section: "Comercial" },
   { href: "/atendimento", label: "Funil CRM", icon: "◷", section: "Comercial" },
   { href: "/conversas", label: "Conversas", icon: "💬", section: "Comercial" },
