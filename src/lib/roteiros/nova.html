@@ -172,6 +172,15 @@ td.save { color: var(--teal); font-weight: 700; }
 .note { font-size: 13.5px; color: var(--muted); margin: 0; }
 
 /* objeções */
+.virada { padding: 18px 22px; border-radius: 16px; border: 1px dashed var(--teal-light); display: grid; gap: 10px; }
+.virada .kicker { color: var(--teal); }
+.virada ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; font-size: 17px; color: var(--ink-2); }
+.virada ol li::marker { color: var(--teal); font-weight: 700; }
+.virada b { color: var(--ink); }
+.virada .slot, .obj .slot { border-bottom: 2px dashed var(--coral); }
+.obj .links { display: flex; flex-wrap: wrap; gap: 8px; }
+.cofre-link { justify-self: start; font-family: var(--label); font-weight: 600; font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; color: var(--teal); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--teal-light); }
+.cofre-link:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
 .jump { display: flex; flex-wrap: wrap; gap: 8px; }
 .jump a { font-size: 14px; font-weight: 600; text-decoration: none; padding: 6px 14px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--ink-2); }
 .jump a:hover { border-color: var(--coral); color: var(--coral); }
@@ -354,13 +363,17 @@ footer img { width: 92px; height: auto; display: block; }
 
     <!-- 4 -->
     <section class="stage" id="e4">
-      <div class="stage-head"><span class="tag">Etapa 4 · Transição</span><h2>Pedir licença <span class="t">pra mostrar</span></h2></div>
-      <div class="says"><p class="say">Acho que você vai gostar do que a gente tem. Posso te mostrar?</p></div>
-      <ul class="do"><li>Pedir licença deixa a pessoa pronta pra ouvir e menos impaciente com a apresentação.</li></ul>
-      <div class="dontbox">
-        <span class="kicker">Fora do roteiro padrão</span>
-        <ul class="dont"><li>O combinado dos “dois sentimentos” (o acordo de sinceridade antes de apresentar). Com lead que só responde “sim” e “não”, dá pra testar, mas cuidado pra não soar como truque.</li></ul>
+      <div class="stage-head"><span class="tag">Etapa 4 · Transição</span><h2>Pedir licença <span class="t">e combinar</span></h2></div>
+      <div class="says">
+        <p class="say">Acho que você vai gostar do que a gente tem. Posso te mostrar?</p>
+        <p class="say small">Antes, um combinado. No final você pode ter dois sentimentos. Um é: “faz muito sentido pro meu momento, resolve o meu problema”. Aí a gente já vê como você começa. O outro é: “não era isso que eu precisava agora”. E tudo bem: pode ser 100% sincero comigo, que eu até te indico outro caminho. Combinado?</p>
       </div>
+      <ul class="do">
+        <li>Pedir licença deixa a pessoa pronta pra ouvir e menos impaciente com a apresentação.</li>
+        <li>O combinado tira a pressão (ela sabe que pode dizer não) e já deixa acertado que no fim vem uma resposta, sim ou não, em vez de “vou pensar”.</li>
+        <li>Com lead que só responde “sim” e “não”, o combinado faz a pessoa falar mais.</li>
+        <li>Diga com as suas palavras e espere o “combinado”. Lido em tom de técnica, soa como truque.</li>
+      </ul>
     </section>
 
     <!-- 5 -->
@@ -411,10 +424,12 @@ footer img { width: 92px; height: auto; display: block; }
         <p class="say">Então, resumindo: você entra na comunidade com as aulas gravadas, o grupo de WhatsApp com o Rômulo dentro e as lives mensais pra tirar dúvida.</p>
         <p class="say small">Lembra que você me disse que <span class="slot">[o problema dela]</span>? É exatamente isso que a gente resolve com <span class="slot">[a perna ou a comunidade]</span>.</p>
         <p class="say small">Faz sentido pra você? Ficou alguma dúvida?</p>
+        <p class="say small">E lembra do nosso combinado? Qual dos dois sentimentos ficou?</p>
         <p class="say">O investimento é R$ 2.997, ou 12x de R$ 299,70. E você tem 14 dias de garantia. A lei dá 7, a gente dá 14: é o dobro. Se não for o que eu te disse, devolvemos 100%, sem precisar explicar nada. Bora começar hoje?</p>
       </div>
       <ul class="do">
         <li>Antes do preço, faça a pessoa dizer que entendeu. Se ficou dúvida, volte e explique: preço só depois de clareza.</li>
+        <li>O preço vem depois do “faz sentido”, o primeiro dos dois sentimentos. Se for o segundo, pergunte o que faltou: é uma objeção (etapa 7).</li>
         <li>Volte à dor dela mais de uma vez, com as palavras dela.</li>
         <li>Qualquer resposta que não seja “sim” vai para as objeções (etapa 7).</li>
       </ul>
@@ -444,73 +459,112 @@ footer img { width: 92px; height: auto; display: block; }
     <!-- 7 -->
     <section class="stage" id="e7">
       <div class="stage-head"><span class="tag">Etapa 7 · Objeções</span><h2>As 11 que <span class="t">mais aparecem</span></h2></div>
-      <p class="intro">As 10 primeiras estão na ordem do que mais aparece nas conversas. A 11ª entrou depois e é a 5ª mais comum. Pra cada uma, o Cofre de Cases acha a história certa pro lead, com o trecho do vídeo pronto pra dar play.</p>
+      <p class="intro">As 10 primeiras estão na ordem do que mais aparece nas conversas. A 11ª entrou depois e é a 5ª mais comum. Cada uma tem a fala, o jeito de virar e o botão do Cofre de Cases já filtrado com as histórias pra essa objeção.</p>
       <a class="btn" href="/cofre" target="_blank" rel="noopener">Abrir o Cofre de Cases ↗</a>
+
+      <div class="virada">
+        <span class="kicker">Antes de responder qualquer objeção</span>
+        <ol>
+          <li><b>Acolha.</b> “Faz sentido.” “Sem problema.” Não discuta nem rebata de primeira.</li>
+          <li><b>Descubra a de verdade.</b> “O que está te pegando?” A objeção que a pessoa fala nem sempre é a que trava. Com mais intimidade, em voz mais baixa: “O que você tem medo que aconteça?”</li>
+          <li><b>Isole.</b> “Tirando isso, tem mais alguma coisa que te impede de começar hoje?” Assim você responde uma vez só, e a certa.</li>
+          <li><b>Responda com lógica e prova.</b> A fala da objeção e o caso mais parecido com o lead no Cofre. Um caso só, bem contado.</li>
+          <li><b>Volte à dor e peça de novo.</b> “Lembra que você me disse que <span class="slot">[problema dela]</span>? Faz sentido? Bora começar?”</li>
+          <li><b>Não fechou? Data e hora.</b> Nunca aceite “vou pensar” sem pergunta e sem data: “Amanhã às 11h eu te chamo pra você me dar a resposta, pode ser?”</li>
+        </ol>
+        <p class="note">Sem promessa de ganho: mostre o que outro aluno fez. A garantia de 14 dias é pra quem está com receio; use sem medo, quase ninguém pede o dinheiro de volta.</p>
+      </div>
+
       <nav class="jump" aria-label="Ir para a objeção">
         <a href="#o1">Preço</a><a href="#o2">Momento</a><a href="#o3">Vou pensar</a><a href="#o4">YouTube</a><a href="#o5">Cônjuge ou sócio</a><a href="#o6">Serve pro meu caso?</a><a href="#o7">Juros</a><a href="#o8">Façam por mim</a><a href="#o9">Confiança</a><a href="#o10">Já fiz curso</a><a href="#o11">Não tenho tempo</a>
       </nav>
       <div class="objs">
         <article class="obj" id="o1">
           <header><b>1</b><h3>Preço</h3></header>
-          <p class="resp"><em>Lógica:</em> “12x de R$ 299,70 é menos que uma diária sua de R$ [diária dela] por mês.” Se a Calculadora de Ganhos já está aberta, mostre em quantos dias de ganho extra o investimento se paga.</p>
-          <p class="resp"><em>Prova:</em> o Danilo era barbeiro havia 18 anos, fez o curso e em 2 meses fez uns R$ 18 mil. Hoje tem um apartamento em Ubatuba e dois com sócios no Guarujá. “Pra ganhar R$ 1.000 eu tinha que cortar 20 cabelos. Hoje a cobertura é R$ 1.000 a diária.”</p>
-          <p class="tip">Condição: 12x, boleto parcelado, dois cartões e a escada de preço. Pra outros casos, use o mais parecido com o lead no <a href="/cofre" target="_blank" rel="noopener">Cofre de Cases</a>.</p>
+          <p class="resp">Primeiro descubra qual é o “caro”: “Tirando o preço, faz sentido pra você? O que pesa: o valor total, a parcela no mês ou a dúvida se volta pra você?”</p>
+          <p class="resp"><em>Se é o retorno:</em> “12x de R$ 299,70 é menos que uma diária sua de R$ <span class="slot">[diária dela]</span> por mês. Uma diária a mais por mês e já se pagou.” Com a Calculadora aberta, mostre em quantos dias de ganho extra o investimento volta.</p>
+          <p class="resp"><em>Se duvida que funciona pra ela:</em> o Danilo era barbeiro havia 18 anos, fez o curso e em 2 meses fez uns R$ 18 mil. “Pra ganhar R$ 1.000 eu tinha que cortar 20 cabelos. Hoje a cobertura é R$ 1.000 a diária.”</p>
+          <p class="resp"><em>Se é a parcela:</em> 12x, boleto parcelado ou dois cartões. Aí entra o cupom da escada (R$ 2.797).</p>
+          <p class="resp">“E é uma vez só: o que você aprende fica com você em todo imóvel que tiver.”</p>
+          <a class="cofre-link" href="/cofre?objecoes=preco" target="_blank" rel="noopener">Cofre: casos pra preço ↗</a>
         </article>
         <article class="obj" id="o2">
           <header><b>2</b><h3>Momento (obra, bebê, viagem, mês que vem)</h3></header>
-          <p class="resp">“Quanto isso é importante pra você? Lá no começo você me disse que isso é um problema pra resolver. A obra é justamente o melhor momento: você estuda agora e abre já certo.”</p>
-          <p class="tip">Se não fechar, marca a retomada numa data.</p>
+          <p class="resp">“Quanto isso é importante pra você? Lá no começo você me disse que <span class="slot">[problema dela]</span>. Isso continua acontecendo enquanto a gente espera.”</p>
+          <p class="resp">“O que vai estar diferente no mês que vem?” A resposta mostra se é momento mesmo ou outra objeção.</p>
+          <p class="resp"><em>Obra:</em> “A obra é o melhor momento: você estuda agora e já abre certo, com mobília, fotos e preço pensados pra temporada, sem refazer depois.”</p>
+          <p class="resp"><em>Bebê, viagem, correria:</em> “As aulas ficam gravadas e o grupo fica no seu celular. Você começa no seu ritmo e não perde nada.”</p>
+          <p class="tip">Se não fechar, marque a retomada com data e hora, no sistema.</p>
+          <a class="cofre-link" href="/cofre?objecoes=momento-obra" target="_blank" rel="noopener">Cofre: casos de obra e momento ↗</a>
         </article>
         <article class="obj" id="o3">
           <header><b>3</b><h3>Vou pensar</h3></header>
-          <p class="resp">“Sem problema, a gente não quer que você feche com pressa. Mas deixa eu tentar te ajudar: o que você precisa resolver pra decidir?”</p>
-          <p class="resp">“Você acha que chega mais rápido nesse resultado sozinha ou com quem já passou por isso te mostrando o caminho? Tem como pagar?”</p>
-          <p class="tip">Depois, em voz mais baixa: “O que você tem medo que aconteça?”</p>
+          <p class="resp">“Sem problema, a gente não quer que você feche com pressa. Mas me ajuda a te ajudar: o que está te pegando? É o dinheiro, o momento, alguém de casa ou alguma dúvida sobre a comunidade?” A resposta leva pra objeção certa.</p>
+          <p class="resp"><em>Se não aparece nada concreto,</em> uma pergunta por vez: “Você acha que com a comunidade chega mais longe do que sem ela?” “E mais rápido com quem já passou por isso te mostrando o caminho do que sozinha?” “Tem como pagar?” Três sins: “Então você já decidiu com a cabeça. O que sobra é o frio na barriga, e isso é normal.”</p>
+          <p class="resp">“O Rômulo levou quase 10 anos batendo cabeça pra chegar nesse método: diária errada, temporada perdida. Você pega pronto, sem pagar pelos erros.”</p>
+          <p class="tip">Em voz mais baixa: “O que você tem medo que aconteça?” Se mesmo assim quiser pensar: “Fechado. Que horas amanhã eu te chamo pra você me dar a resposta? Lembra do combinado: sim ou não, as duas estão ótimas.”</p>
+          <a class="cofre-link" href="/cofre?objecoes=medo-de-errar" target="_blank" rel="noopener">Cofre: medo de errar ↗</a>
         </article>
         <article class="obj" id="o4">
           <header><b>4</b><h3>YouTube ou lives grátis</h3></header>
-          <p class="resp">“O que você faz hoje te dá o resultado que você tem hoje.”</p>
-          <p class="resp">“Nas lives e no YouTube o Rômulo mostra o quê fazer. Na comunidade ele mostra o como, tintim por tintim, e você pergunta no grupo quando travar.”</p>
+          <p class="resp">“O que você faz hoje te dá o resultado que você tem hoje. Há quanto tempo você assiste os vídeos? E o que mudou no seu calendário nesse tempo?”</p>
+          <p class="resp">“No YouTube o Rômulo mostra o quê fazer, em peças soltas, no dia que sai. Na comunidade é o como, tintim por tintim, na ordem certa, e você pergunta no grupo quando travar.”</p>
+          <p class="resp"><em>Prova:</em> a Nat maratonou os vídeos do Rômulo e levou a casinha da garagem de R$ 33 mil pra R$ 70 mil por ano. Pra chegar nos 17 imóveis, entrou na comunidade: “foi o divisor de águas”.</p>
+          <a class="cofre-link" href="/cofre?objecoes=sozinho-youtube" target="_blank" rel="noopener">Cofre: quem começou pelos vídeos ↗</a>
         </article>
         <article class="obj wide" id="o5">
-          <header><b>5</b><h3>Cônjuge ou sócio</h3></header>
-          <p class="resp"><em>Melhor ainda:</em> chamar o cônjuge para a call já na marcação. Se não veio, comece por: “O que você acha que ele vai te perguntar? Às vezes eu já te respondo agora.” Depois, as seis falas, nesta ordem:</p>
+          <header><b>5</b><h3>Cônjuge, sócio ou família</h3></header>
+          <p class="resp"><em>Melhor ainda:</em> chamar o cônjuge para a call já na marcação. Se não veio: “Ele está aí perto? Chama ele, que eu explico em 5 minutos.” Se não dá: “O que você acha que ele vai te perguntar? Às vezes eu já te respondo agora.” Depois, as seis falas, nesta ordem:</p>
           <ol>
             <li>“E se ele não deixar?”</li>
-            <li>“Do que ele seria contra?”</li>
+            <li>“Do que ele seria contra?” (responda o motivo, não a pessoa)</li>
             <li>“Ele sabe que você está tentando resolver isso? Ele aprova ficar como está? Então por que seria contra resolver?”</li>
             <li>“Acho que você está pedindo permissão quando precisa de apoio.”</li>
             <li>“Daqui a 5 anos, se não fizer, quem você vai culpar?”</li>
-            <li>“Entra hoje. Se em casa ele não topar, você tem 14 dias e recebe tudo de volta.”</li>
+            <li>“Entra hoje e mostra pra ele lá dentro. Se ele não topar, você tem 14 dias e recebe tudo de volta.”</li>
           </ol>
+          <p class="tip">Vale igual pra mãe, pai e sócio.</p>
+          <a class="cofre-link" href="/cofre?objecoes=conjuge-socio" target="_blank" rel="noopener">Cofre: casais e sócios ↗</a>
         </article>
         <article class="obj" id="o6">
           <header><b>6</b><h3>Serve pro meu caso?</h3></header>
           <p class="resp"><em>Diagnóstico:</em> de 1 a 5 imóveis, Anfitrião 5 Estrelas. Com mais imóveis ou gestão para terceiros, Gigantes. Uma recomendação só.</p>
           <p class="resp"><em>Imóvel longe:</em> “Na comunidade o Rômulo mostra um imóvel em Balneário Camboriú, a 600 km da casa dele, rodando sem ele lá.”</p>
           <p class="resp"><em>Imóvel simples:</em> “Hóspede valoriza mais funcionalidade e limpeza do que luxo.”</p>
+          <p class="resp"><em>Cidade pequena:</em> a Cidinha, de Rifaina (SP), ajustou o preço numa mentoria e hoje tem todos os fins de semana alugados.</p>
+          <p class="resp"><em>Ainda sem imóvel:</em> “É o melhor jeito de começar: você escolhe e monta o imóvel já pensando em temporada.”</p>
+          <p class="tip">Conte um caso só, o mais parecido com o lead.</p>
+          <div class="links"><a class="cofre-link" href="/cofre?objecoes=imovel-longe" target="_blank" rel="noopener">Imóvel longe ↗</a><a class="cofre-link" href="/cofre?objecoes=imovel-simples" target="_blank" rel="noopener">Imóvel simples ↗</a><a class="cofre-link" href="/cofre?objecoes=sem-imovel" target="_blank" rel="noopener">Sem imóvel ↗</a></div>
         </article>
         <article class="obj" id="o7">
           <header><b>7</b><h3>Juros</h3></header>
           <p class="resp">“O juros não é nosso, é da Eduzz. Mas dá pra pagar bem menos: em 6x fica R$ 551,83 por mês, uns R$ 285 a menos que no 12x. E no Pix à vista não tem juros.”</p>
+          <p class="resp">Quase sempre o problema não é o juros, é a parcela caber no mês. Ache o número de parcelas que cabe: 4x, 6x ou 12x.</p>
           <p class="tip">Valores de 12x, 6x e 4x na tabela da etapa 6.</p>
         </article>
         <article class="obj" id="o8">
           <header><b>8</b><h3>Quero que façam por mim</h3></header>
-          <p class="resp">“Até pra isso você precisa entender o mínimo, pra saber o que cobrar. Te garanto: só de estar lá no grupo, cercado de pessoas falando disso o tempo todo, e com o Rômulo respondendo a turma e você, você já aprende. Seis meses lá e você começa a entender várias dinâmicas pra ter mais resultado.”</p>
+          <p class="resp">“Até pra isso você precisa entender o mínimo, pra saber o que cobrar. Quem contrata sem entender não sabe se o gestor está fazendo bem: diária, fotos, avaliações. Com o básico você cobra com critério e não fica refém.”</p>
+          <p class="resp">“E te garanto: só de estar no grupo, cercado de gente falando disso o tempo todo, com o Rômulo respondendo a turma e você, você já aprende. Seis meses lá e você começa a entender várias dinâmicas pra ter mais resultado.”</p>
         </article>
         <article class="obj" id="o9">
           <header><b>9</b><h3>Confiança</h3></header>
-          <p class="resp">“Faz sentido desconfiar, tem muito golpe por aí. O pagamento é pela Eduzz, uma das maiores plataformas de pagamento de cursos do Brasil, num link seguro. Você tem 14 dias de garantia com 100% de volta, e eu te mostro o grupo funcionando agora.”</p>
+          <p class="resp">“Faz sentido desconfiar, tem muito golpe por aí. O pagamento é pela Eduzz, uma das maiores plataformas de pagamento de cursos do Brasil, num link seguro no seu nome. Você tem 14 dias de garantia com 100% de volta.”</p>
+          <p class="resp"><em>Mostre, não só fale:</em> o grupo funcionando na tela, agora. E quem fala do Rômulo: o diretor comercial do Airbnb pra América do Sul foi no canal e disse que o Rômulo tem sucesso porque “as pessoas te ouvem”.</p>
+          <a class="cofre-link" href="/cofre?objecoes=confianca" target="_blank" rel="noopener">Cofre: elogios e autoridades ↗</a>
         </article>
         <article class="obj" id="o10">
           <header><b>10</b><h3>Já fiz curso e não serviu</h3></header>
-          <p class="resp">“Pior que um investimento ruim é deixar ele te impedir de fazer um bom. O primeiro namoro da escola não deu certo e você não desistiu de namorar.”</p>
+          <p class="resp">Primeiro escute: “O que não funcionou nele?” Se foi aula demais ou falta de suporte, mostre o grupo e as lives. Do que ela não gostou, não fale nada parecido.</p>
+          <p class="resp">“Pior que um investimento ruim é deixar ele te impedir de fazer um bom. Não deixa aquele curso te queimar duas vezes. O primeiro namoro da escola não deu certo e você não desistiu de namorar.”</p>
           <p class="resp">“Tem muito curso ruim e muito curso bom. Aqui quem entra quer continuar no grupo: a renovação é alta. E você ainda tem os 14 dias pra testar.”</p>
+          <a class="cofre-link" href="/cofre?objecoes=ja-fiz-curso" target="_blank" rel="noopener">Cofre: quem já tinha feito curso ↗</a>
         </article>
         <article class="obj" id="o11">
           <header><b>11</b><h3>Não tenho tempo</h3></header>
-          <p class="resp">“Hoje, quanto tempo por semana você gasta com o imóvel? Respondendo hóspede, resolvendo limpeza, mexendo em preço? Normalmente a falta de tempo vem justamente de fazer tudo sem processo. O que você aprende ali (mensagem automática, fechadura eletrônica, rotina de limpeza) é o que te devolve tempo. As aulas são gravadas, você assiste quando quiser: 10 minutinhos por dia já andam. E mesmo na semana mais corrida, só de estar no grupo, com o Rômulo respondendo a turma, você já aprende. Faz sentido?”</p>
+          <p class="resp">“Hoje, quanto tempo por semana você gasta com o imóvel? Respondendo hóspede, resolvendo limpeza, mexendo em preço? Normalmente a falta de tempo vem justamente de fazer tudo sem processo. O que você aprende ali (mensagem automática, fechadura eletrônica, rotina de limpeza) é o que te devolve tempo.”</p>
+          <p class="resp">“Você já está em grupo de WhatsApp de família e de amigos, né? Esse é um grupo que te ajuda a ganhar dinheiro com o imóvel. As aulas são gravadas: 10 minutinhos por dia já andam. E mesmo na semana mais corrida, só de estar no grupo, com o Rômulo respondendo a turma, você já aprende. Faz sentido?”</p>
+          <a class="cofre-link" href="/cofre?objecoes=tempo" target="_blank" rel="noopener">Cofre: casos de tempo ↗</a>
         </article>
       </div>
     </section>
