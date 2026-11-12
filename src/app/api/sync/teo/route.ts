@@ -529,52 +529,35 @@ function especialistaDaConversa(msgs: MsgUnnichat[], cfg: Config): string | null
   return dono;
 }
 
-// Conversão de cada vendedor nos últimos 90 dias: vendas pagas ÷ leads
-// atribuídos (a conta de "leads por venda" do painel, invertida). 90 dias pra
-// um mês ruim (ou um mês com poucos leads novos, como outubro de 2026) não
-// virar a ordem. Contagem no banco (head + count): 90 dias de leads passam do
-// limite de 1.000 linhas por consulta. Quem não tem dado fica com a média do
-// time.
-const JANELA_CONVERSAO_DIAS = 90;
+// Fechamento em call de cada vendedor nos últimos 90 dias: das calls do Téo
+// que aconteceram (com gravação no Teams), quantas viraram venda paga (Eduzz
+// ou TMB) no e-mail do convite em até 7 dias (função teo_fechamento_em_call
+// do banco). Só desempata a divisão do dia, que é igual entre os vendedores.
+// Até 12/11 era a conversão geral (vendas ÷ leads); o Fernando pediu a de call.
+const JANELA_FECHAMENTO_DIAS = 90;
 
-async function taxasDeConversao(
+async function taxasDeFechamentoEmCall(
   supabase: SupabaseClient,
   nomes: string[]
 ): Promise<Map<string, number>> {
-  const desde = new Date(Date.now() - JANELA_CONVERSAO_DIAS * 86400_000).toISOString().slice(0, 10);
-  const { data: sellers } = await supabase.from("sellers").select("id, name").in("name", nomes);
-  const brutas = new Map<string, number | null>(
-    await Promise.all(
-      nomes.map(async (nome): Promise<[string, number | null]> => {
-        const id = (sellers ?? []).find((s) => s.name === nome)?.id;
-        if (!id) return [nome, null];
-        const [v, l] = await Promise.all([
-          supabase
-            .from("sales")
-            .select("id", { count: "exact", head: true })
-            .eq("seller_id", id)
-            .eq("status", "paga")
-            .gte("sale_date", desde),
-          supabase.from("leads").select("id", { count: "exact", head: true }).eq("seller_id", id).gte("created_at", desde),
-        ]);
-        return [nome, v.count != null && l.count ? v.count / l.count : null];
-      })
-    )
+  const { data } = await supabase.rpc("teo_fechamento_em_call", { p_dias: JANELA_FECHAMENTO_DIAS });
+  const linhas = (data ?? []) as { vendedor: string; calls: number; fechamentos: number }[];
+  return new Map(
+    nomes.map((nome) => {
+      const l = linhas.find((x) => x.vendedor === nome);
+      return [nome, l && Number(l.calls) > 0 ? Number(l.fechamentos) / Number(l.calls) : 0];
+    })
   );
-  const conhecidas = [...brutas.values()].filter((t): t is number => t !== null);
-  const media = conhecidas.length ? conhecidas.reduce((a, b) => a + b, 0) / conhecidas.length : 1;
-  // Piso pequeno: quem não vendeu nada no período ainda pega call quando os
-  // outros estão ocupados, e a conta da distribuição não divide por zero.
-  return new Map(nomes.map((n) => [n, Math.max(brutas.get(n) ?? media, 0.001)]));
 }
 
 // Quem pega a próxima call do dia: as calls do dia são divididas igualmente
-// (vai quem tem menos calls no dia) e a conversão só desempata, então a call
-// que sobra quando o dia não divide por 3 fica com quem converte mais. Ex.: 7
-// calls com conversões 9,3%, 7,9% e 4,2% dão 3, 2 e 2. (Até 12/11 a divisão
-// era na proporção da conversão; o Fernando pediu divisão igual.)
+// (vai quem tem menos calls no dia) e o fechamento em call só desempata, então
+// a call que sobra quando o dia não divide por 3 fica com quem fecha mais nas
+// calls. Ex.: 7 calls com fechamentos de 33%, 14% e 0% dão 3, 2 e 2. (Até
+// 12/11 a divisão era na proporção da conversão geral; o Fernando pediu
+// divisão igual, desempatada pelo fechamento em call.)
 function ordemDoDia(livres: string[], cargaNoDia: (v: string) => number, taxa: Map<string, number>): string[] {
-  const t = (v: string) => taxa.get(v) ?? 0.001;
+  const t = (v: string) => taxa.get(v) ?? 0;
   return [...livres].sort((a, b) => cargaNoDia(a) - cargaNoDia(b) || t(b) - t(a));
 }
 
@@ -618,7 +601,7 @@ async function horariosLivres(
       .select("inicio, vendedor, contact_id")
       .neq("status", "cancelada")
       .gte("inicio", new Date(Date.now() - 12 * 3600_000).toISOString()),
-    taxasDeConversao(supabase, time),
+    taxasDeFechamentoEmCall(supabase, time),
   ]);
   // Entre o início de uma call e o da próxima do mesmo vendedor, no mínimo 1h
   // (a call continua com 30 min no convite; a meia hora que sobra é folga).
