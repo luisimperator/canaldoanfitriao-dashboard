@@ -338,7 +338,7 @@ function avisoJaComprouBlack(compra: { origem: string; quando: string; email: st
     `JÁ COMPROU A BLACK (vale acima do MODO BLACK FRIDAY e dos ajustes do dono): este lead comprou a Black Friday Histórica em ${dia} (${compra.origem}, e-mail ${compra.email}).`,
     "Não ofereça nem venda a Black de novo, não mande link de pagamento e não ofereça call de venda.",
     "Se ele escreveu, agradeça a confiança e ajude no que ele pedir. Dúvida de acesso, login, grupos ou conteúdo é com o suporte: chame passar_para_humano (suporte).",
-    "Se esta for uma mensagem de acompanhamento (retomar a conversa com quem parou de responder), não mande nada: responda só [SEM_RESPOSTA].",
+    "Se esta for uma mensagem de acompanhamento (retomar a conversa com quem parou de responder), não mande nada: responda só [ENCERRAR].",
   ].join(" ");
 }
 
@@ -1090,9 +1090,10 @@ async function garantirTeo(supabase: SupabaseClient, c: Conversa, atendenteId: s
 // Acompanhamento de quem parou de responder: horas desde o começo do silêncio
 // (mesmo dia, D+1, D+3, D+7, D+21). Depois do último, mais 2 dias e a conversa
 // fica "encerrado" (sem_resposta); se a pessoa voltar a escrever, o Téo retoma.
-// Se num acompanhamento o Téo decide não mandar nada ([SEM_RESPOSTA]: a pessoa
-// recusou ou pediu pra não ser chamada), a conversa também fecha
-// (sem_interesse): os modelos das etapas seguintes não saem mais.
+// Se num acompanhamento o Téo responde [ENCERRAR] (a pessoa recusou, pediu pra
+// não ser chamada ou já comprou a Black), a conversa também fecha
+// (sem_interesse): os modelos das etapas seguintes não saem mais. [SEM_RESPOSTA]
+// só pula a etapa (ex.: até aqui só veio resposta automática do WhatsApp).
 const FOLLOWUP_HORAS_PADRAO = [3, 24, 72, 168, 504];
 const ENCERRAR_DEPOIS_MS = 48 * 3600_000;
 // Entre um acompanhamento e o próximo, no mínimo isto (pra quem já estava
@@ -1225,7 +1226,8 @@ async function acompanhar(
         `Este é o acompanhamento ${etapa + 1} de ${horas.length}. Mande UMA mensagem curta retomando de onde a conversa parou: ` +
         `se você tinha oferecido horários de call, ofereça de novo (pode trocar por outros da lista "Horários livres"); ` +
         `se tinha feito uma pergunta, retome por outro ângulo. Nada de cobrar, de "passando pra saber" nem de repetir a mensagem anterior. ` +
-        `Se a pessoa disse claramente que não tem interesse ou pediu pra não ser chamada, responda só [SEM_RESPOSTA].]`,
+        `Se a pessoa disse claramente que não tem interesse ou pediu pra não ser chamada, responda só [ENCERRAR] (a conversa fecha e não sai mais nenhum acompanhamento). ` +
+        `Se só não fizer sentido escrever agora (por exemplo, até aqui só chegou resposta automática do WhatsApp dela), responda só [SEM_RESPOSTA] e esta etapa é pulada.]`,
     };
   }
 
@@ -1565,9 +1567,9 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       humano = { motivo: "limite", resumo: "O Téo chegou no limite de respostas desta conversa." };
     }
     const ficha = [c.ficha, res.ficha].filter(Boolean).join("\n") || null;
-    // Acompanhamento sem mensagem: o Téo viu que a pessoa recusou ou pediu pra
-    // não ser chamada. Fecha a conversa pra não sair o modelo da próxima etapa.
-    const recusou = Boolean(retomar) && !humano && res.mensagens.length === 0;
+    // Acompanhamento com [ENCERRAR]: a pessoa recusou ou pediu pra não ser
+    // chamada. Fecha a conversa pra não sair o modelo da próxima etapa.
+    const recusou = Boolean(retomar) && !humano && res.mensagens.length === 0 && Boolean(res.encerrar);
     await supabase
       .from("teo_conversas")
       .update({
@@ -1605,7 +1607,9 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         : retomar
           ? res.mensagens.length
             ? `acompanhamento ${(c.followup_etapa ?? 0) + 1} (texto)`
-            : `acompanhamento ${(c.followup_etapa ?? 0) + 1} pulado (encerrado: sem interesse)`
+            : recusou
+              ? `acompanhamento ${(c.followup_etapa ?? 0) + 1} pulado (encerrado: sem interesse)`
+              : `acompanhamento ${(c.followup_etapa ?? 0) + 1} pulado`
           : "respondeu";
     await log(supabase, nota, {
       contact_id: c.contact_id,
