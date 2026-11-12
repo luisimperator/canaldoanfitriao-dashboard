@@ -278,12 +278,16 @@ export interface EtapaFunil {
 }
 
 /**
- * Funil do período, por lead (a mesma régua dos KPIs): leads com call que já
- * passou → a call aconteceu → compraram em até 48h depois de uma call que
- * aconteceu. Canceladas e agendadas não entram. Lead com mais de uma call conta
+ * Funil do período, por lead (a mesma régua dos KPIs): falaram com o Téo →
+ * marcaram call (que já passou) → a call aconteceu → compraram em até 48h
+ * depois de uma call que aconteceu. Canceladas e agendadas não entram. Lead com mais de uma call conta
  * uma vez só.
  */
-export function funilDoPeriodo(calls: CallPainel[]): { etapas: EtapaFunil[]; emApuracao: number } {
+export function funilDoPeriodo(
+  calls: CallPainel[],
+  /** contatos que falaram com o Téo no período; null esconde a etapa (ex.: filtro por vendedor) */
+  conversasDoTeo: string[] | null
+): { etapas: EtapaFunil[]; emApuracao: number } {
   const porLead = new Map<string, CallPainel[]>();
   for (const c of calls) {
     if (c.situacao === "cancelada" || c.situacao === "futura") continue;
@@ -296,20 +300,18 @@ export function funilDoPeriodo(calls: CallPainel[]): { etapas: EtapaFunil[]; emA
   const emApuracao = leads.filter(
     (l) => !l.some((c) => c.situacao === "aconteceu") && l.some((c) => c.situacao === "apuracao")
   ).length;
+  // Quem marcou call falou com o Téo, mesmo que a conversa seja de antes do
+  // período: a primeira etapa junta os dois pra continuar sendo um funil.
+  const falaram = conversasDoTeo ? new Set([...conversasDoTeo, ...porLead.keys()]).size : null;
   return {
     etapas: [
-      { rotulo: "Leads com call", valor: leads.length },
+      ...(falaram !== null ? [{ rotulo: "Falaram com o Téo", valor: falaram }] : []),
+      { rotulo: "Marcaram call", valor: leads.length },
       { rotulo: "A call aconteceu", valor: aconteceu.length },
       { rotulo: "Compraram em até 48h", valor: compraram.length },
     ],
     emApuracao,
   };
-}
-
-/** Das conversas que o Téo começou no período, quantas marcaram call (qualquer data). */
-export function conversasQueMarcaram(coorte: string[], calls: CallPainel[]): { conversas: number; marcaram: number } {
-  const comCall = new Set(calls.map((c) => c.contactId).filter(Boolean) as string[]);
-  return { conversas: coorte.length, marcaram: coorte.filter((id) => comCall.has(id)).length };
 }
 
 export const pct = (t: Taxa | number | null, digitos = 0): string => {
