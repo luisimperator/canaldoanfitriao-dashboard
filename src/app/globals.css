@@ -13,6 +13,19 @@
   --calls-comprou: #008300;
   --calls-falta: #e34948;
   --calls-espera: #b8b7ae;
+  /* Mapa dos alunos (dia): papel claro, estados em teal, regiões em coral. */
+  --mapa-fundo: #ffffff;
+  --mapa-texto: #10232a;
+  --mapa-suave: #6b7a80;
+  --mapa-linha: #e6ecee;
+  --mapa-chip: #f3f6f7;
+  --mapa-vazio: #eef2f3;
+  --mapa-borda: #ffffff;
+  --mapa-estado: #0a8a8d;
+  --mapa-ponto: #e8395a;
+  --mapa-ponto-borda: #ffffff;
+  --mapa-destaque: #e8395a;
+  --mapa-tooltip: #ffffff;
 }
 
 /* Modo escuro na vibe "OS": navy-violeta profundo, texto zinc. */
@@ -24,6 +37,19 @@
   --calls-comprou: #1baf7a;
   --calls-falta: #e66767;
   --calls-espera: #5c5a66;
+  /* Mapa dos alunos (noite): azul petróleo profundo, estados acesos em teal. */
+  --mapa-fundo: #0b151c;
+  --mapa-texto: #e8f1f3;
+  --mapa-suave: #8aa0a8;
+  --mapa-linha: rgba(255, 255, 255, 0.08);
+  --mapa-chip: rgba(255, 255, 255, 0.05);
+  --mapa-vazio: #13222b;
+  --mapa-borda: #0b151c;
+  --mapa-estado: #2bc4bd;
+  --mapa-ponto: #ff5a78;
+  --mapa-ponto-borda: rgba(255, 255, 255, 0.6);
+  --mapa-destaque: #ff7a92;
+  --mapa-tooltip: #111e26;
 }
 
 @theme inline {
@@ -51,4 +77,10 @@ body {
 }
 .dark .recharts-cartesian-axis-tick-value {
   fill: #71717a;
+}
+
+/* Mapa dos alunos: grade de pontinhos atrás do mapa (vibe de painel de operação). */
+.mapa-quadro {
+  background-image: radial-gradient(circle, var(--mapa-linha) 1px, transparent 1.2px);
+  background-size: 14px 14px;
 }
