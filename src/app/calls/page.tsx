@@ -7,7 +7,6 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { CallsPorDiaChart, PresencaBotoes } from "@/components/PainelCalls";
 import {
   diaBR,
-  conversasQueMarcaram,
   funilDoPeriodo,
   inicioDoDia,
   lerCalls,
@@ -149,7 +148,12 @@ export default async function CallsPage({
   const rpcAte = new Date(Math.max(Date.parse(ate), agora + (AGENDA_DIAS + 1) * 86400_000)).toISOString();
   const [{ data: rows, error }, { data: conversas }, { data: cfg }] = await Promise.all([
     supabase.rpc("painel_calls", { p_de: rpcDe, p_ate: rpcAte }),
-    supabase.from("teo_conversas").select("contact_id").gte("criado_em", de).lt("criado_em", ate).limit(10000),
+    // Falaram com o Téo no período: conversa começou ou teve resposta dele no período.
+    supabase
+      .from("teo_conversas")
+      .select("contact_id")
+      .or(`and(criado_em.gte."${de}",criado_em.lt."${ate}"),and(ultima_resposta_em.gte."${de}",ultima_resposta_em.lt."${ate}")`)
+      .limit(10000),
     supabase.from("teo_config").select("vendedores").eq("id", 1).maybeSingle(),
   ]);
 
@@ -168,11 +172,7 @@ export default async function CallsPage({
   const vendedores = porVendedor(doPeriodo, vendedor ? [vendedor] : nomes);
   const antecedencia = porAntecedencia(doPeriodo);
   const horario = porHorario(doPeriodo);
-  const funil = funilDoPeriodo(doPeriodo);
-  const coorte = conversasQueMarcaram(
-    (conversas ?? []).map((c) => c.contact_id as string),
-    todas.filter((c) => Date.parse(c.inicio) >= t0)
-  );
+  const funil = funilDoPeriodo(doPeriodo, vendedor ? null : (conversas ?? []).map((c) => c.contact_id as string));
   const origens = Object.entries(r.receitaPorOrigem).sort((a, b) => b[1] - a[1]);
   const limiteAgenda = agora + AGENDA_DIAS * 86400_000;
   const proximas = filtradas.filter((c) => c.situacao === "futura" && Date.parse(c.inicio) <= limiteAgenda);
@@ -350,16 +350,12 @@ export default async function CallsPage({
             })}
           </div>
           <p className="text-xs text-slate-400 dark:text-zinc-500 mt-4">
-            Leads{vendedor ? ` de ${primeiroNome(vendedor)}` : ""} com call no período (lead com mais de uma call conta uma vez).
-            O % compara com a etapa anterior.
+            {vendedor
+              ? `Leads de ${primeiroNome(vendedor)} com call no período.`
+              : "Falaram com o Téo: conversa que começou ou teve resposta dele no período (mais quem marcou call)."}{" "}
+            Lead com mais de uma call conta uma vez; o % compara com a etapa anterior.
             {funil.emApuracao ? ` Mais ${funil.emApuracao} com a call em apuração.` : ""}
           </p>
-          {!vendedor && coorte.conversas > 0 && (
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-2">
-              Conversas novas com o Téo no período: {num(coorte.conversas)}, e {num(coorte.marcaram)} delas marcaram call (
-              {pct(coorte.marcaram / coorte.conversas)}).
-            </p>
-          )}
         </Card>
         <Card title="Comparecimento pela antecedência">
           <Faixas faixas={antecedencia} vazio="Nenhuma call apurada no período." />
