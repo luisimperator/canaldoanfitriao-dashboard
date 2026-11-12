@@ -27,7 +27,7 @@ export function AlvoDaRegra({
     );
   }
   return (
-    <div className="rounded-lg border border-violet-300 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-2.5 py-1.5 text-[11px] text-violet-800 dark:text-violet-200">
+    <div className="rounded-lg border border-violet-300 dark:border-zinc-300/30 bg-violet-50 dark:bg-violet-500/10 px-2.5 py-1.5 text-[11px] text-violet-800 dark:text-violet-200">
       <p>
         <span className="font-semibold">Vai atualizar a regra existente</span>
         {anterior ? <> &ldquo;{anterior.titulo}&rdquo;</> : null}, em vez de criar outra.
@@ -36,7 +36,7 @@ export function AlvoDaRegra({
       {anterior && (
         <details className="mt-1">
           <summary className="cursor-pointer select-none font-medium">ver o texto de antes</summary>
-          <p className="mt-1 whitespace-pre-wrap text-violet-700/90 dark:text-violet-300/80">
+          <p className="mt-1 whitespace-pre-wrap text-violet-700/90 dark:text-zinc-100/80">
             {anterior.conteudo}
           </p>
         </details>

@@ -21,7 +21,7 @@ async function postar(path: string, body?: unknown): Promise<{ ok: boolean; mens
 }
 
 const BTN =
-  "rounded-lg bg-slate-900 dark:bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-violet-500 disabled:opacity-60";
+  "rounded-lg bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-white disabled:opacity-60";
 const BTN_LEVE =
   "rounded-md border border-slate-300 dark:border-white/15 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-60";
 const INPUT =

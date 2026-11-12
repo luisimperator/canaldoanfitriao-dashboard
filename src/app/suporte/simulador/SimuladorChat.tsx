@@ -222,7 +222,7 @@ export function SimuladorChat({ enabled }: { enabled: boolean }) {
   const isChefe = mode === "chefe";
 
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] shadow-sm flex flex-col h-[72vh]">
+    <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface shadow-sm flex flex-col h-[72vh]">
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {msgs.length === 0 && (
           <p className="text-sm text-slate-400 dark:text-zinc-500">

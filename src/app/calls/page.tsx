@@ -39,7 +39,7 @@ const AGENDA_DIAS = 7;
 function chip(active: boolean): string {
   return `rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
     active
-      ? "bg-slate-900 dark:bg-violet-600 text-white"
+      ? "bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 text-white"
       : "bg-slate-100 dark:bg-white/[0.07] text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/15"
   }`;
 }

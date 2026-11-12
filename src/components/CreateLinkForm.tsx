@@ -75,7 +75,7 @@ export function CreateLinkForm() {
   }
 
   return (
-    <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-5 space-y-3">
+    <div className="bg-white dark:bg-surface rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-5 space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className={lbl}>Apelido (vira o nome do link e o rastreio)</label>

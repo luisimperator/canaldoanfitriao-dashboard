@@ -156,11 +156,11 @@ export function DateRangePicker({
       <button
         onClick={() => setOpen((o) => !o)}
         aria-pressed={controlado ? Boolean(value) : undefined}
-        className={`inline-flex items-center gap-2 rounded-lg border bg-white dark:bg-[#15121f] font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5 ${
+        className={`inline-flex items-center gap-2 rounded-lg border bg-white dark:bg-surface font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-white/5 ${
           controlado ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm"
         } ${
           controlado && value
-            ? "border-slate-900 dark:border-violet-500"
+            ? "border-slate-900 dark:border-zinc-300"
             : "border-slate-200 dark:border-white/10"
         }`}
       >
@@ -177,7 +177,7 @@ export function DateRangePicker({
             className="fixed inset-0 z-30 bg-slate-900/40 sm:hidden"
             onClick={() => setOpen(false)}
           />
-          <div className="fixed inset-x-3 top-16 z-40 mx-auto max-w-[21rem] max-h-[75vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-3 shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[19rem] sm:max-h-[80vh] sm:shadow-lg">
+          <div className="fixed inset-x-3 top-16 z-40 mx-auto max-w-[21rem] max-h-[75vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-3 shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[19rem] sm:max-h-[80vh] sm:shadow-lg">
           <div className="mb-1 flex items-center justify-between sm:hidden">
             <span className="text-sm font-semibold text-slate-900 dark:text-zinc-100">Período</span>
             <button
@@ -277,7 +277,7 @@ export function DateRangePicker({
                 <button
                   key={m}
                   onClick={() => setMode(m)}
-                  className={`px-2 py-0.5 text-[11px] capitalize ${mode === m ? "bg-slate-900 dark:bg-violet-600 text-white" : "text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/10"}`}
+                  className={`px-2 py-0.5 text-[11px] capitalize ${mode === m ? "bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 text-white" : "text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/10"}`}
                 >
                   {m === "mes" ? "mês" : m}
                 </button>

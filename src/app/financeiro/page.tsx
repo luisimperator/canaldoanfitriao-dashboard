@@ -68,7 +68,7 @@ export default async function FinanceiroPage({
         />
         <Link
           href="/financeiro/provisao"
-          className="shrink-0 rounded-lg bg-slate-900 dark:bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-violet-500"
+          className="shrink-0 rounded-lg bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-white"
         >
           💧 Provisão de caixa →
         </Link>

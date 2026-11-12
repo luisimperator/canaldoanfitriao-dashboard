@@ -93,7 +93,7 @@ export function PainelMqlOrigem({
           rotulo={rotulo}
           controles={
             <>
-              <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-0.5">
+              <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-0.5">
                 {(
                   [
                     ["mqls", "MQLs"],
@@ -107,7 +107,7 @@ export function PainelMqlOrigem({
                     aria-pressed={modo === k}
                     className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
                       modo === k
-                        ? "bg-slate-900 dark:bg-violet-600 text-white"
+                        ? "bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 text-white"
                         : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
                     }`}
                   >

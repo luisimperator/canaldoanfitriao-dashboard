@@ -30,7 +30,7 @@ function useNav() {
 
 function Spinner() {
   return (
-    <span className="ml-auto h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+    <span className="ml-auto h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current/30 border-t-current" />
   );
 }
 
@@ -62,15 +62,29 @@ function groupBySection(tabs: TabDef[]): { section: string; items: TabDef[] }[] 
   return order.map((s) => ({ section: s, items: map.get(s)! }));
 }
 
+// Marca: a estrela do logo do Canal do Anfitrião sobre o degradê coral → teal.
+function Marca({ tamanho = 36 }: { tamanho?: number }) {
+  return (
+    <span
+      className="flex shrink-0 items-center justify-center rounded-[12px] shadow-[0_6px_16px_-6px_rgba(239,62,92,0.6)]"
+      style={{ width: tamanho, height: tamanho, background: "linear-gradient(135deg, #f2405a 0%, #b14a6e 50%, #0a9497 100%)" }}
+    >
+      <svg viewBox="0 0 192 166" width={tamanho * 0.58} height={tamanho * 0.5} aria-hidden="true" fill="#fff">
+        <path d="M95.7 0 L103.5 23 L129 23.8 L113.5 35.2 Q95.7 25 77.5 35.2 L63 23.6 L88 23 Z" />
+        <path d="M65 112.5 L127 112.5 Q128.6 112.5 129.2 114.2 L145 166 L96 135 L47 166 L62.8 114.2 Q63.4 112.5 65 112.5 Z" />
+        <rect x="40" y="52" width="112" height="40" rx="8" opacity="0.92" />
+      </svg>
+    </span>
+  );
+}
+
 function Brand() {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-lg font-bold text-white shadow">
-        ↗
-      </span>
+    <div className="flex items-center gap-3">
+      <Marca />
       <span className="leading-tight">
-        <span className="block text-base font-bold text-white">Canal do Anfitrião</span>
-        <span className="block text-[11px] font-medium text-rose-400">dashboard</span>
+        <span className="block text-[15px] font-semibold tracking-[-0.01em] text-[var(--nav-ink)]">Canal do Anfitrião</span>
+        <span className="block text-[11px] font-medium text-[var(--nav-muted)]">painel</span>
       </span>
     </div>
   );
@@ -91,7 +105,7 @@ function NavItems({
     <>
       {groupBySection(tabs).map((group) => (
         <div key={group.section} className="mb-1.5">
-          <div className="px-3 mt-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+          <div className="px-3 mt-4 mb-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--nav-muted)]">
             {group.section}
           </div>
           <div className="space-y-0.5">
@@ -105,16 +119,13 @@ function NavItems({
                     e.preventDefault();
                     onClick(link.href);
                   }}
-                  className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  className={`relative flex items-center gap-3 rounded-full px-3.5 py-2 text-[13.5px] transition-colors ${
                     active
-                      ? "bg-slate-800 font-semibold text-white"
-                      : "text-slate-300 hover:bg-slate-800/60"
+                      ? "bg-[var(--nav-active)] font-semibold text-[var(--nav-active-ink)] shadow-sm"
+                      : "text-[var(--nav-ink)] opacity-80 hover:opacity-100 hover:bg-[var(--nav-hover)]"
                   }`}
                 >
-                  {active && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r bg-rose-500" />
-                  )}
-                  <span className="w-4 text-center text-xs opacity-80">{link.icon}</span>
+                  <span className={`w-4 text-center text-xs ${active ? "text-[var(--brand)]" : "opacity-70"}`}>{link.icon}</span>
                   <span className="truncate">{link.label}</span>
                   {pending === link.href && <Spinner />}
                 </Link>
@@ -140,17 +151,17 @@ function Footer({
   avisoVendas: boolean;
 }) {
   return (
-    <div className="border-t border-slate-800 px-4 py-3 text-[11px] text-slate-500">
+    <div className="border-t border-line px-4 py-3 text-[11px] text-[var(--nav-muted)]">
       <InstallButton />
       {email && avisoVendas && <PushVendasButton />}
       {email ? (
         <div className="flex items-center justify-between gap-2">
           <ThemeToggle />
-          <span className="truncate text-slate-400">{email}</span>
+          <span className="truncate">{email}</span>
           <button
             onClick={logout}
             disabled={loading}
-            className="shrink-0 rounded-md border border-slate-700 px-2 py-1 text-slate-300 hover:bg-slate-800"
+            className="shrink-0 rounded-full border border-line px-2.5 py-1 text-[var(--nav-ink)] hover:bg-[var(--nav-hover)]"
           >
             {loading ? "…" : "Sair"}
           </button>
@@ -175,18 +186,18 @@ export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null 
   return (
     <>
       {/* Celular: barra superior só com a marca + hambúrguer */}
-      <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 bg-slate-900 dark:bg-[#0e0c17] px-4 py-3 text-slate-200 shadow-md">
+      <header className="lg:hidden sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-[var(--nav)]/90 backdrop-blur px-4 py-3 text-[var(--nav-ink)]">
         <button
           onClick={() => setOpen(true)}
           aria-label="Abrir menu"
-          className="rounded-md p-1.5 text-slate-300 hover:bg-slate-800"
+          className="rounded-full p-1.5 hover:bg-[var(--nav-hover)]"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <span className="text-base font-bold text-white">Canal do Anfitrião</span>
-        <span className="text-[11px] font-medium text-rose-400">dashboard</span>
+        <Marca tamanho={28} />
+        <span className="text-[15px] font-semibold">Canal do Anfitrião</span>
         <ThemeToggle className="ml-auto" />
       </header>
 
@@ -194,13 +205,13 @@ export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null 
       {open && (
         <div className="lg:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
-          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[85%] flex-col bg-slate-900 dark:bg-[#0e0c17] text-slate-200 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-4">
+          <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[85%] flex-col bg-[var(--nav)] text-[var(--nav-ink)] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-4 py-4">
               <Brand />
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Fechar menu"
-                className="rounded-md p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+                className="rounded-full p-1.5 text-[var(--nav-muted)] hover:bg-[var(--nav-hover)]"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M6 6l12 12M18 6L6 18" />
@@ -216,8 +227,8 @@ export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null 
       )}
 
       {/* Desktop: barra lateral fixa */}
-      <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-slate-900 dark:bg-[#0e0c17] text-slate-200">
-        <div className="border-b border-slate-800 px-5 py-5">
+      <aside className="hidden lg:flex sticky top-3 m-3 mr-0 h-[calc(100vh-24px)] w-60 shrink-0 flex-col overflow-hidden rounded-[24px] border border-line bg-[var(--nav)] text-[var(--nav-ink)] shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-16px_rgba(16,24,40,0.12)] dark:shadow-none">
+        <div className="px-5 pt-5 pb-3">
           <Brand />
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">

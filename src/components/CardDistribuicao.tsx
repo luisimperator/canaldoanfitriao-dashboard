@@ -147,7 +147,7 @@ export function CardDistribuicao({
                 </div>
                 {/* Sócio que não retirou tudo deixou o resto de giro na empresa */}
                 {sPago && s.valor - s.pago > 1 && (
-                  <div className="mt-1 text-[11px] text-violet-600 dark:text-violet-300">
+                  <div className="mt-1 text-[11px] text-violet-600 dark:text-zinc-100">
                     deixou {brl(s.valor - s.pago)} na empresa (cota era {brl(s.valor)})
                   </div>
                 )}
@@ -219,7 +219,7 @@ function Selo({
     tom === "emerald"
       ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
       : tom === "violet"
-        ? "bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300"
+        ? "bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-zinc-100"
         : "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300";
   return (
     <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${cor}`}>

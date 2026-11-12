@@ -262,7 +262,7 @@ export function ProvisaoTimeline({
       {/* tooltip */}
       {hover && (
         <div
-          className="pointer-events-none absolute z-10 w-60 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1d1628] p-3 shadow-xl"
+          className="pointer-events-none absolute z-10 w-60 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface-2 p-3 shadow-xl"
           style={{
             left: Math.min(Math.max(hoverX - 120, 0), width - 244),
             top: 0,

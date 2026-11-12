@@ -96,7 +96,7 @@ export default function UtmBuilderPage() {
       </p>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-5 space-y-4">
+        <div className="bg-white dark:bg-surface rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-5 space-y-4">
           <div>
             <label className={labelCls}>URL da página (lista de espera / LP)</label>
             <input className={field} value={base} onChange={(e) => setBase(e.target.value)} />
@@ -160,7 +160,7 @@ export default function UtmBuilderPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-5">
+          <div className="bg-white dark:bg-surface rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400 mb-2">
               Link pronto
             </p>

@@ -53,13 +53,13 @@ export default function AtualizarSenhaPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex min-h-screen items-center justify-center bg-slate-900 dark:bg-violet-600 px-4">
+    <div className="fixed inset-0 z-30 flex min-h-screen items-center justify-center bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <div className="text-xl font-bold text-white">Canal do Anfitrião</div>
           <div className="text-xs font-medium text-rose-400 mt-0.5">redefinir senha</div>
         </div>
-        <form onSubmit={handleSubmit} className="rounded-xl bg-white dark:bg-[#15121f] p-6 shadow-lg space-y-4">
+        <form onSubmit={handleSubmit} className="rounded-xl bg-white dark:bg-surface p-6 shadow-lg space-y-4">
           {done ? (
             <p className="text-sm text-emerald-600 dark:text-emerald-400">Senha redefinida! Redirecionando…</p>
           ) : !ready ? (

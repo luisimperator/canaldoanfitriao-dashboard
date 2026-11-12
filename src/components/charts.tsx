@@ -207,7 +207,7 @@ function SellerTooltip({
     .filter((r) => r.real > 0 || r.gap > 0);
   if (rows.length === 0) return null;
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] px-3 py-2 text-xs shadow-sm">
+    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface px-3 py-2 text-xs shadow-sm">
       <div className="font-semibold text-slate-900 dark:text-zinc-100 mb-1">{label}</div>
       {rows.map((r) => (
         <div key={r.name} className="text-slate-600 dark:text-zinc-400">
@@ -282,7 +282,7 @@ function TeamTooltip({
   const realizado = Number(payload.find((p) => p.dataKey === "realizado")?.value ?? 0);
   const gap = Number(payload.find((p) => p.dataKey === "projecao")?.value ?? 0);
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] px-3 py-2 text-xs shadow-sm">
+    <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface px-3 py-2 text-xs shadow-sm">
       <div className="font-semibold text-slate-900 dark:text-zinc-100 mb-1">{label}</div>
       <div className="text-slate-600 dark:text-zinc-400">
         Realizado: <span className="font-medium text-slate-900 dark:text-zinc-100">{brlTooltip(realizado)}</span>
@@ -569,7 +569,7 @@ function Segmentos<T extends string | number>({
   onChange: (k: T) => void;
 }) {
   return (
-    <div className="inline-flex flex-wrap rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-0.5">
+    <div className="inline-flex flex-wrap rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-0.5">
       {opcoes.map((o) => (
         <button
           key={o.key}
@@ -578,7 +578,7 @@ function Segmentos<T extends string | number>({
           aria-pressed={atual === o.key}
           className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
             atual === o.key
-              ? "bg-slate-900 dark:bg-violet-600 text-white"
+              ? "bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 text-white"
               : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
           }`}
         >

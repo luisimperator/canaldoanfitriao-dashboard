@@ -108,7 +108,7 @@ export function HandoffsList({ initial }: { initial: HandoffRow[] }) {
             <button
               onClick={() => advance(r)}
               disabled={busy === r.id}
-              className="shrink-0 self-start rounded-lg bg-slate-900 dark:bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-violet-500 disabled:opacity-50"
+              className="shrink-0 self-start rounded-lg bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-white disabled:opacity-50"
             >
               {busy === r.id
                 ? "…"

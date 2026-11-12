@@ -173,7 +173,7 @@ export default async function ProvisaoPage() {
 
       {/* KPIs */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-2">
-        <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4">
+        <div className="bg-white dark:bg-surface rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4">
           <div className="font-mono text-[10px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-widest">
             Disponível agora
           </div>
@@ -206,7 +206,7 @@ export default async function ProvisaoPage() {
           )}
         </div>
 
-        <div className="bg-white dark:bg-[#15121f] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4">
+        <div className="bg-white dark:bg-surface rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-4">
           <div className="font-mono text-[10px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-widest">
             A liberar {asaas.ok ? "(Eduzz + Asaas)" : "(Eduzz)"}
           </div>
@@ -218,7 +218,7 @@ export default async function ProvisaoPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-violet-300 dark:border-violet-500/30 bg-violet-50/60 dark:bg-violet-500/[0.06] shadow-sm p-4">
+        <div className="rounded-xl border border-violet-300 dark:border-zinc-300/30 bg-violet-50/60 dark:bg-violet-500/[0.06] shadow-sm p-4">
           <div className="font-mono text-[10px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-widest">
             Entra em 30 dias
           </div>
@@ -231,7 +231,7 @@ export default async function ProvisaoPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-violet-300 dark:border-violet-500/30 bg-violet-50/60 dark:bg-violet-500/[0.06] shadow-sm p-4">
+        <div className="rounded-xl border border-violet-300 dark:border-zinc-300/30 bg-violet-50/60 dark:bg-violet-500/[0.06] shadow-sm p-4">
           <div className="font-mono text-[10px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-widest">
             Entra até o fim de {mesCap}
           </div>

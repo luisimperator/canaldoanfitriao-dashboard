@@ -143,9 +143,9 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Editor */}
-      <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-5 shadow-sm h-fit lg:sticky lg:top-6">
+      <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-5 shadow-sm h-fit lg:sticky lg:top-6">
         {!form.id && (
-          <div className="mb-5 rounded-lg border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.07] p-4">
+          <div className="mb-5 rounded-lg border border-violet-200 dark:border-zinc-300/25 bg-violet-50 dark:bg-violet-500/[0.07] p-4">
             <h2 className="text-sm font-semibold text-slate-700 dark:text-zinc-300">
               Escreva com suas palavras
             </h2>
@@ -307,7 +307,7 @@ export function TreinamentoEditor({ initial }: { initial: KbItem[] }) {
                   {b.items.map((it) => (
                     <div
                       key={it.id}
-                      className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#15121f] p-3"
+                      className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-3"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <span className="text-sm font-medium text-slate-800 dark:text-zinc-200">
