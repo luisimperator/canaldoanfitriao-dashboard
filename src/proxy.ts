@@ -47,6 +47,11 @@ export async function proxy(request: NextRequest) {
     const fromCron = secret ? auth === `Bearer ${secret}` : ua.includes("vercel-cron");
     if (fromCron) return NextResponse.next();
   }
+  // Deck do A5E: público (vai pro lead), sem login; o conteúdo vem do projeto
+  // deck-a5e pelo rewrite do next.config.
+  if (pathname === "/deck" || pathname.startsWith("/deck/")) {
+    return NextResponse.next();
+  }
   // Páginas de roteiro da call: fora do login do painel, com senha própria
   // (src/lib/roteiros/porta.ts, ROTEIRO_SENHA na Vercel).
   if (pathname === "/roteiro-sales-call-atual" || pathname === "/roteiro-sales-call-nova") {
