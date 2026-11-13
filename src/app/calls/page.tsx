@@ -73,6 +73,7 @@ function comoSabemos(c: CallPainel): string {
   if (c.fonte === "teams") return "gravação no Teams";
   if (c.fonte === "nota") return c.situacao === "aconteceu" ? "nota #call do vendedor" : "nota #faltou do vendedor";
   if (c.fonte === "painel") return "marcado no painel";
+  if (c.fonte === "venda") return "venda ligada à call (sem esperar a gravação)";
   return "sem gravação e sem nota";
 }
 
@@ -522,7 +523,8 @@ export default async function CallsPage({
         <ul className="text-sm text-slate-600 dark:text-zinc-400 space-y-1.5 list-disc pl-5">
           <li>
             <strong className="text-slate-800 dark:text-zinc-200">Aconteceu</strong>: gravação no Teams com fala do lead, nota do
-            vendedor começando com <code>#call</code> na conversa do lead no Unnichat, ou marcação aqui no painel.
+            vendedor começando com <code>#call</code> na conversa do lead no Unnichat, marcação aqui no painel, ou venda ligada à
+            call (essa confirma na hora, sem esperar a gravação).
           </li>
           <li>
             <strong className="text-slate-800 dark:text-zinc-200">Faltou</strong>: nota <code>#faltou</code>, marcação aqui, ou nada

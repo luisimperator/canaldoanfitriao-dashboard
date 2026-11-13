@@ -3,14 +3,15 @@
 // Paulo (o servidor roda em UTC).
 //
 // Régua (resumo; o detalhe está na migração):
-//  * aconteceu: gravação no Teams com fala do lead, nota #call do vendedor ou
-//    marcação no painel;
+//  * aconteceu: gravação no Teams com fala do lead, nota #call do vendedor,
+//    marcação no painel ou venda ligada à call (confirma na hora, sem esperar
+//    a gravação; migração 0087);
 //  * falta: nada disso depois de apurada (24h), nota #faltou ou marcação;
 //  * venda da call: paga em até 48h depois do início, ligada por e-mail,
 //    telefone ou nome.
 
 export type Situacao = "aconteceu" | "falta" | "apuracao" | "sem_dado" | "futura" | "cancelada";
-export type Fonte = "teams" | "nota" | "painel" | null;
+export type Fonte = "teams" | "nota" | "painel" | "venda" | null;
 
 export interface CallPainel {
   id: string;
