@@ -602,13 +602,17 @@ function semAcento(s: string): string {
 }
 
 // Quem do time já conversou com o lead (mensagem digitada no Unnichat nos
-// últimos 30 dias). Se tem alguém, a call é com essa pessoa. A API não diz
+// últimos DONO_RECENTE_DIAS dias; era 30 até 14/11, o Fernando pediu 15). Se tem alguém, a call é com essa pessoa. A API não diz
 // quem mandou cada mensagem: vale quem estava com a conversa naquela hora,
 // pelos avisos "Conversa atribuída … ao Fulano" (o Unnichat também atribui a
 // quem manda mensagem numa conversa sem dono).
+// A venda é de quem vende agora (Fernando, 14/11): contato do vendedor (mensagem
+// ou call) mais antigo que isto não prende o lead. Mesmo prazo em lib/teo-entrada.
+const DONO_RECENTE_DIAS = 15;
+
 function especialistaDaConversa(msgs: MsgUnnichat[], cfg: Config): string | null {
   const vendedores = (cfg.vendedores ?? []).map((v) => v.nome);
-  const desde = Date.now() - 30 * 86400_000;
+  const desde = Date.now() - DONO_RECENTE_DIAS * 86400_000;
   let atual: string | null = null;
   let dono: string | null = null;
   for (const m of msgs) {
@@ -661,13 +665,17 @@ function ordemDoDia(livres: string[], cargaNoDia: (v: string) => number, taxa: M
 }
 
 // O lead é do vendedor da primeira call que o Téo marcou pra ele: remarcação
-// é sempre com essa pessoa (se ainda estiver no time), nunca troca.
+// é sempre com essa pessoa (se ainda estiver no time), nunca troca. Só vale
+// call dos últimos DONO_RECENTE_DIAS dias (ou futura): call antiga não prende o lead, a venda
+// é de quem vende agora (Fernando, 14/11). Mesma janela da mensagem do
+// vendedor em especialistaDaConversa().
 async function vendedorDoLead(supabase: SupabaseClient, cfg: Config, contato: string): Promise<string | null> {
   const { data } = await supabase
     .from("teo_calls")
     .select("vendedor")
     .eq("contact_id", contato)
     .not("vendedor", "is", null)
+    .gte("inicio", new Date(Date.now() - DONO_RECENTE_DIAS * 86400_000).toISOString())
     .order("criado_em", { ascending: true })
     .limit(1)
     .maybeSingle();
