@@ -264,6 +264,12 @@ const MAX_TAG = /^(alunoa5e|aluno-a5e|alunos-a5e|aluno-gigantes|gigantes-\d)/i;
 const AVISO_MAX =
   "ASSISTENTE DE IA (este lead já comprou a Black, o Anfitrião 5 Estrelas ou o Gigantes; vale acima da regra de suporte dos ajustes do dono): se ele perguntar do assistente de IA, responda direto, sem passar pro suporte: é o Max, o concierge. Ele fica no grupo de WhatsApp dos alunos e dá pra chamar ele no privado pelo +55 11 91164-7699. Login, senha, cobrança e outros problemas de acesso continuam com o suporte.";
 
+// Já tem o Gigantes? Em 14/11 o Téo ofereceu o Gigantes como novidade a um
+// aluno do disparo que já tinha comprado (10 dos 97 da onda 1 têm o Gigantes).
+const GIGANTES_RE = /gigantes/i;
+const AVISO_JA_TEM_GIGANTES =
+  "JÁ É ALUNO DO GIGANTES: este lead já comprou o Gigantes da Temporada (compra confirmada no sistema). Não ofereça o Gigantes como coisa nova nem diga que o Gigantes é a fase dele como se ele fosse comprar. Pra ele, o upgrade pra Black é ficar com todo o resto (os outros cursos vitalícios, os 4 anos de comunidade, a IA e o que mais estiver no bloco de upgrade) pelo preço de aluno. Se ele comparar com o que pagou no Gigantes, concorde: a Black inteira sai perto do preço do Gigantes sozinho. Se nesta conversa você já falou do Gigantes como novidade, ajuste com naturalidade.";
+
 // Compras pagas do lead na Eduzz pelo e-mail ou pelo telefone (RPC
 // teo_compras_do_lead, migration 0091): muito lead chega sem e-mail no cadastro.
 async function acharCompraDeCurso(
@@ -1853,6 +1859,18 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         const emails = emailsDaConversa(lead.email ?? null, msgs);
         return Boolean(await acharCompraDeCurso(supabase, emails, c.telefone, MAX_RE, NAO_CURSO_RE));
       })().catch(() => false));
+    const temGigantes =
+      blackAtiva(cfg) && !jaComprouBlack
+        ? Boolean(
+            await acharCompraDeCurso(
+              supabase,
+              emailsDaConversa(lead.email ?? null, msgs),
+              c.telefone,
+              GIGANTES_RE,
+              NAO_CURSO_RE
+            ).catch(() => null)
+          )
+        : false;
     const disparo = blackAtiva(cfg) ? await disparoDoLead(supabase, c.telefone).catch(() => null) : null;
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
@@ -1890,6 +1908,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           !jaComprouBlack && compraDeCurso && !ehCurso(compraDeCurso.produto)
             ? `Black, condição de aluno: confirmada pela compra de "${compraDeCurso.produto}" (quem fez imersão, foi a um Encontro ou comprou o Airbnb do Zero também é aluno). Se antes nesta conversa você passou o preço de quem não é aluno (R$ 8.997), corrija com naturalidade e sem esconder: estava errado, a condição dela é a de aluno. Ela ainda não tem o Anfitrião 5 Estrelas: no upgrade, a Black é o jeito de ter o Anfitrião 5 Estrelas, o Gigantes e todo o resto pelo preço de aluno.`
             : null,
+          temGigantes ? AVISO_JA_TEM_GIGANTES : null,
           disparo && !jaComprouBlack ? avisoDisparo(disparo) : null,
           cupom ? avisoCupom(cupom, !cupomEsperando) : null,
         ]
