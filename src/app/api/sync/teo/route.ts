@@ -54,6 +54,8 @@ interface Conversa {
   /** Cupom pedido "à equipe": o Téo volta com a condição em cupom_em. */
   cupom_pendente?: CupomPedido | null;
   cupom_em?: string | null;
+  /** Atendido na venda direta: continua com o Téo até aqui (migration 0096). */
+  venda_direta_ate?: string | null;
 }
 
 /** Degrau da escada de cupons (teo_config.cupons). */
@@ -85,7 +87,7 @@ interface CupomPedido {
 }
 
 const CAMPOS_CONVERSA =
-  "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo, cupom_pendente, cupom_em";
+  "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo, cupom_pendente, cupom_em, venda_direta_ate";
 
 interface Config {
   ligado: boolean;
@@ -267,23 +269,51 @@ const AVISO_MAX =
 // Já tem o Gigantes? Em 14/11 o Téo ofereceu o Gigantes como novidade a um
 // aluno do disparo que já tinha comprado (10 dos 97 da onda 1 têm o Gigantes).
 const GIGANTES_RE = /gigantes/i;
-// Regra do Fernando (14/11): quem comprou ou renovou o Gigantes de outubro pra
-// frente pode fazer a Black por R$ 1.997, mas só se pedir.
-const GIGANTES_RECENTE_DESDE = new Date("2026-10-01T03:00:00Z").getTime();
+// Regra do Fernando (14/11): quem comprou o Anfitrião 5 Estrelas ou comprou ou
+// renovou o Gigantes de outubro pra frente faz a Black por R$ 1.997 (cupom
+// UPGRADE1997, criado na Eduzz em 14/11; oferta 335668 na TMB), mas só se pedir.
+// A renovação do Anfitrião 5 Estrelas (R$ 997) entra com o mesmo nome do curso
+// e não conta: pra essa vale a devolução dos R$ 997 do bloco de upgrade.
+const COMPRA_RECENTE_DESDE = new Date("2026-10-01T03:00:00Z").getTime();
+const CURSO_COM_DIREITO_RE = /(anfitri[aã]o 5 estrelas|gigantes)/i;
+const UPGRADE_1997 = {
+  pix: "https://sun.eduzz.com/Q9N54JR101?cupom=UPGRADE1997&p=1",
+  cartao: "https://sun.eduzz.com/Q9N54JR101?cupom=UPGRADE1997",
+  boleto: "https://pay.tmb.com.br/CANALDOANFIT/SI1335668ZZ",
+};
 
-function avisoJaTemGigantes(quando: string | null): string {
-  const recente = Boolean(quando) && new Date(quando as string).getTime() >= GIGANTES_RECENTE_DESDE;
-  const data = quando
-    ? new Date(quando).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
-    : null;
+// Próximo dia útil às 10h de Brasília (UTC-3, sem horário de verão) depois de
+// `ms`: domingo 14h → segunda 10h; sexta 18h → segunda 10h.
+function proximoDiaUtil10h(ms: number): number {
+  const BR = 3 * 3600_000;
+  const d = new Date(ms - BR);
+  d.setUTCDate(d.getUTCDate() + 1);
+  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() + 1);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 10) + BR;
+}
+
+function dataBr(quando: string): string {
+  return new Date(quando).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+function avisoCompraRecente(c: { produto: string; quando: string }, utm: string): string {
+  const data = dataBr(c.quando);
+  return [
+    `COMPRA RECENTE (${c.produto}, paga em ${data}, de outubro pra frente): existe uma condição pra este lead, mas SÓ SE ELE PEDIR (pedir pra abater o que pagou, dizer que acabou de comprar, renovar ou ainda está pagando, ou pedir condição melhor por isso). Vale acima da objeção "acabei de comprar" do bloco de upgrade.`,
+    `A condição (regra do Fernando): a Black inteira por R$ 1.997 à vista ou 12x de R$ 199,70 no cartão, com o cupom UPGRADE1997. Nunca ofereça nem mencione por conta própria; até ele pedir, a condição é a de aluno, R$ 4.997. É condição individual: não diga que é pra todo mundo nem que existe cupom aberto.`,
+    `Se ele pedir, confirme com naturalidade (quem comprou de outubro pra frente tem esse abatimento) e mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(UPGRADE_1997.pix, utm)} · Cartão ${linkComUtm(UPGRADE_1997.cartao, utm)} · Boleto parcelado na TMB ${linkComUtm(UPGRADE_1997.boleto, utm)} (12x de R$ 206,54 com o financiamento do boleto). Garantia de 7 dias, como na Black. Anote na ficha "Black por R$ 1.997 (UPGRADE1997): comprou ${c.produto} em ${data}".`,
+  ].join(" ");
+}
+
+function avisoJaTemGigantes(temCompraRecente: boolean): string {
   return [
     "JÁ É ALUNO DO GIGANTES (compra confirmada no sistema): não ofereça o Gigantes como novidade nem diga que o Gigantes é a fase dele. Com ele, a narrativa do upgrade é outra:",
     "1. O Gigantes dele vira vitalício. O Gigantes avulso é 1 ano de acesso e de comunidade e depois renova a R$ 1.997 por ano: ficar mais 4 anos no Gigantes renovando dá R$ 7.988, só pra isso. Na Black, pelo preço de aluno (R$ 4.997, uma vez), o curso fica vitalício (nunca mais renova) e ele leva 4 anos das duas comunidades. Se o acesso dele já venceu, a Black traz o Gigantes e o grupo de volta.",
     "2. O que ele ainda não tem, escolhido pelo caso dele (um ou dois, nunca a lista inteira): Sublocação (crescer sem comprar imóvel), Booking (depender menos do Airbnb), Decoração Estratégica e Fotografia Prática (anúncio que chama atenção e diária maior), o Anfitrião 5 Estrelas se ele não tiver, a comunidade do Anfitrião 5 Estrelas, as gravações dos 4 Encontros, o assistente de IA por 1 ano e o ingresso do Encontro de 2027 (só pros 100 primeiros).",
     "Antes de detalhar, pergunte se o acesso e o grupo do Gigantes dele ainda estão ativos ou já venceram, e use a resposta. Se ele comparar com o que pagou no Gigantes, concorde: é o mesmo valor, só que agora vitalício e com tudo junto. Se nesta conversa você já falou do Gigantes como novidade, ajuste com naturalidade.",
-    recente
-      ? `COMPRA RECENTE DO GIGANTES (${data}, de outubro pra frente): existe uma condição pra ele, mas SÓ SE ELE PEDIR (pedir pra abater o que pagou, dizer que acabou de comprar ou renovar o Gigantes, ou pedir condição melhor por isso): a Black sai por R$ 1.997 (regra do Fernando). Nunca ofereça nem mencione por conta própria; até ele pedir, a condição é a de aluno, R$ 4.997. Se ele pedir, diga que dá, sim, e que o especialista manda o link por aqui; você não tem link nesse valor: chame passar_para_humano (motivo "black") com "Black por R$ 1.997: comprou o Gigantes em ${data} (regra do Fernando)".`
-      : "Se ele pedir pra abater o que pagou no Gigantes: abatimento só existe pra quem comprou ou renovou o Gigantes de outubro pra frente, e a compra dele no sistema é anterior; a condição dele é a de aluno, R$ 4.997. Se ele disser que comprou ou renovou de outubro pra frente (talvez com outro e-mail), não confirme valor: chame passar_para_humano (motivo \"black\") pra o especialista conferir.",
+    temCompraRecente
+      ? "Se ele pedir pra abater o que pagou: siga o aviso COMPRA RECENTE."
+      : "Se ele pedir pra abater o que pagou no Gigantes: abatimento só existe pra quem comprou ou renovou de outubro pra frente, e a compra dele no sistema é anterior; a condição dele é a de aluno, R$ 4.997. Se ele disser que comprou ou renovou de outubro pra frente (talvez com outro e-mail), não confirme valor: chame passar_para_humano (motivo \"black\") pra o especialista conferir.",
   ].join(" ");
 }
 
@@ -306,20 +336,41 @@ async function acharCompraDeCurso(
   return curso ? { email: String(curso.email ?? "").toLowerCase(), produto: String(curso.produto) } : null;
 }
 
-// Compra mais recente do Gigantes (curso ou renovação; imersão, Encontro e
-// ingresso não contam), com a data, pra regra de quem comprou de outubro pra frente.
-async function compraDoGigantes(
+// Gigantes e compra recente com direito ao UPGRADE1997. Imersão, Encontro,
+// ingresso e renovação com "Renovação" no nome não contam. No Anfitrião 5
+// Estrelas, a renovação de R$ 997 tem o mesmo nome do curso: só o valor separa
+// (parcela de compra parcelada conta; R$ 997 cheio, não).
+async function comprasDoUpgrade(
   supabase: SupabaseClient,
   emails: string[],
   telefone: string | null
-): Promise<{ produto: string; quando: string | null } | null> {
-  if (!emails.length && !telefone) return null;
+): Promise<{ temGigantes: boolean; recente: { produto: string; quando: string } | null }> {
+  if (!emails.length && !telefone) return { temGigantes: false, recente: null };
   const { data, error } = await supabase.rpc("teo_compras_do_lead", { p_emails: emails, p_telefone: telefone });
   if (error) throw error;
-  const linhas = ((data ?? []) as { produto: string | null; quando: string | null }[])
-    .filter((s) => GIGANTES_RE.test(s.produto ?? "") && !NAO_CURSO_RE.test(s.produto ?? ""))
+  const linhas = ((data ?? []) as { email: string | null; produto: string | null; quando: string | null }[])
+    .filter((s) => CURSO_COM_DIREITO_RE.test(s.produto ?? "") && !NAO_CURSO_RE.test(s.produto ?? ""))
     .sort((a, b) => new Date(b.quando ?? 0).getTime() - new Date(a.quando ?? 0).getTime());
-  return linhas[0] ? { produto: String(linhas[0].produto), quando: linhas[0].quando ?? null } : null;
+  const temGigantes = linhas.some((s) => GIGANTES_RE.test(s.produto ?? ""));
+  let recente: { produto: string; quando: string } | null = null;
+  for (const s of linhas) {
+    if (!s.quando || new Date(s.quando).getTime() < COMPRA_RECENTE_DESDE) break;
+    if (/renova/i.test(s.produto ?? "")) continue;
+    if (!GIGANTES_RE.test(s.produto ?? "")) {
+      const { data: vendas } = await supabase
+        .from("sales")
+        .select("amount")
+        .ilike("buyer_email", s.email ?? "")
+        .eq("product", s.produto ?? "")
+        .eq("status", "paga")
+        .gte("created_at", new Date(COMPRA_RECENTE_DESDE).toISOString());
+      const valores = ((vendas ?? []) as { amount: number | string | null }[]).map((v) => Math.round(Number(v.amount)));
+      if (!valores.some((v) => v > 0 && v !== 997)) continue;
+    }
+    recente = { produto: String(s.produto), quando: s.quando };
+    break;
+  }
+  return { temGigantes, recente };
 }
 
 // Checkout da Black (os mesmos botões das páginas de pagamento), com
@@ -1859,12 +1910,25 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // (black_vendedor); só sai do teste se tiver call ou conversa com alguém do time.
     // Venda direta do dia (teo_config.venda_direta_ate): todo lead sem especialista
     // é do Téo até o fim do prazo, sem sorteio e sem marcar o lead pra depois.
-    const vendaDia =
-      blackAtiva(cfg) &&
-      !doTime &&
-      !especialista &&
-      Boolean(cfg.venda_direta_ate) &&
-      Date.now() < new Date(cfg.venda_direta_ate ?? 0).getTime();
+    // Depois do prazo (Fernando, 14/11): quem o Téo atendeu na venda direta, e
+    // quem recebeu o disparo pros alunos, continua com ele até o próximo dia útil
+    // às 10h; sem compra até lá, volta o fluxo de call.
+    const disparo = blackAtiva(cfg) ? await disparoDoLead(supabase, c.telefone).catch(() => null) : null;
+    const semDono = blackAtiva(cfg) && !doTime && !especialista;
+    const prazoDia = cfg.venda_direta_ate ? new Date(cfg.venda_direta_ate).getTime() : 0;
+    const prorrogacao = prazoDia ? proximoDiaUtil10h(prazoDia) : 0;
+    const vendaDiaGlobal = semDono && Date.now() < prazoDia;
+    const prazoConversa = Math.max(
+      c.venda_direta_ate ? new Date(c.venda_direta_ate).getTime() : 0,
+      disparo ? prorrogacao : 0
+    );
+    const vendaDia = vendaDiaGlobal || (semDono && Date.now() < prazoConversa);
+    if (vendaDiaGlobal && prorrogacao && prazoConversa < prorrogacao) {
+      await supabase
+        .from("teo_conversas")
+        .update({ venda_direta_ate: new Date(prorrogacao).toISOString() })
+        .eq("contact_id", c.contact_id);
+    }
     const vendaTeo =
       vendaDia ||
       (blackAtiva(cfg) && !doTime && (c.venda_teo === true || !especialista)
@@ -1892,11 +1956,10 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         const emails = emailsDaConversa(lead.email ?? null, msgs);
         return Boolean(await acharCompraDeCurso(supabase, emails, c.telefone, MAX_RE, NAO_CURSO_RE));
       })().catch(() => false));
-    const gigantes =
+    const upgrade =
       blackAtiva(cfg) && !jaComprouBlack
-        ? await compraDoGigantes(supabase, emailsDaConversa(lead.email ?? null, msgs), c.telefone).catch(() => null)
+        ? await comprasDoUpgrade(supabase, emailsDaConversa(lead.email ?? null, msgs), c.telefone).catch(() => null)
         : null;
-    const disparo = blackAtiva(cfg) ? await disparoDoLead(supabase, c.telefone).catch(() => null) : null;
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
     if (ouvidos) await log(supabase, "áudio ouvido", { contact_id: c.contact_id, nome: c.nome, audios: ouvidos });
@@ -1933,7 +1996,8 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           !jaComprouBlack && compraDeCurso && !ehCurso(compraDeCurso.produto)
             ? `Black, condição de aluno: confirmada pela compra de "${compraDeCurso.produto}" (quem fez imersão, foi a um Encontro ou comprou o Airbnb do Zero também é aluno). Se antes nesta conversa você passou o preço de quem não é aluno (R$ 8.997), corrija com naturalidade e sem esconder: estava errado, a condição dela é a de aluno. Ela ainda não tem o Anfitrião 5 Estrelas: no upgrade, a Black é o jeito de ter o Anfitrião 5 Estrelas, o Gigantes e todo o resto pelo preço de aluno.`
             : null,
-          gigantes ? avisoJaTemGigantes(gigantes.quando) : null,
+          upgrade?.temGigantes ? avisoJaTemGigantes(Boolean(upgrade.recente)) : null,
+          upgrade?.recente ? avisoCompraRecente(upgrade.recente, utmDoLead(especialista)) : null,
           disparo && !jaComprouBlack ? avisoDisparo(disparo) : null,
           cupom ? avisoCupom(cupom, !cupomEsperando) : null,
         ]
