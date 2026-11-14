@@ -458,6 +458,11 @@ function avisoDisparo(d: { onda: number; mensagem: string | null; enviado_em: st
 // mandar sempre que o Encontro entrar na conversa (14/11).
 const TRAILER_ENCONTRO = "https://youtu.be/ou9MYRpGp9M";
 
+// Qual ingresso vem na Black (Fernando, 14/11, ~20h30): o Standard; quem
+// quiser o VIP paga só a diferença. Sem link pra esse upgrade ainda: vai pro time.
+const INGRESSO_DA_BLACK =
+  'O ingresso do Encontro de 2027 que vem na Black é o STANDARD (Fernando, 14/11). Quem quiser o VIP faz o upgrade pagando só a diferença: pelos preços da pré-venda, R$ 400 (VIP R$ 1.397 menos Standard R$ 997). Ainda não tem link pra esse upgrade: se a pessoa quiser, diga que o link chega por aqui e chame passar_para_humano (motivo "comprar") com "upgrade do ingresso da Black pra VIP, pagando a diferença". O que o VIP tem a mais que o Standard você não sabe: não invente; diga que o especialista confirma.';
+
 // 2º ingresso do Encontro de 2027 com 20% (Fernando, 14/11, 19:40: "pode usar"),
 // pra acompanhante de quem compra a Black ou um ingresso. Os links com o
 // desconto ainda não existem (cupom pedido ao agente da Eduzz): até lá, quando a
@@ -507,7 +512,7 @@ function blocoUpgradeAluno(vendendoPorAqui: boolean): string {
     "- \"Acabei de comprar o curso\" ou \"ainda estou pagando\": a condição dela é a de aluno, R$ 4.000 a menos. Se ela pedir pra abater as parcelas do curso, você não sabe: chame passar_para_humano (motivo \"black\") e diga que o especialista responde por aqui.",
     "- \"Tenho 1 imóvel, o Gigantes não é pra mim\": os outros cursos e o vitalício já pagam; o Gigantes fica pronto pra quando ela crescer.",
     "- Caro ou parcela: trate como na seção \"Objeções\"; na venda por aqui, pergunte \"e se eu conseguir um desconto pra você, fica interessante?\" e, se topar, os cupons de aluno da seção \"Cupons\" (um degrau por vez).",
-    "- Se o ingresso do Encontro é VIP ou Standard, ou a data do Encontro: você não sabe (a previsão é maio de 2027); o especialista confirma.",
+    `- ${INGRESSO_DA_BLACK} A data do Encontro você não sabe (a previsão é maio de 2027); o especialista confirma.`,
   ].join("\n");
 }
 
@@ -570,6 +575,7 @@ function blocoBlack(o: {
     "- Anfitrião 5 Estrelas (R$ 2.997), Gigantes da Temporada (R$ 4.997), Sublocação (R$ 997), Booking (R$ 997), Decoração (R$ 697) e Fotografia (R$ 497).",
     "- Assistente pessoal de IA, o Max, por 4 anos (R$ 997), junto com os 4 anos de comunidade (Fernando, 14/11): a novidade de 2026. Não detalhe como é entregue.",
     "- Ingresso do Encontro presencial 2027 + gravações das 4 edições, só pros 100 primeiros (R$ 997).",
+    `- ${INGRESSO_DA_BLACK}`,
     `- Quando falar do Encontro, mande o trailer do 4º Encontro pra mostrar como foi (${TRAILER_ENCONTRO}), com uma frase sua; uma vez só na conversa.`,
     avisoSegundoIngresso(o.semEspecialista || o.vendaTeo ? "teo" : ""),
     "- Comunidades de WhatsApp por 4 anos (A5E R$ 3.988 e Gigantes R$ 7.988).",
