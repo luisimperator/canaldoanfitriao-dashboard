@@ -267,8 +267,12 @@ const AVISO_MAX =
 // Já tem o Gigantes? Em 14/11 o Téo ofereceu o Gigantes como novidade a um
 // aluno do disparo que já tinha comprado (10 dos 97 da onda 1 têm o Gigantes).
 const GIGANTES_RE = /gigantes/i;
-const AVISO_JA_TEM_GIGANTES =
-  "JÁ É ALUNO DO GIGANTES: este lead já comprou o Gigantes da Temporada (compra confirmada no sistema). Não ofereça o Gigantes como coisa nova nem diga que o Gigantes é a fase dele como se ele fosse comprar. Pra ele, o upgrade pra Black é ficar com todo o resto (os outros cursos vitalícios, os 4 anos de comunidade, a IA e o que mais estiver no bloco de upgrade) pelo preço de aluno. Se ele comparar com o que pagou no Gigantes, concorde: a Black inteira sai perto do preço do Gigantes sozinho. Se nesta conversa você já falou do Gigantes como novidade, ajuste com naturalidade.";
+const AVISO_JA_TEM_GIGANTES = [
+  "JÁ É ALUNO DO GIGANTES (compra confirmada no sistema): não ofereça o Gigantes como novidade nem diga que o Gigantes é a fase dele. Com ele, a narrativa do upgrade é outra:",
+  "1. O Gigantes dele vira vitalício. O Gigantes avulso é 1 ano de acesso e de comunidade e depois renova a R$ 1.997 por ano: ficar mais 4 anos no Gigantes renovando dá R$ 7.988, só pra isso. Na Black, pelo preço de aluno (R$ 4.997, uma vez), o curso fica vitalício (nunca mais renova) e ele leva 4 anos das duas comunidades. Se o acesso dele já venceu, a Black traz o Gigantes e o grupo de volta.",
+  "2. O que ele ainda não tem, escolhido pelo caso dele (um ou dois, nunca a lista inteira): Sublocação (crescer sem comprar imóvel), Booking (depender menos do Airbnb), Decoração Estratégica e Fotografia Prática (anúncio que chama atenção e diária maior), o Anfitrião 5 Estrelas se ele não tiver, a comunidade do Anfitrião 5 Estrelas, as gravações dos 4 Encontros, o assistente de IA por 1 ano e o ingresso do Encontro de 2027 (só pros 100 primeiros).",
+  "Antes de detalhar, pergunte se o acesso e o grupo do Gigantes dele ainda estão ativos ou já venceram, e use a resposta. Se ele comparar com o que pagou no Gigantes, concorde: é o mesmo valor, só que agora vitalício e com tudo junto. Se ele renovou o Gigantes há pouco e pedir pra abater ou devolver, você não sabe: chame passar_para_humano (motivo \"black\"). Se nesta conversa você já falou do Gigantes como novidade, ajuste com naturalidade.",
+].join(" ");
 
 // Compras pagas do lead na Eduzz pelo e-mail ou pelo telefone (RPC
 // teo_compras_do_lead, migration 0091): muito lead chega sem e-mail no cadastro.
