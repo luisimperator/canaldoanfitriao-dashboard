@@ -1665,7 +1665,7 @@ async function acompanhar(
       retomar:
         `[Instrução interna, o lead não vê: o lead não responde desde ${quando(new Date(desde).toISOString())}. ` +
         `Este é o acompanhamento ${etapa + 1} de ${horas.length}. Mande UMA mensagem curta retomando de onde a conversa parou: ` +
-        `se você tinha oferecido horários de call, ofereça de novo (pode trocar por outros da lista "Horários livres"), a não ser que você esteja na venda direta (aí retome a venda, não a call); ` +
+        `se você tinha oferecido horários de call, ofereça de novo (pode trocar por outros da lista "Horários livres"), a não ser que você esteja na venda direta (aí retome a venda, não a call, pelo roteiro por permissão: se ela ainda não pediu o preço, não mande preço; retome com um \"quer saber mais?\" ou um \"faz sentido pra você?\" ligado ao que ela contou); ` +
         `se tinha feito uma pergunta, retome por outro ângulo. Nada de cobrar, de "passando pra saber" nem de repetir a mensagem anterior. ` +
         `Se a pessoa disse claramente que não tem interesse ou pediu pra não ser chamada, responda só [ENCERRAR] (a conversa fecha e não sai mais nenhum acompanhamento). ` +
         `Se só não fizer sentido escrever agora (por exemplo, até aqui só chegou resposta automática do WhatsApp dela), responda só [SEM_RESPOSTA] e esta etapa é pulada.]`,
