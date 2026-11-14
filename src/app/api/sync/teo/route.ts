@@ -314,16 +314,17 @@ function avisoCompraRecente(c: { produto: string; quando: string }, utm: string)
 
 // Fernando (14/11, 18h): "Oferece logo 2997 pra quem tem gigantes". Cupom
 // BFQCQHN547 na Eduzz (R$ 8.997 → R$ 2.997, conferido no checkout em 14/11).
-// Boleto da TMB nesse valor ainda não existe: vai pro especialista.
+// Boleto: oferta 335692 da TMB (criada e conferida em 14/11, ~19h20), no padrão
+// da de R$ 1.997: entrada + 11x de R$ 309,96 com o financiamento do boleto.
 const GIGANTES_2997_LINKS: { pix: string; cartao: string; boleto: string | null } | null = {
   pix: "https://sun.eduzz.com/Q9N54JR101?cupom=BFQCQHN547&p=1",
   cartao: "https://sun.eduzz.com/Q9N54JR101?cupom=BFQCQHN547",
-  boleto: null,
+  boleto: "https://pay.tmb.com.br/CANALDOANFIT/1D8335692O9",
 };
 
 function avisoJaTemGigantes(temCompraRecente: boolean, utm: string): string {
   const fechar = GIGANTES_2997_LINKS
-    ? `Quando ele topar, mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(GIGANTES_2997_LINKS.pix, utm)} · Cartão ${linkComUtm(GIGANTES_2997_LINKS.cartao, utm)}${GIGANTES_2997_LINKS.boleto ? ` · Boleto parcelado ${linkComUtm(GIGANTES_2997_LINKS.boleto, utm)}` : ""}. O cupom já vai no link (não diga o código). Nunca mande o link de aluno de R$ 4.997 pra ele.${GIGANTES_2997_LINKS.boleto ? "" : ' Boleto parcelado nesse valor ainda não tem link: se ele quiser boleto, diga que o link chega por aqui em instantes e chame passar_para_humano (motivo "black") com "Black por R$ 2.997 no boleto (já é do Gigantes)".'}`
+    ? `Quando ele topar, mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(GIGANTES_2997_LINKS.pix, utm)} · Cartão ${linkComUtm(GIGANTES_2997_LINKS.cartao, utm)}${GIGANTES_2997_LINKS.boleto ? ` · Boleto parcelado na TMB ${linkComUtm(GIGANTES_2997_LINKS.boleto, utm)} (12x de R$ 309,96 com o financiamento do boleto, a primeira como entrada)` : ""}. O cupom já vai no link (não diga o código). Nunca mande o link de aluno de R$ 4.997 pra ele.${GIGANTES_2997_LINKS.boleto ? "" : ' Boleto parcelado nesse valor ainda não tem link: se ele quiser boleto, diga que o link chega por aqui em instantes e chame passar_para_humano (motivo "black") com "Black por R$ 2.997 no boleto (já é do Gigantes)".'}`
     : 'Ainda não existe link nesse valor: quando ele topar (ou perguntar como paga), diga que o link chega por aqui em instantes e chame passar_para_humano (motivo "black") com "Black por R$ 2.997 (já é do Gigantes, condição do Fernando), forma de pagamento: X". Nunca mande o link de aluno de R$ 4.997 pra ele.';
   return [
     "JÁ É ALUNO DO GIGANTES (compra confirmada no sistema): não ofereça o Gigantes como novidade nem diga que o Gigantes é a fase dele.",
