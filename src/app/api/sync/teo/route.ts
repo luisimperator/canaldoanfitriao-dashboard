@@ -277,14 +277,15 @@ const AVISO_PERGUNTE_MAX =
 const GIGANTES_RE = /gigantes/i;
 // Regra do Fernando (14/11): quem comprou o Anfitrião 5 Estrelas ou comprou ou
 // renovou o Gigantes de outubro pra frente faz a Black por R$ 1.997 (cupom
-// UPGRADE1997, criado na Eduzz em 14/11; oferta 335668 na TMB), mas só se pedir.
+// BFR5H3U5XS, que substituiu o UPGRADE1997 em 14/11: código difícil de adivinhar,
+// 50 usos, até 30/11; oferta 335668 na TMB), mas só se pedir.
 // A renovação do Anfitrião 5 Estrelas (R$ 997) entra com o mesmo nome do curso
 // e não conta: pra essa vale a devolução dos R$ 997 do bloco de upgrade.
 const COMPRA_RECENTE_DESDE = new Date("2026-10-01T03:00:00Z").getTime();
 const CURSO_COM_DIREITO_RE = /(anfitri[aã]o 5 estrelas|gigantes)/i;
 const UPGRADE_1997 = {
-  pix: "https://sun.eduzz.com/Q9N54JR101?cupom=UPGRADE1997&p=1",
-  cartao: "https://sun.eduzz.com/Q9N54JR101?cupom=UPGRADE1997",
+  pix: "https://sun.eduzz.com/Q9N54JR101?cupom=BFR5H3U5XS&p=1",
+  cartao: "https://sun.eduzz.com/Q9N54JR101?cupom=BFR5H3U5XS",
   boleto: "https://pay.tmb.com.br/CANALDOANFIT/SI1335668ZZ",
 };
 
@@ -306,19 +307,23 @@ function avisoCompraRecente(c: { produto: string; quando: string }, utm: string)
   const data = dataBr(c.quando);
   return [
     `COMPRA RECENTE (${c.produto}, paga em ${data}, de outubro pra frente): existe uma condição pra este lead, mas SÓ SE ELE PEDIR (pedir pra abater o que pagou, dizer que acabou de comprar, renovar ou ainda está pagando, ou pedir condição melhor por isso). Vale acima da objeção "acabei de comprar" do bloco de upgrade.`,
-    `A condição (regra do Fernando): a Black inteira por R$ 1.997 à vista ou 12x de R$ 199,70 no cartão, com o cupom UPGRADE1997. Nunca ofereça nem mencione por conta própria; até ele pedir, a condição é a de aluno, R$ 4.997 (ou R$ 2.997, se ele já é do Gigantes). É condição individual: não diga que é pra todo mundo nem que existe cupom aberto.`,
-    `Se ele pedir, confirme com naturalidade (quem comprou de outubro pra frente tem esse abatimento) e mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(UPGRADE_1997.pix, utm)} · Cartão ${linkComUtm(UPGRADE_1997.cartao, utm)} · Boleto parcelado na TMB ${linkComUtm(UPGRADE_1997.boleto, utm)} (12x de R$ 206,54 com o financiamento do boleto). Garantia de 7 dias, como na Black. Anote na ficha "Black por R$ 1.997 (UPGRADE1997): comprou ${c.produto} em ${data}".`,
+    `A condição (regra do Fernando): a Black inteira por R$ 1.997 à vista ou 12x de R$ 199,70 no cartão (o cupom já vai no link). Nunca ofereça nem mencione por conta própria; até ele pedir, a condição é a de aluno, R$ 4.997 (ou R$ 2.997, se ele já é do Gigantes). É condição individual: não diga que é pra todo mundo nem que existe cupom aberto.`,
+    `Se ele pedir, confirme com naturalidade (quem comprou de outubro pra frente tem esse abatimento) e mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(UPGRADE_1997.pix, utm)} · Cartão ${linkComUtm(UPGRADE_1997.cartao, utm)} · Boleto parcelado na TMB ${linkComUtm(UPGRADE_1997.boleto, utm)} (12x de R$ 206,54 com o financiamento do boleto). Garantia de 7 dias, como na Black. Anote na ficha "Black por R$ 1.997 (cupom de upgrade): comprou ${c.produto} em ${data}".`,
   ].join(" ");
 }
 
-// Fernando (14/11, 18h): "Oferece logo 2997 pra quem tem gigantes". Ainda não
-// existe cupom da Black nesse valor: até existir, quando ele topar, o Téo passa
-// pro especialista mandar o link (GIGANTES_2997_LINKS fica null).
-const GIGANTES_2997_LINKS: { pix: string; cartao: string; boleto: string | null } | null = null;
+// Fernando (14/11, 18h): "Oferece logo 2997 pra quem tem gigantes". Cupom
+// BFQCQHN547 na Eduzz (R$ 8.997 → R$ 2.997, conferido no checkout em 14/11).
+// Boleto da TMB nesse valor ainda não existe: vai pro especialista.
+const GIGANTES_2997_LINKS: { pix: string; cartao: string; boleto: string | null } | null = {
+  pix: "https://sun.eduzz.com/Q9N54JR101?cupom=BFQCQHN547&p=1",
+  cartao: "https://sun.eduzz.com/Q9N54JR101?cupom=BFQCQHN547",
+  boleto: null,
+};
 
 function avisoJaTemGigantes(temCompraRecente: boolean, utm: string): string {
   const fechar = GIGANTES_2997_LINKS
-    ? `Quando ele topar, mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(GIGANTES_2997_LINKS.pix, utm)} · Cartão ${linkComUtm(GIGANTES_2997_LINKS.cartao, utm)}${GIGANTES_2997_LINKS.boleto ? ` · Boleto parcelado ${linkComUtm(GIGANTES_2997_LINKS.boleto, utm)}` : ""}.`
+    ? `Quando ele topar, mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(GIGANTES_2997_LINKS.pix, utm)} · Cartão ${linkComUtm(GIGANTES_2997_LINKS.cartao, utm)}${GIGANTES_2997_LINKS.boleto ? ` · Boleto parcelado ${linkComUtm(GIGANTES_2997_LINKS.boleto, utm)}` : ""}. O cupom já vai no link (não diga o código). Nunca mande o link de aluno de R$ 4.997 pra ele.${GIGANTES_2997_LINKS.boleto ? "" : ' Boleto parcelado nesse valor ainda não tem link: se ele quiser boleto, diga que o link chega por aqui em instantes e chame passar_para_humano (motivo "black") com "Black por R$ 2.997 no boleto (já é do Gigantes)".'}`
     : 'Ainda não existe link nesse valor: quando ele topar (ou perguntar como paga), diga que o link chega por aqui em instantes e chame passar_para_humano (motivo "black") com "Black por R$ 2.997 (já é do Gigantes, condição do Fernando), forma de pagamento: X". Nunca mande o link de aluno de R$ 4.997 pra ele.';
   return [
     "JÁ É ALUNO DO GIGANTES (compra confirmada no sistema): não ofereça o Gigantes como novidade nem diga que o Gigantes é a fase dele.",
@@ -351,7 +356,7 @@ async function acharCompraDeCurso(
   return curso ? { email: String(curso.email ?? "").toLowerCase(), produto: String(curso.produto) } : null;
 }
 
-// Gigantes e compra recente com direito ao UPGRADE1997. Imersão, Encontro,
+// Gigantes e compra recente com direito ao cupom de upgrade (R$ 1.997). Imersão, Encontro,
 // ingresso e renovação com "Renovação" no nome não contam. No Anfitrião 5
 // Estrelas, a renovação de R$ 997 tem o mesmo nome do curso: só o valor separa
 // (parcela de compra parcelada conta; R$ 997 cheio, não).
