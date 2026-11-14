@@ -7,6 +7,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import type { TabDef } from "@/lib/access";
 import { InstallButton } from "@/components/InstallButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { RefreshButton } from "@/components/RefreshButton";
 import { PushVendasButton } from "@/components/PushVendasButton";
 
 // Navegação com estado "pendente": ao clicar, o item já fica destacado e mostra
@@ -156,7 +157,10 @@ function Footer({
       {email && avisoVendas && <PushVendasButton />}
       {email ? (
         <div className="flex items-center justify-between gap-2">
-          <ThemeToggle />
+          <div className="flex shrink-0 items-center">
+            <ThemeToggle />
+            <RefreshButton />
+          </div>
           <span className="truncate">{email}</span>
           <button
             onClick={logout}
@@ -198,7 +202,8 @@ export function Sidebar({ tabs, email }: { tabs: TabDef[]; email: string | null 
         </button>
         <Marca tamanho={28} />
         <span className="text-[15px] font-semibold">Canal do Anfitrião</span>
-        <ThemeToggle className="ml-auto" />
+        <RefreshButton className="ml-auto" />
+        <ThemeToggle />
       </header>
 
       {/* Celular: drawer lateral deslizante */}
