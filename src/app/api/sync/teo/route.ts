@@ -370,20 +370,26 @@ function avisoJaComprouBlack(compra: { origem: string; quando: string; email: st
 async function callMarcadaDoLead(
   supabase: SupabaseClient,
   contactId: string
-): Promise<{ inicio: string; vendedor: string | null } | null> {
+): Promise<{ inicio: string; vendedor: string | null; meet_url: string | null } | null> {
   const { data } = await supabase
     .from("teo_calls")
-    .select("inicio, vendedor")
+    .select("inicio, vendedor, meet_url")
     .eq("contact_id", contactId)
     .neq("status", "cancelada")
-    .gte("inicio", new Date().toISOString())
+    .gte("inicio", new Date(Date.now() - 40 * 60_000).toISOString())
     .order("inicio", { ascending: true })
     .limit(1)
     .maybeSingle();
-  return data ? { inicio: String(data.inicio), vendedor: (data.vendedor as string | null) ?? null } : null;
+  return data
+    ? {
+        inicio: String(data.inicio),
+        vendedor: (data.vendedor as string | null) ?? null,
+        meet_url: (data.meet_url as string | null) ?? null,
+      }
+    : null;
 }
 
-function avisoCallMarcada(call: { inicio: string; vendedor: string | null }): string {
+function avisoCallMarcada(call: { inicio: string; vendedor: string | null; meet_url?: string | null }): string {
   const quando = new Date(call.inicio).toLocaleString("pt-BR", {
     timeZone: "America/Sao_Paulo",
     weekday: "long",
@@ -393,11 +399,19 @@ function avisoCallMarcada(call: { inicio: string; vendedor: string | null }): st
     minute: "2-digit",
   });
   const com = call.vendedor ? ` com ${primeiroNomeVendedor(call.vendedor)}` : "";
+  const comecou = new Date(call.inicio).getTime() <= Date.now();
   return [
-    `CALL JÁ MARCADA: este lead tem call ${quando} (horário de Brasília)${com}. Ela já está na agenda e o convite já foi pro e-mail dele.`,
-    "Se pela conversa ele ainda não recebeu a confirmação (por exemplo, a sua última mensagem não fala do horário marcado), confirme agora esse horário em uma mensagem curta.",
+    comecou
+      ? `CALL AGORA: a call deste lead começou ${quando} (horário de Brasília)${com}.`
+      : `CALL JÁ MARCADA: este lead tem call ${quando} (horário de Brasília)${com}. Ela já está na agenda e o convite já foi pro e-mail dele.`,
+    comecou
+      ? ""
+      : "Se pela conversa ele ainda não recebeu a confirmação (por exemplo, a sua última mensagem não fala do horário marcado), confirme agora esse horário em uma mensagem curta.",
     "Não marque outro horário e nunca diga que o horário foi preenchido: só chame marcar_call de novo se ele pedir pra mudar.",
-  ].join(" ");
+    call.meet_url
+      ? `NÃO CONSEGUE ENTRAR: se perto do horário ele disser que não consegue entrar (link não abre, pede app, não acha a sala), responda na hora, curto: mande de novo ESTE link da call (${call.meet_url}) e o passo a passo. Celular: precisa do app Microsoft Teams (grátis; ${LOJAS_TEAMS}); depois de instalar, abre o link de novo e toca em "Entrar como convidado", digita o nome e entra. Computador: abre o link no Chrome ou no Edge e escolhe "Continuar neste navegador". Nunca mande outro link (Meet, outra sala), não diga que o especialista já está na sala e não remarque: o especialista foi avisado e entra por esse mesmo link.`
+      : "",
+  ].filter(Boolean).join(" ");
 }
 
 /** Aviso só deste lead (fica fora do bloco da Black, que vai em cache). */
@@ -732,6 +746,22 @@ async function criarReuniaoOnline(
   return { ok: true, link: m.joinWebUrl, id: m.id ?? null };
 }
 
+// Marca no webhook_log de que a reunião já foi ajustada. Muda quando o ajuste
+// muda, pra repassar nas reuniões já ligadas: "(pt-BR)" quando o idioma passou
+// a ir junto; "sem sala de espera" desde 14/11.
+const MARCA_GRAVACAO = "gravação automática ligada (pt-BR, sem sala de espera)";
+
+// App do Teams pro lead que entra pelo celular (o link da call pede o app).
+// No lembrete vai só o texto (um link por mensagem: mensagem cheia de link
+// parece spam e bloqueio derruba a qualidade do número); os links das lojas
+// vão só pra quem disser que não consegue entrar.
+const APP_TEAMS =
+  "Se for entrar pelo celular, baixe antes o app Microsoft Teams (grátis, na loja do celular): dá pra entrar como convidado, só com o seu nome, sem criar conta. No computador, abre direto no navegador.";
+const LOJAS_TEAMS =
+  "Android: https://play.google.com/store/apps/details?id=com.microsoft.teams · iPhone: https://apps.apple.com/br/app/microsoft-teams/id1113153706";
+const NAO_CONSIGO_ENTRAR_RE =
+  /(n[aã]o (consigo|consegui|estou conseguindo|t[oô] conseguindo)|n[aã]o (abre|abriu|carrega|entra|funciona)|\blink\b|aplicativo|\bapp\b|baixar|inv[aá]lido|como (eu )?entro|cad[eê] (a sala|voc[eê]|o link))/i;
+
 // Liga "gravar e transcrever automaticamente" na reunião do Teams da call,
 // direto na reunião (vale mesmo pra reunião criada pela agenda e não depende
 // do vendedor lembrar). Acha a reunião pelo link quando não temos o id.
@@ -757,7 +787,13 @@ async function ligarGravacao(
   const res = await fetch(`${base}/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: g.auth,
-    body: JSON.stringify({ recordAutomatically: true, meetingSpokenLanguageTag: "pt-BR" }),
+    // Sem sala de espera: o lead entra direto (em 12/11 a Caroline ficou
+    // "aguardando aprovação" e ninguém aprovou).
+    body: JSON.stringify({
+      recordAutomatically: true,
+      meetingSpokenLanguageTag: "pt-BR",
+      lobbyBypassSettings: { scope: "everyone", isDialInBypassEnabled: true },
+    }),
   });
   if (!res.ok) {
     const e = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
@@ -1734,13 +1770,13 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         .from("webhook_log")
         .select("id")
         .eq("source", "teo")
-        .eq("note", "gravação automática ligada (pt-BR)")
+        .eq("note", MARCA_GRAVACAO)
         .eq("body->>meet_url", k.meet_url)
         .limit(1);
       if (!feito?.length) {
         const r = await ligarGravacao(supabase, cfg, k).catch((e) => (e instanceof Error ? e.message : String(e)));
         if (r === "ok") {
-          await log(supabase, "gravação automática ligada (pt-BR)", { call_id: k.id, nome: k.nome, meet_url: k.meet_url });
+          await log(supabase, MARCA_GRAVACAO, { call_id: k.id, nome: k.nome, meet_url: k.meet_url });
         } else if (r !== "sem teams") {
           const { count } = await supabase
             .from("webhook_log")
@@ -1802,7 +1838,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
           cfg,
           conv.telefone,
           await janela(),
-          `Oi, ${nome}! Passando pra lembrar: hoje às ${hora} é o seu papo de 20 min com ${vend}. É só entrar por este link na hora: ${k.meet_url}`,
+          `Oi, ${nome}! Passando pra lembrar: hoje às ${hora} é o seu papo de 20 min com ${vend}. É só entrar por este link na hora: ${k.meet_url}\n\n${APP_TEAMS}`,
           [nome, vend, `hoje às ${horaFala}`]
         );
         await supabase.from("teo_calls").update({ lembrete_em: new Date().toISOString() }).eq("id", k.id);
@@ -1820,19 +1856,27 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         const escreveu = (await msgs()).some(
           (m) => m.senderBy === "contact" && new Date(m.date).getTime() >= t - 10 * 60_000
         );
+        // O vendedor falou com o lead nas 3h antes da call (remarcou, mandou
+        // outro link, combinou outra coisa): ele está cuidando, não manda.
+        // Em 13/11 o Breno tinha remarcado a Gabriela e o Téo mandou mesmo assim.
+        const vendedorFalou = (await msgs()).some(
+          (m) => ehDoVendedor(m) && new Date(m.date).getTime() >= t - 3 * 3600_000
+        );
         const r = escreveu
           ? "lead por perto"
-          : await avisarDaCall(
-              supabase,
-              cfg,
-              conv.telefone,
-              await janela(),
-              `Oi, ${nome}! ${vend} já está na sala te esperando. Se ainda não conseguiu entrar, é por este link: ${k.meet_url}`,
-              [nome, vend, `começou agora e ${vend} já está na sala te esperando`]
-            );
+          : vendedorFalou
+            ? "vendedor falou com o lead"
+            : await avisarDaCall(
+                supabase,
+                cfg,
+                conv.telefone,
+                await janela(),
+                `Oi, ${nome}! Chegou a hora do seu papo com ${vend}. Se ainda não entrou, é por este link: ${k.meet_url}\n\n${APP_TEAMS}`,
+                [nome, vend, `começou agora`]
+              );
         await supabase.from("teo_calls").update({ esperando_em: new Date().toISOString() }).eq("id", k.id);
         await log(supabase, `te esperando ${r}`, { contact_id: k.contact_id, nome: k.nome, hora });
-        if (r !== "lead por perto") feitos.push(`te esperando ${k.nome}`);
+        if (r !== "lead por perto" && r !== "vendedor falou com o lead") feitos.push(`te esperando ${k.nome}`);
       }
       if (!k.passou_vendedor_em && agora >= t - 10 * 60_000) {
         const v = (cfg.vendedores ?? []).find((x) => x.nome === k.vendedor);
@@ -1859,7 +1903,11 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         const depois = (await msgs()).filter((m) => new Date(m.date).getTime() > desde);
         const doLead = depois.filter((m) => m.senderBy === "contact");
         const ultLead = doLead[doLead.length - 1];
-        if (ultLead && !depois.some(ehDoVendedor) && agora - new Date(ultLead.date).getTime() >= 5 * 60_000) {
+        // "Não consigo entrar" (link, app, sala) não espera os 5 min: o Téo
+        // responde na hora com o link e o passo a passo, e avisa o vendedor.
+        const naoEntra = Boolean(ultLead && NAO_CONSIGO_ENTRAR_RE.test(ultLead.message ?? ""));
+        const espera = naoEntra ? 0 : 5 * 60_000;
+        if (ultLead && !depois.some(ehDoVendedor) && agora - new Date(ultLead.date).getTime() >= espera) {
           const { data: retomou } = await supabase
             .from("teo_conversas")
             .update({ estado: "em_conversa", motivo_humano: null, proxima_checagem: null, atualizado_em: new Date().toISOString() })
@@ -1868,7 +1916,18 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
             .eq("motivo_humano", "call")
             .select("contact_id");
           if (retomou?.length) {
-            await log(supabase, "téo retomou antes da call", { contact_id: k.contact_id, nome: k.nome, hora });
+            if (naoEntra && k.meet_url) {
+              await anotar(
+                supabase,
+                k.contact_id,
+                `⚠️ ${nome} disse que não consegue entrar na call. O Téo mandou o link da sala e o passo a passo (app no celular, navegador no computador). ${vend}: entre por ESTE link, que é o mesmo do lead: ${k.meet_url}`
+              );
+            }
+            await log(supabase, naoEntra ? "téo retomou antes da call (não consegue entrar)" : "téo retomou antes da call", {
+              contact_id: k.contact_id,
+              nome: k.nome,
+              hora,
+            });
             feitos.push(`retomou ${k.nome}`);
           }
         }
