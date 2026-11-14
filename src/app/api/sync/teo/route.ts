@@ -67,8 +67,9 @@ interface Cupom {
   link: string | null;
   /** Bônus (sem baixar o preço): o time libera depois da compra. */
   bonus?: boolean;
-  /** Pra quem vale: aluno confirmado pelo sistema, não aluno ou todos (padrão). */
-  publico?: "aluno" | "nao_aluno" | "todos";
+  /** Pra quem vale: aluno confirmado (inclui imersão e Encontro), aluno de curso
+   * (comprou curso ou tem tag de aluno), não aluno ou todos (padrão). */
+  publico?: "aluno" | "aluno_curso" | "nao_aluno" | "todos";
 }
 interface CupomPedido {
   codigo: string;
@@ -234,6 +235,15 @@ const ESPERA_BLACK_MS = 10 * 60_000;
 // Black passada. Ingresso de Encontro e imersão não contam.
 const CURSO_RE = /(anfitri[aã]o 5 estrelas|gigantes da temporada|subloca|booking|black friday hist|decora[cç][aã]o|fotografia)/i;
 const NAO_CURSO_RE = /(encontro|imers[aã]o|ingresso)/i;
+// Quem é aluno pra condição da Black (live de 05/11, Rômulo e Fernando, com o
+// slide): quem já comprou material educacional: imersão (ao vivo ou gravação),
+// Anfitrião 5 Estrelas (inclusive a renovação), Sublocação, Gigantes, ingresso
+// de qualquer Encontro, Booking, a Black passada, Decoração, Fotografia.
+// Adesivo não conta. Até 14/11 imersão e Encontro ficavam de fora (erro: a
+// Evelyn, do 4º Encontro VIP, ouviu o preço de não aluno). O Max continua só
+// pra curso (CURSO_RE sem NAO_CURSO_RE).
+const ALUNO_COMPRA_RE = /(anfitri[aã]o 5 estrelas|gigantes|subloca|booking|black friday hist|decora[cç][aã]o|fotografia|imers[aã]o|encontro)/i;
+const ehCurso = (produto: string) => CURSO_RE.test(produto) && !NAO_CURSO_RE.test(produto);
 const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/gi;
 
 // E-mail do cadastro e os que o lead mandou na conversa (no máximo 5).
@@ -256,7 +266,8 @@ const AVISO_MAX =
 async function acharCompraDeCurso(
   supabase: SupabaseClient,
   emails: string[],
-  re: RegExp = CURSO_RE
+  re: RegExp = ALUNO_COMPRA_RE,
+  excluir: RegExp | null = null
 ): Promise<{ email: string; produto: string } | null> {
   const { data } = await supabase
     .from("sales")
@@ -264,7 +275,9 @@ async function acharCompraDeCurso(
     .eq("status", "paga")
     .or(emails.map((e) => `buyer_email.ilike.${e}`).join(","))
     .limit(200);
-  const curso = (data ?? []).find((s) => re.test(s.product ?? "") && !NAO_CURSO_RE.test(s.product ?? ""));
+  const achadas = (data ?? []).filter((s) => re.test(s.product ?? "") && !(excluir && excluir.test(s.product ?? "")));
+  // Curso primeiro: imersão ou Encontro só se não houver curso.
+  const curso = achadas.find((s) => ehCurso(s.product ?? "")) ?? achadas[0];
   return curso ? { email: String(curso.buyer_email).toLowerCase(), produto: String(curso.product) } : null;
 }
 
@@ -286,33 +299,39 @@ const CHECKOUT_TEO = {
 };
 
 // Upgrade pra Black de quem já é (ou foi) aluno: a oferta da página oficial
-// (anfitriao5estrelas.com.br/black-friday-historica/, lida em 14/11) e o
+// (anfitriao5estrelas.com.br/black-friday-historica/, lida em 14/11), a live de
+// 05/11 (Rômulo e Fernando, transcrição enviada pelo Fernando em 14/11) e o
 // argumento do Fernando: pra aluno, a Black sai pelo preço do Gigantes sozinho.
 function blocoUpgradeAluno(vendendoPorAqui: boolean): string {
   return [
     "# UPGRADE PRA BLACK (este lead é aluno ou ex-aluno confirmado)",
-    "Pra quem já é ou foi aluno, a venda é o upgrade pra Black, nunca o Anfitrião 5 Estrelas de novo: ela já conhece a comunidade. Este bloco substitui as etapas 5 (vender a viagem) e 6 (fechamento) do \"Roteiro de venda por mensagem\"; as etapas 1 a 4 e as objeções continuam valendo.",
+    "Aluno, pra Black, é quem já comprou material educacional do Canal: curso, imersão (ao vivo ou gravada) ou ingresso de algum Encontro. Adesivo não conta. Pra quem já tem o Anfitrião 5 Estrelas, a venda é o upgrade, nunca o Anfitrião 5 Estrelas de novo. Pra quem só fez imersão ou foi a um Encontro, a Black é o jeito de ter o Anfitrião 5 Estrelas e todo o resto pelo preço de aluno. Este bloco substitui as etapas 5 (vender a viagem) e 6 (fechamento) do \"Roteiro de venda por mensagem\"; as etapas 1 a 4 e as objeções continuam valendo.",
     vendendoPorAqui
       ? "Você está vendendo por aqui: conduza até o link, sem call."
       : "Seu objetivo continua sendo a call: use só o argumento central, curto, pra mostrar por que vale o papo de 20 min com o especialista. Não faça o roteiro inteiro por mensagem.",
     "O argumento central: pra aluno, a Black sai pelo preço do Gigantes sozinho.",
     "- Gigantes avulso: R$ 4.997 por 1 ano de acesso e de comunidade (depois renova a R$ 1.997 por ano).",
-    "- Black pra aluno e ex-aluno: os mesmos R$ 4.997 à vista ou 12x de R$ 499,70, e ela leva: os 6 cursos com acesso vitalício (Anfitrião 5 Estrelas, Gigantes, Sublocação, Booking, Decoração e Fotografia; nunca mais paga renovação deles), 4 anos das duas comunidades de WhatsApp (a do Anfitrião 5 Estrelas e a do Gigantes, com o Rômulo dentro), as gravações de todos os Encontros de Anfitriões, o assistente de IA por 1 ano e o ingresso do Encontro presencial de 2027 (só pros 100 primeiros compradores).",
-    "- Cursos novos NÃO entram automaticamente (está na página). Nunca prometa curso que ainda vai ser lançado.",
-    "Quem é o público do Gigantes (o caminho mais forte do upgrade): quem já tem 2 imóveis ou mais, faz ou quer fazer gestão pra terceiros, é corretor ou tem imobiliária, ou quer crescer pra dezenas de imóveis e virar empresa. A dor que o Gigantes resolve: o crescimento travou porque tudo depende dela (limpeza, check-in, mensagens e preço na mão, sem processo nem equipe), ela não sabe cobrar e fechar contrato com proprietário, nem cuidar de imposto e CNPJ, e não consegue precificar e operar vários imóveis ao mesmo tempo. O Gigantes é o curso pra estruturar a empresa de gestão profissional de temporada: 20 módulos e 167 aulas (modelo de negócio, tributação, financeiro, plataformas, operação, atendimento, jurídico e contratos, marketing, precificação, pessoas, tecnologia e IA), masterclasses com grandes gestores, encontros mensais, 2 imersões gravadas e o grupo. O Rômulo começou com um quartinho no Airbnb e hoje administra mais de 60 imóveis: é esse caminho.",
-    "Nas etapas 1 a 3, com aluno, descubra: quantos imóveis tem hoje, se são dela ou de proprietários, se quer crescer (quantos, até quando), o que mais toma o tempo dela e se o acesso ao Anfitrião 5 Estrelas ainda está ativo ou já venceu.",
+    "- Black pra aluno e ex-aluno: os mesmos R$ 4.997 à vista ou 12x de R$ 499,70 (boleto parcelado com análise: 12x de R$ 549,70), e ela leva: os 6 cursos com acesso vitalício (Anfitrião 5 Estrelas, Gigantes, Sublocação, Booking, Decoração Estratégica e Fotografia Prática; nunca mais paga renovação deles), 4 anos das duas comunidades de WhatsApp (a do Anfitrião 5 Estrelas, com uns 935 anfitriões, e a do Gigantes, com uns 324 gestores, as duas com o Rômulo dentro todo dia e encontros mensais), as gravações das 4 edições do Encontro de Anfitriões, o assistente de IA por 1 ano e o ingresso do Encontro presencial de 2027, de 2 dias em São Paulo (só pros 100 primeiros compradores). Os 4 anos contam da data da compra.",
+    "- \"É Black de verdade: a gente não dobra o preço pra dar desconto\" (palavras do Rômulo). E é uma vez por ano: quem não aproveitar agora só tem a condição de aluno de novo na próxima Black; um curso avulso depois sai pelo preço cheio.",
+    "- Decoração Estratégica e Fotografia Prática são os cursos novos do Canal e entram na Black (saem primeiro pra quem é da Black, e só depois pro mercado). Fora esses dois, curso lançado depois não entra automaticamente (está na página). Nunca prometa outro curso futuro.",
+    "Quem é o público do Gigantes (o caminho mais forte do upgrade): quem já tem 2 imóveis ou mais, faz ou quer fazer gestão pra terceiros, é corretor ou tem imobiliária, ou quer crescer pra dezenas de imóveis e virar empresa. A história do Rômulo é essa: começou alugando um quartinho no Airbnb, depois os imóveis da família, em 2018 começou a sublocar, e de repente se viu administrando 10, 15, 20 imóveis: \"agora eu tenho uma empresa\". Hoje são mais de 60.",
+    "A dor que o Gigantes resolve: com 10, 15, 20 imóveis vem uma avalanche de check-ins, mensagens e limpezas que o Anfitrião 5 Estrelas não dá mais conta. O que tem no Gigantes (20 módulos, 167 aulas): estruturar o negócio pra gerir vários imóveis; captar e gerir imóveis de terceiros (como apresentar o serviço ao proprietário); modelo de contrato de administração (\"no começo vai de boca: cobro 20%, pode deixar que eu cuido. Cuida do quê?\"); quanto cobrar de comissão, em nome de quem fica o anúncio, em que conta cai o dinheiro e como prestar contas ao proprietário; nota fiscal, CNAE e impostos; quais tecnologias usar (channel manager, PriceLabs); montar equipe de atendimento, limpeza e manutenção. E um bônus de quem está no grupo: o Rômulo recebe pedido de proprietário do Brasil todo querendo gestão e indica pra comunidade do Gigantes.",
+    "Casos da live (use no máximo um, ligado ao caso dela; é história, não promessa de resultado): um gestor da região de Piracicaba tinha 16 imóveis quando conheceu o Rômulo e hoje tem 45, quase todos de terceiros, e diz que o curso ajudou na captação de proprietários; o Arnaldo, de Santos, largou a profissão pra focar 100% na empresa de gestão e está com 11 apartamentos, rumo a 20 (é do Gigantes); uma operação de alunos começou com 2 imóveis no fim de 2021 (R$ 15 mil naqueles 2 meses), chegou a 22 imóveis e R$ 420 mil em 2024 e faturou R$ 800 mil em 2025; um gestor fez o Gigantes e renovou só pra continuar no grupo; o Diogo, de Serra Negra, chegou a 10 imóveis em 5 meses.",
+    "Nas etapas 1 a 3, com aluno, descubra: quantos imóveis tem hoje, se são dela ou de proprietários, se quer crescer (quantos, até quando), o que mais toma o tempo dela e se o acesso ao Anfitrião 5 Estrelas ainda está ativo, já venceu ou se ela nunca teve (só imersão ou Encontro).",
     "Etapa 5 pra aluno (vender o próximo nível, uma ideia por mensagem, com \"faz sentido?\"):",
-    "- Se ela é do público do Gigantes: o Gigantes no centro, ligado à dor que ela contou (o que trava o crescimento), e depois: \"e na Black ele vem junto com tudo, vitalício\".",
+    "- Se ela é do público do Gigantes: o Gigantes no centro, ligado à dor que ela contou (o que trava o crescimento), um caso parecido com o dela, e depois: \"e na Black ele vem junto com tudo, vitalício\".",
     "- Se ela tem 1 imóvel e não quer crescer agora: no centro o vitalício (nunca mais renovar) e 1 ou 2 cursos que resolvem a perna bamba dela: Booking (depender menos do Airbnb), Decoração e Fotografia (anúncio que chama atenção e diária maior), Sublocação (crescer sem comprar imóvel). O Gigantes fica como \"quando você for pro segundo imóvel, já está lá\". Nunca despeje a lista inteira do combo: só o que serve ao caso.",
+    "- Se ela nunca teve o Anfitrião 5 Estrelas (só imersão ou Encontro): o Anfitrião 5 Estrelas é a base (o \"saber cortar o cabelo antes de abrir o salão\", como diz o Rômulo) e vem na Black junto com o resto, pelo preço de aluno.",
     "- Pra quem é aluna há tempo: a comunidade de 4 anos (não 1) e o Encontro.",
     "Etapa 6 pra aluno (fechamento), sempre ancorando do maior pro menor, depois do resumo, da volta à dor e do \"faz sentido?\": \"Tudo isso somado vale R$ 25.152. Quem não é aluno paga R$ 8.997. Como você é aluna, sai R$ 4.997 à vista ou 12x de R$ 499,70: R$ 4.000 a menos, o mesmo preço do Gigantes sozinho. Só que o Gigantes sozinho é 1 ano; na Black ele é vitalício, junto com os outros 5 cursos e 4 anos das duas comunidades.\" Depois a garantia de 7 dias e \"bora fazer o upgrade hoje?\".",
     "Objeções de aluno:",
     "- \"Ainda não terminei o Anfitrião 5 Estrelas\": com a Black é vitalício, ela segue no ritmo dela e nada mais vence.",
     "- \"Vou só renovar\": a renovação do Anfitrião 5 Estrelas é R$ 997 por ano (4 anos = R$ 3.988, só ele); a Black é R$ 4.997 uma vez, com os 6 cursos vitalícios e 4 anos das duas comunidades.",
+    "- \"Acabei de renovar\": quem pagou a renovação anual (R$ 997) em outubro ou novembro tem esse valor devolvido pelo time depois da compra da Black (regra do Fernando na live). Diga isso, siga com o link e anote na ficha \"renovou em [mês]: devolver R$ 997 da renovação\".",
+    "- \"Acabei de comprar o curso\" ou \"ainda estou pagando\": a condição dela é a de aluno, R$ 4.000 a menos. Se ela pedir pra abater as parcelas do curso, você não sabe: chame passar_para_humano (motivo \"black\") e diga que o especialista responde por aqui.",
     "- \"Tenho 1 imóvel, o Gigantes não é pra mim\": os outros cursos e o vitalício já pagam; o Gigantes fica pronto pra quando ela crescer.",
-    "- \"Ainda estou pagando o Anfitrião 5 Estrelas\" ou \"dá pra abater?\": você não sabe se abate; chame passar_para_humano (motivo \"black\") e diga que o especialista responde por aqui.",
     "- Caro ou parcela: trate como na seção \"Objeções\"; na venda por aqui, os cupons de aluno da seção \"Cupons\".",
-    "- Se o ingresso do Encontro é VIP ou Standard: você não sabe; o especialista confirma.",
+    "- Se o ingresso do Encontro é VIP ou Standard, ou a data do Encontro: você não sabe (a previsão é maio de 2027); o especialista confirma.",
   ].join("\n");
 }
 
@@ -383,7 +402,7 @@ function blocoBlack(o: {
       ? "- Este lead É aluno (pelo cadastro): pra ele é R$ 4.997 à vista ou 12x de R$ 499,70, com o cupom BLACKFRIDAYALUNOS. Página: anfitriao5estrelas.com.br/pagamento-alunos/"
       : // Os e-mails já conferidos são deste lead: vão em avisoEmailsSemCompra(),
         // fora deste bloco, pra ele continuar igual entre leads (cache).
-        "- Aluno tem condição especial, mas o cadastro deste lead não mostra compra de curso: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, peça o e-mail que ela usou na compra do curso; o sistema confere e, se achar, na sua próxima resposta este bloco já vem com a condição de aluno. Não diga que o especialista confirma.",
+        "- Aluno tem condição especial (quem já comprou qualquer curso, imersão ou ingresso de Encontro; adesivo não conta), mas o cadastro deste lead não mostra compra: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, que fez imersão ou que foi a um Encontro, peça o e-mail que ela usou na compra; o sistema confere e, se achar, na sua próxima resposta este bloco já vem com a condição de aluno. Não diga que o especialista confirma.",
     "- Página da Black: anfitriao5estrelas.com.br/black-friday-historica/",
     o.semEspecialista || o.vendaTeo ? `- ${linksTeo}` : "",
     "Garantia da Black: 7 dias.",
@@ -481,7 +500,7 @@ function avisoCallMarcada(call: { inicio: string; vendedor: string | null; meet_
 /** Aviso só deste lead (fica fora do bloco da Black, que vai em cache). */
 function avisoEmailsSemCompra(emails: string[]): string | null {
   if (!emails.length) return null;
-  return `Black, condição de aluno: já conferi e não há compra de curso nestes e-mails: ${emails.join(", ")}. Se ela disse que é aluna, diga isso com naturalidade e pergunte se comprou com outro e-mail; se não tiver outro, siga com a condição de quem não é aluno (e diga que, se lembrar de outro e-mail, é só mandar).`;
+  return `Black, condição de aluno: já conferi e não há compra de curso, imersão ou Encontro nestes e-mails: ${emails.join(", ")}. Se ela disse que é aluna, diga isso com naturalidade e pergunte se comprou com outro e-mail; se não tiver outro, siga com a condição de quem não é aluno (e diga que, se lembrar de outro e-mail, é só mandar).`;
 }
 
 // Teste de venda direta: a cada N leads que vão pra call (calls marcadas desde
@@ -830,7 +849,13 @@ function blocoCupons(cfg: Config): string {
     .sort((a, b) => a.produto.localeCompare(b.produto) || a.degrau - b.degrau);
   if (!lista.length) return "";
   const pub = (c: Cupom) =>
-    c.publico === "aluno" ? " Só pra aluno confirmado pelo sistema." : c.publico === "nao_aluno" ? " Só pra quem não é aluno." : "";
+    c.publico === "aluno"
+      ? " Só pra aluno confirmado pelo sistema."
+      : c.publico === "aluno_curso"
+        ? " Só pra quem comprou curso (imersão ou Encontro não basta)."
+        : c.publico === "nao_aluno"
+          ? " Só pra quem não é aluno."
+          : "";
   return [
     "# Cupons (só quando você estiver vendendo por aqui, sem call)",
     "O cupom não é atalho nem isca. Só chega nele quem passou pelo roteiro: ela já contou a dor, já entendeu o que o produto resolve pra ela, quer, e o que trava é o valor. Se ela ainda não viu valor, o próximo passo é o roteiro (descobrir, ciclo da dor, vender a viagem), não o cupom. Nunca ofereça cupom de cara, nunca pra quem não falou de preço e nunca cupom fora desta lista.",
@@ -891,7 +916,7 @@ async function pedirCupom(
   supabase: SupabaseClient,
   c: Conversa,
   cfg: Config,
-  o: { liberado: boolean; aluno: boolean; utm: string },
+  o: { liberado: boolean; aluno: boolean; alunoCurso: boolean; utm: string },
   args: { codigo: string; motivo: string }
 ): Promise<string> {
   if (!o.liberado) {
@@ -901,7 +926,10 @@ async function pedirCupom(
   const cup = lista.find((x) => x.codigo.toUpperCase() === args.codigo.trim().toUpperCase());
   if (!cup) return 'Esse cupom não existe. Use só os códigos da seção "Cupons".';
   if (cup.publico === "aluno" && !o.aluno) {
-    return "Esse cupom é só pra aluno confirmado pelo sistema, e o cadastro dela não mostra compra de curso. Se ela disser que é aluna, peça o e-mail da compra; não peça o cupom agora.";
+    return "Esse cupom é só pra aluno confirmado pelo sistema, e o cadastro dela não mostra compra de curso, imersão ou Encontro. Se ela disser que é aluna, peça o e-mail da compra; não peça o cupom agora.";
+  }
+  if (cup.publico === "aluno_curso" && !o.alunoCurso) {
+    return "Esse cupom é só pra quem já comprou curso (imersão ou Encontro não basta). Siga com o preço da tabela.";
   }
   if (cup.publico === "nao_aluno" && o.aluno) return "Esse cupom é pra quem não é aluno; ela é aluna e já tem a condição de aluno.";
   const ant = c.cupom_pendente ?? null;
@@ -1770,10 +1798,10 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     const temMax =
       Boolean(jaComprouBlack) ||
       lead.tags.some((t) => MAX_TAG.test(t.trim())) ||
-      (compraDeCurso ? MAX_RE.test(compraDeCurso.produto) : false) ||
+      (compraDeCurso && ehCurso(compraDeCurso.produto) ? MAX_RE.test(compraDeCurso.produto) : false) ||
       (await (async () => {
         const emails = emailsDaConversa(lead.email ?? null, msgs);
-        return emails.length ? Boolean(await acharCompraDeCurso(supabase, emails, MAX_RE)) : false;
+        return emails.length ? Boolean(await acharCompraDeCurso(supabase, emails, MAX_RE, NAO_CURSO_RE)) : false;
       })().catch(() => false));
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
@@ -1808,6 +1836,9 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
             : blackAtiva(cfg) && !compraDeCurso
               ? avisoEmailsSemCompra(emailsDoLead)
               : null,
+          !jaComprouBlack && compraDeCurso && !ehCurso(compraDeCurso.produto)
+            ? `Black, condição de aluno: confirmada pela compra de "${compraDeCurso.produto}" (quem fez imersão ou foi a um Encontro também é aluno, como o Rômulo explicou na live). Ela ainda não tem o Anfitrião 5 Estrelas: no upgrade, a Black é o jeito de ter o Anfitrião 5 Estrelas, o Gigantes e todo o resto pelo preço de aluno.`
+            : null,
           cupom ? avisoCupom(cupom, !cupomEsperando) : null,
         ]
           .filter(Boolean)
@@ -1826,7 +1857,12 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           supabase,
           c,
           cfg,
-          { liberado: vendaTeo, aluno: alunoPorTag || Boolean(compraDeCurso), utm: utmDoLead(especialista) },
+          {
+            liberado: vendaTeo,
+            aluno: alunoPorTag || Boolean(compraDeCurso),
+            alunoCurso: alunoPorTag || (compraDeCurso ? ehCurso(compraDeCurso.produto) : false),
+            utm: utmDoLead(especialista),
+          },
           args
         ),
     });
