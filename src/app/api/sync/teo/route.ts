@@ -264,22 +264,23 @@ const MAX_TAG = /^(alunoa5e|aluno-a5e|alunos-a5e|aluno-gigantes|gigantes-\d)/i;
 const AVISO_MAX =
   "ASSISTENTE DE IA (este lead já comprou a Black, o Anfitrião 5 Estrelas ou o Gigantes; vale acima da regra de suporte dos ajustes do dono): se ele perguntar do assistente de IA, responda direto, sem passar pro suporte: é o Max, o concierge. Ele fica no grupo de WhatsApp dos alunos e dá pra chamar ele no privado pelo +55 11 91164-7699. Login, senha, cobrança e outros problemas de acesso continuam com o suporte.";
 
+// Compras pagas do lead na Eduzz pelo e-mail ou pelo telefone (RPC
+// teo_compras_do_lead, migration 0091): muito lead chega sem e-mail no cadastro.
 async function acharCompraDeCurso(
   supabase: SupabaseClient,
   emails: string[],
+  telefone: string | null,
   re: RegExp = ALUNO_COMPRA_RE,
   excluir: RegExp | null = null
 ): Promise<{ email: string; produto: string } | null> {
-  const { data } = await supabase
-    .from("sales")
-    .select("buyer_email, product")
-    .eq("status", "paga")
-    .or(emails.map((e) => `buyer_email.ilike.${e}`).join(","))
-    .limit(200);
-  const achadas = (data ?? []).filter((s) => re.test(s.product ?? "") && !(excluir && excluir.test(s.product ?? "")));
-  // Curso primeiro: imersão ou Encontro só se não houver curso.
-  const curso = achadas.find((s) => ehCurso(s.product ?? "")) ?? achadas[0];
-  return curso ? { email: String(curso.buyer_email).toLowerCase(), produto: String(curso.product) } : null;
+  if (!emails.length && !telefone) return null;
+  const { data, error } = await supabase.rpc("teo_compras_do_lead", { p_emails: emails, p_telefone: telefone });
+  if (error) throw error;
+  const linhas = (data ?? []) as { email: string | null; produto: string | null }[];
+  const achadas = linhas.filter((s) => re.test(s.produto ?? "") && !(excluir && excluir.test(s.produto ?? "")));
+  // Curso primeiro: imersão, Encontro ou Airbnb do Zero só se não houver curso.
+  const curso = achadas.find((s) => ehCurso(s.produto ?? "")) ?? achadas[0];
+  return curso ? { email: String(curso.email ?? "").toLowerCase(), produto: String(curso.produto) } : null;
 }
 
 // Checkout da Black (os mesmos botões das páginas de pagamento), com
@@ -400,7 +401,7 @@ function blocoBlack(o: {
     "Preço:",
     "- Quem não é aluno: R$ 8.997 à vista ou 12x de R$ 899,71 no cartão (também Pix e saldo Eduzz). Boleto parcelado (com análise): 12x de R$ 949,71. Página: anfitriao5estrelas.com.br/pagamento-nao-alunos/",
     o.aluno
-      ? "- Este lead É aluno (pelo cadastro): pra ele é R$ 4.997 à vista ou 12x de R$ 499,70, com o cupom BLACKFRIDAYALUNOS. Página: anfitriao5estrelas.com.br/pagamento-alunos/"
+      ? "- Este lead É aluno (pelo cadastro ou pela compra): pra ele é R$ 4.997 à vista ou 12x de R$ 499,70, com o cupom BLACKFRIDAYALUNOS. Página: anfitriao5estrelas.com.br/pagamento-alunos/. Se antes nesta conversa você passou o preço de quem não é aluno (R$ 8.997), corrija com naturalidade e sem esconder: estava errado."
       : // Os e-mails já conferidos são deste lead: vão em avisoEmailsSemCompra(),
         // fora deste bloco, pra ele continuar igual entre leads (cache).
         "- Aluno tem condição especial (quem já comprou qualquer curso, inclusive o Airbnb do Zero, imersão ou ingresso de Encontro; adesivo, Piloto Automático e Checklist não contam), mas o cadastro deste lead não mostra compra: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, que fez imersão ou que foi a um Encontro, peça o e-mail que ela usou na compra; o sistema confere e, se achar, na sua próxima resposta este bloco já vem com a condição de aluno. Não diga que o especialista confirma.",
@@ -1794,7 +1795,10 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       ? await acharCompraDaBlack(supabase, emailsDaConversa(lead.email ?? null, msgs), c.telefone).catch(() => null)
       : null;
     const emailsDoLead = blackAtiva(cfg) && !alunoPorTag ? emailsDaConversa(lead.email ?? null, msgs) : [];
-    const compraDeCurso = emailsDoLead.length ? await acharCompraDeCurso(supabase, emailsDoLead).catch(() => null) : null;
+    const compraDeCurso =
+      blackAtiva(cfg) && !alunoPorTag
+        ? await acharCompraDeCurso(supabase, emailsDoLead, c.telefone).catch(() => null)
+        : null;
     // Tem o Max? (Black, Anfitrião 5 Estrelas ou Gigantes: compra, tag ou e-mail)
     const temMax =
       Boolean(jaComprouBlack) ||
@@ -1802,7 +1806,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       (compraDeCurso && ehCurso(compraDeCurso.produto) ? MAX_RE.test(compraDeCurso.produto) : false) ||
       (await (async () => {
         const emails = emailsDaConversa(lead.email ?? null, msgs);
-        return emails.length ? Boolean(await acharCompraDeCurso(supabase, emails, MAX_RE, NAO_CURSO_RE)) : false;
+        return Boolean(await acharCompraDeCurso(supabase, emails, c.telefone, MAX_RE, NAO_CURSO_RE));
       })().catch(() => false));
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
@@ -1838,7 +1842,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
               ? avisoEmailsSemCompra(emailsDoLead)
               : null,
           !jaComprouBlack && compraDeCurso && !ehCurso(compraDeCurso.produto)
-            ? `Black, condição de aluno: confirmada pela compra de "${compraDeCurso.produto}" (quem fez imersão, foi a um Encontro ou comprou o Airbnb do Zero também é aluno). Ela ainda não tem o Anfitrião 5 Estrelas: no upgrade, a Black é o jeito de ter o Anfitrião 5 Estrelas, o Gigantes e todo o resto pelo preço de aluno.`
+            ? `Black, condição de aluno: confirmada pela compra de "${compraDeCurso.produto}" (quem fez imersão, foi a um Encontro ou comprou o Airbnb do Zero também é aluno). Se antes nesta conversa você passou o preço de quem não é aluno (R$ 8.997), corrija com naturalidade e sem esconder: estava errado, a condição dela é a de aluno. Ela ainda não tem o Anfitrião 5 Estrelas: no upgrade, a Black é o jeito de ter o Anfitrião 5 Estrelas, o Gigantes e todo o resto pelo preço de aluno.`
             : null,
           cupom ? avisoCupom(cupom, !cupomEsperando) : null,
         ]
