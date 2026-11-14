@@ -15,7 +15,7 @@ import { historico } from "@/lib/teo";
 //   quem está vendendo agora (Fernando, 14/11: "o Breno conversou com ele 2
 //   meses atrás, dane-se, agora a venda é do Téo").
 // - Conversa atribuída ao Diego: o Téo não entra.
-const DONO_RECENTE_DIAS = 30;
+const DONO_RECENTE_DIAS = 15;
 
 // O vendedor ainda está com o lead? Só se a passagem pro time é recente, ou se
 // alguém do time escreveu (mensagem digitada) ou tem call com ele nos últimos
@@ -86,7 +86,7 @@ export async function inscreverEntrada(
         .eq("contact_id", id);
       await supabase.from("webhook_log").insert({
         source: "teo",
-        note: "entrada: voltou pro Téo (vendedor sem contato há 30+ dias)",
+        note: `entrada: voltou pro Téo (vendedor sem contato há ${DONO_RECENTE_DIAS}+ dias)`,
         body: { contact_id: id, nome: contato?.name ?? null, motivo_antes: ja.motivo_humano ?? null },
       });
     } else if (ja.estado !== "humano") {
