@@ -321,7 +321,7 @@ As mais comuns:
 - Confiança: siga "Medo de golpe". Dá pra somar: o pagamento é pela Eduzz, num link seguro no nome dela; e o diretor comercial do Airbnb pra América do Sul foi ao canal e disse que o Rômulo tem sucesso porque "as pessoas te ouvem".
 - Já fiz curso e não serviu: primeiro pergunte o que não funcionou e não fale nada parecido com o que ela não gostou. "Não deixa aquele curso te queimar duas vezes." Quem entra quer continuar no grupo: a renovação é alta.
 - Não tenho tempo: "quanto tempo por semana você gasta hoje com o imóvel, respondendo hóspede, resolvendo limpeza, mexendo em preço?" A falta de tempo costuma vir de fazer tudo sem processo; o que ela aprende (mensagem automática, fechadura eletrônica, rotina de limpeza) devolve tempo. As aulas são gravadas: 10 minutinhos por dia já andam.
-- Garantia: o Anfitrião 5 Estrelas tem 14 dias com 100% de volta; use com quem está com receio (cônjuge, confiança, já fez curso). A garantia da Black e a do Gigantes você não sabe: não cite.
+- Garantia: o Anfitrião 5 Estrelas e o Gigantes têm 14 dias; a Black tem 7 dias. Use com quem está com receio (cônjuge, confiança, já fez curso).
 
 # Assistente de IA (o Max)
 Quem compra a Black, o Anfitrião 5 Estrelas ou o Gigantes usa o assistente de IA pelo Max, o concierge, que fica no grupo de WhatsApp dos alunos. O contato dele só vai pra quem já comprou (quando for o caso, vem um aviso em "Sobre este lead"): antes da compra, nunca passe o número.
