@@ -458,6 +458,25 @@ function avisoDisparo(d: { onda: number; mensagem: string | null; enviado_em: st
 // mandar sempre que o Encontro entrar na conversa (14/11).
 const TRAILER_ENCONTRO = "https://youtu.be/ou9MYRpGp9M";
 
+// 2º ingresso do Encontro de 2027 com 20% (Fernando, 14/11, 19:40: "pode usar"),
+// pra acompanhante de quem compra a Black ou um ingresso. Os links com o
+// desconto ainda não existem (cupom pedido ao agente da Eduzz): até lá, quando a
+// pessoa topar, o Téo passa pro time.
+const SEGUNDO_INGRESSO_LINKS: { standard: string | null; vip: string | null } = {
+  standard: null,
+  vip: null,
+};
+
+function avisoSegundoIngresso(utm: string): string {
+  const { standard, vip } = SEGUNDO_INGRESSO_LINKS;
+  const comUtm = (l: string) => (utm ? linkComUtm(l, utm) : l);
+  const links =
+    standard && vip
+      ? `Links com o desconto: Standard ${comUtm(standard)} · VIP ${comUtm(vip)}.`
+      : 'O link com o desconto ainda não está pronto: quando ela escolher Standard ou VIP, diga que o link com os 20% chega por aqui em seguida e chame passar_para_humano (motivo "comprar") com "2º ingresso do Encontro com 20% (Standard ou VIP), acompanhante de [nome]". Nunca mande o link da pré-venda cheio como se tivesse o desconto.';
+  return `- 2º INGRESSO COM 20% (Fernando, 14/11): quem compra a Black (ou um ingresso do Encontro) e quer levar alguém (cônjuge, sócio, familiar) tem 20% de desconto no 2º ingresso do Encontro de 2027, Standard ou VIP: Standard R$ 797,60 (em vez de R$ 997) e VIP R$ 1.117,60 (em vez de R$ 1.397). Use quando a pessoa falar em levar alguém ou na objeção de cônjuge e sócio ("e a sua esposa vai junto com 20% de desconto no ingresso dela"). A Black continua trazendo 1 ingresso só; o desconto é no ingresso avulso do acompanhante. ${links}`;
+}
+
 function blocoUpgradeAluno(vendendoPorAqui: boolean): string {
   return [
     "# UPGRADE PRA BLACK (este lead é aluno ou ex-aluno confirmado)",
@@ -552,6 +571,7 @@ function blocoBlack(o: {
     "- Assistente pessoal de IA, o Max, por 4 anos (R$ 997), junto com os 4 anos de comunidade (Fernando, 14/11): a novidade de 2026. Não detalhe como é entregue.",
     "- Ingresso do Encontro presencial 2027 + gravações das 4 edições, só pros 100 primeiros (R$ 997).",
     `- Quando falar do Encontro, mande o trailer do 4º Encontro pra mostrar como foi (${TRAILER_ENCONTRO}), com uma frase sua; uma vez só na conversa.`,
+    avisoSegundoIngresso(o.semEspecialista || o.vendaTeo ? "teo" : ""),
     "- Comunidades de WhatsApp por 4 anos (A5E R$ 3.988 e Gigantes R$ 7.988).",
     "- Tudo somado: R$ 25.152.",
     "Preço:",
