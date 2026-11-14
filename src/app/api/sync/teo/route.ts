@@ -661,13 +661,17 @@ function ordemDoDia(livres: string[], cargaNoDia: (v: string) => number, taxa: M
 }
 
 // O lead é do vendedor da primeira call que o Téo marcou pra ele: remarcação
-// é sempre com essa pessoa (se ainda estiver no time), nunca troca.
+// é sempre com essa pessoa (se ainda estiver no time), nunca troca. Só vale
+// call dos últimos 30 dias (ou futura): call antiga não prende o lead, a venda
+// é de quem vende agora (Fernando, 14/11). Mesma janela da mensagem do
+// vendedor em especialistaDaConversa().
 async function vendedorDoLead(supabase: SupabaseClient, cfg: Config, contato: string): Promise<string | null> {
   const { data } = await supabase
     .from("teo_calls")
     .select("vendedor")
     .eq("contact_id", contato)
     .not("vendedor", "is", null)
+    .gte("inicio", new Date(Date.now() - 30 * 86400_000).toISOString())
     .order("criado_em", { ascending: true })
     .limit(1)
     .maybeSingle();
