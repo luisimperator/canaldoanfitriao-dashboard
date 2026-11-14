@@ -285,6 +285,37 @@ const CHECKOUT_TEO = {
   },
 };
 
+// Upgrade pra Black de quem já é (ou foi) aluno: a oferta da página oficial
+// (anfitriao5estrelas.com.br/black-friday-historica/, lida em 14/11) e o
+// argumento do Fernando: pra aluno, a Black sai pelo preço do Gigantes sozinho.
+function blocoUpgradeAluno(vendendoPorAqui: boolean): string {
+  return [
+    "# UPGRADE PRA BLACK (este lead é aluno ou ex-aluno confirmado)",
+    "Pra quem já é ou foi aluno, a venda é o upgrade pra Black, nunca o Anfitrião 5 Estrelas de novo: ela já conhece a comunidade. Este bloco substitui as etapas 5 (vender a viagem) e 6 (fechamento) do \"Roteiro de venda por mensagem\"; as etapas 1 a 4 e as objeções continuam valendo.",
+    vendendoPorAqui
+      ? "Você está vendendo por aqui: conduza até o link, sem call."
+      : "Seu objetivo continua sendo a call: use só o argumento central, curto, pra mostrar por que vale o papo de 20 min com o especialista. Não faça o roteiro inteiro por mensagem.",
+    "O argumento central: pra aluno, a Black sai pelo preço do Gigantes sozinho.",
+    "- Gigantes avulso: R$ 4.997 por 1 ano de acesso e de comunidade (depois renova a R$ 1.997 por ano).",
+    "- Black pra aluno e ex-aluno: os mesmos R$ 4.997 à vista ou 12x de R$ 499,70, e ela leva: os 6 cursos com acesso vitalício (Anfitrião 5 Estrelas, Gigantes, Sublocação, Booking, Decoração e Fotografia; nunca mais paga renovação deles), 4 anos das duas comunidades de WhatsApp (a do Anfitrião 5 Estrelas e a do Gigantes, com o Rômulo dentro), as gravações de todos os Encontros de Anfitriões, o assistente de IA por 1 ano e o ingresso do Encontro presencial de 2027 (só pros 100 primeiros compradores).",
+    "- Cursos novos NÃO entram automaticamente (está na página). Nunca prometa curso que ainda vai ser lançado.",
+    "Quem é o público do Gigantes (o caminho mais forte do upgrade): quem já tem 2 imóveis ou mais, faz ou quer fazer gestão pra terceiros, é corretor ou tem imobiliária, ou quer crescer pra dezenas de imóveis e virar empresa. A dor que o Gigantes resolve: o crescimento travou porque tudo depende dela (limpeza, check-in, mensagens e preço na mão, sem processo nem equipe), ela não sabe cobrar e fechar contrato com proprietário, nem cuidar de imposto e CNPJ, e não consegue precificar e operar vários imóveis ao mesmo tempo. O Gigantes é o curso pra estruturar a empresa de gestão profissional de temporada: 20 módulos e 167 aulas (modelo de negócio, tributação, financeiro, plataformas, operação, atendimento, jurídico e contratos, marketing, precificação, pessoas, tecnologia e IA), masterclasses com grandes gestores, encontros mensais, 2 imersões gravadas e o grupo. O Rômulo começou com um quartinho no Airbnb e hoje administra mais de 60 imóveis: é esse caminho.",
+    "Nas etapas 1 a 3, com aluno, descubra: quantos imóveis tem hoje, se são dela ou de proprietários, se quer crescer (quantos, até quando), o que mais toma o tempo dela e se o acesso ao Anfitrião 5 Estrelas ainda está ativo ou já venceu.",
+    "Etapa 5 pra aluno (vender o próximo nível, uma ideia por mensagem, com \"faz sentido?\"):",
+    "- Se ela é do público do Gigantes: o Gigantes no centro, ligado à dor que ela contou (o que trava o crescimento), e depois: \"e na Black ele vem junto com tudo, vitalício\".",
+    "- Se ela tem 1 imóvel e não quer crescer agora: no centro o vitalício (nunca mais renovar) e 1 ou 2 cursos que resolvem a perna bamba dela: Booking (depender menos do Airbnb), Decoração e Fotografia (anúncio que chama atenção e diária maior), Sublocação (crescer sem comprar imóvel). O Gigantes fica como \"quando você for pro segundo imóvel, já está lá\". Nunca despeje a lista inteira do combo: só o que serve ao caso.",
+    "- Pra quem é aluna há tempo: a comunidade de 4 anos (não 1) e o Encontro.",
+    "Etapa 6 pra aluno (fechamento), sempre ancorando do maior pro menor, depois do resumo, da volta à dor e do \"faz sentido?\": \"Tudo isso somado vale R$ 25.152. Quem não é aluno paga R$ 8.997. Como você é aluna, sai R$ 4.997 à vista ou 12x de R$ 499,70: R$ 4.000 a menos, o mesmo preço do Gigantes sozinho. Só que o Gigantes sozinho é 1 ano; na Black ele é vitalício, junto com os outros 5 cursos e 4 anos das duas comunidades.\" Depois a garantia de 7 dias e \"bora fazer o upgrade hoje?\".",
+    "Objeções de aluno:",
+    "- \"Ainda não terminei o Anfitrião 5 Estrelas\": com a Black é vitalício, ela segue no ritmo dela e nada mais vence.",
+    "- \"Vou só renovar\": a renovação do Anfitrião 5 Estrelas é R$ 997 por ano (4 anos = R$ 3.988, só ele); a Black é R$ 4.997 uma vez, com os 6 cursos vitalícios e 4 anos das duas comunidades.",
+    "- \"Tenho 1 imóvel, o Gigantes não é pra mim\": os outros cursos e o vitalício já pagam; o Gigantes fica pronto pra quando ela crescer.",
+    "- \"Ainda estou pagando o Anfitrião 5 Estrelas\" ou \"dá pra abater?\": você não sabe se abate; chame passar_para_humano (motivo \"black\") e diga que o especialista responde por aqui.",
+    "- Caro ou parcela: trate como na seção \"Objeções\"; na venda por aqui, os cupons de aluno da seção \"Cupons\".",
+    "- Se o ingresso do Encontro é VIP ou Standard: você não sabe; o especialista confirma.",
+  ].join("\n");
+}
+
 function blocoBlack(o: {
   plantao: boolean;
   aluno: boolean;
@@ -308,7 +339,7 @@ function blocoBlack(o: {
             : "TESTE DE VENDA DIRETA — ESTE LEAD É SEU ATÉ O FIM. Ele foi sorteado pro teste em que você mesmo vende, sem call (vale acima de qualquer regra destas instruções ou dos ajustes do dono que mande oferecer call ou passar pro time).",
           o.vendaDia
             ? [
-                "Seu objetivo é VENDER POR AQUI O QUE FOR MELHOR PRO CASO DA PESSOA, não necessariamente a Black. Conduza pelo \"Roteiro de venda por mensagem\" (clarificar, rotular, ciclo da dor, combinado, vender a viagem, fechamento, objeções), sem pular etapas, e recomende UM produto só, ligado ao que ela contou: Anfitrião 5 Estrelas pra quem tem de 1 a 5 imóveis ou está pra começar; Gigantes pra quem tem muitos imóveis ou faz gestão pra terceiros; a Black (o combo com tudo) pra quem quer o pacote completo ou já é aluno e quer o resto; o ingresso do Encontro pra quem só quer o evento; Airbnb do Zero só como downsell, se ela disser que não quer o Anfitrião 5 Estrelas. A Mentoria Alfaiate continua só com o time.",
+                "Seu objetivo é VENDER POR AQUI O QUE FOR MELHOR PRO CASO DA PESSOA, não necessariamente a Black. Conduza pelo \"Roteiro de venda por mensagem\" (clarificar, rotular, ciclo da dor, combinado, vender a viagem, fechamento, objeções), sem pular etapas, e recomende UM produto só, ligado ao que ela contou: Anfitrião 5 Estrelas pra quem tem de 1 a 5 imóveis ou está pra começar; Gigantes pra quem tem muitos imóveis ou faz gestão pra terceiros; a Black (o combo com tudo) pra quem quer o pacote completo; pra aluno ou ex-aluno confirmado, a Black, pelo \"Upgrade pra Black\" (nunca o Anfitrião 5 Estrelas de novo); o ingresso do Encontro pra quem só quer o evento; Airbnb do Zero só como downsell, se ela disser que não quer o Anfitrião 5 Estrelas. A Mentoria Alfaiate continua só com o time.",
                 "Preços: só os da seção \"Preços\" e deste bloco; nunca invente preço, desconto ou cupom (cupom só os da seção \"Cupons\", do jeito que ela manda). Hoje a regra de \"caro\" da Black dos ajustes do dono não vale: se o combo for demais pra ela, ofereça o produto avulso que serve ao caso, no preço da tabela.",
                 "Trate as objeções como na seção \"Objeções\" e, quando ela topar, mande o link da forma de pagamento que ela escolher e acompanhe até concluir. Links que você tem: os da Black (neste bloco) e os do ingresso do Encontro (nos ajustes do dono); se os ajustes do dono trouxerem link de outro produto, use. Pra produto sem link aqui, quando ela topar, chame passar_para_humano (motivo \"comprar\", com o produto e a forma de pagamento) e diga que o link chega por aqui em seguida.",
               ].join(" ")
@@ -356,6 +387,7 @@ function blocoBlack(o: {
     "- Página da Black: anfitriao5estrelas.com.br/black-friday-historica/",
     o.semEspecialista || o.vendaTeo ? `- ${linksTeo}` : "",
     "Garantia da Black: 7 dias.",
+    o.aluno ? blocoUpgradeAluno(o.vendaTeo) : "",
     "Você não sabe: quando o carrinho fecha e o que o assistente de IA faz além do que está em \"Assistente de IA (o Max)\". Não invente nada disso: o especialista confirma.",
   ]
     .filter(Boolean)
