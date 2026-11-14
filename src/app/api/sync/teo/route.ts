@@ -213,9 +213,16 @@ function emailsDaConversa(cadastro: string | null, msgs: MsgUnnichat[]): string[
   return [...achados].slice(-5);
 }
 
+// Quem tem o Max (assistente de IA): comprou a Black, o Anfitrião 5 Estrelas ou o Gigantes.
+const MAX_RE = /(anfitri[aã]o 5 estrelas|gigantes da temporada|black friday hist)/i;
+const MAX_TAG = /^(alunoa5e|aluno-a5e|alunos-a5e|aluno-gigantes|gigantes-\d)/i;
+const AVISO_MAX =
+  "ASSISTENTE DE IA (este lead já comprou a Black, o Anfitrião 5 Estrelas ou o Gigantes; vale acima da regra de suporte dos ajustes do dono): se ele perguntar do assistente de IA, responda direto, sem passar pro suporte: é o Max, o concierge. Ele fica no grupo de WhatsApp dos alunos e dá pra chamar ele no privado pelo +55 11 91164-7699. Login, senha, cobrança e outros problemas de acesso continuam com o suporte.";
+
 async function acharCompraDeCurso(
   supabase: SupabaseClient,
-  emails: string[]
+  emails: string[],
+  re: RegExp = CURSO_RE
 ): Promise<{ email: string; produto: string } | null> {
   const { data } = await supabase
     .from("sales")
@@ -223,7 +230,7 @@ async function acharCompraDeCurso(
     .eq("status", "paga")
     .or(emails.map((e) => `buyer_email.ilike.${e}`).join(","))
     .limit(200);
-  const curso = (data ?? []).find((s) => CURSO_RE.test(s.product ?? "") && !NAO_CURSO_RE.test(s.product ?? ""));
+  const curso = (data ?? []).find((s) => re.test(s.product ?? "") && !NAO_CURSO_RE.test(s.product ?? ""));
   return curso ? { email: String(curso.buyer_email).toLowerCase(), produto: String(curso.product) } : null;
 }
 
@@ -304,7 +311,7 @@ function blocoBlack(o: {
         "- Aluno tem condição especial, mas o cadastro deste lead não mostra compra de curso: nunca passe o cupom nem o preço de aluno. Se a pessoa disser que é aluna, peça o e-mail que ela usou na compra do curso; o sistema confere e, se achar, na sua próxima resposta este bloco já vem com a condição de aluno. Não diga que o especialista confirma.",
     "- Página da Black: anfitriao5estrelas.com.br/black-friday-historica/",
     o.semEspecialista || o.vendaTeo ? `- ${linksTeo}` : "",
-    "Você não sabe: quando o carrinho fecha, a garantia da Black e detalhes da entrega da IA. Não invente nada disso: o especialista confirma.",
+    "Você não sabe: quando o carrinho fecha, a garantia da Black e o que o assistente de IA faz além do que está em \"Assistente de IA (o Max)\". Não invente nada disso: o especialista confirma.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -337,7 +344,7 @@ function avisoJaComprouBlack(compra: { origem: string; quando: string; email: st
   return [
     `JÁ COMPROU A BLACK (vale acima do MODO BLACK FRIDAY e dos ajustes do dono): este lead comprou a Black Friday Histórica em ${dia} (${compra.origem}, e-mail ${compra.email}).`,
     "Não ofereça nem venda a Black de novo, não mande link de pagamento e não ofereça call de venda.",
-    "Se ele escreveu, agradeça a confiança e ajude no que ele pedir. Dúvida de acesso, login, grupos ou conteúdo é com o suporte: chame passar_para_humano (suporte).",
+    "Se ele escreveu, agradeça a confiança e ajude no que ele pedir. Dúvida de acesso, login, grupos ou conteúdo é com o suporte: chame passar_para_humano (suporte). A exceção é o assistente de IA: veja o aviso do Max.",
     "Se esta for uma mensagem de acompanhamento (retomar a conversa com quem parou de responder), não mande nada: responda só [ENCERRAR].",
   ].join(" ");
 }
@@ -1484,6 +1491,15 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       : null;
     const emailsDoLead = blackAtiva(cfg) && !alunoPorTag ? emailsDaConversa(lead.email ?? null, msgs) : [];
     const compraDeCurso = emailsDoLead.length ? await acharCompraDeCurso(supabase, emailsDoLead).catch(() => null) : null;
+    // Tem o Max? (Black, Anfitrião 5 Estrelas ou Gigantes: compra, tag ou e-mail)
+    const temMax =
+      Boolean(jaComprouBlack) ||
+      lead.tags.some((t) => MAX_TAG.test(t.trim())) ||
+      (compraDeCurso ? MAX_RE.test(compraDeCurso.produto) : false) ||
+      (await (async () => {
+        const emails = emailsDaConversa(lead.email ?? null, msgs);
+        return emails.length ? Boolean(await acharCompraDeCurso(supabase, emails, MAX_RE)) : false;
+      })().catch(() => false));
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
     if (ouvidos) await log(supabase, "áudio ouvido", { contact_id: c.contact_id, nome: c.nome, audios: ouvidos });
@@ -1509,6 +1525,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       avisoDoLead:
         [
           callMarcada ? avisoCallMarcada(callMarcada) : null,
+          temMax ? AVISO_MAX : null,
           jaComprouBlack
             ? avisoJaComprouBlack(jaComprouBlack)
             : blackAtiva(cfg) && !compraDeCurso
