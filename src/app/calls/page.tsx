@@ -248,7 +248,7 @@ export default async function CallsPage({
               ? "nenhuma venda ainda"
               : origens.length
                 ? `${origens.map(([o, v]) => `${o} ${brl(v)}`).join(" · ")}${origens.some(([o]) => o === "TMB") ? "" : " · TMB R$ 0"}`
-                : `ticket médio ${brl(ticket)}`
+                : `${num(r.fechamento.ok)} vendas`
           }
         />
         <KpiCard
@@ -262,6 +262,27 @@ export default async function CallsPage({
           hint={r.faltaramMasCompraram.length ? "pode ser call fora do Teams sem nota" : "em até 48h da call"}
           tone={r.faltaramMasCompraram.length ? "warn" : "neutral"}
         />
+      </div>
+      {/* Quanto cada call rende: a receita das calls dividida pelas marcadas,
+          pelas que aconteceram e pelas que fecharam (ticket médio). */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-3">
+        <KpiCard
+          label="Faturamento por call marcada"
+          value={r.marcadas ? brl(r.receita / r.marcadas) : "—"}
+          hint={`${brl(r.receita)} ÷ ${num(r.marcadas)} marcadas`}
+        />
+        <KpiCard
+          label="Faturamento por call feita"
+          value={r.aconteceram ? brl(r.receita / r.aconteceram) : "—"}
+          hint={`${brl(r.receita)} ÷ ${num(r.aconteceram)} que aconteceram`}
+        />
+        <div className="col-span-2 md:col-span-1 [&>div]:h-full">
+          <KpiCard
+            label="Ticket médio por call fechada"
+            value={ticket !== null ? brl(ticket) : "—"}
+            hint={ticket !== null ? `${brl(r.receita)} ÷ ${num(r.fechamento.ok)} vendas` : "nenhuma venda ainda"}
+          />
+        </div>
       </div>
       <p className="text-xs text-slate-500 dark:text-zinc-400 mb-6">
         {num(r.canceladas)} canceladas ou remarcadas · {num(r.foraDoTeams)} aconteceram fora do Teams (nota ou painel)
