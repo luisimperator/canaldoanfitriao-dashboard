@@ -51,10 +51,40 @@ interface Conversa {
   black_retomou_em?: string | null;
   /** Teste de venda direta: true = o Téo vende este lead até o fim, sem call. */
   venda_teo?: boolean | null;
+  /** Cupom pedido "à equipe": o Téo volta com a condição em cupom_em. */
+  cupom_pendente?: CupomPedido | null;
+  cupom_em?: string | null;
+}
+
+/** Degrau da escada de cupons (teo_config.cupons). */
+interface Cupom {
+  codigo: string;
+  produto: string;
+  degrau: number;
+  para: string;
+  quando: string;
+  condicao: string;
+  link: string | null;
+  /** Bônus (sem baixar o preço): o time libera depois da compra. */
+  bonus?: boolean;
+  /** Pra quem vale: aluno confirmado pelo sistema, não aluno ou todos (padrão). */
+  publico?: "aluno" | "nao_aluno" | "todos";
+}
+interface CupomPedido {
+  codigo: string;
+  produto: string;
+  degrau: number;
+  condicao: string;
+  link: string | null;
+  bonus?: boolean;
+  motivo: string;
+  pedido_em: string;
+  /** A "equipe" respondeu: daqui em diante a condição está aprovada pra ela. */
+  respondida_em?: string | null;
 }
 
 const CAMPOS_CONVERSA =
-  "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo";
+  "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo, cupom_pendente, cupom_em";
 
 interface Config {
   ligado: boolean;
@@ -69,6 +99,8 @@ interface Config {
   venda_teo_desde?: string | null;
   /** Venda direta do dia: até quando todo lead sem especialista é do Téo, sem call (null = desligado). */
   venda_direta_ate?: string | null;
+  /** Escada de cupons na venda por mensagem (com o "vou confirmar com a equipe"). */
+  cupons?: Cupom[] | null;
   contexto: string;
   precos: string | null;
   instrucoes_extras: string | null;
@@ -277,7 +309,7 @@ function blocoBlack(o: {
           o.vendaDia
             ? [
                 "Seu objetivo é VENDER POR AQUI O QUE FOR MELHOR PRO CASO DA PESSOA, não necessariamente a Black. Conduza pelo \"Roteiro de venda por mensagem\" (clarificar, rotular, ciclo da dor, combinado, vender a viagem, fechamento, objeções), sem pular etapas, e recomende UM produto só, ligado ao que ela contou: Anfitrião 5 Estrelas pra quem tem de 1 a 5 imóveis ou está pra começar; Gigantes pra quem tem muitos imóveis ou faz gestão pra terceiros; a Black (o combo com tudo) pra quem quer o pacote completo ou já é aluno e quer o resto; o ingresso do Encontro pra quem só quer o evento; Airbnb do Zero só como downsell, se ela disser que não quer o Anfitrião 5 Estrelas. A Mentoria Alfaiate continua só com o time.",
-                "Preços: só os da seção \"Preços\" e deste bloco; nunca invente preço, desconto ou cupom. Hoje a regra de \"caro\" da Black dos ajustes do dono não vale: se o combo for demais pra ela, ofereça o produto avulso que serve ao caso, no preço da tabela.",
+                "Preços: só os da seção \"Preços\" e deste bloco; nunca invente preço, desconto ou cupom (cupom só os da seção \"Cupons\", do jeito que ela manda). Hoje a regra de \"caro\" da Black dos ajustes do dono não vale: se o combo for demais pra ela, ofereça o produto avulso que serve ao caso, no preço da tabela.",
                 "Trate as objeções como na seção \"Objeções\" e, quando ela topar, mande o link da forma de pagamento que ela escolher e acompanhe até concluir. Links que você tem: os da Black (neste bloco) e os do ingresso do Encontro (nos ajustes do dono); se os ajustes do dono trouxerem link de outro produto, use. Pra produto sem link aqui, quando ela topar, chame passar_para_humano (motivo \"comprar\", com o produto e a forma de pagamento) e diga que o link chega por aqui em seguida.",
               ].join(" ")
             : "Seu objetivo é VENDER A BLACK POR AQUI: entenda o caso em poucas perguntas (o que tem hoje, o que trava, o que quer), mostre como a Black resolve isso com 2 ou 3 pontos ligados ao caso dela (não a lista inteira), trate as objeções com curiosidade (pergunte o porquê, concorde com o que for verdade, sem rebater nem pressionar) e, quando ela topar, mande o link de pagamento da forma que ela escolher e acompanhe até concluir.",
@@ -744,6 +776,133 @@ async function criarReuniaoOnline(
     return { ok: false, erro: `reunião online ${res.status}: ${(m?.error?.message ?? "").slice(0, 200)}` };
   }
   return { ok: true, link: m.joinWebUrl, id: m.id ?? null };
+}
+
+// Escada de cupons pro Téo (só quando ele vende por aqui). A ordem e os
+// limites seguem o roteiro: R$ 2.997 sempre primeiro; R$ 2.797 só na objeção
+// de preço; R$ 2.497 só com trava concreta; pediu mais, bônus do Booking e
+// não baixa mais. O Téo "vê com a equipe" e volta uns minutos depois.
+const CUPOM_ESPERA_MS = 4 * 60_000;
+
+function blocoCupons(cfg: Config): string {
+  const lista = (cfg.cupons ?? [])
+    .slice()
+    .sort((a, b) => a.produto.localeCompare(b.produto) || a.degrau - b.degrau);
+  if (!lista.length) return "";
+  const pub = (c: Cupom) =>
+    c.publico === "aluno" ? " Só pra aluno confirmado pelo sistema." : c.publico === "nao_aluno" ? " Só pra quem não é aluno." : "";
+  return [
+    "# Cupons (só quando você estiver vendendo por aqui, sem call)",
+    "O cupom não é atalho nem isca. Só chega nele quem passou pelo roteiro: ela já contou a dor, já entendeu o que o produto resolve pra ela, quer, e o que trava é o valor. Se ela ainda não viu valor, o próximo passo é o roteiro (descobrir, ciclo da dor, vender a viagem), não o cupom. Nunca ofereça cupom de cara, nunca pra quem não falou de preço e nunca cupom fora desta lista.",
+    "Ordem: preço da tabela sempre primeiro, no fechamento. Na objeção de preço, primeiro trate o \"caro\" como na seção \"Objeções\" (o total, a parcela ou o retorno? a conta com os números dela). Se mesmo assim o preço continuar travando, aí sim o primeiro degrau. Cada degrau seguinte só com uma nova trava concreta dela (ex.: \"a parcela não cabe\", \"só consigo até tanto\"), um por vez, na ordem.",
+    "Como: diga com naturalidade que vai ver com a equipe o que dá pra fazer (ex.: \"deixa eu ver aqui com a equipe se consigo algo melhor pra você, já te volto\"), sem citar valor nem prometer, e chame pedir_cupom. Em alguns minutos a resposta da equipe chega pra você. Nunca diga que a equipe já aprovou antes disso. A partir do segundo degrau, ao voltar, use algo como \"conversei com a equipe e consegui aprovar\".",
+    ...lista.map(
+      (c) => `- ${c.produto}, degrau ${c.degrau} (${c.codigo}): ${c.condicao}. Quando: ${c.quando}.${pub(c)}`
+    ),
+    "Depois do último degrau não tem mais desconto: segure o preço e volte pro valor (a dor dela, o retorno, a garantia). Cupom com boleto parcelado não existe: se ela quiser boleto com a condição, chame passar_para_humano (motivo \"comprar\").",
+  ].join("\n");
+}
+
+function linkComUtm(link: string, utm: string): string {
+  return `${link}${link.includes("?") ? "&" : "?"}utm_source=${utm}`;
+}
+
+function utmDoLead(especialista: string | null): string {
+  if (!especialista) return "teo";
+  return primeiroNomeVendedor(especialista)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+function textoCondicao(p: CupomPedido): string {
+  return [
+    `${p.produto}: ${p.condicao} (cupom ${p.codigo})`,
+    p.link ? `link: ${p.link}` : "sem link aqui: quando ela topar, chame passar_para_humano (motivo \"comprar\")",
+    p.bonus ? "O bônus o time libera depois da compra." : "",
+  ]
+    .filter(Boolean)
+    .join(". ");
+}
+
+// O que o Téo sabe do cupom pedido, em toda resposta (fora do cache).
+function avisoCupom(p: CupomPedido, respondida: boolean): string {
+  if (!respondida) {
+    return `CUPOM: você pediu à equipe uma condição pra ela (${p.produto}, cupom ${p.codigo}) e a resposta ainda não chegou. Se ela perguntar, diga que ainda está vendo com a equipe; não cite valor nem prometa.`;
+  }
+  return [
+    `CUPOM APROVADO pela equipe pra ela — ${textoCondicao(p)}.`,
+    "Use quando for o próximo passo natural da conversa: se o preço era o que travava, volte com a condição ligada ao que ela contou (a dor, o objetivo) e pergunte se assim fica bom pra começar; o link vai quando ela topar (ou junto, se ela já disse que compra com essa condição). Se a conversa mudou de rumo, siga o rumo e guarde a condição pra quando o preço voltar.",
+    "Não volte ao preço da tabela e não desça mais sem uma nova trava concreta (aí é o próximo degrau da seção \"Cupons\", se houver).",
+  ].join(" ");
+}
+
+// Rodada em que a resposta da "equipe" chega e o lead não escreveu nada desde
+// o "vou ver com a equipe".
+function instrucaoCupom(p: CupomPedido): string {
+  return (
+    `[Instrução interna, o lead não vê: a equipe acabou de responder o pedido de condição que você fez. ${avisoCupom(p, true)} ` +
+    "Releia a conversa antes de escrever. Se ela está esperando essa resposta, volte agora, curto e natural (ex.: \"consegui uma condição aqui pra você\"), sem textão e sem repetir o que já disse. " +
+    "Se ela já comprou, desistiu, pediu pra parar ou a conversa foi pra outro lado, não empurre o cupom: responda só [SEM_RESPOSTA].]"
+  );
+}
+
+async function pedirCupom(
+  supabase: SupabaseClient,
+  c: Conversa,
+  cfg: Config,
+  o: { liberado: boolean; aluno: boolean; utm: string },
+  args: { codigo: string; motivo: string }
+): Promise<string> {
+  if (!o.liberado) {
+    return "Cupom não está liberado pra este lead (você não está vendendo por aqui): siga com o preço da tabela; condição especial é com o especialista.";
+  }
+  const lista = cfg.cupons ?? [];
+  const cup = lista.find((x) => x.codigo.toUpperCase() === args.codigo.trim().toUpperCase());
+  if (!cup) return 'Esse cupom não existe. Use só os códigos da seção "Cupons".';
+  if (cup.publico === "aluno" && !o.aluno) {
+    return "Esse cupom é só pra aluno confirmado pelo sistema, e o cadastro dela não mostra compra de curso. Se ela disser que é aluna, peça o e-mail da compra; não peça o cupom agora.";
+  }
+  if (cup.publico === "nao_aluno" && o.aluno) return "Esse cupom é pra quem não é aluno; ela é aluna e já tem a condição de aluno.";
+  const ant = c.cupom_pendente ?? null;
+  if (ant && !ant.respondida_em) {
+    return "Você já pediu uma condição à equipe e a resposta ainda não chegou. Diga só que ainda está vendo; não peça outra.";
+  }
+  const ultimo = ant && ant.produto === cup.produto ? ant.degrau : 0;
+  if (cup.degrau <= ultimo) return `Ela já tem essa condição ou uma melhor aprovada (${ant!.condicao}). Mantenha essa.`;
+  if (cup.degrau > ultimo + 1) {
+    const prox = lista.find((x) => x.produto === cup.produto && x.degrau === ultimo + 1);
+    return prox
+      ? `Um degrau por vez: o próximo é ${prox.codigo} (${prox.condicao}), e só se ela trouxer uma trava concreta de preço.`
+      : 'Um degrau por vez, na ordem da seção "Cupons".';
+  }
+  const agora = new Date();
+  const pedido: CupomPedido = {
+    codigo: cup.codigo,
+    produto: cup.produto,
+    degrau: cup.degrau,
+    condicao: cup.condicao,
+    link: cup.link ? linkComUtm(cup.link, o.utm) : null,
+    bonus: cup.bonus ?? false,
+    motivo: args.motivo.slice(0, 300),
+    pedido_em: agora.toISOString(),
+    respondida_em: null,
+  };
+  const em = new Date(agora.getTime() + CUPOM_ESPERA_MS).toISOString();
+  const { error } = await supabase
+    .from("teo_conversas")
+    .update({ cupom_pendente: pedido, cupom_em: em })
+    .eq("contact_id", c.contact_id);
+  if (error) return "Não deu pra pedir agora. Siga com o preço da tabela e trate o valor pelo roteiro.";
+  c.cupom_pendente = pedido;
+  c.cupom_em = em;
+  await anotar(
+    supabase,
+    c.contact_id,
+    `🎟️ Téo pediu condição (venda por aqui): ${cup.produto} — ${cup.condicao} (cupom ${cup.codigo}).\nO que trava: ${pedido.motivo}\nEle volta com a condição em ~4 min.${cup.bonus ? "\nSe ela comprar, liberar o bônus." : ""}`
+  );
+  await log(supabase, "cupom pedido", { contact_id: c.contact_id, nome: c.nome, cupom: cup.codigo, motivo: pedido.motivo });
+  return "Pedido feito à equipe. Agora diga, curto e natural, que vai ver com a equipe e já volta (sem citar valor e sem prometer). A resposta chega em alguns minutos.";
 }
 
 // Marca no webhook_log de que a reunião já foi ajustada. Muda quando o ajuste
@@ -1395,6 +1554,13 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     let retomar: string | undefined;
     let acompanhamento = false;
     const ocioso = ultima ? Date.now() - new Date(ultima.date).getTime() : Infinity;
+    // Cupom pedido "à equipe" (pedir_cupom): até cupom_em o Téo está "vendo";
+    // depois, a condição está aprovada e ele volta com ela quando fizer sentido.
+    const cupom = c.cupom_pendente ?? null;
+    const cupomEm = c.cupom_em ? new Date(c.cupom_em).getTime() : 0;
+    const cupomEsperando = Boolean(cupom && !cupom.respondida_em) && Date.now() < cupomEm;
+    const cupomChegou = Boolean(cupom && !cupom.respondida_em) && !cupomEsperando;
+    let cupomAgora = false;
     if (c.estado === "encerrado") {
       // Encerrado por falta de resposta ou porque a pessoa recusou: só volta se
       // ela escrever de novo.
@@ -1483,6 +1649,17 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       if (retomaBlack && !pendente) {
         retomar =
           "O especialista não respondeu a tempo. Responda você, agora, a dúvida que o lead trouxe sobre a Black (está no histórico), com as informações do MODO BLACK FRIDAY.";
+      } else if (!pendente && cupomEsperando) {
+        await adiar(supabase, c.contact_id, cupomEm - Date.now());
+        return "vendo com a equipe (cupom)";
+      } else if (!pendente && cupomChegou && janelaAberta && (podeChamar() || ocioso < 30 * 60_000)) {
+        // A "equipe" respondeu e o lead não escreveu desde o "vou ver": o Téo
+        // volta com a condição, se ainda fizer sentido (não conta como acompanhamento).
+        retomar = instrucaoCupom(cupom!);
+        cupomAgora = true;
+      } else if (!pendente && cupomChegou && janelaAberta) {
+        await adiar(supabase, c.contact_id, proximas8hSP().getTime() - Date.now());
+        return "cupom fica pras 8h";
       } else if (!pendente) {
         if (ultima?.senderBy === "contact") {
           await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
@@ -1578,6 +1755,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
               vendaDia,
             })
           : "",
+        vendaTeo ? blocoCupons(cfg) : "",
       ]
         .filter(Boolean)
         .join("\n\n"),
@@ -1590,6 +1768,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
             : blackAtiva(cfg) && !compraDeCurso
               ? avisoEmailsSemCompra(emailsDoLead)
               : null,
+          cupom ? avisoCupom(cupom, !cupomEsperando) : null,
         ]
           .filter(Boolean)
           .join("\n\n") || null,
@@ -1602,6 +1781,14 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`
       ),
       marcarCall: (args) => marcarCall(supabase, c, cfg, especialista, args),
+      pedirCupom: (args) =>
+        pedirCupom(
+          supabase,
+          c,
+          cfg,
+          { liberado: vendaTeo, aluno: alunoPorTag || Boolean(compraDeCurso), utm: utmDoLead(especialista) },
+          args
+        ),
     });
 
     // Retomou a conversa da Black e não tem nada a dizer (ex.: o lead só
@@ -1645,7 +1832,16 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     const ficha = [c.ficha, res.ficha].filter(Boolean).join("\n") || null;
     // Acompanhamento com [ENCERRAR]: a pessoa recusou ou pediu pra não ser
     // chamada. Fecha a conversa pra não sair o modelo da próxima etapa.
-    const recusou = Boolean(retomar) && !humano && res.mensagens.length === 0 && Boolean(res.encerrar);
+    const recusou = Boolean(retomar) && !cupomAgora && !humano && res.mensagens.length === 0 && Boolean(res.encerrar);
+    // Cupom: a resposta da "equipe" chegou nesta rodada (o Téo usou ou guardou);
+    // ainda esperando, a próxima checagem é quando ela chega.
+    const cupomAgoraPedido = c.cupom_pendente && !c.cupom_pendente.respondida_em ? c.cupom_pendente : null;
+    const cupomRespondido =
+      cupomChegou && cupom && cupomAgoraPedido?.pedido_em === cupom.pedido_em
+        ? { ...cupom, respondida_em: new Date().toISOString() }
+        : null;
+    const esperaCupom =
+      cupomAgoraPedido && !cupomRespondido && c.cupom_em && new Date(c.cupom_em).getTime() > Date.now() ? c.cupom_em : null;
     await supabase
       .from("teo_conversas")
       .update({
@@ -1657,11 +1853,15 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         ficha,
         erro: null,
         atualizado_em: new Date().toISOString(),
-        proxima_checagem: recusou ? new Date(Date.now() + 2 * 3600_000).toISOString() : null,
+        proxima_checagem: recusou ? new Date(Date.now() + 2 * 3600_000).toISOString() : esperaCupom,
+        ...(cupomRespondido ? { cupom_pendente: cupomRespondido } : {}),
         // Acompanhamento conta a etapa; resposta a quem escreveu zera o silêncio.
-        ...(retomar
-          ? { followup_etapa: (c.followup_etapa ?? 0) + 1, followup_em: new Date().toISOString() }
-          : { followup_etapa: 0, silencio_desde: null, followup_em: null }),
+        // A volta com o cupom não é acompanhamento: não mexe na contagem.
+        ...(cupomAgora
+          ? {}
+          : retomar
+            ? { followup_etapa: (c.followup_etapa ?? 0) + 1, followup_em: new Date().toISOString() }
+            : { followup_etapa: 0, silencio_desde: null, followup_em: null }),
       })
       .eq("contact_id", c.contact_id);
 
@@ -1680,7 +1880,11 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       ? "passou pro time"
       : abrir
         ? "abriu conversa"
-        : retomar
+        : cupomAgora
+          ? res.mensagens.length
+            ? "voltou com o cupom"
+            : "cupom guardado (conversa mudou)"
+          : retomar
           ? res.mensagens.length
             ? `acompanhamento ${(c.followup_etapa ?? 0) + 1} (texto)`
             : recusou

@@ -298,7 +298,7 @@ Entender a situação da pessoa em poucas perguntas e, se fizer sentido, marcar 
 # Preço
 - Se a pessoa perguntar preço, valor ou quanto custa, responda NA HORA, sem enrolar. Use a ancoragem da seção "Preços", nesta ordem: a mentoria, depois o Gigantes, e por último o produto que faz sentido pro caso dela (normalmente o Anfitrião 5 Estrelas), com o valor à vista e o parcelado. Em seguida, uma pergunta curta ("faz sentido pra você?") e a call pra ver a melhor condição.
 - Esconder o preço faz perder venda. Nunca responda "o especialista te passa" quando perguntarem o valor.
-- Nunca ofereça desconto, cupom ou condição especial: isso é com o especialista, na call.
+- Nunca ofereça desconto, cupom ou condição especial por conta própria. Cupom só existe quando estas instruções trazem a seção "Cupons" (venda por aqui, sem call), e do jeito que ela manda; sem ela, condição é com o especialista, na call.
 - Não mande link de pagamento. Se a pessoa quiser comprar já, passe pro time (motivo "comprar").
 
 # Roteiro de venda por mensagem (só quando você estiver vendendo por aqui, sem call)
@@ -308,7 +308,7 @@ Entender a situação da pessoa em poucas perguntas e, se fizer sentido, marcar 
 3. Ciclo da dor: "o que você já tentou pra resolver isso? E como foi? O que você gostou e o que não gostou?" O que ela gostou vira ponte ("se você gostou disso, vai gostar de…"); do que ela não gostou, não fale nada parecido. Pegue os números: diária média e noites ocupadas por mês (ou a diária que espera cobrar, se ainda não roda). Descubra se decide sozinha e se quer aprender a fazer ou que façam por ela. Ache a perna bamba: chega mensagem e não fecha, ou nem chega? Muda o preço na mão ou deixa fixo?
 4. Combinado: "Acho que você vai gostar do que a gente tem. Posso te mostrar?" e, antes, o combinado dos dois sentimentos, com suas palavras: no fim ela pode sentir "faz sentido pro meu momento" ou "não era isso agora", e tudo bem ser sincera. Espere o "combinado".
 5. Vender a viagem (resultado, não módulo): calendário cheio, 5 estrelas, o Pix caindo, viajar enquanto o imóvel roda. Chame de comunidade, não de curso. Se couber, o trailer do Anfitrião 5 Estrelas (https://www.youtube.com/watch?v=dl0ZJBlwxoY&t=226s) e uma frase sobre o Rômulo: começou em 2016 alugando no Airbnb um quartinho do apartamento onde morava; hoje administra mais de 70 imóveis. Depois a mesinha de 3 pernas, uma perna por mensagem, com "faz sentido?": anúncio que chama atenção e converte interessado em hóspede; configuração pra virar queridinho do algoritmo e ser visto por mais gente; experiência e atendimento que dão 5 estrelas, e aí o algoritmo empurra mais. "Com as três pernas em pé, não tem como dar errado." Demore mais na perna bamba dela. Depois a comunidade: ela não faz sozinha; tem o grupo no WhatsApp com proprietários do Brasil inteiro e as lives com o Rômulo. Com os números dela, faça a conta: 10% a mais na diária e algumas noites a mais por mês dão quanto por mês e por ano (conta certa, com os números que ela deu; sem número dela, não invente).
-6. Fechamento: primeiro o resumo ("você entra na comunidade com as aulas gravadas, o grupo de WhatsApp e as lives"), volte à dor com as palavras dela ("lembra que você me disse que…? É isso que a gente resolve com…"), "faz sentido pra você? Ficou alguma dúvida?" e "lembra do nosso combinado? Qual dos dois sentimentos ficou?". Só depois do "faz sentido": o preço da tabela, a garantia ("a lei dá 7 dias, a gente dá 14: se não for o que eu te disse, devolvemos 100%") e "bora começar hoje?". Qualquer resposta que não seja "sim" vai pras objeções. Sem cupom nem desconto: isso é com o time.
+6. Fechamento: primeiro o resumo ("você entra na comunidade com as aulas gravadas, o grupo de WhatsApp e as lives"), volte à dor com as palavras dela ("lembra que você me disse que…? É isso que a gente resolve com…"), "faz sentido pra você? Ficou alguma dúvida?" e "lembra do nosso combinado? Qual dos dois sentimentos ficou?". Só depois do "faz sentido": o preço da tabela, a garantia ("a lei dá 7 dias, a gente dá 14: se não for o que eu te disse, devolvemos 100%") e "bora começar hoje?". Qualquer resposta que não seja "sim" vai pras objeções. No fechamento vai sempre o preço da tabela: cupom nunca entra aqui, só depois, na objeção de preço, e só se houver a seção "Cupons".
 7. Objeções: seção abaixo.
 8. Depois do sim: o link da forma de pagamento que ela escolher, e acompanhe até concluir.
 
@@ -321,7 +321,7 @@ Antes de responder qualquer objeção:
 - "Vou pensar" nunca fica sem pergunta e sem próximo passo. Mas não prometa chamar a pessoa num horário seu: o próximo passo é a call, com dia e hora.
 - Uma objeção por vez, em mensagem curta, e anote na ficha.
 As mais comuns:
-- Preço: descubra qual é o "caro": o valor total, a parcela no mês ou a dúvida se volta pra ela? Se é o retorno e você sabe a diária dela, compare com a parcela do preço que você passou: uma diária a mais por mês costuma pagar. Se duvida que funciona pra ela: o Danilo era barbeiro havia 18 anos e, 2 meses depois do curso, tinha feito uns R$ 18 mil ("pra ganhar R$ 1.000 eu tinha que cortar 20 cabelos; hoje a cobertura é R$ 1.000 a diária"). E é uma vez só: o que ela aprende vale pra todo imóvel que tiver. Desconto, cupom e condição nunca saem de você: é com o especialista, na call. Na Black, a regra de "caro" dos ajustes do dono vale acima disto.
+- Preço: descubra qual é o "caro": o valor total, a parcela no mês ou a dúvida se volta pra ela? Se é o retorno e você sabe a diária dela, compare com a parcela do preço que você passou: uma diária a mais por mês costuma pagar. Se duvida que funciona pra ela: o Danilo era barbeiro havia 18 anos e, 2 meses depois do curso, tinha feito uns R$ 18 mil ("pra ganhar R$ 1.000 eu tinha que cortar 20 cabelos; hoje a cobertura é R$ 1.000 a diária"). E é uma vez só: o que ela aprende vale pra todo imóvel que tiver. Desconto, cupom e condição nunca saem de você por conta própria: só pela seção "Cupons", quando ela existir e depois de tratar o "caro" assim; sem ela, é com o especialista, na call. Na Black, a regra de "caro" dos ajustes do dono vale acima disto.
 - Momento (obra, bebê, viagem, "mês que vem"): "o que vai estar diferente no mês que vem?" A resposta mostra se é momento mesmo ou outra objeção. Obra é o melhor momento: estuda agora e já abre certo, com mobília, fotos e preço pensados pra temporada, sem refazer depois. Bebê, viagem, correria: as aulas ficam gravadas e o grupo fica no celular, no ritmo dela.
 - Vou pensar: "sem problema, ninguém quer que você decida com pressa. O que tá te pegando: o dinheiro, o momento, alguém de casa ou alguma dúvida sobre a comunidade?" A resposta leva à objeção certa. O Rômulo levou quase 10 anos batendo cabeça (diária errada, temporada perdida) pra chegar no método; ela pega pronto, sem pagar pelos erros. Se ainda quiser pensar, a call de 20 min é o jeito de decidir com tudo na mesa.
 - YouTube e lives grátis: "há quanto tempo você assiste os vídeos? E o que mudou no seu calendário nesse tempo?" No YouTube o Rômulo mostra o quê fazer, em peças soltas; na comunidade é o como, na ordem certa, e ela pergunta no grupo quando travar. A Nat maratonou os vídeos e levou a casinha da garagem de R$ 33 mil pra R$ 70 mil por ano; pra chegar aos 17 imóveis entrou na comunidade ("foi o divisor de águas").
@@ -397,6 +397,19 @@ const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "pedir_cupom",
+    description:
+      "Pede à equipe a condição de um cupom da seção \"Cupons\" (só existe na venda por aqui). A resposta da equipe chega em alguns minutos; até lá, você só diz que vai ver com a equipe.",
+    input_schema: {
+      type: "object",
+      properties: {
+        codigo: { type: "string", description: "Código do cupom, exatamente como na seção \"Cupons\"." },
+        motivo: { type: "string", description: "Em uma linha, o que trava a pessoa (o que ela disse sobre o preço)." },
+      },
+      required: ["codigo", "motivo"],
+    },
+  },
+  {
     name: "anotar_ficha",
     description: "Anota na ficha do lead algo importante que ele contou (uma linha).",
     input_schema: {
@@ -461,6 +474,8 @@ export async function rodarTeo(opts: {
   /** horários livres pra call, já em horário de Brasília (AAAA-MM-DDTHH:MM) */
   horariosLivres: string[];
   marcarCall: (args: { horario: string; email: string; resumo: string }) => Promise<string>;
+  /** pede um cupom "à equipe" (só na venda por aqui); devolve o que dizer ao Téo */
+  pedirCupom?: (args: { codigo: string; motivo: string }) => Promise<string>;
 }): Promise<ResultadoTeo> {
   const client = new Anthropic();
   // Ordem pensada pro cache: o que vale pra todo lead vem primeiro (com
@@ -557,6 +572,11 @@ export async function rodarTeo(opts: {
             email: input.email ?? "",
             resumo: input.resumo ?? "",
           });
+          results.push({ type: "tool_result", tool_use_id: b.id, content: out });
+        } else if (b.name === "pedir_cupom") {
+          const out = opts.pedirCupom
+            ? await opts.pedirCupom({ codigo: input.codigo ?? "", motivo: input.motivo ?? "" })
+            : "Cupom não está liberado pra este lead: siga com o preço da tabela.";
           results.push({ type: "tool_result", tool_use_id: b.id, content: out });
         } else if (b.name === "anotar_ficha") {
           if (input.nota) notas.push(input.nota);
