@@ -306,21 +306,29 @@ function avisoCompraRecente(c: { produto: string; quando: string }, utm: string)
   const data = dataBr(c.quando);
   return [
     `COMPRA RECENTE (${c.produto}, paga em ${data}, de outubro pra frente): existe uma condição pra este lead, mas SÓ SE ELE PEDIR (pedir pra abater o que pagou, dizer que acabou de comprar, renovar ou ainda está pagando, ou pedir condição melhor por isso). Vale acima da objeção "acabei de comprar" do bloco de upgrade.`,
-    `A condição (regra do Fernando): a Black inteira por R$ 1.997 à vista ou 12x de R$ 199,70 no cartão, com o cupom UPGRADE1997. Nunca ofereça nem mencione por conta própria; até ele pedir, a condição é a de aluno, R$ 4.997. É condição individual: não diga que é pra todo mundo nem que existe cupom aberto.`,
+    `A condição (regra do Fernando): a Black inteira por R$ 1.997 à vista ou 12x de R$ 199,70 no cartão, com o cupom UPGRADE1997. Nunca ofereça nem mencione por conta própria; até ele pedir, a condição é a de aluno, R$ 4.997 (ou R$ 2.997, se ele já é do Gigantes). É condição individual: não diga que é pra todo mundo nem que existe cupom aberto.`,
     `Se ele pedir, confirme com naturalidade (quem comprou de outubro pra frente tem esse abatimento) e mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(UPGRADE_1997.pix, utm)} · Cartão ${linkComUtm(UPGRADE_1997.cartao, utm)} · Boleto parcelado na TMB ${linkComUtm(UPGRADE_1997.boleto, utm)} (12x de R$ 206,54 com o financiamento do boleto). Garantia de 7 dias, como na Black. Anote na ficha "Black por R$ 1.997 (UPGRADE1997): comprou ${c.produto} em ${data}".`,
   ].join(" ");
 }
 
-function avisoJaTemGigantes(temCompraRecente: boolean): string {
+// Fernando (14/11, 18h): "Oferece logo 2997 pra quem tem gigantes". Ainda não
+// existe cupom da Black nesse valor: até existir, quando ele topar, o Téo passa
+// pro especialista mandar o link (GIGANTES_2997_LINKS fica null).
+const GIGANTES_2997_LINKS: { pix: string; cartao: string; boleto: string | null } | null = null;
+
+function avisoJaTemGigantes(temCompraRecente: boolean, utm: string): string {
+  const fechar = GIGANTES_2997_LINKS
+    ? `Quando ele topar, mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(GIGANTES_2997_LINKS.pix, utm)} · Cartão ${linkComUtm(GIGANTES_2997_LINKS.cartao, utm)}${GIGANTES_2997_LINKS.boleto ? ` · Boleto parcelado ${linkComUtm(GIGANTES_2997_LINKS.boleto, utm)}` : ""}.`
+    : 'Ainda não existe link nesse valor: quando ele topar (ou perguntar como paga), diga que o link chega por aqui em instantes e chame passar_para_humano (motivo "black") com "Black por R$ 2.997 (já é do Gigantes, condição do Fernando), forma de pagamento: X". Nunca mande o link de aluno de R$ 4.997 pra ele.';
   return [
-    "JÁ É ALUNO DO GIGANTES (compra confirmada no sistema): não ofereça o Gigantes como novidade nem diga que o Gigantes é a fase dele. Com ele, a narrativa do upgrade é outra:",
-    "1. O Gigantes dele vira vitalício. O Gigantes avulso é 1 ano de acesso e de comunidade e depois renova a R$ 1.997 por ano: ficar mais 4 anos no Gigantes renovando dá R$ 7.988, só pra isso. Na Black, pelo preço de aluno (R$ 4.997, uma vez), o curso fica vitalício (nunca mais renova) e ele leva 4 anos das duas comunidades. Se o acesso dele já venceu, a Black traz o Gigantes e o grupo de volta.",
-    "2. O que ele ainda não tem, escolhido pelo caso dele (um ou dois, nunca a lista inteira): Sublocação (crescer sem comprar imóvel), Booking (depender menos do Airbnb), Decoração Estratégica e Fotografia Prática (anúncio que chama atenção e diária maior), o Anfitrião 5 Estrelas se ele não tiver, a comunidade do Anfitrião 5 Estrelas, as gravações dos 4 Encontros, o Max (o assistente de IA) por 4 anos e o ingresso do Encontro de 2027 (só pros 100 primeiros).",
-    "Se não souber, pergunte junto com a oferta (sem atrasar) se o acesso do Gigantes dele ainda está ativo ou já venceu. Se ele comparar com o que pagou no Gigantes, concorde: é o mesmo valor, só que agora vitalício e com tudo junto. Se nesta conversa você já falou do Gigantes como novidade, ajuste com naturalidade.",
-    "Se ele reclamar do preço ou disser que não consegue agora (Fernando, 14/11): acolha e pergunte \"e se eu conseguir um desconto pra você, fica interessante?\". Se ele topar, peça o cupom (pedir_cupom) do primeiro degrau da Black de aluno da seção \"Cupons\"; se ainda travar no valor, o degrau seguinte. Sem a seção \"Cupons\", desconto é com o especialista.",
+    "JÁ É ALUNO DO GIGANTES (compra confirmada no sistema): não ofereça o Gigantes como novidade nem diga que o Gigantes é a fase dele.",
+    "CONDIÇÃO DELE (Fernando, 14/11: \"oferece logo 2997 pra quem tem Gigantes\"; vale acima do preço de aluno do aviso do disparo e do bloco de upgrade): a Black inteira por R$ 2.997 à vista ou 12x de R$ 299,70. OFEREÇA LOGO, já na primeira oferta, sem esperar ele reclamar do preço, ancorando do maior pro menor: quem não é aluno paga R$ 8.997; aluno, R$ 4.997; pra quem já é do Gigantes, R$ 2.997. " + fechar,
+    "A narrativa: 1. O Gigantes dele vira vitalício. O Gigantes avulso é 1 ano de acesso e de comunidade e depois renova a R$ 1.997 por ano: ficar mais 4 anos renovando dá R$ 7.988, só pra isso. Na Black, por R$ 2.997 uma vez, o curso fica vitalício (nunca mais renova) e ele leva 4 anos das duas comunidades. Se o acesso dele já venceu, a Black traz o Gigantes e o grupo de volta. 2. O que ele ainda não tem, escolhido pelo caso dele (um ou dois, nunca a lista inteira): Sublocação (crescer sem comprar imóvel), Booking (depender menos do Airbnb), Decoração Estratégica e Fotografia Prática (anúncio que chama atenção e diária maior), o Anfitrião 5 Estrelas se ele não tiver, a comunidade do Anfitrião 5 Estrelas, as gravações dos 4 Encontros, o Max (o assistente de IA) por 4 anos e o ingresso do Encontro de 2027 (só pros 100 primeiros).",
+    "Se ele comparar com o que pagou no Gigantes, concorde: sai bem abaixo, vitalício e com tudo junto. Se nesta conversa você já passou outro preço (R$ 4.997), corrija com naturalidade: pra quem já é do Gigantes, a condição é R$ 2.997.",
+    "Se ainda travar no preço: R$ 2.997 já é a condição especial dele; trate a objeção (a parcela de R$ 299,70 cabe numa diária) e não use os cupons da escada de aluno (eles dão mais caro que isso).",
     temCompraRecente
-      ? "Se ele pedir pra abater o que pagou: siga o aviso COMPRA RECENTE."
-      : "Se ele pedir pra abater o que pagou no Gigantes: abatimento só existe pra quem comprou ou renovou de outubro pra frente, e a compra dele no sistema é anterior; a condição dele é a de aluno, R$ 4.997. Se ele disser que comprou ou renovou de outubro pra frente (talvez com outro e-mail), não confirme valor: chame passar_para_humano (motivo \"black\") pra o especialista conferir.",
+      ? "Se ele pedir pra abater o que pagou: siga o aviso COMPRA RECENTE (R$ 1.997, só se pedir)."
+      : "Abatimento do que pagou no Gigantes não existe pra ele (a compra é anterior a outubro): a condição dele é R$ 2.997. Se ele disser que comprou ou renovou de outubro pra frente (talvez com outro e-mail), chame passar_para_humano (motivo \"black\") pra o especialista conferir.",
   ].join(" ");
 }
 
@@ -2004,7 +2012,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           !jaComprouBlack && compraDeCurso && !ehCurso(compraDeCurso.produto)
             ? `Black, condição de aluno: confirmada pela compra de "${compraDeCurso.produto}" (quem fez imersão, foi a um Encontro ou comprou o Airbnb do Zero também é aluno). Se antes nesta conversa você passou o preço de quem não é aluno (R$ 8.997), corrija com naturalidade e sem esconder: estava errado, a condição dela é a de aluno. Ela ainda não tem o Anfitrião 5 Estrelas: no upgrade, a Black é o jeito de ter o Anfitrião 5 Estrelas, o Gigantes e todo o resto pelo preço de aluno.`
             : null,
-          upgrade?.temGigantes ? avisoJaTemGigantes(Boolean(upgrade.recente)) : null,
+          upgrade?.temGigantes ? avisoJaTemGigantes(Boolean(upgrade.recente), utmDoLead(especialista)) : null,
           upgrade?.recente ? avisoCompraRecente(upgrade.recente, utmDoLead(especialista)) : null,
           disparo && !jaComprouBlack ? avisoDisparo(disparo) : null,
           cupom ? avisoCupom(cupom, !cupomEsperando) : null,
