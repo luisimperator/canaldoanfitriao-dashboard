@@ -300,6 +300,45 @@ const CHECKOUT_TEO = {
   },
 };
 
+// Disparo pra alunos (campanha_alunos, migration 0092/0093): o aluno sorteado
+// recebeu um template e, quando responde, o Téo precisa saber a que mensagem
+// ele está respondendo (o texto do template nem sempre vem no histórico).
+async function disparoDoLead(
+  supabase: SupabaseClient,
+  telefone: string | null
+): Promise<{ onda: number; template: string | null; mensagem: string | null; enviado_em: string } | null> {
+  const t8 = (telefone ?? "").replace(/\D/g, "").slice(-8);
+  if (t8.length !== 8) return null;
+  const { data } = await supabase
+    .from("campanha_alunos")
+    .select("onda, template, mensagem, enviado_em")
+    .like("telefone", `%${t8}`)
+    .not("enviado_em", "is", null)
+    .gte("enviado_em", new Date(Date.now() - 14 * 86400_000).toISOString())
+    .order("enviado_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as { onda: number; template: string | null; mensagem: string | null; enviado_em: string } | null) ?? null;
+}
+
+function avisoDisparo(d: { onda: number; mensagem: string | null; enviado_em: string }): string {
+  const quando = new Date(d.enviado_em).toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const msg = d.mensagem ?? "";
+  const imoveis = /quantos im[óo]veis/i.test(msg);
+  return [
+    `DISPARO PRA ALUNOS (onda ${d.onda}, ${quando}): este lead é aluno ou ex-aluno do Anfitrião 5 Estrelas e recebeu a mensagem "${msg}". Se ele está respondendo a ela, siga daí, sem repetir a pergunta e sem se apresentar de novo do zero. O caminho é o "Upgrade pra Black".`,
+    imoveis
+      ? "Ele está dizendo quantos imóveis tem: agradeça e use o número pra escolher o caminho (2 ou mais, ou gestão pra terceiros: o Gigantes no centro; 1 ou nenhum: o vitalício e o curso da perna bamba dele). Conte em uma frase por que perguntou (pra quem já foi aluno, a Black saiu pelo preço do Gigantes sozinho, com os cursos vitalícios) e faça uma pergunta sobre o momento dele antes de detalhar."
+      : "Se ele pediu a condição, dê em uma frase, sem despejar a oferta (pra quem é ou foi aluno, a Black inteira sai pelo preço do Gigantes sozinho, com os 6 cursos vitalícios e 4 anos de comunidade) e faça uma pergunta sobre o momento dele (quantos imóveis, o que quer agora) antes de detalhar e de mandar link.",
+  ].join(" ");
+}
+
 // Upgrade pra Black de quem já é (ou foi) aluno: a oferta da página oficial
 // (anfitriao5estrelas.com.br/black-friday-historica/, lida em 14/11), a live de
 // 05/11 (Rômulo e Fernando, transcrição enviada pelo Fernando em 14/11) e o
@@ -1814,6 +1853,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         const emails = emailsDaConversa(lead.email ?? null, msgs);
         return Boolean(await acharCompraDeCurso(supabase, emails, c.telefone, MAX_RE, NAO_CURSO_RE));
       })().catch(() => false));
+    const disparo = blackAtiva(cfg) ? await disparoDoLead(supabase, c.telefone).catch(() => null) : null;
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
     if (ouvidos) await log(supabase, "áudio ouvido", { contact_id: c.contact_id, nome: c.nome, audios: ouvidos });
@@ -1850,6 +1890,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           !jaComprouBlack && compraDeCurso && !ehCurso(compraDeCurso.produto)
             ? `Black, condição de aluno: confirmada pela compra de "${compraDeCurso.produto}" (quem fez imersão, foi a um Encontro ou comprou o Airbnb do Zero também é aluno). Se antes nesta conversa você passou o preço de quem não é aluno (R$ 8.997), corrija com naturalidade e sem esconder: estava errado, a condição dela é a de aluno. Ela ainda não tem o Anfitrião 5 Estrelas: no upgrade, a Black é o jeito de ter o Anfitrião 5 Estrelas, o Gigantes e todo o resto pelo preço de aluno.`
             : null,
+          disparo && !jaComprouBlack ? avisoDisparo(disparo) : null,
           cupom ? avisoCupom(cupom, !cupomEsperando) : null,
         ]
           .filter(Boolean)
