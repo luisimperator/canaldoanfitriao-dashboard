@@ -26,15 +26,17 @@ const JANELA_DIAS = 3;
 const DEPOIS_DO_FIM_MS = 40 * 60_000;
 const DURACAO_CALL_MS = 30 * 60_000;
 const RECHECAR_MS = 30 * 60_000;
-// Resposta certa mas sem transcrição um dia depois: a call não aconteceu (ou
-// ninguém falou). Com erro (permissão, reunião não achada), tenta por 14 dias.
-const DESISTIR_VAZIO_MS = 24 * 3600_000;
+// Ninguém entrou na sala (sem gravação e sem transcrição) 3h depois do fim:
+// falta. Desde 03/11 a transcrição da Teams chegou em ~67 min (a mais lenta,
+// 2h08), então 3h sobra. Venda ligada à call ou nota #call/#faltou continuam
+// valendo antes disso. Com erro (permissão, reunião não achada), tenta por 14 dias.
+const DESISTIR_VAZIO_MS = 3 * 3600_000;
 const DESISTIR_ERRO_MS = 14 * 86400_000;
-// Gravou mas a Teams não transcreveu até 6h depois do fim: refaz pela gravação.
-// A transcrição nativa da Teams é o caminho principal e às vezes chega horas
-// depois (a da Ligia, em 09/11, levou 5h); o Whisper (Groq grátis, cota
-// diária dividida com os áudios do WhatsApp do Téo) é só a reserva.
-const SEM_TRANSCRICAO_MS = 6 * 3600_000;
+// Gravou mas a Teams não transcreveu até 3h depois do fim: refaz pela gravação.
+// A transcrição nativa da Teams é o caminho principal (chega em ~67 min; a mais
+// lenta desde 03/11, 2h08); o Whisper (Groq grátis, cota diária dividida com os
+// áudios do WhatsApp do Téo) é só a reserva.
+const SEM_TRANSCRICAO_MS = 3 * 3600_000;
 const POR_RODADA = 6;
 // A refação baixa vídeo e transcreve: só começa uma nova até 200 s de rodada
 // (maxDuration 300 s).
@@ -261,10 +263,12 @@ async function buscar(
         await log(supabase, "transcrição salva", { join_url: k.join_url, nome, caracteres: texto.length });
       } else {
         marca.erro = `transcrições: ${lista.length ? "vazia" : "nenhuma ainda"} | ${situacaoGravacoes}`;
-        // A Teams não transcreveu, mas a call gravou: 1h30 depois do fim,
-        // transcreve pela gravação (sem os nomes de quem fala).
-        if (Array.isArray(marca.gravacoes) && marca.gravacoes.length && passou > SEM_TRANSCRICAO_MS) {
-          marca.retranscrever = true;
+        // A Teams não transcreveu, mas a call gravou: depois de SEM_TRANSCRICAO_MS,
+        // transcreve pela gravação (sem os nomes de quem fala). Sem gravação
+        // nenhuma, ninguém entrou na sala: vira falta depois de DESISTIR_VAZIO_MS.
+        const gravou = Array.isArray(marca.gravacoes) && marca.gravacoes.length > 0;
+        if (gravou) {
+          if (passou > SEM_TRANSCRICAO_MS) marca.retranscrever = true;
         } else if (passou > DESISTIR_VAZIO_MS) marca.status = "sem_transcricao";
       }
     } catch (e) {
