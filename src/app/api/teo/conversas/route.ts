@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getAccess } from "@/lib/supabase-server";
-import { historico, type MsgUnnichat } from "@/lib/teo";
-import { paginaConversas, type ConversaExport, type MsgExport } from "@/lib/teo-conversas-html";
+import { historico } from "@/lib/teo";
+import { converterMsg as converter } from "@/lib/teo-mensagens";
+import { paginaConversas, type ConversaExport } from "@/lib/teo-conversas-html";
 
 // Todas as conversas em que o Téo atuou, num HTML só no visual do WhatsApp
 // (só admin). Lê o histórico completo de cada contato no Unnichat na hora.
@@ -25,31 +26,6 @@ type Conv = {
 };
 
 type Call = { contact_id: string; inicio: string; vendedor: string | null; status: string };
-
-function textoTemplate(m: MsgUnnichat): string | null {
-  const comps = Array.isArray(m.templateComponents) ? (m.templateComponents as Record<string, unknown>[]) : [];
-  const corpo = comps.find((c) => String(c.type ?? "").toLowerCase() === "body");
-  let txt = corpo && typeof corpo.text === "string" ? corpo.text : null;
-  const params = Array.isArray(m.templateBodyParameters) ? (m.templateBodyParameters as Record<string, unknown>[]) : [];
-  if (txt) {
-    params.forEach((p, i) => {
-      txt = txt!.split(`{{${i + 1}}}`).join(typeof p.text === "string" ? p.text : "");
-    });
-  }
-  return txt;
-}
-
-function converter(m: MsgUnnichat, audios: Map<string, string>): MsgExport {
-  const tx = m.type === "template" ? textoTemplate(m) : (m.message ?? "").trim() || null;
-  let s: MsgExport["s"];
-  if (m.senderBy === "platform") s = "p";
-  else if (m.type === "note") s = "n";
-  else if (m.senderBy === "contact") s = "c";
-  else if (m.origin === "unniApi") s = "t";
-  else if (m.origin === "automation" || m.type === "template" || m.type === "flow") s = "a";
-  else s = "h";
-  return { d: m.date, s, tx, ty: m.type || "message", u: m.url ?? null, tr: audios.get(m.id) ?? null };
-}
 
 export async function GET(req: NextRequest) {
   const access = await getAccess();
