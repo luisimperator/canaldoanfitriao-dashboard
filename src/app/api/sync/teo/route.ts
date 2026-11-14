@@ -464,12 +464,19 @@ const INGRESSO_DA_BLACK =
   'O ingresso do Encontro de 2027 que vem na Black é o STANDARD (Fernando, 14/11). Quem quiser o VIP faz o upgrade pagando só a diferença: pelos preços da pré-venda, R$ 400 (VIP R$ 1.397 menos Standard R$ 997). Ainda não tem link pra esse upgrade: se a pessoa quiser, diga que o link chega por aqui e chame passar_para_humano (motivo "comprar") com "upgrade do ingresso da Black pra VIP, pagando a diferença". O que o VIP tem a mais que o Standard você não sabe: não invente; diga que o especialista confirma.';
 
 // 2º ingresso do Encontro de 2027 com 20% (Fernando, 14/11, 19:40: "pode usar"),
-// pra acompanhante de quem compra a Black ou um ingresso. Os links com o
-// desconto ainda não existem (cupom pedido ao agente da Eduzz): até lá, quando a
-// pessoa topar, o Téo passa pro time.
-const SEGUNDO_INGRESSO_LINKS: { standard: string | null; vip: string | null } = {
-  standard: null,
-  vip: null,
+// pra acompanhante de quem compra a Black ou um ingresso. Cupom EN9NC4CUHN na
+// Eduzz (20%, ilimitado, até 30/11 23h59, produtos 3148845 Standard e 3148846
+// VIP), criado e testado em 14/11 ~20h30 (VIP conferido no checkout: R$ 1.117,60).
+type LinksPagamento = { pix: string; cartao: string };
+const SEGUNDO_INGRESSO_LINKS: { standard: LinksPagamento | null; vip: LinksPagamento | null } = {
+  standard: {
+    pix: "https://sun.eduzz.com/E9OG745AWB?cupom=EN9NC4CUHN&p=1",
+    cartao: "https://sun.eduzz.com/E9OG745AWB?cupom=EN9NC4CUHN",
+  },
+  vip: {
+    pix: "https://sun.eduzz.com/6W4GPN7A0Z?cupom=EN9NC4CUHN&p=1",
+    cartao: "https://sun.eduzz.com/6W4GPN7A0Z?cupom=EN9NC4CUHN",
+  },
 };
 
 function avisoSegundoIngresso(utm: string): string {
@@ -477,7 +484,7 @@ function avisoSegundoIngresso(utm: string): string {
   const comUtm = (l: string) => (utm ? linkComUtm(l, utm) : l);
   const links =
     standard && vip
-      ? `Links com o desconto: Standard ${comUtm(standard)} · VIP ${comUtm(vip)}.`
+      ? `Quando ela escolher, mande o link da forma de pagamento que ela preferir (o desconto já vai no link; não diga o código): Standard: Pix ${comUtm(standard.pix)} · Cartão ${comUtm(standard.cartao)}. VIP: Pix ${comUtm(vip.pix)} · Cartão ${comUtm(vip.cartao)} (no cartão, até 12x de R$ 111,76). Vale até 30/11.`
       : 'O link com o desconto ainda não está pronto: quando ela escolher Standard ou VIP, diga que o link com os 20% chega por aqui em seguida e chame passar_para_humano (motivo "comprar") com "2º ingresso do Encontro com 20% (Standard ou VIP), acompanhante de [nome]". Nunca mande o link da pré-venda cheio como se tivesse o desconto.';
   return `- 2º INGRESSO COM 20% (Fernando, 14/11): quem compra a Black (ou um ingresso do Encontro) e quer levar alguém (cônjuge, sócio, familiar) tem 20% de desconto no 2º ingresso do Encontro de 2027, Standard ou VIP: Standard R$ 797,60 (em vez de R$ 997) e VIP R$ 1.117,60 (em vez de R$ 1.397). Use quando a pessoa falar em levar alguém ou na objeção de cônjuge e sócio ("e a sua esposa vai junto com 20% de desconto no ingresso dela"). A Black continua trazendo 1 ingresso só; o desconto é no ingresso avulso do acompanhante. ${links}`;
 }
