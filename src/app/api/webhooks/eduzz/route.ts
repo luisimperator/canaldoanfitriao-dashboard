@@ -121,13 +121,33 @@ export async function POST(req: NextRequest) {
   // UTMs vêm em campos diferentes conforme a versão do payload; guarda o que houver.
   const utm = data.utm ?? data.tracker ?? data.utmParameters ?? null;
 
-  // O vendedor é atribuído cruzando com o lead do Unnichat (por e-mail),
-  // ou pelo nome no utm_source (links individuais dos vendedores).
+  // O vendedor é o do link (utm_source com o nome dele, links individuais dos
+  // vendedores); sem vendedor no link, vale o dono do lead no CRM (por e-mail).
+  // Fernando, 14/11: o link vale mais que o dono do CRM (a Claudia Reis pagou
+  // pelo link do Breno, que fez o follow-up, e a venda tinha ido pro Flávio,
+  // dono do lead desde a lista de espera).
   const buyerEmail: string | null = data.buyer?.email ?? data.student?.email ?? null;
   const buyerDocument: string | null = data.buyer?.document ?? data.student?.document ?? null;
   const buyerName: string | null = data.buyer?.name ?? data.student?.name ?? null;
   let sellerId: string | null = null;
   let leadId: string | null = null;
+  // Vendedor pelo utm_source: uma palavra do utm que começa com o primeiro nome
+  // do vendedor (ex.: "breno", "flavio", "flaviov"); "teo", "facebook" ou
+  // "recuperacao_unnichat" não casam com ninguém.
+  let vendedorDoLink: string | null = null;
+  const utmSource = semAcento(String(utm?.source ?? utm?.utm_source ?? "").toLowerCase());
+  if (utmSource) {
+    const palavras = utmSource.split(/[^a-z0-9]+/).filter(Boolean);
+    const { data: sellers } = await supabase
+      .from("sellers")
+      .select("id, name")
+      .eq("is_active", true);
+    const match = (sellers ?? []).find((s) => {
+      const nome = semAcento(s.name.split(" ")[0].toLowerCase());
+      return palavras.some((p) => p.startsWith(nome)); // "flavio", "flaviov"
+    });
+    vendedorDoLink = match?.id ?? null;
+  }
   if (buyerEmail) {
     // Match case-insensitive (ilike com o padrão escapado = igualdade ignorando
     // caixa; "_" e "%" são curingas de LIKE e "_" é comum em e-mail) e
@@ -143,7 +163,7 @@ export async function POST(req: NextRequest) {
     const lead = (matches ?? []).find((l) => l.seller_id) ?? (matches ?? [])[0] ?? null;
     if (lead) {
       leadId = lead.id;
-      sellerId = lead.seller_id;
+      sellerId = vendedorDoLink ?? lead.seller_id;
       // Adiciona tags do que a Eduzz mandou (compra) no lead, sem apagar as
       // que já existem: marca como cliente e guarda o produto comprado.
       const extra = (lead.extra ?? {}) as Record<string, unknown>;
@@ -155,19 +175,7 @@ export async function POST(req: NextRequest) {
         .eq("id", lead.id);
     }
   }
-  if (!sellerId && utm) {
-    const utmSource = String(utm.source ?? utm.utm_source ?? "").toLowerCase();
-    if (utmSource) {
-      const { data: sellers } = await supabase
-        .from("sellers")
-        .select("id, name")
-        .eq("is_active", true);
-      const match = (sellers ?? []).find((s) =>
-        utmSource.includes(semAcento(s.name.split(" ")[0].toLowerCase()))
-      );
-      sellerId = match?.id ?? null;
-    }
-  }
+  if (!sellerId) sellerId = vendedorDoLink;
 
   const { error } = await supabase.from("sales").upsert(
     {
