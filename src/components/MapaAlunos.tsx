@@ -2,12 +2,14 @@
 
 // Mapa dos alunos: Brasil por estado (cor = quantos alunos) com as regiões de
 // DDD em bolinhas; clique num estado pra dar zoom e ver as regiões e a lista
-// de nomes. Filtros: alunos ou todos os clientes; ativos, ex-alunos ou todos;
+// de nomes. Na vista Mundo, os países (pelo código do telefone) com a mesma
+// lógica. Filtros: alunos ou todos os clientes; ativos, ex-alunos ou todos;
 // busca por nome. Claro e escuro pelas variáveis --mapa-* (globals.css).
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ESTADOS, VIEWBOX, projetar } from "@/lib/mapa/brasil";
 import { DDD } from "@/lib/mapa/ddd";
+import { MUNDO_VIEWBOX, PAISES } from "@/lib/mapa/mundo";
 
 export interface AlunoMapa {
   id: string;
@@ -15,6 +17,8 @@ export interface AlunoMapa {
   uf: string | null;
   ddd: string | null;
   exterior: boolean;
+  /** país (ISO, "BR" pro Brasil) ou null quando não deu pra saber */
+  pais: string | null;
   cidade: string | null;
   curso: boolean;
   ativo: boolean;
@@ -22,12 +26,41 @@ export interface AlunoMapa {
 }
 
 type Publico = "alunos" | "todos";
+type Vista = "brasil" | "mundo";
 type Status = "todos" | "ativos" | "ex";
 type Caixa = [number, number, number, number];
 
 const NOME_UF = Object.fromEntries(ESTADOS.map((e) => [e.uf, e.nome]));
 const BRASIL: Caixa = [-12, -12, VIEWBOX.w + 24, VIEWBOX.h + 24];
-const PONTO = Object.fromEntries(Object.entries(DDD).map(([d, r]) => [d, projetar(r.lat, r.lon)]));
+// arredondado: a conta em ponto flutuante dava diferente no servidor e no
+// navegador e o React reclamava (hydration mismatch)
+const PONTO = Object.fromEntries(
+  Object.entries(DDD).map(([d, r]) => [d, projetar(r.lat, r.lon).map((v) => Math.round(v * 100) / 100) as [number, number]])
+);
+const MUNDO: Caixa = [-10, -10, MUNDO_VIEWBOX.w + 20, MUNDO_VIEWBOX.h + 20];
+const PAIS = Object.fromEntries(PAISES.map((p) => [p.iso, p]));
+// "??": telefone de fora do Brasil sem país identificado
+const SEM_PAIS = "??";
+
+function nomePais(iso: string): string {
+  if (iso === SEM_PAIS) return "País não identificado";
+  if (PAIS[iso]) return PAIS[iso].nome;
+  try {
+    return new Intl.DisplayNames(["pt-BR"], { type: "region" }).of(iso) ?? iso;
+  } catch {
+    return iso;
+  }
+}
+
+function caixaDoPais(iso: string): Caixa {
+  const p = PAIS[iso];
+  if (!p) return MUNDO;
+  const [x0, y0, x1, y1] = p.bbox;
+  const w = x1 - x0, h = y1 - y0;
+  const lado = Math.max(w, h * (MUNDO_VIEWBOX.w / MUNDO_VIEWBOX.h)) * 1.6 + 40;
+  const alto = lado * (MUNDO_VIEWBOX.h / MUNDO_VIEWBOX.w);
+  return [x0 + w / 2 - lado / 2, y0 + h / 2 - alto / 2, lado, alto];
+}
 
 const semAcento = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const fmt = (n: number) => n.toLocaleString("pt-BR");
@@ -88,10 +121,13 @@ function Segmento<T extends string>({ valor, opcoes, onChange }: { valor: T; opc
 export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
   const [publico, setPublico] = useState<Publico>("alunos");
   const [status, setStatus] = useState<Status>("todos");
+  const [vista, setVista] = useState<Vista>("brasil");
+  const [pais, setPais] = useState<string | null>(null);
   const [uf, setUf] = useState<string | null>(null);
   const [ddd, setDdd] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [hover, setHover] = useState<{ uf: string; x: number; y: number; largura: number } | null>(null);
+  const [hoverPais, setHoverPais] = useState<{ iso: string; x: number; y: number; largura: number } | null>(null);
   const [limite, setLimite] = useState(120);
   const quadro = useRef<HTMLDivElement>(null);
 
@@ -121,22 +157,53 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
     for (const a of base) if (a.ddd && PONTO[a.ddd]) m.set(a.ddd, (m.get(a.ddd) ?? 0) + 1);
     return m;
   }, [base]);
+  const porPais = useMemo(() => {
+    const m = new Map<string, { total: number; ativos: number }>();
+    for (const a of base) {
+      const k = a.pais ?? (a.exterior ? SEM_PAIS : null);
+      if (!k) continue;
+      const v = m.get(k) ?? { total: 0, ativos: 0 };
+      v.total++;
+      if (a.ativo) v.ativos++;
+      m.set(k, v);
+    }
+    return m;
+  }, [base]);
+  const maxPais = Math.max(1, ...[...porPais.entries()].filter(([k]) => k !== SEM_PAIS).map(([, v]) => v.total));
+  const paises = [...porPais.keys()].filter((k) => k !== SEM_PAIS).length;
   const maxUf = Math.max(1, ...[...porUf.values()].map((v) => v.total));
   const maxDdd = Math.max(1, ...porDdd.values());
   const exterior = base.filter((a) => a.exterior).length;
   const semLugar = base.filter((a) => !a.uf && !a.exterior).length;
   const estados = porUf.size;
   // Os números do topo seguem a seleção: Brasil inteiro, um estado ou o exterior.
-  const escopo = uf === "EX" ? base.filter((a) => a.exterior) : uf ? base.filter((a) => a.uf === uf) : base;
+  const doPais = (a: AlunoMapa, k: string) => (k === SEM_PAIS ? a.exterior && !a.pais : a.pais === k);
+  const escopo =
+    vista === "mundo"
+      ? pais
+        ? base.filter((a) => doPais(a, pais))
+        : base
+      : uf === "EX"
+        ? base.filter((a) => a.exterior)
+        : uf
+          ? base.filter((a) => a.uf === uf)
+          : base;
   const ativos = escopo.filter((a) => a.ativo).length;
 
   const alvo = useMemo(() => (uf && uf !== "EX" ? caixaDoEstado(uf) : BRASIL), [uf]);
   const caixa = useCaixaAnimada(alvo);
   const zoom = VIEWBOX.w / caixa[2];
+  const alvoMundo = useMemo(() => (pais && pais !== SEM_PAIS ? caixaDoPais(pais) : MUNDO), [pais]);
+  const caixaMundo = useCaixaAnimada(alvoMundo);
+  const zoomMundo = MUNDO_VIEWBOX.w / caixaMundo[2];
 
   const q = semAcento(busca.trim());
   const lista = useMemo(() => {
     const l = base.filter((a) => {
+      if (vista === "mundo") {
+        if (!pais || !doPais(a, pais)) return false;
+        return !q || semAcento(`${a.nome} ${a.cidade ?? ""}`).includes(q);
+      }
       if (uf === "EX") return a.exterior;
       if (uf && a.uf !== uf) return false;
       if (ddd && a.ddd !== ddd) return false;
@@ -144,9 +211,10 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
       return true;
     });
     return l.sort((a, b) => Number(b.ativo) - Number(a.ativo) || a.nome.localeCompare(b.nome, "pt-BR"));
-  }, [base, uf, ddd, q]);
+  }, [base, uf, ddd, q, vista, pais]);
 
   const ranking = [...porUf.entries()].sort((a, b) => b[1].total - a[1].total);
+  const rankingPaises = [...porPais.entries()].sort((a, b) => (a[0] === SEM_PAIS ? 1 : b[0] === SEM_PAIS ? -1 : b[1].total - a[1].total));
   const regioesDoUf = uf
     ? Object.entries(DDD)
         .filter(([d, r]) => r.uf === uf && porDdd.get(d))
@@ -160,6 +228,24 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
     setLimite(120);
   }
 
+  function escolheVista(v: Vista) {
+    setVista(v);
+    setPais(null);
+    setUf(null);
+    setDdd(null);
+    setHover(null);
+    setHoverPais(null);
+    setLimite(120);
+  }
+
+  function escolhePais(novo: string | null) {
+    // Brasil abre o mapa do Brasil, com estados e DDDs
+    if (novo === "BR") return escolheVista("brasil");
+    setPais(novo);
+    setHoverPais(null);
+    setLimite(120);
+  }
+
   const total = escopo.length;
   const rotuloPublico = publico === "alunos" ? "alunos" : "clientes";
 
@@ -169,13 +255,17 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
       <div className="px-5 sm:px-7 pt-6 pb-5 border-b border-[var(--mapa-linha)] grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] items-end">
         <div>
           <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[var(--mapa-suave)]">
-            Canal do Anfitrião / {uf === "EX" ? "Exterior" : uf ? NOME_UF[uf] : "Brasil"}
+            Canal do Anfitrião / {vista === "mundo" ? (pais ? nomePais(pais) : "Mundo") : uf === "EX" ? "Exterior" : uf ? NOME_UF[uf] : "Brasil"}
           </div>
           <h2 className="mt-2 font-serif text-3xl sm:text-4xl font-bold tracking-tight">
-            {uf === "EX" ? "Fora do Brasil." : uf ? `${NOME_UF[uf]}.` : "Do Oiapoque ao Chuí."}
+            {vista === "mundo" ? (pais ? `${nomePais(pais)}.` : "Pelo mundo.") : uf === "EX" ? "Fora do Brasil." : uf ? `${NOME_UF[uf]}.` : "Do Oiapoque ao Chuí."}
           </h2>
           <p className="mt-1 text-sm text-[var(--mapa-suave)]">
-            {uf === "EX"
+            {vista === "mundo"
+              ? pais
+                ? `${fmt(total)} ${rotuloPublico}${pais === SEM_PAIS ? " com telefone de fora do Brasil sem país identificado" : ""}.`
+                : `${fmt(total)} ${rotuloPublico} em ${paises} ${paises === 1 ? "país" : "países"}${porPais.get(SEM_PAIS) ? ` (${fmt(porPais.get(SEM_PAIS)?.total ?? 0)} sem país identificado)` : ""}.`
+              : uf === "EX"
               ? `${fmt(total)} ${rotuloPublico} com telefone de fora do Brasil.`
               : uf
                 ? `${fmt(total)} ${rotuloPublico} em ${regioesDoUf.length} ${regioesDoUf.length === 1 ? "região" : "regiões"} de DDD.`
@@ -202,10 +292,20 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
         <div ref={quadro} className="mapa-quadro relative min-h-[420px] border-b lg:border-b-0 lg:border-r border-[var(--mapa-linha)]">
           <div className="absolute z-10 left-4 top-4 right-4 flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap gap-2">
+              <Segmento<Vista> valor={vista} onChange={escolheVista} opcoes={[["brasil", "Brasil"], ["mundo", "Mundo"]]} />
               <Segmento<Publico> valor={publico} onChange={setPublico} opcoes={[["alunos", "Alunos"], ["todos", "Todos os clientes"]]} />
               <Segmento<Status> valor={status} onChange={setStatus} opcoes={[["todos", "Todos"], ["ativos", "Ativos"], ["ex", "Ex-alunos"]]} />
             </div>
-            {uf && (
+            {vista === "mundo" && pais && (
+              <button
+                type="button"
+                onClick={() => escolhePais(null)}
+                className="rounded-full px-3 py-1 text-xs font-semibold bg-[var(--mapa-chip)] border border-[var(--mapa-linha)] hover:border-[var(--mapa-destaque)]"
+              >
+                ← Mundo
+              </button>
+            )}
+            {vista === "brasil" && uf && (
               <button
                 type="button"
                 onClick={() => escolheUf(null)}
@@ -216,6 +316,67 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
             )}
           </div>
 
+          {vista === "mundo" ? (
+            <svg
+              viewBox={caixaMundo.join(" ")}
+              className="w-full h-[min(72vh,640px)] block"
+              role="img"
+              aria-label="Mapa do mundo com os alunos por país"
+              onMouseLeave={() => setHoverPais(null)}
+            >
+              <defs>
+                <filter id="brilho-mundo" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.6" result="b" />
+                  <feMerge>
+                    <feMergeNode in="b" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              {PAISES.map((p) => {
+                const v = porPais.get(p.iso)?.total ?? 0;
+                // escala logarítmica: o Brasil tem muito mais gente que o resto
+                const t = v ? Math.log(1 + v) / Math.log(1 + maxPais) : 0;
+                const fora = pais && pais !== p.iso;
+                const destaque = hoverPais?.iso === p.iso || pais === p.iso;
+                return (
+                  <path
+                    key={p.iso}
+                    d={p.path}
+                    fill={v ? "var(--mapa-estado)" : "var(--mapa-vazio)"}
+                    fillOpacity={v ? 0.22 + 0.78 * t : 1}
+                    stroke={destaque ? "var(--mapa-destaque)" : "var(--mapa-borda)"}
+                    strokeWidth={(destaque ? 1.4 : 0.4) / zoomMundo}
+                    opacity={fora ? 0.35 : 1}
+                    className={v ? "cursor-pointer transition-[opacity] duration-300" : "transition-[opacity] duration-300"}
+                    onMouseMove={(ev) => {
+                      if (!v) return setHoverPais(null);
+                      const r = quadro.current?.getBoundingClientRect();
+                      if (r) setHoverPais({ iso: p.iso, x: ev.clientX - r.left, y: ev.clientY - r.top, largura: r.width });
+                    }}
+                    onClick={() => v && escolhePais(pais === p.iso ? null : p.iso)}
+                  >
+                    <title>{`${p.nome}: ${fmt(v)} ${rotuloPublico}`}</title>
+                  </path>
+                );
+              })}
+              {/* bolinhas: deixam visível país pequeno (Portugal, Suíça…) */}
+              {[...porPais.entries()]
+                .filter(([k]) => PAIS[k])
+                .sort((a, b) => b[1].total - a[1].total)
+                .map(([k, v]) => {
+                  const [x, y] = PAIS[k].centro;
+                  const r = (2 + 7 * Math.sqrt(v.total / maxPais)) / Math.sqrt(zoomMundo);
+                  return (
+                    <g key={k} className="cursor-pointer" onClick={() => escolhePais(pais === k ? null : k)}>
+                      <circle cx={x} cy={y} r={r} fill="var(--mapa-ponto)" fillOpacity={pais === k ? 0.95 : 0.8} filter="url(#brilho-mundo)" />
+                      <circle cx={x} cy={y} r={r} fill="none" stroke="var(--mapa-ponto-borda)" strokeWidth={0.6 / zoomMundo} />
+                      <title>{`${PAIS[k].nome}: ${fmt(v.total)}`}</title>
+                    </g>
+                  );
+                })}
+            </svg>
+          ) : (
           <svg
             viewBox={caixa.join(" ")}
             className="w-full h-[min(72vh,640px)] block"
@@ -287,8 +448,22 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
                 );
               })}
           </svg>
+          )}
 
-          {hover && !uf && (
+          {vista === "mundo" && hoverPais && !pais && (
+            <div
+              className="pointer-events-none absolute z-20 rounded-lg px-3 py-2 text-xs shadow-lg border border-[var(--mapa-linha)] bg-[var(--mapa-tooltip)]"
+              style={{ left: Math.min(hoverPais.x + 14, hoverPais.largura - 190), top: hoverPais.y + 14 }}
+            >
+              <div className="font-semibold text-[var(--mapa-texto)]">{nomePais(hoverPais.iso)}</div>
+              <div className="text-[var(--mapa-suave)] tabular-nums">
+                {fmt(porPais.get(hoverPais.iso)?.total ?? 0)} {rotuloPublico} · {fmt(porPais.get(hoverPais.iso)?.ativos ?? 0)} ativos
+              </div>
+              <div className="text-[var(--mapa-destaque)] mt-0.5">{hoverPais.iso === "BR" ? "Clique pra ver os estados" : "Clique pra ver os nomes"}</div>
+            </div>
+          )}
+
+          {vista === "brasil" && hover && !uf && (
             <div
               className="pointer-events-none absolute z-20 rounded-lg px-3 py-2 text-xs shadow-lg border border-[var(--mapa-linha)] bg-[var(--mapa-tooltip)]"
               style={{ left: Math.min(hover.x + 14, hover.largura - 190), top: hover.y + 14 }}
@@ -309,23 +484,43 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
               ))}
               <span>Mais</span>
               <span className="ml-3 inline-flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "var(--mapa-ponto)" }} /> região do DDD
+                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "var(--mapa-ponto)" }} /> {vista === "mundo" ? "país" : "região do DDD"}
               </span>
             </div>
             <div className="flex gap-2">
-              {exterior > 0 && (
-                <button type="button" onClick={() => escolheUf(uf === "EX" ? null : "EX")} className="rounded-full px-2.5 py-0.5 border border-[var(--mapa-linha)] hover:border-[var(--mapa-destaque)]">
-                  Exterior · {fmt(exterior)}
+              {vista === "brasil" && exterior > 0 && (
+                <button type="button" onClick={() => escolheVista("mundo")} className="rounded-full px-2.5 py-0.5 border border-[var(--mapa-linha)] hover:border-[var(--mapa-destaque)]">
+                  Exterior · {fmt(exterior)} →
                 </button>
               )}
-              {semLugar > 0 && <span className="px-1">Sem DDD válido · {fmt(semLugar)}</span>}
+              {vista === "brasil" && semLugar > 0 && <span className="px-1">Sem DDD válido · {fmt(semLugar)}</span>}
             </div>
           </div>
         </div>
 
         {/* painel lateral */}
         <div className="flex flex-col min-h-0 max-h-[min(80vh,760px)]">
-          {!uf ? (
+          {vista === "mundo" && !pais ? (
+            <div className="p-5 overflow-y-auto">
+              <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[var(--mapa-suave)] mb-3">Países</div>
+              <ul className="grid gap-1.5">
+                {rankingPaises.map(([k, v]) => (
+                  <li key={k}>
+                    <button type="button" onClick={() => escolhePais(k)} onMouseEnter={() => setHoverPais(null)} className="group w-full text-left grid grid-cols-[2.2rem_minmax(0,1fr)_auto] items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--mapa-chip)]">
+                      <span className="text-xs font-mono text-[var(--mapa-suave)]">{k === SEM_PAIS ? "—" : k}</span>
+                      <span className="min-w-0">
+                        <span className="block text-sm truncate">{nomePais(k)}</span>
+                        <span className="block h-1 mt-1 rounded-full bg-[var(--mapa-vazio)] overflow-hidden">
+                          <span className="block h-full rounded-full" style={{ width: `${Math.max(2, (Math.log(1 + v.total) / Math.log(1 + maxPais)) * 100)}%`, background: "var(--mapa-estado)" }} />
+                        </span>
+                      </span>
+                      <span className="text-sm font-semibold tabular-nums">{fmt(v.total)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : vista === "brasil" && !uf ? (
             <div className="p-5 overflow-y-auto">
               <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[var(--mapa-suave)] mb-3">Estados</div>
               <ul className="grid gap-1.5">
@@ -349,10 +544,10 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
             <>
               <div className="p-5 pb-3 border-b border-[var(--mapa-linha)]">
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-lg font-semibold">{uf === "EX" ? "Exterior" : NOME_UF[uf]}</div>
+                  <div className="text-lg font-semibold">{vista === "mundo" ? nomePais(pais ?? SEM_PAIS) : uf === "EX" ? "Exterior" : uf ? NOME_UF[uf] : ""}</div>
                   <div className="text-sm tabular-nums text-[var(--mapa-suave)]">{fmt(lista.length)} {lista.length === 1 ? "pessoa" : "pessoas"}</div>
                 </div>
-                {regioesDoUf.length > 0 && (
+                {vista === "brasil" && regioesDoUf.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-3">
                     {regioesDoUf.map(({ d, r, n }) => (
                       <button
@@ -383,7 +578,7 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate">{a.nome}</div>
                       <div className="text-[11px] text-[var(--mapa-suave)] truncate">
-                        {[a.cidade, a.ddd ? DDD[a.ddd]?.regiao : null].filter(Boolean).join(" · ") || "—"}
+                        {[a.cidade, a.ddd ? DDD[a.ddd]?.regiao : null, vista === "mundo" || a.exterior ? (a.pais ? nomePais(a.pais) : null) : null].filter(Boolean).join(" · ") || "—"}
                         {a.produtos ? ` · ${a.produtos}` : ""}
                       </div>
                     </div>
@@ -410,8 +605,8 @@ export function MapaAlunos({ alunos }: { alunos: AlunoMapa[] }) {
         </div>
       </div>
       <div className="px-5 py-2 text-[10px] text-[var(--mapa-suave)] border-t border-[var(--mapa-linha)] flex flex-wrap justify-between gap-2">
-        <span>Região pelo DDD do telefone da compra (ou cidade do endereço na TMB). Ativo = comprou curso nos últimos 12 meses.</span>
-        <span>Mapa: svg-maps/brazil, de Victor Cazanave (CC BY 4.0)</span>
+        <span>Região pelo DDD do telefone da compra (ou cidade do endereço na TMB); fora do Brasil, pelo código do país. Ativo = comprou curso nos últimos 12 meses.</span>
+        <span>Mapas: svg-maps/brazil, de Victor Cazanave (CC BY 4.0); mundo, Natural Earth (domínio público)</span>
       </div>
     </div>
   );
