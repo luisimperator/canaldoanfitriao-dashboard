@@ -466,7 +466,8 @@ const INGRESSO_DA_BLACK =
 // 2º ingresso do Encontro de 2027 com 20% (Fernando, 14/11, 19:40: "pode usar"),
 // pra acompanhante de quem compra a Black ou um ingresso. Cupom EN9NC4CUHN na
 // Eduzz (20%, ilimitado, até 30/11 23h59, produtos 3148845 Standard e 3148846
-// VIP), criado e testado em 14/11 ~20h30 (VIP conferido no checkout: R$ 1.117,60).
+// VIP), criado em 14/11 ~20h30; conferidos no checkout: VIP R$ 1.117,60 (12x R$ 111,76) e
+// Standard R$ 797,60 (12x R$ 79,76, conferido pelo Fernando em 15/11).
 type LinksPagamento = { pix: string; cartao: string };
 const SEGUNDO_INGRESSO_LINKS: { standard: LinksPagamento | null; vip: LinksPagamento | null } = {
   standard: {
@@ -484,7 +485,7 @@ function avisoSegundoIngresso(utm: string): string {
   const comUtm = (l: string) => (utm ? linkComUtm(l, utm) : l);
   const links =
     standard && vip
-      ? `Quando ela escolher, mande o link da forma de pagamento que ela preferir (o desconto já vai no link; não diga o código): Standard: Pix ${comUtm(standard.pix)} · Cartão ${comUtm(standard.cartao)}. VIP: Pix ${comUtm(vip.pix)} · Cartão ${comUtm(vip.cartao)} (no cartão, até 12x de R$ 111,76). Vale até 30/11.`
+      ? `Quando ela escolher, mande o link da forma de pagamento que ela preferir (o desconto já vai no link; não diga o código): Standard: Pix ${comUtm(standard.pix)} · Cartão ${comUtm(standard.cartao)} (no cartão, até 12x de R$ 79,76). VIP: Pix ${comUtm(vip.pix)} · Cartão ${comUtm(vip.cartao)} (no cartão, até 12x de R$ 111,76). Vale até 30/11.`
       : 'O link com o desconto ainda não está pronto: quando ela escolher Standard ou VIP, diga que o link com os 20% chega por aqui em seguida e chame passar_para_humano (motivo "comprar") com "2º ingresso do Encontro com 20% (Standard ou VIP), acompanhante de [nome]". Nunca mande o link da pré-venda cheio como se tivesse o desconto.';
   return `- 2º INGRESSO COM 20% (Fernando, 14/11): quem compra a Black (ou um ingresso do Encontro) e quer levar alguém (cônjuge, sócio, familiar) tem 20% de desconto no 2º ingresso do Encontro de 2027, Standard ou VIP: Standard R$ 797,60 (em vez de R$ 997) e VIP R$ 1.117,60 (em vez de R$ 1.397). Use quando a pessoa falar em levar alguém ou na objeção de cônjuge e sócio ("e a sua esposa vai junto com 20% de desconto no ingresso dela"). A Black continua trazendo 1 ingresso só; o desconto é no ingresso avulso do acompanhante. ${links}`;
 }
