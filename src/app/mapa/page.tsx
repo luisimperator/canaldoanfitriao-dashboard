@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { Card, PageHeader } from "@/components/ui";
 import { MapaAlunos, type AlunoMapa } from "@/components/MapaAlunos";
@@ -24,6 +25,23 @@ function nomeBonito(n: string | null): string {
     .join(" ");
 }
 
+// O Supabase devolve no máximo 1.000 linhas por consulta: sem paginar, o mapa
+// mostrava só os primeiros 1.000 compradores (237 alunos) dos ~8.900.
+async function lerCompradores(supabase: SupabaseClient) {
+  const lote = 1000;
+  const todos: Record<string, unknown>[] = [];
+  for (let de = 0; ; de += lote) {
+    const { data, error } = await supabase
+      .rpc("mapa_alunos")
+      .order("id")
+      .range(de, de + lote - 1);
+    if (error) return { data: todos, error };
+    const linhas = (data ?? []) as Record<string, unknown>[];
+    todos.push(...linhas);
+    if (linhas.length < lote) return { data: todos, error: null };
+  }
+}
+
 export default async function MapaPage() {
   const supabase = getSupabaseAdmin();
   if (!supabase) {
@@ -36,9 +54,9 @@ export default async function MapaPage() {
       </div>
     );
   }
-  const { data, error } = await supabase.rpc("mapa_alunos");
+  const { data, error } = await lerCompradores(supabase);
   const hoje = new Date().getTime();
-  const alunos: AlunoMapa[] = ((data ?? []) as Record<string, unknown>[]).map((r) => {
+  const alunos: AlunoMapa[] = data.map((r) => {
     const ddd = (r.ddd as string | null) ?? null;
     const regiao = ddd && DDD[ddd] ? DDD[ddd] : null;
     const ufEndereco = typeof r.uf === "string" && UFS.has(r.uf) ? r.uf : null;
