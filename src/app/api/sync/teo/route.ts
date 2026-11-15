@@ -461,7 +461,7 @@ const TRAILER_ENCONTRO = "https://youtu.be/ou9MYRpGp9M";
 // Qual ingresso vem na Black (Fernando, 14/11, ~20h30): o Standard; quem
 // quiser o VIP paga só a diferença. Sem link pra esse upgrade ainda: vai pro time.
 const INGRESSO_DA_BLACK =
-  'O ingresso do Encontro de 2027 que vem na Black é o STANDARD (Fernando, 14/11). Quem quiser o VIP faz o upgrade pagando só a diferença: pelos preços da pré-venda, R$ 400 (VIP R$ 1.397 menos Standard R$ 997). Ainda não tem link pra esse upgrade: se a pessoa quiser, diga que o link chega por aqui e chame passar_para_humano (motivo "comprar") com "upgrade do ingresso da Black pra VIP, pagando a diferença". O que o VIP tem a mais que o Standard você não sabe: não invente; diga que o especialista confirma.';
+  'O ingresso do Encontro de 2027 que vem na Black é o STANDARD (Fernando, 14/11). Quem quiser o VIP faz o upgrade pagando só a diferença: pelos preços da pré-venda, R$ 400 (VIP R$ 1.397 menos Standard R$ 997). Ainda não tem link pra esse upgrade: se a pessoa quiser, diga que o link chega por aqui e chame passar_para_humano (motivo "comprar") com "upgrade do ingresso da Black pra VIP, pagando a diferença". O que o VIP tem a mais AINDA NÃO FOI ANUNCIADO (Fernando, 15/11: "ninguém sabe ainda; mais pra frente vamos anunciar e a pessoa pode fazer o upgrade ou não"): diga isso com naturalidade, sem inventar benefício, e que não precisa decidir agora: o Standard já está garantido e, quando o VIP for anunciado, ela escolhe se quer subir. A data do Encontro também está a confirmar (a previsão é maio de 2027, em São Paulo).';
 
 // 2º ingresso do Encontro de 2027 com 20% (Fernando, 14/11, 19:40: "pode usar"),
 // pra acompanhante de quem compra a Black ou um ingresso. Cupom EN9NC4CUHN na
