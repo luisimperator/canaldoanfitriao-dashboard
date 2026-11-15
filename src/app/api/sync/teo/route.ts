@@ -1867,6 +1867,10 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           nome: c.nome,
           status: r.status,
         });
+        // Falhou (ex.: "Contact not found!" com telefone mal cadastrado, como o
+        // da Geovanna Porto em 15/11 com 16 dígitos): sem espera, o Téo tentava
+        // de novo a cada minuto (31 vezes em 30 min). Agora espera 6 h.
+        if (!ok) await adiar(supabase, c.contact_id, 6 * 3600_000);
         return ok ? "template" : "template falhou";
       }
       // Janela aberta: se o lead acabou de escrever, espera juntar as mensagens.
