@@ -125,6 +125,8 @@ create table if not exists public.acoes_grupo (
   tipo text not null check (tipo in ('aprovar', 'recusar', 'remover', 'adicionar')),
   motivo text not null check (motivo ~ '^(assinatura_ativa|cadeira_extra|cancelou|reembolsou|atrasada_[0-9]+_dias|expirou|troca_numero|manual)$'),
   status text not null default 'pendente' check (status in ('pendente', 'aguardando_ok', 'executada', 'falhou', 'descartada')),
+  nome text,                 -- nome que aparece no WhatsApp (pedido de entrada)
+  detalhe jsonb not null default '{}'::jsonb,  -- como casou (telefone / só nome / nada), dias de atraso, assinatura
   pedida_por text,
   aprovada_por text,
   aprovada_em timestamptz,
@@ -134,6 +136,26 @@ create table if not exists public.acoes_grupo (
   atualizado_em timestamptz not null default now()
 );
 create index if not exists acoes_grupo_status_idx on public.acoes_grupo (status, criado_em);
+-- A mesma ação não entra duas vezes na fila enquanto está aberta.
+create unique index if not exists acoes_grupo_aberta_uq on public.acoes_grupo (coalesce(grupo_jid, ''), telefone, tipo)
+  where status in ('pendente', 'aguardando_ok');
+
+-- Pendências da tela (vence em 30 dias, pagou e não está no grupo, possíveis
+-- duplicados). Cada uma é resolvida por alguém, com nome e data.
+create table if not exists public.pendencias (
+  id uuid primary key default gen_random_uuid(),
+  tipo text not null check (tipo in ('vence_30d', 'pagou_fora_do_grupo', 'possivel_duplicado')),
+  chave text not null unique,  -- tipo|pessoa|assinatura|telefone: a mesma pendência não duplica
+  pessoa_id uuid references public.pessoas(id) on delete restrict,
+  assinatura_id uuid references public.assinaturas_eduzz(id) on delete restrict,
+  telefone text,
+  detalhe jsonb not null default '{}'::jsonb,
+  criada_em timestamptz not null default now(),
+  vista_em timestamptz not null default now(),   -- última vez que a conferência encontrou
+  resolvida_em timestamptz,
+  resolvida_por text
+);
+create index if not exists pendencias_abertas_idx on public.pendencias (tipo, criada_em) where resolvida_em is null;
 
 -- ── Histórico ──────────────────────────────────────────────────────────────
 
@@ -161,9 +183,8 @@ $$;
 do $$
 declare t text;
 begin
-  foreach t in array array['pessoas', 'contatos_pessoa', 'assinaturas_eduzz', 'cadeiras_extras', 'acoes_grupo', 'eventos', 'membros_grupo', 'excecoes_grupo', 'produtos_grupos'] loop
-    execute format('drop trigger if exists %I on public.%I', t || '_sem_delete', t);
-    execute format('create trigger %I before delete on public.%I for each row execute function public.assinantes_sem_delete()', t || '_sem_delete', t);
+  foreach t in array array['pessoas', 'contatos_pessoa', 'assinaturas_eduzz', 'cadeiras_extras', 'acoes_grupo', 'eventos', 'membros_grupo', 'excecoes_grupo', 'produtos_grupos', 'pendencias'] loop
+    execute format('create or replace trigger %I before delete on public.%I for each row execute function public.assinantes_sem_delete()', t || '_sem_delete', t);
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from anon, authenticated', t);
   end loop;
