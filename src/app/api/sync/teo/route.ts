@@ -278,13 +278,31 @@ function emailsDaConversa(cadastro: string | null, msgs: MsgUnnichat[]): string[
 const MAX_RE = /(anfitri[aã]o 5 estrelas|gigantes da temporada|black friday hist)/i;
 const MAX_TAG = /^(alunoa5e|aluno-a5e|alunos-a5e|aluno-gigantes|gigantes-\d)/i;
 const AVISO_MAX =
-  "ASSISTENTE DE IA (este lead já comprou a Black, o Anfitrião 5 Estrelas ou o Gigantes; vale acima da regra de suporte dos ajustes do dono): se ele perguntar do assistente de IA, responda direto, sem passar pro suporte: é o Max, o concierge. Ele fica no grupo de WhatsApp dos alunos e dá pra chamar ele no privado pelo +55 11 91164-7699. Login, senha, cobrança e outros problemas de acesso continuam com o suporte.";
+  "ASSISTENTE DE IA (este lead já comprou a Black, o Anfitrião 5 Estrelas ou o Gigantes; vale acima da regra de suporte dos ajustes do dono): se ele perguntar do assistente de IA, responda direto, sem passar pro suporte: é o Max, o concierge. Ele fica no grupo de WhatsApp dos alunos e dá pra chamar ele no privado pelo +55 11 91164-7699. Dúvida de aluno sobre anúncio, preço e aulas é com ele. Login, senha, cobrança e outros problemas de acesso continuam com o suporte (WhatsApp +55 11 92522-1376).";
+
+// Mapa de aulas e anexos do Anfitrião 5 Estrelas e do Gigantes (support_docs,
+// o mesmo que o suporte consulta). Vai no prompt do Téo (Fernando, 16/11: "o
+// Téo precisa ter acesso a todo o conteúdo do curso"; ele não sabia do
+// Checklist - Itens essenciais). Guardado 15 min na memória da função.
+let mapasCache: { em: number; texto: string | null } | null = null;
+async function mapasDosCursos(supabase: SupabaseClient): Promise<string | null> {
+  if (mapasCache && Date.now() - mapasCache.em < 15 * 60_000) return mapasCache.texto;
+  const { data, error } = await supabase
+    .from("support_docs")
+    .select("slug, conteudo")
+    .in("slug", ["mapa-a5e", "mapa-gigantes"])
+    .order("slug");
+  if (error) return mapasCache?.texto ?? null;
+  const texto = (data ?? []).map((d) => String(d.conteudo).trim()).filter(Boolean).join("\n\n") || null;
+  mapasCache = { em: Date.now(), texto };
+  return texto;
+}
 
 // Max (o assistente de IA dos alunos). Fernando, 14/11: "se a pessoa já é
 // aluna, pergunta se já está usando o Max; se não está, usa ele, a galera tá
 // pirando". E na Black ele vem junto com a comunidade: vira estímulo.
 const AVISO_PERGUNTE_MAX =
-  "MAX: este lead é aluno. Uma vez na conversa, numa frase e sem atrasar a oferta (pode ir no fim de uma mensagem que já tinha outra coisa), pergunte se ele já está usando o Max, o assistente de IA dos alunos. Se não estiver, recomende com entusiasmo (\"a galera tá amando, vale muito a pena\") e passe o número: +55 11 91164-7699. Se ele disser que não tem acesso (ex-aluno), use como estímulo do upgrade: na Black ele tem o Max por 4 anos, junto com os 4 anos de comunidade. Se nesta conversa você já falou do Max, não repita.";
+  "MAX: este lead é aluno. Uma vez na conversa, numa frase e sem atrasar a oferta (pode ir no fim de uma mensagem que já tinha outra coisa), pergunte se ele já está usando o Max, o assistente de IA dos alunos. Se não estiver, recomende com entusiasmo (\"a galera tá amando, vale muito a pena\") e passe o número: +55 11 91164-7699. Se ele disser que não tem acesso (ex-aluno), use como estímulo do upgrade: na Black ele tem o Max por 4 anos, junto com os 4 anos de comunidade. Se nesta conversa você já falou do Max, não repita. Se ele acabou de comprar nesta conversa, não fale do Max junto com a confirmação da compra: espere ele contar que conseguiu entrar no curso (ou voltar com uma dúvida do imóvel) e apresente aí, quando ele já tem o que perguntar.";
 
 // Já tem o Gigantes? Em 14/11 o Téo ofereceu o Gigantes como novidade a um
 // aluno do disparo que já tinha comprado (10 dos 97 da onda 1 têm o Gigantes).
@@ -2046,6 +2064,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     const res = await rodarTeo({
       msgs,
       lead,
+      mapas: await mapasDosCursos(supabase),
       contexto: cfg.contexto,
       precos: cfg.precos ?? "",
       extras: [
