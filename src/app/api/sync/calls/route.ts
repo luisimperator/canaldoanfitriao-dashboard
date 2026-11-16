@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { graphToken, vttParaTexto } from "@/lib/graph";
 import { pareceIngles, transcreverGravacoes, turnosDaTeams, type Gravacao } from "@/lib/transcrever-gravacao";
 import { historico, type MsgUnnichat } from "@/lib/teo";
-import { marcaDaNota, NOTA_ANTES_MS, NOTA_DEPOIS_MS, type Presenca } from "@/lib/calls-presenca";
+import { marcaDaNota, NOTA_ANTES_MS, NOTA_DEPOIS_MS, soOTimeFalou, type Presenca } from "@/lib/calls-presenca";
 
 // Acervo das calls do Teams (tabela call_transcricoes), separado do Téo: guarda
 // a transcrição e as gravações de toda call da agenda do anfitriao@, pra
@@ -180,12 +180,13 @@ async function registrar(
 async function buscar(
   supabase: SupabaseClient,
   auth: Record<string, string>,
-  org: string
+  org: string,
+  vendedores: { nome: string; email: string }[]
 ): Promise<string[]> {
   const agora = Date.now();
   const { data: fila } = await supabase
     .from("call_transcricoes")
-    .select("join_url, reuniao_id, lead_nome, assunto, fim, criado_em")
+    .select("join_url, reuniao_id, lead_nome, assunto, fim, criado_em, participantes")
     .eq("status", "aguardando")
     .or(`checado_em.is.null,checado_em.lte.${new Date(agora - RECHECAR_MS).toISOString()}`)
     .order("checado_em", { ascending: true, nullsFirst: true })
@@ -249,7 +250,18 @@ async function buscar(
         if (c.ok) partes.push(vttParaTexto(await c.text()));
       }
       const texto = partes.filter(Boolean).join("\n\n");
-      if (texto) {
+      if (texto && soOTimeFalou(texto, k.participantes as Linha["participantes"], vendedores)) {
+        // Só o time falou na sala: o lead faltou (Fernando, 16/11). Guarda o
+        // texto e não refaz pela gravação (não tem fala do lead pra salvar).
+        marca.status = "sem_transcricao";
+        marca.transcricao = texto;
+        marca.transcricao_ids = lista.map((t) => t.id);
+        marca.transcrito_em = new Date().toISOString();
+        marca.transcricao_fonte = "teams";
+        marca.retranscrever = false;
+        marca.erro = "só o vendedor falou na gravação: lead faltou";
+        await log(supabase, "só o vendedor falou (faltou)", { join_url: k.join_url, nome, caracteres: texto.length });
+      } else if (texto) {
         marca.status = "ok";
         marca.transcricao = texto;
         marca.transcricao_ids = lista.map((t) => t.id);
@@ -377,7 +389,7 @@ async function rodar() {
     return NextResponse.json({ ok: false, erro: g.erro }, { status: 502 });
   }
   const novas = await registrar(supabase, cfg as Cfg, g.auth, org);
-  const salvas = await buscar(supabase, g.auth, org);
+  const salvas = await buscar(supabase, g.auth, org, (cfg as Cfg).vendedores ?? []);
   // A etapa pesada só entra com folga no tempo da função (maxDuration).
   const refeitas = Date.now() - inicio < 60_000 ? await refazer(supabase, g.auth, inicio) : [];
   const presencas = await lerNotas(supabase, inicio);

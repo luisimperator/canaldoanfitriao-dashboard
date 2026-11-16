@@ -276,10 +276,11 @@ function emailsDaConversa(cadastro: string | null, msgs: MsgUnnichat[]): string[
 }
 
 // Quem tem o Max (assistente de IA): comprou a Black, o Anfitrião 5 Estrelas ou o Gigantes.
-const MAX_RE = /(anfitri[aã]o 5 estrelas|gigantes da temporada|black friday hist)/i;
+// "Max - Concierge do Anfitrião": o Max avulso (Eduzz 3152952, 16/11).
+const MAX_RE = /(anfitri[aã]o 5 estrelas|gigantes da temporada|black friday hist|concierge do anfitri)/i;
 const MAX_TAG = /^(alunoa5e|aluno-a5e|alunos-a5e|aluno-gigantes|gigantes-\d)/i;
 const AVISO_MAX =
-  "ASSISTENTE DE IA (este lead já comprou a Black, o Anfitrião 5 Estrelas ou o Gigantes; vale acima da regra de suporte dos ajustes do dono): se ele perguntar do assistente de IA, responda direto, sem passar pro suporte: é o Max, o concierge. Ele fica no grupo de WhatsApp dos alunos e dá pra chamar ele no privado pelo +55 11 91164-7699. Dúvida de aluno sobre anúncio, preço e aulas é com ele. Login, senha, cobrança e outros problemas de acesso continuam com o suporte (WhatsApp +55 11 92522-1376).";
+  "ASSISTENTE DE IA (este lead já comprou a Black, o Anfitrião 5 Estrelas, o Gigantes ou o Max avulso; vale acima da regra de suporte dos ajustes do dono): se ele perguntar do assistente de IA, responda direto, sem passar pro suporte: é o Max, o concierge. Ele fica no grupo de WhatsApp dos alunos e dá pra chamar ele no privado pelo +55 11 91164-7699. Dúvida de aluno sobre anúncio, preço e aulas é com ele. Login, senha, cobrança e outros problemas de acesso continuam com o suporte (WhatsApp +55 11 92522-1376).";
 
 // Mapa de aulas e anexos do Anfitrião 5 Estrelas e do Gigantes (support_docs,
 // o mesmo que o suporte consulta). Vai no prompt do Téo (Fernando, 16/11: "o
@@ -2060,7 +2061,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       blackAtiva(cfg) && !alunoPorTag
         ? await acharCompraDeCurso(supabase, emailsDoLead, c.telefone).catch(() => null)
         : null;
-    // Tem o Max? (Black, Anfitrião 5 Estrelas ou Gigantes: compra, tag ou e-mail)
+    // Tem o Max? (Black, Anfitrião 5 Estrelas, Gigantes ou Max avulso: compra, tag ou e-mail)
     const temMax =
       Boolean(jaComprouBlack) ||
       lead.tags.some((t) => MAX_TAG.test(t.trim())) ||
