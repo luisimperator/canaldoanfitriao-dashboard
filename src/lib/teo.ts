@@ -343,7 +343,7 @@ As mais comuns:
 Quem compra a Black, o Anfitrião 5 Estrelas ou o Gigantes usa o assistente de IA pelo Max, o concierge, que fica no grupo de WhatsApp dos alunos. O contato dele só vai pra quem já comprou (quando for o caso, vem um aviso em "Sobre este lead"): antes da compra, nunca passe o número.
 
 # Nunca
-- Nunca invente conteúdo da comunidade, prazo, garantia, número ou resultado. Na dúvida: "o especialista te explica certinho na call".
+- Nunca invente conteúdo da comunidade, prazo, garantia, número ou resultado. O que tem no Anfitrião 5 Estrelas e no Gigantes (aulas, séries, planilhas, checklists, contratos) você confere no "Mapa dos cursos", no fim destas instruções. Na dúvida sobre o resto: "o especialista te explica certinho na call".
 - Nunca pressione nem use urgência falsa.
 - Se a pessoa pedir pra parar, respeite: agradeça e encerre.
 
@@ -459,6 +459,17 @@ function dividir(reply: string): string[] {
   return partes.map((p) => (p.length > 900 ? `${p.slice(0, 900)}…` : p));
 }
 
+// Como usar o mapa de aulas e anexos (support_docs, o mesmo do suporte), que
+// vem logo depois, no mesmo bloco do PROMPT (cache de 1h).
+const COMO_USAR_MAPAS = `# Mapa dos cursos (aulas e anexos)
+Abaixo está o mapa oficial do Anfitrião 5 Estrelas e do Gigantes da Temporada: os módulos, as aulas e os materiais de cada aula (o que o aluno acessa em app.nutror.com).
+- Antes de dizer que não sabe se tem, ou que não tem, confira aqui. Nunca responda "não sei se tem" sobre aula ou material desses dois cursos.
+- Na venda, cite 1 ou 2 itens ligados ao que a pessoa contou (o material ou a aula e em que parte do curso fica), nunca a lista. Os materiais ficam dentro da própria aula (não existe aba de downloads).
+- Materiais pra citar na venda: quem já tem o imóvel e pergunta de montagem, utensílios ou "o que falta": o Checklist - Itens essenciais, que vem no curso (na série do Studio de 19 m²), com tudo que o imóvel precisa ter pra receber hóspede. Quem pergunta de planilha ou material pronto: o checklist, as regras da casa prontas (aula "Tour pelo Studio de 19 m²") e o kit de mensagens pro hóspede (módulo das mensagens automáticas). O controle de repasse (planilha) só interessa a quem administra imóvel de terceiros.
+- Com o lead, descreva o material com palavras ("um checklist com tudo que o imóvel precisa ter"), sem nome de arquivo, e diga "Anfitrião 5 Estrelas", nunca a sigla A5E.
+- O mapa diz o que existe, não o que cada aula ensina: além do título, não invente o conteúdo da aula.
+- Os outros cursos (Sublocação, Booking, Decoração, Fotografia, Airbnb do Zero) não estão neste mapa: deles, só o que está nas outras seções.`;
+
 export async function rodarTeo(opts: {
   msgs: MsgUnnichat[];
   lead: LeadTeo;
@@ -466,6 +477,8 @@ export async function rodarTeo(opts: {
   precos: string;
   /** ajustes de tom/regra vindos de teo_config.instrucoes_extras (sem deploy) */
   extras: string;
+  /** mapa de aulas e anexos dos cursos (support_docs), igual pra todo lead */
+  mapas?: string | null;
   ficha: string | null;
   abrir: boolean;
   /** instrução pro Téo retomar a conversa (acompanhamento ou retomada da Black) */
@@ -493,7 +506,11 @@ export async function rodarTeo(opts: {
     .filter(Boolean)
     .join("\n\n");
   const system: Anthropic.TextBlockParam[] = [
-    { type: "text", text: PROMPT, cache_control: CACHE_1H },
+    {
+      type: "text",
+      text: opts.mapas ? `${PROMPT}\n\n${COMO_USAR_MAPAS}\n\n${opts.mapas}` : PROMPT,
+      cache_control: CACHE_1H,
+    },
     ...(fixo ? [{ type: "text" as const, text: fixo, cache_control: CACHE_1H }] : []),
     {
       type: "text",
