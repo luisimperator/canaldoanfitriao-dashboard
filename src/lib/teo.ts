@@ -43,6 +43,8 @@ export interface MsgUnnichat {
   transcricao?: string;
   /** leitura da imagem (texto que aparece + o que mostra), preenchida por verImagens() */
   leitura?: string;
+  /** a própria imagem, pro Téo enxergar (só as últimas do lead), preenchida por verImagens() */
+  imagem?: { tipo: "image/jpeg" | "image/png" | "image/gif" | "image/webp"; base64: string };
 }
 
 export interface LeadTeo {
@@ -175,10 +177,13 @@ export async function ouvirAudios(supabase: SupabaseClient, msgs: MsgUnnichat[])
 // teo_imagens; se falhar, tenta de novo até 3 vezes e, depois disso, a imagem
 // segue como "não deu pra abrir".
 const MAX_TENTATIVAS_IMAGEM = 3;
-// Limite da API pra imagem em base64.
-const MAX_IMAGEM_BYTES = 5 * 1024 * 1024;
+// Limite da API: 5 MB por imagem já em base64 (que cresce 1/3).
+const MAX_IMAGEM_BYTES = Math.floor(3.7 * 1024 * 1024);
 // Imagens novas lidas por rodada (as de antes já estão em teo_imagens).
 const MAX_IMAGENS_POR_RODADA = 4;
+// Além da leitura, o Téo enxerga a própria imagem: as últimas que o lead
+// mandou (as mais antigas seguem só pela leitura, pra não pesar a conversa).
+const MAX_FOTOS_VISTAS = 3;
 const MODEL_IMAGEM = process.env.TEO_MODEL_IMAGEM || MODEL_ACOMPANHAMENTO;
 const TIPOS_IMAGEM = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
 type TipoImagem = (typeof TIPOS_IMAGEM)[number];
@@ -200,9 +205,9 @@ function tipoDaImagem(contentType: string, url: string): TipoImagem | null {
   return null;
 }
 
-async function baixarELer(
+async function baixarImagem(
   url: string
-): Promise<{ ok: boolean; texto?: string; erro?: string; entrada?: number; saida?: number }> {
+): Promise<{ ok: true; tipo: TipoImagem; base64: string } | { ok: false; erro: string }> {
   try {
     const r = await fetch(url);
     if (!r.ok) return { ok: false, erro: `download ${r.status}` };
@@ -210,6 +215,17 @@ async function baixarELer(
     if (bytes.byteLength > MAX_IMAGEM_BYTES) return { ok: false, erro: `imagem grande demais (${bytes.byteLength} bytes)` };
     const tipo = tipoDaImagem(r.headers.get("content-type") || "", url);
     if (!tipo) return { ok: false, erro: `tipo de imagem não suportado (${r.headers.get("content-type")})` };
+    return { ok: true, tipo, base64: Buffer.from(bytes).toString("base64") };
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+async function lerImagem(img: {
+  tipo: TipoImagem;
+  base64: string;
+}): Promise<{ ok: boolean; texto?: string; erro?: string; entrada?: number; saida?: number }> {
+  try {
     const resp = await new Anthropic().messages.create({
       model: MODEL_IMAGEM,
       max_tokens: 1024,
@@ -218,7 +234,7 @@ async function baixarELer(
         {
           role: "user",
           content: [
-            { type: "image", source: { type: "base64", media_type: tipo, data: Buffer.from(bytes).toString("base64") } },
+            { type: "image", source: { type: "base64", media_type: img.tipo, data: img.base64 } },
             { type: "text", text: "Leia esta imagem." },
           ],
         },
@@ -256,15 +272,24 @@ export async function verImagens(supabase: SupabaseClient, msgs: MsgUnnichat[]):
     );
   const cache = new Map((salvos ?? []).map((s) => [s.msg_id as string, s as { texto: string | null; tentativas: number }]));
   let novos = 0;
+  let fotos = 0;
   // Da mais nova pra mais antiga: se tiver muitas, as últimas são as que importam.
   for (const a of [...imagens].reverse()) {
     const salva = cache.get(a.id);
-    if (salva?.texto) {
-      a.leitura = salva.texto;
-      continue;
+    // As últimas do lead vão inteiras pro Téo enxergar (a API não aceita
+    // imagem em mensagem do Téo, então as do time seguem só pela leitura).
+    const ver =
+      a.senderBy === "contact" && fotos < MAX_FOTOS_VISTAS && Date.now() - new Date(a.date).getTime() < 3 * 86_400_000;
+    const precisaLer = !salva?.texto && (salva?.tentativas ?? 0) < MAX_TENTATIVAS_IMAGEM && novos < MAX_IMAGENS_POR_RODADA;
+    if (salva?.texto) a.leitura = salva.texto;
+    if (!ver && !precisaLer) continue;
+    const img = await baixarImagem(a.url!);
+    if (ver) {
+      fotos++;
+      if (img.ok) a.imagem = { tipo: img.tipo, base64: img.base64 };
     }
-    if ((salva?.tentativas ?? 0) >= MAX_TENTATIVAS_IMAGEM || novos >= MAX_IMAGENS_POR_RODADA) continue;
-    const lida = await baixarELer(a.url!);
+    if (!precisaLer) continue;
+    const lida = img.ok ? await lerImagem(img) : { ok: false, erro: img.erro, entrada: undefined, saida: undefined, texto: undefined };
     await supabase.from("teo_imagens").upsert(
       {
         msg_id: a.id,
@@ -322,11 +347,11 @@ function textoDaMensagem(m: MsgUnnichat): string | null {
     const tpl = textoDoTemplate(m);
     return `(mensagem automática) ${tpl ?? "[template]"}`;
   }
-  if (m.leitura) {
+  if (m.imagem || m.leitura) {
     const legenda = t ? ` Legenda: "${t}".` : "";
-    return m.senderBy === "contact"
-      ? `(o lead mandou uma imagem; você vê o que ela mostra por esta leitura) ${m.leitura}${legenda}`
-      : `(imagem que alguém do time mandou pro lead) ${m.leitura}${legenda}`;
+    if (m.senderBy !== "contact") return `(imagem que alguém do time mandou pro lead) ${m.leitura}${legenda}`;
+    if (m.imagem) return `(o lead mandou a imagem acima)${legenda}${m.leitura ? `\nLeitura de apoio: ${m.leitura}` : ""}`;
+    return `(o lead mandou uma imagem, que você vê por esta leitura) ${m.leitura}${legenda}`;
   }
   if (t) {
     const txt = m.origin === "automation" ? `(mensagem automática) ${t}` : t;
@@ -352,34 +377,73 @@ function textoDaMensagem(m: MsgUnnichat): string | null {
   return null;
 }
 
+type Parte = string | Anthropic.ImageBlockParam;
+
+// Junta as partes de um turno: textos seguidos viram um texto só; com imagem,
+// o turno vira lista de blocos (imagem, depois o texto que fala dela).
+function conteudo(partes: Parte[]): Anthropic.MessageParam["content"] {
+  if (partes.every((p) => typeof p === "string")) return (partes as string[]).join("\n");
+  const blocos: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = [];
+  for (const p of partes) {
+    const ult = blocos[blocos.length - 1];
+    if (typeof p !== "string") blocos.push(p);
+    else if (ult?.type === "text") ult.text = `${ult.text}\n${p}`;
+    else blocos.push({ type: "text", text: p });
+  }
+  return blocos;
+}
+
 export function paraClaude(msgs: MsgUnnichat[], instrucaoFinal?: string): Anthropic.MessageParam[] {
-  const out: Anthropic.MessageParam[] = [];
+  const turnos: { role: "user" | "assistant"; partes: Parte[] }[] = [];
   for (const m of msgs.slice(-MAX_MSGS_HISTORICO)) {
     const txt = textoDaMensagem(m);
     if (!txt) continue;
     const role = m.senderBy === "contact" ? "user" : "assistant";
-    const last = out[out.length - 1];
-    if (last && last.role === role) last.content = `${last.content as string}\n${txt}`;
-    else out.push({ role, content: txt });
+    let last = turnos[turnos.length - 1];
+    if (!last || last.role !== role) {
+      last = { role, partes: [] };
+      turnos.push(last);
+    }
+    if (role === "user" && m.imagem) {
+      last.partes.push({ type: "image", source: { type: "base64", media_type: m.imagem.tipo, data: m.imagem.base64 } });
+    }
+    last.partes.push(txt);
   }
-  if (out.length === 0 || out[0].role !== "user") {
-    out.unshift({ role: "user", content: "(início da conversa — o lead entrou na lista de espera)" });
+  if (turnos.length === 0 || turnos[0].role !== "user") {
+    turnos.unshift({ role: "user", partes: ["(início da conversa — o lead entrou na lista de espera)"] });
   }
   if (instrucaoFinal) {
-    const last = out[out.length - 1];
-    if (last.role === "user") last.content = `${last.content as string}\n\n${instrucaoFinal}`;
-    else out.push({ role: "user", content: instrucaoFinal });
-  } else if (out[out.length - 1].role === "assistant") {
+    const last = turnos[turnos.length - 1];
+    if (last.role === "user") last.partes.push(`\n${instrucaoFinal}`);
+    else turnos.push({ role: "user", partes: [instrucaoFinal] });
+  } else if (turnos[turnos.length - 1].role === "assistant") {
     // A conversa não pode terminar com o Téo: o modelo recusa "prefill" (erro
     // 400) e a conversa trava, repetindo o erro a cada rodada. Acontece quando
     // uma automação ou alguém do time escreveu depois da última mensagem do lead.
-    out.push({
+    turnos.push({
       role: "user",
-      content:
+      partes: [
         "[Instrução interna, o lead não vê: a última mensagem acima saiu depois da última mensagem do lead (automação ou time). Se ainda falta responder algo que o lead disse, responda; se não, devolva a resposta vazia, sem texto nenhum.]",
+      ],
     });
   }
-  return out;
+  return turnos.map((t) => ({ role: t.role, content: conteudo(t.partes) }));
+}
+
+// Se a API recusar uma imagem (arquivo corrompido, formato estranho), a
+// conversa não pode travar: tira as imagens e tenta de novo só com a leitura.
+function semImagens(messages: Anthropic.MessageParam[]): Anthropic.MessageParam[] | null {
+  let tinha = false;
+  const out = messages.map((m) => {
+    if (typeof m.content === "string") return m;
+    const blocos = m.content.map((b) => {
+      if (b.type !== "image") return b;
+      tinha = true;
+      return { type: "text" as const, text: "[aqui o lead mandou uma imagem que não deu pra abrir]" };
+    });
+    return { ...m, content: blocos };
+  });
+  return tinha ? out : null;
 }
 
 // ---------- prompt ----------
@@ -696,6 +760,12 @@ export async function rodarTeo(opts: {
         cache_control: { type: "ephemeral" },
       });
     } catch (e) {
+      const sem = e instanceof Anthropic.BadRequestError ? semImagens(messages) : null;
+      if (sem) {
+        messages.splice(0, messages.length, ...sem);
+        turn--;
+        continue;
+      }
       if (e instanceof Anthropic.NotFoundError && m < modelos.length - 1) {
         m++;
         uso.modelo = modelos[m];
