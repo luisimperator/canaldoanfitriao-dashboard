@@ -465,7 +465,10 @@ async function disparoDoLead(
   return (data as { onda: number; template: string | null; mensagem: string | null; enviado_em: string } | null) ?? null;
 }
 
-function avisoDisparo(d: { onda: number; mensagem: string | null; enviado_em: string }): string {
+// porAqui: o Téo está vendendo por mensagem (venda direta ou sorteio do teste).
+// Fora disso (Fernando, 16/11: "volta a oferecer o call com o especialista"),
+// a resposta ao disparo leva pra call de 20 min, sem link.
+function avisoDisparo(d: { onda: number; mensagem: string | null; enviado_em: string }, porAqui: boolean): string {
   const quando = new Date(d.enviado_em).toLocaleString("pt-BR", {
     timeZone: "America/Sao_Paulo",
     day: "2-digit",
@@ -478,9 +481,20 @@ function avisoDisparo(d: { onda: number; mensagem: string | null; enviado_em: st
   return [
     `DISPARO PRA ALUNOS (onda ${d.onda}, ${quando}): este lead é aluno ou ex-aluno do Anfitrião 5 Estrelas e recebeu a mensagem "${msg}". Se ele está respondendo a ela, siga daí, sem repetir a pergunta e sem se apresentar de novo do zero. O caminho é o "Upgrade pra Black".`,
     imoveis
-      ? "Ele está dizendo quantos imóveis tem: agradeça numa frase e use o número pra escolher o caminho (2 ou mais, ou gestão pra terceiros: o Gigantes no centro; 1 ou nenhum: o vitalício e o curso da perna bamba dele). Venda por permissão (Fernando, 14/11: \"primeiro pergunta se a pessoa tá interessada, em vez de sair falando um preço\"): nesta resposta diga numa frase por que perguntou e pergunte se ele quer saber mais, SEM PREÇO e sem lista (ex.: \"Perguntei porque, pra quem já foi aluno, a Black do Rômulo tem uma condição que junta o Gigantes e os outros cursos, e com X imóveis ela encaixa bem. Quer saber mais?\"). Se ele quiser: o que serve pro caso dele em 2 ou 3 pontos curtos, sem preço, e \"faz sentido pra você ou não tem nada a ver?\"; se fizer, \"quer saber o preço?\". Preço e link só quando ele pedir (passo 4 do roteiro)."
-      : "Ele pediu pra saber da condição, então o \"quer saber mais?\" já foi respondido. Venda por permissão (Fernando, 14/11: \"deixa a pessoa pedir o preço; ela pedindo o preço, você fecha\"): nesta resposta conte o que é, curto e SEM PREÇO: a Black do Rômulo, que junta os cursos com acesso vitalício e 4 anos de comunidade, com um preço especial pra quem é ou foi aluno (2 ou 3 pontos, nunca a lista inteira). Termine com UMA pergunta: se faz sentido pra ele e se quer saber o valor (ex.: \"Faz sentido pra você? Quer que eu te passe o valor?\"). Se ele pedir o valor, aí sim: o preço dele, a garantia de 7 dias e o link, numa mensagem curta (passo 4 do roteiro).",
-  ].join(" ");
+      ? "Ele está dizendo quantos imóveis tem: agradeça numa frase e use o número pra escolher o caminho (2 ou mais, ou gestão pra terceiros: o Gigantes no centro; 1 ou nenhum: o vitalício e o curso da perna bamba dele). Venda por permissão (Fernando, 14/11: \"primeiro pergunta se a pessoa tá interessada, em vez de sair falando um preço\"): nesta resposta diga numa frase por que perguntou e pergunte se ele quer saber mais, SEM PREÇO e sem lista (ex.: \"Perguntei porque, pra quem já foi aluno, a Black do Rômulo tem uma condição que junta o Gigantes e os outros cursos, e com X imóveis ela encaixa bem. Quer saber mais?\")." +
+        (porAqui
+          ? " Se ele quiser: o que serve pro caso dele em 2 ou 3 pontos curtos, sem preço, e \"faz sentido pra você ou não tem nada a ver?\"; se fizer, \"quer saber o preço?\". Preço e link só quando ele pedir (passo 4 do roteiro)."
+          : " Se ele quiser: o que serve pro caso dele em 2 ou 3 pontos curtos, sem preço, e ofereça a call de 20 min com o especialista, que mostra a condição de aluno pro caso dele (dois horários da lista).")
+      : "Ele pediu pra saber da condição, então o \"quer saber mais?\" já foi respondido." +
+        (porAqui
+          ? " Venda por permissão (Fernando, 14/11: \"deixa a pessoa pedir o preço; ela pedindo o preço, você fecha\"): nesta resposta conte o que é, curto e SEM PREÇO: a Black do Rômulo, que junta os cursos com acesso vitalício e 4 anos de comunidade, com um preço especial pra quem é ou foi aluno (2 ou 3 pontos, nunca a lista inteira). Termine com UMA pergunta: se faz sentido pra ele e se quer saber o valor (ex.: \"Faz sentido pra você? Quer que eu te passe o valor?\"). Se ele pedir o valor, aí sim: o preço dele, a garantia de 7 dias e o link, numa mensagem curta (passo 4 do roteiro)."
+          : " Nesta resposta conte o que é, curto e SEM PREÇO: a Black do Rômulo, que junta os cursos com acesso vitalício e 4 anos de comunidade, com uma condição especial pra quem é ou foi aluno (2 ou 3 pontos, nunca a lista inteira), e ofereça a call de 20 min com o especialista, que mostra essa condição pro caso dele (dois horários da lista)."),
+    porAqui
+      ? ""
+      : "O objetivo aqui é a CALL com o especialista (Fernando, 16/11). Se ele perguntar o preço, diga o dele sem esconder e emende com a call; não mande link de pagamento. Link só se ele disser que já quer comprar (aí vale a regra de quem já está fechando).",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 // Upgrade pra Black de quem já é (ou foi) aluno: a oferta da página oficial
@@ -2103,7 +2117,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
             : null,
           upgrade?.temGigantes ? avisoJaTemGigantes(Boolean(upgrade.recente), utmDoLead(especialista)) : null,
           upgrade?.recente ? avisoCompraRecente(upgrade.recente, utmDoLead(especialista)) : null,
-          disparo && !jaComprouBlack ? avisoDisparo(disparo) : null,
+          disparo && !jaComprouBlack ? avisoDisparo(disparo, vendaTeo) : null,
           cupom ? avisoCupom(cupom, !cupomEsperando) : null,
         ]
           .filter(Boolean)
