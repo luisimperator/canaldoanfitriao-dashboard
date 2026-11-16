@@ -205,7 +205,20 @@ export async function POST(req: NextRequest) {
       const { data: s } = await supabase.from("sellers").select("name").eq("id", sellerId).maybeSingle();
       vendedor = s?.name ?? null;
     }
-    await notificarVenda({ chave: `eduzz:${invoiceId}`, plataforma: "Eduzz", valor: amount, produto: product, vendedor });
+    // No aviso vai o preço do produto (com cupom, sem os juros do
+    // parcelamento) e em quantas vezes; a venda continua gravada com o valor
+    // pago (amount), como no histórico.
+    const preco = Number(data.price?.value ?? data.items?.[0]?.price?.value ?? 0) || amount;
+    const parcelas = Number(data.installments ?? 0) || null;
+    await notificarVenda({
+      chave: `eduzz:${invoiceId}`,
+      plataforma: "Eduzz",
+      valor: preco,
+      produto: product,
+      vendedor,
+      parcelas,
+      metodo: typeof data.paymentMethod === "string" ? data.paymentMethod : (data.payment?.method ?? null),
+    });
   });
   return NextResponse.json({ ok: true, action: "paid" });
 }
