@@ -108,9 +108,23 @@ export interface VendaNova {
   /** 'eduzz:<fatura>' ou 'tmb:<pedido>': a mesma venda nunca avisa duas vezes. */
   chave: string;
   plataforma: "Eduzz" | "TMB";
+  /** Preço do produto (com cupom), sem os juros do parcelamento. */
   valor: number;
   produto: string;
   vendedor?: string | null;
+  /** Em quantas vezes (Eduzz manda em installments); 1 ou vazio = à vista. */
+  parcelas?: number | null;
+  /** creditCard, pix, bankslip... (paymentMethod da Eduzz). */
+  metodo?: string | null;
+}
+
+function nomeDoMetodo(m: string | null | undefined): string | null {
+  const t = (m ?? "").toLowerCase();
+  if (!t) return null;
+  if (t.includes("pix")) return "Pix";
+  if (t.includes("card") || t.includes("cartao") || t.includes("credit")) return "cartão";
+  if (t.includes("bank") || t.includes("billet") || t.includes("boleto")) return "boleto";
+  return null;
 }
 
 /** Avisa venda nova, uma vez só por venda. */
@@ -123,8 +137,12 @@ export async function notificarVenda(v: VendaNova): Promise<void> {
     .select("chave");
   if (!nova || nova.length === 0) return;
   await pushParaTodos({
-    title: `💰 Venda nova · ${brl(v.valor)}`,
-    body: [v.produto, v.plataforma, v.vendedor ? `Vendedor: ${v.vendedor}` : null].filter(Boolean).join(" · "),
+    // Fernando, 16/11: o preço do produto, não o total com juros (os juros do
+    // parcelamento não vêm pra empresa), e em quantas vezes foi.
+    title: `💰 Venda nova · ${brl(v.valor)}${v.parcelas && v.parcelas > 1 ? ` em ${v.parcelas}x` : ""}`,
+    body: [v.produto, v.plataforma, nomeDoMetodo(v.metodo), v.vendedor ? `Vendedor: ${v.vendedor}` : null]
+      .filter(Boolean)
+      .join(" · "),
     url: "/vendas",
     tag: v.chave,
   });
