@@ -78,6 +78,8 @@ export interface ResultadoTeo {
   humano: { motivo: string; resumo: string } | null;
   ficha: string | null;
   uso?: UsoTeo;
+  /** partes da resposta barradas por parecerem recado interno (não foram pro lead) */
+  bloqueado?: string[];
 }
 
 // ---------- Unnichat ----------
@@ -649,6 +651,34 @@ function blocoLead(lead: LeadTeo): string {
   return `# Sobre o lead\n${linhas.join("\n")}`;
 }
 
+// Trava contra recado interno vazando pro lead (15/11, Alessandra: o Téo
+// emendou na resposta um recado pro Fernando, com "**", "pra eu mesmo" e
+// "o Flávio não respondeu"). Fernando, 16/11: "faz". A parte que parece
+// recado não sai: o Téo reescreve uma vez; se insistir, ela é descartada.
+function semAcentoTeo(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+// Sinal forte: recado interno com certeza (some se insistir). Sinal fraco
+// (citar o lead pelo nome em terceira pessoa): pede pra reescrever uma vez,
+// mas não descarta, pra não sumir com mensagem boa.
+export function pareceRecadoInterno(texto: string, nomeLead?: string | null): { motivo: string; forte: boolean } | null {
+  const t = semAcentoTeo(texto);
+  if (/\*\*[^*\n]+\*\*/.test(texto)) return { motivo: "negrito com **", forte: true };
+  if (/\b(pra|para) eu mesmo\b/.test(t)) return { motivo: "pra eu mesmo", forte: true };
+  if (/\btime humano\b/.test(t)) return { motivo: "time humano", forte: true };
+  if (/\b(anotei|anotado|registrei)\b[^.\n]{0,20}\bna ficha\b/.test(t)) return { motivo: "fala da ficha", forte: true };
+  if (/\b(flavio|breno|wurtz|priscila|vendedor|especialista)\b[^.\n]{0,60}\bnao (respondeu|atendeu)\b/.test(t))
+    return { motivo: "vendedor não respondeu", forte: true };
+  if (/\bo lead\b/.test(t)) return { motivo: "fala do lead em terceira pessoa", forte: true };
+  const primeiro = semAcentoTeo((nomeLead ?? "").trim().split(/\s+/)[0] ?? "").replace(/[^a-z]/g, "");
+  if (primeiro.length >= 4 && new RegExp(`(^|[^a-z])(o|a|pra|da|do) ${primeiro}([^a-z]|$)`).test(t))
+    return { motivo: "fala do lead em terceira pessoa", forte: false };
+  return null;
+}
+
+const AVISO_RECADO =
+  "[Instrução interna, o lead não vê: sua última resposta tinha um recado pro time ou explicação sobre você mesmo (motivo: MOTIVO), e isso não pode ir pro lead. Reescreva só a mensagem pro lead: curta, falando com ele (você), sem negrito, sem falar do time, de vendedor, da ficha ou do que você decidiu. O que é pro time vai em anotar_ficha ou passar_para_humano.]";
+
 function dividir(reply: string): string[] {
   const partes = reply
     .split(/\n*\[BREAK\]\n*/i)
@@ -739,6 +769,8 @@ export async function rodarTeo(opts: {
 
   let humano: ResultadoTeo["humano"] = null;
   const notas: string[] = [];
+  const bloqueado: string[] = [];
+  let reescreveu = false;
   // Se um modelo sumir (404), cai pro próximo da lista.
   const modelos = [...new Set(opts.acompanhamento ? [MODEL_ACOMPANHAMENTO, MODEL, FALLBACK_MODEL] : [MODEL, FALLBACK_MODEL])];
   let m = 0;
@@ -821,13 +853,34 @@ export async function rodarTeo(opts: {
       .map((b) => b.text)
       .join("\n")
       .trim();
+    const partes = texto ? dividir(texto) : [];
+    const sinais = partes.map((p) => pareceRecadoInterno(p, opts.lead.nome));
+    if (sinais.some(Boolean) && !reescreveu && turn < MAX_TURNS - 1) {
+      reescreveu = true;
+      bloqueado.push(...partes.filter((_, i) => sinais[i]));
+      messages.push({ role: "assistant", content: resp.content });
+      messages.push({
+        role: "user",
+        content: AVISO_RECADO.replace("MOTIVO", [...new Set(sinais.filter(Boolean).map((x) => x!.motivo))].join(", ")),
+      });
+      continue;
+    }
+    // Depois de reescrever: só o recado com sinal forte é descartado.
+    bloqueado.push(...partes.filter((_, i) => sinais[i]?.forte));
     return {
-      mensagens: texto ? dividir(texto) : [],
+      mensagens: partes.filter((_, i) => !sinais[i]?.forte),
       encerrar: /\[ENCERRAR\]/i.test(texto),
       humano,
       ficha: notas.length ? notas.join("\n") : null,
       uso,
+      ...(bloqueado.length ? { bloqueado } : {}),
     };
   }
-  return { mensagens: [], humano, ficha: notas.length ? notas.join("\n") : null, uso };
+  return {
+    mensagens: [],
+    humano,
+    ficha: notas.length ? notas.join("\n") : null,
+    uso,
+    ...(bloqueado.length ? { bloqueado } : {}),
+  };
 }

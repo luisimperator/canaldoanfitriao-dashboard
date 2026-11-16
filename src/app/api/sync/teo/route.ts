@@ -563,7 +563,7 @@ function blocoUpgradeAluno(vendendoPorAqui: boolean): string {
     "Objeções de aluno:",
     "- \"Ainda não terminei o Anfitrião 5 Estrelas\": com a Black é vitalício, ela segue no ritmo dela e nada mais vence.",
     "- \"Vou só renovar\": a renovação do Anfitrião 5 Estrelas é R$ 997 por ano (4 anos = R$ 3.988, só ele); a Black é R$ 4.997 uma vez, com os 6 cursos vitalícios e 4 anos das duas comunidades.",
-    "- \"Acabei de renovar\": quem pagou a renovação anual (R$ 997) em outubro ou novembro tem esse valor devolvido pelo time depois da compra da Black (regra do Fernando na live). Diga isso, siga com o link e anote na ficha \"renovou em [mês]: devolver R$ 997 da renovação\".",
+    "- \"Acabei de renovar\": quem pagou a renovação anual (R$ 997) de julho de 2026 em diante tem esse valor devolvido pelo time depois da compra da Black (regra do Fernando na live, estendida pra julho em diante em 16/11). Renovação paga antes de julho não é devolvida. Diga isso, siga com o link e anote na ficha \"renovou em [mês]: devolver R$ 997 da renovação\".",
     "- \"Acabei de comprar o curso\" ou \"ainda estou pagando\": a condição dela é a de aluno, R$ 4.000 a menos. Se ela pedir pra abater as parcelas do curso, você não sabe: chame passar_para_humano (motivo \"black\") e diga que o especialista responde por aqui.",
     "- \"Tenho 1 imóvel, o Gigantes não é pra mim\": os outros cursos e o vitalício já pagam; o Gigantes fica pronto pra quando ela crescer.",
     "- Caro ou parcela: trate como na seção \"Objeções\"; na venda por aqui, pergunte \"e se eu conseguir um desconto pra você, fica interessante?\" e, se topar, os cupons de aluno da seção \"Cupons\" (um degrau por vez).",
@@ -2145,6 +2145,14 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           args
         ),
     });
+    if (res.bloqueado?.length) {
+      await log(supabase, "recado interno barrado", {
+        contact_id: c.contact_id,
+        nome: c.nome,
+        partes: res.bloqueado.map((x) => x.slice(0, 500)),
+        enviadas: res.mensagens,
+      });
+    }
 
     // Retomou a conversa da Black e não tem nada a dizer (ex.: o lead só
     // agradeceu depois de pagar), ou só quer passar de volta: devolve em
