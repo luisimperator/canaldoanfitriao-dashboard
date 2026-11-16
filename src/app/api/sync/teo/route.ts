@@ -8,6 +8,7 @@ import {
   enviarTexto,
   historico,
   ouvirAudios,
+  verImagens,
   rodarTeo,
   unnichat,
   type LeadTeo,
@@ -2061,6 +2062,9 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // Áudios recentes (do lead e do time) viram texto antes de o Téo ler.
     const ouvidos = await ouvirAudios(supabase, msgs).catch(() => 0);
     if (ouvidos) await log(supabase, "áudio ouvido", { contact_id: c.contact_id, nome: c.nome, audios: ouvidos });
+    // Imagens (print de erro, comprovante, foto do imóvel) viram leitura em texto.
+    const vistas = await verImagens(supabase, msgs).catch(() => 0);
+    if (vistas) await log(supabase, "imagem vista", { contact_id: c.contact_id, nome: c.nome, imagens: vistas });
     const res = await rodarTeo({
       msgs,
       lead,
