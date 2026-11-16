@@ -224,11 +224,25 @@ function blackAtiva(cfg: Config): boolean {
   return Boolean(cfg.black_ate && new Date(cfg.black_ate).getTime() > Date.now());
 }
 
-// Vendedores de plantão na Black: das 9h às 23h de Brasília.
+// Fim de semana do time de vendas (Brasília): de sexta 23h até domingo 23h59.
+// O próximo plantão é só segunda 9h; quem atende é o Téo (Fernando, 16/11:
+// "eles não trabalham de fds").
+function fimDeSemana(ms = Date.now()): boolean {
+  const sp = new Date(ms - 3 * 3600_000);
+  const d = sp.getUTCDay();
+  return d === 6 || d === 0 || (d === 5 && sp.getUTCHours() >= 23);
+}
+
+// Vendedores de plantão na Black: de segunda a sexta, das 9h às 23h de Brasília.
 function plantaoBlack(): boolean {
+  if (fimDeSemana()) return false;
   const h = new Date(Date.now() - 3 * 3600_000).getUTCHours();
   return h >= 9 && h < 23;
 }
+
+// Motivos de passagem que, na Black, vão pro vendedor. No fim de semana o Téo
+// anota pro time e segue com a conversa; segunda 9h vai pro vendedor.
+const MOTIVOS_DO_VENDEDOR = ["black", "pediu_humano", "preco", "comprar"];
 
 const ALUNO_TAG = /^(aluno|alunoa5e|aluno-a5e|aluno-gigantes|aluno-geral|alunos-a5e|gigantes-\d|comprou:)/i;
 const ESPERA_BLACK_MS = 10 * 60_000;
@@ -526,6 +540,8 @@ function blocoUpgradeAluno(vendendoPorAqui: boolean): string {
 
 function blocoBlack(o: {
   plantao: boolean;
+  /** fim de semana: o time de vendas só volta segunda 9h */
+  fds: boolean;
   aluno: boolean;
   retomou: boolean;
   /** lead sem especialista: quem fecha a venda por aqui é o Téo (links com utm teo) */
@@ -573,8 +589,13 @@ function blocoBlack(o: {
           'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda com as informações abaixo e ofereça dois horários da lista pra call com o especialista (a não ser que ela já esteja fechando: aí feche por aqui).',
           o.plantao
             ? 'Só chame passar_para_humano (motivo "black", com um resumo de uma linha: se é aluna e o que quer) se a pessoa pedir pra falar com uma pessoa, ou se, sem call, ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado, outra forma de pagamento). Nesse caso diga que esse ponto o especialista responde por aqui; o resto você mesmo resolve.'
-            : "Se a pessoa recusar a call e pedir uma pessoa, diga que um especialista fala com ela a partir das 9h e chame passar_para_humano (pediu_humano).",
+            : o.fds
+              ? "Se a pessoa não quiser call, a venda segue com você por aqui até o fim."
+              : "Se a pessoa recusar a call e pedir uma pessoa, diga que um especialista fala com ela a partir das 9h e chame passar_para_humano (pediu_humano).",
         ].join(" "),
+    o.fds
+      ? 'FIM DE SEMANA: o time de vendas não trabalha sábado e domingo e só volta segunda às 9h. Quem atende é você, e a conversa continua com você. Não prometa resposta de especialista antes de segunda às 9h. Se a pessoa pedir uma pessoa ou precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado, outra forma de pagamento, curso avulso sem link), diga que esse ponto o especialista responde na segunda, a partir das 9h, chame passar_para_humano uma vez (motivo "black", ou "pediu_humano" se ela pediu uma pessoa, com um resumo de uma linha) e siga respondendo o resto por aqui.'
+      : "",
     "Tom: a maior parte do público já é aluno ou já comprou algo do Rômulo. A linha é \"você já conhece o resultado, agora leva tudo\". Nada de narrativa de dor.",
     "Nunca fale de sócios, sociedade, estrutura da empresa, faturamento, metas ou números de vendas.",
     "Mentorado da Mentoria Alfaiate: não venda nada; chame passar_para_humano (pediu_humano). Dúvida de acesso/plataforma de aluno: passar_para_humano (suporte).",
@@ -2032,6 +2053,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         blackAtiva(cfg)
           ? blocoBlack({
               plantao: plantaoBlack(),
+              fds: fimDeSemana(),
               aluno: alunoPorTag || Boolean(compraDeCurso),
               retomou: Boolean(c.black_retomou_em),
               semEspecialista: !especialista,
@@ -2126,6 +2148,12 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       humano = { motivo: "limite", resumo: "O Téo chegou no limite de respostas desta conversa." };
     }
     const ficha = [c.ficha, res.ficha].filter(Boolean).join("\n") || null;
+    // Black no fim de semana: o time não trabalha. O Téo anota o que é do time
+    // e segue com a conversa (não passa pro vendedor nem para de responder);
+    // segunda 9h, cuidarDaBlack passa pro vendedor.
+    const ficaComTeo =
+      Boolean(humano) && blackAtiva(cfg) && fimDeSemana() && MOTIVOS_DO_VENDEDOR.includes(humano?.motivo ?? "");
+    const vaiProTime = ficaComTeo ? null : humano;
     // Acompanhamento com [ENCERRAR]: a pessoa recusou ou pediu pra não ser
     // chamada. Fecha a conversa pra não sair o modelo da próxima etapa.
     const recusou = Boolean(retomar) && !cupomAgora && !humano && res.mensagens.length === 0 && Boolean(res.encerrar);
@@ -2141,8 +2169,8 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     await supabase
       .from("teo_conversas")
       .update({
-        estado: humano ? "humano" : recusou ? "encerrado" : "em_conversa",
-        motivo_humano: humano?.motivo ?? (recusou ? "sem_interesse" : null),
+        estado: vaiProTime ? "humano" : recusou ? "encerrado" : "em_conversa",
+        motivo_humano: vaiProTime?.motivo ?? (recusou ? "sem_interesse" : null),
         ultima_msg_tratada: ultimaDoLead?.id ?? c.ultima_msg_tratada,
         ultima_resposta_em: new Date().toISOString(),
         respostas,
@@ -2161,7 +2189,13 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       })
       .eq("contact_id", c.contact_id);
 
-    if (humano && blackAtiva(cfg) && plantaoBlack() && humano.motivo !== "suporte") {
+    if (ficaComTeo && humano) {
+      await anotar(
+        supabase,
+        c.contact_id,
+        `🤖 Téo (fim de semana): fica pro time na segunda, a conversa segue com o Téo até lá — motivo: ${humano.motivo}\n${humano.resumo}${ficha ? `\n\nFicha:\n${ficha}` : ""}`
+      );
+    } else if (humano && blackAtiva(cfg) && plantaoBlack() && humano.motivo !== "suporte") {
       await passarNaBlack(supabase, cfg, c, especialista, humano.resumo, ficha);
     } else if (humano) {
       await anotar(
@@ -2193,9 +2227,10 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       recebida: ultimaDoLead?.message ?? null,
       enviadas: res.mensagens,
       humano,
+      ...(ficaComTeo ? { fds: true } : {}),
       uso: res.uso ?? null,
     });
-    return humano ? `humano (${humano.motivo})` : nota;
+    return humano ? `humano (${humano.motivo}${ficaComTeo ? ", fim de semana: segue com o Téo" : ""})` : nota;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await supabase
@@ -2526,6 +2561,57 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
         (n.ficha as string | null) ?? null
       );
       feitos.push(`black noturno ${n.nome}`);
+    }
+    // Fim de semana o Téo seguiu com a conversa e só anotou o que é do time
+    // (log "passou pro time" com fds): segunda, com o plantão aberto, vai pro
+    // vendedor como uma passagem normal da Black (com os 10 min de espera).
+    // Uma vez só: depois da passagem, black_passou_em fica depois do log.
+    if (new Date(Date.now() - 3 * 3600_000).getUTCDay() === 1) {
+      const { data: doFds } = await supabase
+        .from("webhook_log")
+        .select("body, created_at")
+        .eq("source", "teo")
+        .eq("note", "passou pro time")
+        .eq("body->>fds", "true")
+        .gte("created_at", new Date(Date.now() - 72 * 3600_000).toISOString())
+        .order("created_at", { ascending: false })
+        .limit(200);
+      const vistos = new Set<string>();
+      for (const l of doFds ?? []) {
+        const b = l.body as { contact_id?: string; humano?: { motivo?: string; resumo?: string } } | null;
+        const cid = b?.contact_id;
+        if (!cid || vistos.has(cid)) continue;
+        vistos.add(cid);
+        const { data: conv } = await supabase
+          .from("teo_conversas")
+          .select("contact_id, nome, ficha, estado, ativo, black_passou_em, black_vendedor")
+          .eq("contact_id", cid)
+          .maybeSingle();
+        if (!conv || !conv.ativo || conv.estado !== "em_conversa") continue;
+        if (conv.black_passou_em && new Date(conv.black_passou_em as string).getTime() >= new Date(l.created_at).getTime()) continue;
+        const especialista =
+          (await vendedorDoLead(supabase, cfg, cid)) ??
+          especialistaDaConversa(await historico(supabase, cid).catch(() => []), cfg) ??
+          ((conv.black_vendedor as string | null) ?? null);
+        await supabase
+          .from("teo_conversas")
+          .update({
+            estado: "humano",
+            motivo_humano: b?.humano?.motivo ?? "black",
+            proxima_checagem: null,
+            atualizado_em: new Date().toISOString(),
+          })
+          .eq("contact_id", cid);
+        await passarNaBlack(
+          supabase,
+          cfg,
+          { contact_id: cid, nome: conv.nome } as Conversa,
+          especialista,
+          `(do fim de semana; o Téo seguiu com a conversa, leia o que ele já respondeu) ${b?.humano?.resumo ?? ""}`.trim(),
+          (conv.ficha as string | null) ?? null
+        );
+        feitos.push(`black fim de semana ${conv.nome}`);
+      }
     }
   }
   const { data: paradas } = await supabase
