@@ -135,6 +135,14 @@ const CHAT = [
   { nome: "Iolanda", cidade: "Niterói", texto: "Você é muito didático, até eu, uma senhora idosa, entendi." },
 ];
 
+// Versão curta: o que se aprende, em 4 linhas.
+const CURTA_TOPICOS = [
+  "Foto de capa, mosaico de 5 fotos, título e descrição que fazem o anúncio ser clicado",
+  "Como o algoritmo decide quem aparece e as métricas escondidas do seu anúncio",
+  "Preço dinâmico e promoções no lugar de só baixar o preço",
+  "Avaliações e o selo Preferido dos hóspedes",
+];
+
 const PARA_QUEM = [
   "Já anuncia e quer se destacar nas buscas",
   "Vai estrear o primeiro imóvel e não quer errar",
@@ -461,6 +469,20 @@ section{position:relative}
 .caixa .seguro{font-size:12px;opacity:.55;margin-top:16px}
 .caixa .cd{justify-content:center;margin:22px 0 4px}
 
+/* versão curta */
+.s.curta{padding:56px 0 8px}
+.topicos{list-style:none;padding:0;margin:24px 0 0;display:grid;gap:10px;max-width:760px}
+.topicos li{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--linha);border-radius:18px;padding:14px 16px;font-weight:600}
+.topicos li:before{content:"✓";flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--grad);color:#fff;font-size:13px;font-weight:800}
+.relato{margin:24px 0 0;max-width:760px;border-left:3px solid var(--coral);padding:4px 0 4px 18px}
+.relato blockquote{margin:0;font-family:"Instrument Serif",serif;font-style:italic;font-size:22px;line-height:1.3}
+.relato figcaption{font-size:13px;color:var(--tinta2);margin-top:8px}
+.minibio{background:var(--noite);color:#fff;padding:22px 0}
+.minibio .wrap{display:flex;align-items:center;gap:16px}
+.minibio img{width:64px;height:64px;object-fit:cover;object-position:top;border-radius:50%;flex:none;background:#000}
+.minibio b{display:block;font-size:16px}
+.minibio span{display:block;font-size:13px;opacity:.7;line-height:1.5}
+.curta-pag .ingresso{padding-top:40px}
 /* professor */
 .prof{background:#000}
 .prof .wrap{display:grid;gap:24px;align-items:center}
@@ -523,7 +545,7 @@ footer a{color:#ddd;text-decoration:none;margin-right:16px}
 </style>
 ${pixel}
 </head>
-<body>
+<body class="${longa ? "" : "curta-pag"}">
 <div class="prog-bar" id="prog"></div>
 
 <div class="topo"><div class="wrap">
@@ -554,7 +576,7 @@ ${pixel}
       <div class="float f3"><img src="${A}/selo-preferido.webp" alt="Preferido dos hóspedes" width="454" height="170"></div>
     </div>
   </div>
-  <div class="ticker" aria-hidden="true"><div class="trilho">${[...TICKER, ...TICKER].map((x) => `<span>${x}</span>`).join("")}</div></div>
+  ${longa ? `<div class="ticker" aria-hidden="true"><div class="trilho">${[...TICKER, ...TICKER].map((x) => `<span>${x}</span>`).join("")}</div></div>` : ""}
 </header>
 
 ${longa ? `<section class="s"><div class="wrap">
@@ -581,16 +603,16 @@ ${longa ? `<section class="s"><div class="wrap">
   </div>
 </div></section>` : ""}
 
-<section class="s segredos"><div class="wrap">
+${longa ? `<section class="s segredos"><div class="wrap">
   <span class="eyebrow rv" style="color:var(--coral)">Direto da última turma</span>
   <h2 class="titulo rv" style="--d:.08s">${SEGREDOS.length} coisas que você vai sair sabendo sobre <span class="serif grad-txt">ranquear</span> no Airbnb.</h2>
   <div class="lista-seg">
     ${SEGREDOS.map((x, i) => `<div class="seg rv" style="--d:${(i % 2) * 0.08}s"><div><h3>${x.t}</h3><p>${x.d}</p></div></div>`).join("\n    ")}
   </div>
   <blockquote class="fala rv">“${FALAS[0]}”<cite>RÔMULO VILLELA</cite></blockquote>
-</div></section>
+</div></section>` : ""}
 
-<section class="s"><div class="wrap chat-wrap">
+${longa ? `<section class="s"><div class="wrap chat-wrap">
   <div>
     <span class="eyebrow rv">Quem já participou</span>
     <h2 class="titulo rv" style="--d:.08s">Teve gente reservando <span class="serif grad-txt">durante</span> a imersão.</h2>
@@ -604,7 +626,7 @@ ${longa ? `<section class="s"><div class="wrap">
       <div class="digitando"><i></i><i></i><i></i></div>
     </div>
   </div>
-</div></section>
+</div></section>` : ""}
 
 ${longa ? `<section class="s" style="background:var(--creme)"><div class="wrap">
   <span class="eyebrow rv">Programação</span>
@@ -624,6 +646,14 @@ ${longa ? `<section class="s" style="background:var(--creme)"><div class="wrap">
   </div>
   <blockquote class="fala rv" style="color:var(--tinta)">“${FALAS[1]}”<cite>RÔMULO VILLELA</cite></blockquote>
 </div></section>` : ""}
+
+${longa ? "" : `<section class="s curta"><div class="wrap">
+  <h2 class="titulo rv">Em 2 dias você <span class="serif grad-txt">aprende</span>:</h2>
+  <ul class="topicos">
+    ${CURTA_TOPICOS.map((x, i) => `<li class="rv" style="--d:${i * 0.06}s">${x}</li>`).join("")}
+  </ul>
+  <figure class="relato rv"><blockquote>“${esc(CHAT[0].texto)}”</blockquote><figcaption>${esc(CHAT[0].nome)} · ${esc(CHAT[0].cidade)}, na última turma</figcaption></figure>
+</div></section>`}
 
 <section class="s ingresso" id="ingresso"><div class="wrap">
   <span class="eyebrow rv" style="display:flex;justify-content:center">Ingresso</span>
@@ -646,7 +676,12 @@ ${longa ? `<section class="s" style="background:var(--creme)"><div class="wrap">
   </div></div>
 </div></section>
 
-<section class="s prof"><div class="wrap">
+${longa ? "" : `<section class="minibio"><div class="wrap">
+  <img src="${A}/romulo.webp" alt="Rômulo Villela" loading="lazy" width="606" height="804">
+  <div><b>Com Rômulo Villela</b><span>${BIO.destaques.join(" · ")}</span></div>
+</div></section>`}
+
+${longa ? `<section class="s prof"><div class="wrap">
   <img class="foto rv" src="${A}/romulo.webp" alt="Rômulo Villela" loading="lazy" width="606" height="804">
   <div class="bio rv" style="--d:.1s">
     <span class="tag">Quem será seu professor</span>
@@ -657,15 +692,15 @@ ${longa ? `<section class="s" style="background:var(--creme)"><div class="wrap">
     </ul>
     <p class="frase">“${BIO.frase}”</p>
   </div>
-</div></section>
+</div></section>` : ""}
 
-<section class="s"><div class="wrap">
+${longa ? `<section class="s"><div class="wrap">
   <span class="eyebrow rv" style="display:flex;justify-content:center">Dúvidas</span>
   <h2 class="titulo c rv" style="--d:.08s;text-align:center">Perguntas frequentes</h2>
   <div class="faq">
     ${(longa ? faq : faq.filter((f) => FAQ_CURTA.includes(f.p))).map((f, i) => `<details class="rv" style="--d:${i * 0.05}s"><summary>${f.p}<i>+</i></summary><div class="r"><p>${f.r}</p></div></details>`).join("\n    ")}
   </div>
-</div></section>
+</div></section>` : ""}
 
 ${longa ? `<section class="s final"><div class="wrap">
   <h2 class="rv">Seu próximo fim de semana pode encher o seu <span class="serif">calendário.</span></h2>
