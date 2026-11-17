@@ -1,4 +1,5 @@
 import { getDashboardData } from "@/lib/data";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   capacityAnalysis,
   funnelStages,
@@ -19,6 +20,22 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+// Ingressos pagos da imersão (dia de São Paulo do pagamento e valor).
+async function imersoesPagas(): Promise<{ dia: string; valor: number }[]> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from("imersao_compradores")
+    .select("pago_em, created_at, valor")
+    .eq("status", "pago")
+    .limit(5000);
+  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" });
+  return ((data ?? []) as { pago_em: string | null; created_at: string; valor: number | string | null }[]).map((r) => ({
+    dia: fmt.format(new Date(r.pago_em ?? r.created_at)),
+    valor: Number(r.valor ?? 0),
+  }));
+}
 
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const reYMD = /^\d{4}-\d{2}-\d{2}$/;
@@ -68,9 +85,17 @@ export default async function VisaoGeralPage({
 
   const sales = paidSales(data.sales);
   const salesToday = sales.filter((s) => s.saleDate === today);
-  const revenueToday = sum(salesToday.map((s) => s.amount));
   const salesP = noPeriodo(sales, (s) => s.saleDate);
-  const revenueP = sum(salesP.map((s) => s.amount));
+  // Imersão (ingresso de R$ 27): fica em imersao_compradores, fora de `sales`
+  // pra não contar como venda do time; entra só no faturamento (Fernando,
+  // 17/11: "tivemos vendas hoje da imersão paga, pq não tá contando?").
+  const imersoes = await imersoesPagas();
+  const imersoesHoje = imersoes.filter((i) => i.dia === today);
+  const imersoesP = noPeriodo(imersoes, (i) => i.dia);
+  const revenueToday = sum(salesToday.map((s) => s.amount)) + sum(imersoesHoje.map((i) => i.valor));
+  const revenueP = sum(salesP.map((s) => s.amount)) + sum(imersoesP.map((i) => i.valor));
+  const extraImersao = (lista: { valor: number }[]) =>
+    lista.length ? ` + ${num(lista.length)} imers${lista.length === 1 ? "ão" : "ões"} (${brl(sum(lista.map((i) => i.valor)))})` : "";
   // Projeção do mês pelo ritmo atual (run rate) — só quando o período é o mês corrente.
   const dayOfMonth = Number(today.slice(8, 10));
   const daysInMonth = Number(ultimoDiaDoMes(month).slice(8, 10));
@@ -163,13 +188,13 @@ export default async function VisaoGeralPage({
           label="Faturamento hoje"
           value={brl(revenueToday)}
           tone="good"
-          hint={`${num(salesToday.length)} venda${salesToday.length === 1 ? "" : "s"}`}
+          hint={`${num(salesToday.length)} venda${salesToday.length === 1 ? "" : "s"}${extraImersao(imersoesHoje)}`}
         />
         <KpiCard
           label={`Faturamento ${sufixo}`}
           value={brl(revenueP)}
           tone="good"
-          hint={`${num(salesP.length)} venda${salesP.length === 1 ? "" : "s"}${
+          hint={`${num(salesP.length)} venda${salesP.length === 1 ? "" : "s"}${extraImersao(imersoesP)}${
             ehMesAtual ? ` · projeção ${brl(projectedMonth)}` : ""
           }`}
         />

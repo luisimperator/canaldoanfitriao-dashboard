@@ -137,6 +137,18 @@ export async function POST(req: NextRequest) {
   if (ehProdutoImersao(data)) {
     try {
       const r = await processarCompraImersao(supabase, data, logId);
+      // Aviso de venda nova no celular também pro ingresso da imersão (uma vez
+      // por fatura; Fernando, 17/11: "não notificou").
+      after(async () => {
+        await notificarVenda({
+          chave: `eduzz:${invoiceId}`,
+          plataforma: "Eduzz",
+          valor: Number(data.price?.value ?? data.items?.[0]?.price?.value ?? data.paid?.value ?? 0),
+          produto: String(data.items?.[0]?.name ?? "Imersão"),
+          parcelas: Number(data.installments ?? 0) || null,
+          metodo: typeof data.paymentMethod === "string" ? data.paymentMethod : (data.payment?.method ?? null),
+        });
+      });
       return NextResponse.json({ ok: true, action: "imersao_paid", ...r });
     } catch (e) {
       const erro = e instanceof Error ? e.message : String(e);
