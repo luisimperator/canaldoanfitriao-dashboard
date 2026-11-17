@@ -711,7 +711,7 @@ ${longa ? `<section class="s final"><div class="wrap">
 
 <footer><div class="wrap">
   <div>Imersão Chuva de Reservas no seu Airbnb</div>
-  <div><a href="https://www.instagram.com/canaldoanfitriao/" rel="noopener">Instagram</a><a href="https://www.youtube.com/c/CanaldoAnfitri%C3%A3o" rel="noopener">YouTube</a>© ${new Date().getFullYear()} Canal do Anfitrião</div>
+  <div><a href="https://www.instagram.com/romulovillela/" rel="noopener">Instagram</a><a href="https://www.youtube.com/@romulovillela" rel="noopener">YouTube</a>© ${new Date().getFullYear()} Canal do Anfitrião</div>
 </div></footer>
 
 <div class="barra" id="barra" aria-hidden="true">
