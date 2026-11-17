@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { confirmarMatricula } from "@/lib/tmb-entrega";
 import { notificarVenda } from "@/lib/push";
+import { ehProdutoImersao, processarCompraImersao, reembolsarImersao } from "@/lib/imersao";
 
 // Webhook da Eduzz.
 // Cadastre https://SEU_DOMINIO/api/webhooks/eduzz?key=EDUZZ_WEBHOOK_KEY no painel.
@@ -67,9 +68,12 @@ export async function POST(req: NextRequest) {
   const data = body.data ?? {};
 
   // CAIXA-PRETA: registra todo evento (até os sem id) para mapear o formato real.
-  await supabase
+  const { data: logRow } = await supabase
     .from("webhook_log")
-    .insert({ source: "eduzz", note: event || "(sem event)", body });
+    .insert({ source: "eduzz", note: event || "(sem event)", body })
+    .select("id")
+    .maybeSingle();
+  const logId = (logRow?.id as string | undefined) ?? null;
 
   // Matrícula na Nutror: se for no pacote da Black e o e-mail tiver pedido da
   // TMB esperando a Entrega Manual, fecha como entregue (src/lib/tmb-entrega).
@@ -85,6 +89,23 @@ export async function POST(req: NextRequest) {
   }
 
   const invoiceId = String(data.id ?? data.invoice_id ?? "");
+
+  // Imersão A5E (lançamento pago): reembolso/chargeback marca o comprador como
+  // reembolsado e tira as tags do Mailchimp (src/lib/imersao).
+  if ((event === "myeduzz.invoice_refunded" || event === "myeduzz.invoice_chargeback") && invoiceId) {
+    try {
+      if (await reembolsarImersao(supabase, invoiceId)) {
+        return NextResponse.json({ ok: true, action: "imersao_reembolso" });
+      }
+    } catch (e) {
+      if (logId) {
+        await supabase
+          .from("webhook_log")
+          .update({ etapa: "imersao reembolso", pendente: true, erro: e instanceof Error ? e.message : String(e) })
+          .eq("id", logId);
+      }
+    }
+  }
 
   // Reembolso / chargeback: atualizam o status de uma venda já existente.
   if (event === "myeduzz.invoice_refunded") {
@@ -106,6 +127,25 @@ export async function POST(req: NextRequest) {
   }
   if (!invoiceId) {
     return NextResponse.json({ ok: true, action: "ping" });
+  }
+
+  // --- Imersão A5E (ingresso de R$ 19,90, lançamento pago semanal) ---
+  // Vai pra imersao_compradores (turma do próximo sábado + tags), e NÃO pra
+  // `sales`: o ingresso contaria como venda do A5E nas métricas do time
+  // (leads por venda, capacidade do vendedor) e marcaria o lead como
+  // convertido, tirando-o do funil do produto principal.
+  if (ehProdutoImersao(data)) {
+    try {
+      const r = await processarCompraImersao(supabase, data, logId);
+      return NextResponse.json({ ok: true, action: "imersao_paid", ...r });
+    } catch (e) {
+      const erro = e instanceof Error ? e.message : String(e);
+      if (logId) {
+        await supabase.from("webhook_log").update({ etapa: "imersao", pendente: true, erro }).eq("id", logId);
+      }
+      // 500 faz a Eduzz reenviar; o processamento é idempotente pela fatura.
+      return NextResponse.json({ error: erro }, { status: 500 });
+    }
   }
 
   // --- Fatura paga: registra/atualiza a venda ---
