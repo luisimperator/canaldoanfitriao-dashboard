@@ -8,8 +8,16 @@ import { ALL_TAB_HREFS, canAccess, tabForPath } from "@/lib/access";
 // LP de venda da Imersão A5E (página, botão de comprar e as imagens dela em
 // public/lp/): pública nos dois domínios.
 const LP_IMERSAO = "/imersao-chuva-de-reservas-airbnb";
+// /t/pv e /t/click: contador próprio da LP (sendBeacon), também público.
 function ehLpPublica(p: string): boolean {
-  return p === LP_IMERSAO || p.startsWith(LP_IMERSAO + "/") || p.startsWith("/lp/") || p === "/icon-192.png";
+  return (
+    p === LP_IMERSAO ||
+    p.startsWith(LP_IMERSAO + "/") ||
+    p.startsWith("/lp/") ||
+    p === "/icon-192.png" ||
+    p === "/t/pv" ||
+    p === "/t/click"
+  );
 }
 
 export async function proxy(request: NextRequest) {

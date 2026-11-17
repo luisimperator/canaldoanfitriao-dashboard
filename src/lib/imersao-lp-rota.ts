@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { garantirTurma, horaSP, registrarClique, somaDias, turmaParaCompra, turmaPorData, UTM_KEYS } from "@/lib/imersao";
-import { lpHtml, type LpTurma, type Variante } from "@/lib/imersao-lp";
+import { garantirTurma, horaSP, registrarClique, somaDias, turmaParaCompra, turmaPorData } from "@/lib/imersao";
+import { lpHtml, PIXEL_PADRAO, type LpTurma, type Variante } from "@/lib/imersao-lp";
 import { horaHumana } from "@/lib/imersao-pagina";
 
 // Serve a LP de venda da Imersão A5E numa das versões (longa, curta).
@@ -23,6 +23,7 @@ function descreve(turma: string, inicioSab: string, fimSab: string, inicioDom: s
   const dias = m === mDom ? `${d} e ${dDom} de ${MESES[m - 1]}` : `${d} de ${MESES[m - 1]} e ${dDom} de ${MESES[mDom - 1]}`;
   const dd = (n: number) => String(n).padStart(2, "0");
   return {
+    turma,
     inicioSabado: inicioSab,
     dias,
     sabadoCurto: `${dd(d)}/${dd(m)}`,
@@ -59,16 +60,16 @@ export async function servirLp(req: NextRequest, variante: Variante): Promise<Re
     }
   }
 
-  // Botão de compra: /comprar da LP, levando as UTMs da visita e a versão.
+  // Botão de compra: /comprar da LP, levando TODOS os parâmetros da visita
+  // (utm_*, fbclid, gclid…) e a versão.
   const q = new URLSearchParams();
-  for (const k of UTM_KEYS) {
-    const v = params.get(k);
-    if (v) q.set(k, v);
+  for (const [k, v] of params) {
+    if (k !== "v" && v) q.set(k, v);
   }
   if (variante !== "longa") q.set("v", variante);
   const comprar = `${LP_BASE}/comprar${q.size ? `?${q}` : ""}`;
 
-  return new Response(lpHtml(t, comprar, process.env.IMERSAO_META_PIXEL_ID?.trim() || null, variante), {
+  return new Response(lpHtml(t, comprar, process.env.IMERSAO_META_PIXEL_ID?.trim() || PIXEL_PADRAO, variante), {
     headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
   });
 }
