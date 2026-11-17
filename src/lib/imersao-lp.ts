@@ -7,14 +7,24 @@
 // o contador vêm da turma à venda (próximo sábado cujo 9h ainda não chegou).
 // Imagens em public/lp/imersao/.
 //
-// NÚMEROS DE PROVA: vieram da LP de 2025 — conferir e atualizar aqui.
+// NÚMEROS DE PROVA. A bio do professor segue o card aprovado em 17/11/2026;
+// o faturamento ainda é o da LP de 2025 (conferir).
 
 const PROVA = {
   faturamento: "R$ 3,9 milhões",
-  imoveis: "80",
-  locacoes: "11 mil",
-  alunos: "1.300",
-  views: "6 milhões",
+  imoveis: "60",
+};
+const BIO = {
+  resumo: "Criador de um dos maiores canais educacionais sobre aluguel por temporada do Brasil.",
+  destaques: [
+    "+200.000 seguidores no Instagram",
+    "+120.000 inscritos no YouTube",
+    "+2.000 alunos formados nos cursos online",
+    `Gerencia portfólio de ${PROVA.imoveis}+ imóveis de temporada`,
+    "Palestrante em eventos oficiais do Airbnb",
+  ],
+  frase:
+    "Minha missão é democratizar o conhecimento sobre aluguel de temporada e criar a maior comunidade de anfitriões profissionais do Brasil.",
 };
 // Preço do ingresso: tem que bater com o produto na Eduzz.
 const PRECO = { reais: "27", centavos: "00" };
@@ -109,7 +119,7 @@ export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null):
     },
     {
       p: "Posso desistir do meu ingresso?",
-      r: `Sim. Você pode pedir o reembolso em até 7 dias depois da compra. Se tiver qualquer dúvida, fale com o nosso suporte no WhatsApp ${SUPORTE_WHATSAPP.texto}.`,
+      r: `Sim. Você pode pedir o reembolso em até 7 dias depois da compra. Se tiver qualquer dúvida, fale com o nosso suporte no WhatsApp <a href="${SUPORTE_WHATSAPP.link}" target="_blank" rel="noopener">${SUPORTE_WHATSAPP.texto}</a>.`,
     },
   ];
 
@@ -215,13 +225,20 @@ section.s{padding:64px 0}
 .formato ul{list-style:none;padding:0;margin:16px 0 0}
 .formato li{border:1px solid rgba(255,90,95,.4);background:rgba(255,90,95,.08);border-radius:14px;padding:14px 16px;margin-bottom:10px}
 /* professor */
-.prof{background:linear-gradient(135deg,var(--coral),var(--rosa));color:#fff}
-.prof .wrap{display:grid;gap:28px;align-items:center}
-@media(min-width:760px){.prof .wrap{grid-template-columns:.9fr 1.1fr}}
-.prof img{border-radius:22px;max-width:380px;width:100%;margin:0 auto;background:#111}
-.prof .tag{display:inline-block;background:rgba(255,255,255,.2);border-radius:999px;padding:6px 14px;font-size:13px}
-.prof h2{font-size:30px;font-weight:800;margin:12px 0 14px}
-.prof p{margin:0 0 12px;font-size:15px}
+.prof{background:#000}
+.prof .wrap{display:grid;gap:24px;align-items:center}
+@media(min-width:860px){.prof .wrap{grid-template-columns:1.05fr 1fr;gap:32px}}
+.prof .foto{width:100%;max-width:560px;margin:0 auto;border-radius:22px}
+.prof .bio{background:#fff;color:#111;border-radius:24px;padding:28px 22px}
+@media(min-width:860px){.prof .bio{padding:40px}}
+.prof .tag{display:inline-block;border:1px solid var(--coral);background:#ffe4e6;color:#333;border-radius:999px;padding:4px 26px;font-size:15px}
+.prof h2{font-size:34px;font-weight:800;margin:16px 0 12px;letter-spacing:-.03em}
+@media(min-width:860px){.prof h2{font-size:44px}}
+.prof .resumo{font-size:17px;color:#333;margin:0 0 18px}
+.prof ul{list-style:none;margin:0 0 20px;padding:0}
+.prof li{display:flex;align-items:center;gap:14px;background:linear-gradient(90deg,var(--coral),var(--rosa));color:#fff;font-weight:700;font-size:15px;border-radius:999px;padding:12px 22px;margin-bottom:9px;letter-spacing:-.01em}
+.prof li:before{content:"✓";flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#fff;color:#111;font-size:14px;font-weight:800}
+.prof .frase{font-size:17px;color:#333;margin:0}
 /* faq */
 .faq{max-width:680px;margin:0 auto}
 details{background:var(--claro);border-radius:18px;padding:18px 22px;margin-bottom:10px}
@@ -230,6 +247,7 @@ summary::-webkit-details-marker{display:none}
 summary:after{content:"+";font-size:22px;line-height:1;color:var(--rosa)}
 details[open] summary:after{content:"–"}
 details p{margin:12px 0 0;color:var(--tinta2)}
+details a{color:var(--rosa);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .cta-fim{text-align:center;margin-top:36px}
 footer{background:var(--escuro);color:#aaa;font-size:13px}
 footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:24px;padding-bottom:24px}
@@ -333,14 +351,15 @@ ${pixel}
 </div></section>
 
 <section class="s prof"><div class="wrap">
-  <img src="${A}/romulo.webp" alt="Rômulo Villela" loading="lazy" width="606" height="804">
-  <div>
+  <img class="foto" src="${A}/romulo.webp" alt="Rômulo Villela" loading="lazy" width="606" height="804">
+  <div class="bio">
     <span class="tag">Quem será seu professor</span>
     <h2>Prazer, Rômulo Villela</h2>
-    <p>Rômulo Villela é fundador do Canal do Anfitrião, empresa de gestão profissional de aluguel por temporada em plataformas como Airbnb, Booking.com e Decolar, com mais de ${PROVA.locacoes} locações realizadas.</p>
-    <p>Hoje administra cerca de ${PROVA.imoveis} imóveis e fatura mais de ${PROVA.faturamento} por ano.</p>
-    <p>É criador do curso Anfitrião 5 Estrelas, com mais de ${PROVA.alunos} alunos em todo o Brasil, onde treina proprietários a transformar seus imóveis em acomodações de sucesso.</p>
-    <p>É referência em conteúdo sobre locação por temporada, com centenas de publicações e mais de ${PROVA.views} de visualizações no YouTube.</p>
+    <p class="resumo">${BIO.resumo}</p>
+    <ul>
+      ${BIO.destaques.map((d) => `<li>${d}</li>`).join("\n      ")}
+    </ul>
+    <p class="frase">“${BIO.frase}”</p>
   </div>
 </div></section>
 
