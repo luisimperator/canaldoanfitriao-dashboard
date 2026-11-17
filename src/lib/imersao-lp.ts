@@ -531,7 +531,7 @@ ${pixel}
         <span class="tag-off">${DESCONTO}% OFF</span>
       </div>
       <div class="rv" style="--d:.7s">${botao("Garantir meu ingresso", "grande")}</div>
-      <div class="confia rv" style="--d:.8s"><span>Pagamento seguro Eduzz</span><span>Reembolso em 7 dias</span><span>Computador ou celular</span></div>
+      <div class="confia rv" style="--d:.8s"><span>Pagamento seguro Eduzz</span><span>Reembolso em 7 dias</span><span>Assista no computador ou no celular</span></div>
     </div>
     <div class="foto rv" style="--d:.2s" data-parallax>
       <img class="p" src="${A}/hero-celular.webp" alt="Rômulo Villela" width="850" height="840" fetchpriority="high">
@@ -621,8 +621,7 @@ ${pixel}
       <li>2 dias de imersão: sábado e domingo, das ${esc(t.horario)}</li>
       <li>Anúncio, preço, algoritmo, métricas e avaliações</li>
       <li>Análise de anúncios reais, com as métricas de cada um</li>
-      <li>Computador ou celular (melhor no computador)</li>
-      <li>Grupo VIP da turma, com entrada durante a imersão</li>
+      <li>Dá pra assistir no computador ou no celular (melhor no computador)</li>
     </ul>
     <div class="de">de ${precoDe} por</div>
     <div class="valor"><small>R$</small>${PRECO.por}<sup>,00</sup></div>
