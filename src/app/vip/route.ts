@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { diaSP, ehSabado, registrarClique, somaDias, turmaParaCompra, turmaPorData } from "@/lib/imersao";
+import { diaSP, ehSabado, registrarClique, somaDias, turmaAtiva, turmaParaCompra, turmaPorData } from "@/lib/imersao";
 import { diaHumano, paginaAviso } from "@/lib/imersao-pagina";
 
 // Link fixo do grupo de avisos da turma: link.canaldoanfitriao.com.br/vip
 //
-// Vai na página de obrigado da Eduzz e nos e-mails. Qual turma:
-//  1. ?turma=AAAA-MM-DD, se vier (ex.: link do e-mail com a turma);
+// Vai no QR Code mostrado DURANTE a imersão: só entra no grupo quem assistiu
+// (a página de obrigado da Eduzz aponta pra /imersao, não pra cá). Qual turma:
+//  1. ?turma=AAAA-MM-DD, se vier;
 //  2. a turma do comprador, se vier ?email= e ele estiver em imersao_compradores;
-//  3. senão, a turma de quem compra agora (próximo sábado que ainda não começou)
-//     — o caso de quem acabou de pagar.
+//  3. senão, a turma ativa (a que está acontecendo: fim_domingo >= agora) —
+//     não a "turma em venda", que no sábado após as 9h já é a da semana seguinte;
+//  4. sem turma ativa cadastrada, a próxima pela regra de compra.
 // Grupo cheio (grupo_vip_cheio) manda pro reserva (grupo_vip_url_2).
 
 export const dynamic = "force-dynamic";
@@ -35,7 +37,7 @@ export async function GET(req: NextRequest) {
       .limit(1);
     turmaData = (data?.[0]?.turma_data as string | undefined) ?? null;
   }
-  if (!turmaData) turmaData = turmaParaCompra(new Date());
+  if (!turmaData) turmaData = (await turmaAtiva(supabase, new Date()))?.turma_data ?? turmaParaCompra(new Date());
 
   const turma = await turmaPorData(supabase, turmaData);
   const principal = turma?.grupo_vip_url?.trim() || null;

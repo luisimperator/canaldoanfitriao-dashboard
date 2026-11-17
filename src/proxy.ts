@@ -5,6 +5,13 @@ import { ALL_TAB_HREFS, canAccess, tabForPath } from "@/lib/access";
 // Porteiro do dashboard: sem login, redireciona tudo para /login.
 // Webhooks e syncs ficam de fora (são chamados por serviços externos e
 // validam suas próprias chaves). Sem Supabase configurado (modo demo), não há login.
+// LP de venda da Imersão A5E (página, botão de comprar e as imagens dela em
+// public/lp/): pública nos dois domínios.
+const LP_IMERSAO = "/imersao-chuva-de-reservas-airbnb";
+function ehLpPublica(p: string): boolean {
+  return p === LP_IMERSAO || p.startsWith(LP_IMERSAO + "/") || p.startsWith("/lp/") || p === "/icon-192.png";
+}
+
 export async function proxy(request: NextRequest) {
   // Subdomínio dos links curtos (link.canaldoanfitriao.com.br): só rotas
   // públicas de link. Os links fixos da Imersão (/imersao, /vip) passam direto;
@@ -17,7 +24,7 @@ export async function proxy(request: NextRequest) {
     if (p === "/") {
       return NextResponse.redirect("https://canaldoanfitriao.com.br");
     }
-    if (p === "/imersao" || p === "/vip") return NextResponse.next();
+    if (p === "/imersao" || p === "/vip" || ehLpPublica(p)) return NextResponse.next();
     if (p.startsWith("/r/")) return NextResponse.next();
     const u = request.nextUrl.clone();
     u.pathname = `/r${p}`; // /<slug> -> /r/<slug>
@@ -77,7 +84,7 @@ export async function proxy(request: NextRequest) {
   }
   // Links fixos da Imersão A5E (sala da turma e grupo VIP): públicos, vão pro
   // comprador. Também respondem no domínio do painel.
-  if (pathname === "/imersao" || pathname === "/vip") {
+  if (pathname === "/imersao" || pathname === "/vip" || ehLpPublica(pathname)) {
     return NextResponse.next();
   }
 

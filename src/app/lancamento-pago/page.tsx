@@ -26,6 +26,10 @@ interface Resumo {
   domingo_cliques: number;
   domingo_unicos: number;
   fora_cliques: number;
+  lp_visitas: number;
+  lp_unicos: number;
+  checkout_cliques: number;
+  checkout_unicos: number;
 }
 
 interface CompradorRow {
@@ -177,10 +181,12 @@ export default async function LancamentoPagoPage({
 
   const funil = r
     ? [
-        { etapa: "Compraram (pagos)", valor: r.pagos, nota: "ingressos pagos, sem reembolsos" },
-        { etapa: "Abriram o grupo VIP (/vip)", valor: r.vip_unicos, nota: `${num(r.vip_cliques)} cliques` },
+        { etapa: "Visitaram a LP", valor: r.lp_unicos, nota: `${num(r.lp_visitas)} visitas (turma à venda na hora da visita)` },
+        { etapa: "Clicaram em comprar", valor: r.checkout_unicos, nota: `${num(r.checkout_cliques)} cliques no botão` },
+        { etapa: "Compraram (pagos)", valor: r.pagos, nota: "ingressos pagos, sem reembolsos (inclui vendas que não passaram pela LP)" },
         { etapa: "Entraram no sábado (/imersao)", valor: r.sabado_unicos, nota: `${num(r.sabado_cliques)} cliques` },
         { etapa: "Entraram no domingo (/imersao)", valor: r.domingo_unicos, nota: `${num(r.domingo_cliques)} cliques` },
+        { etapa: "Entraram no grupo VIP (QR na imersão)", valor: r.vip_unicos, nota: `${num(r.vip_cliques)} cliques em /vip` },
       ]
     : [];
   const topo = Math.max(1, ...funil.map((f) => f.valor));
@@ -206,8 +212,9 @@ export default async function LancamentoPagoPage({
         <Card title="Links fixos">
           <div className="space-y-3 text-sm">
             {[
+              { path: "/imersao-chuva-de-reservas-airbnb", desc: "LP de venda: mostra a turma à venda e leva pro checkout com as UTMs." },
               { path: "/imersao", desc: "Sala do evento: leva pra sala do dia (abre 30 min antes)." },
-              { path: "/vip", desc: "Grupo de avisos da turma (página de obrigado e e-mails)." },
+              { path: "/vip", desc: "Grupo VIP da turma em andamento: vai no QR Code mostrado durante a imersão." },
             ].map((l) => (
               <div key={l.path} className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
@@ -218,8 +225,8 @@ export default async function LancamentoPagoPage({
               </div>
             ))}
             <p className="text-xs text-ink-2">
-              Repassam UTMs; a sala também recebe nome/e-mail/telefone se vierem na URL. No e-mail, dá pra fixar a
-              turma do grupo com <code>/vip?turma=AAAA-MM-DD</code>.
+              A página de obrigado da Eduzz aponta pra <code>/imersao</code>. A sala recebe UTMs e nome/e-mail/telefone
+              se vierem na URL. Pra fixar a turma do grupo: <code>/vip?turma=AAAA-MM-DD</code>.
             </p>
           </div>
         </Card>
@@ -246,6 +253,7 @@ export default async function LancamentoPagoPage({
                 <th className={th}>Pagos</th>
                 <th className={th}>Reemb.</th>
                 <th className={th}>Receita</th>
+                <th className={th}>LP → comprar</th>
                 <th className={th}>VIP (únicos)</th>
                 <th className={th}>Sábado</th>
                 <th className={th}>Domingo</th>
@@ -271,6 +279,10 @@ export default async function LancamentoPagoPage({
                     <td className={`${td} tabular-nums`}>{num(s?.pagos ?? 0)}</td>
                     <td className={`${td} tabular-nums`}>{num(s?.reembolsados ?? 0)}</td>
                     <td className={`${td} tabular-nums`}>{brl(Number(s?.receita ?? 0))}</td>
+                    <td className={`${td} tabular-nums`}>
+                      {num(s?.lp_unicos ?? 0)} → {num(s?.checkout_unicos ?? 0)}{" "}
+                      <span className="text-ink-2">({pct(s?.pagos ?? 0, s?.lp_unicos ?? 0)} compra)</span>
+                    </td>
                     <td className={`${td} tabular-nums`}>
                       {num(s?.vip_unicos ?? 0)} <span className="text-ink-2">({pct(s?.vip_unicos ?? 0, s?.pagos ?? 0)})</span>
                     </td>
@@ -300,7 +312,7 @@ export default async function LancamentoPagoPage({
               })}
               {turmas.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-3 py-6 text-center text-sm text-ink-2">
+                  <td colSpan={11} className="px-3 py-6 text-center text-sm text-ink-2">
                     Nenhuma turma ainda. A primeira venda cria a turma sozinha (com horário padrão), mas os links das salas e
                     do grupo precisam ser cadastrados aqui.
                   </td>
@@ -317,15 +329,15 @@ export default async function LancamentoPagoPage({
             Turma de {fmtData(foco.turma_data)}
           </div>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <KpiCard label="Ingressos pagos" value={num(r.pagos)} hint={r.reembolsados ? `${num(r.reembolsados)} reembolsados` : undefined} />
-            <KpiCard label="Receita" value={brl(Number(r.receita))} />
-            <KpiCard label="Entraram no grupo" value={pct(r.vip_unicos, r.pagos)} hint={`${num(r.vip_unicos)} pessoas`} />
+            <KpiCard label="Ingressos pagos" value={num(r.pagos)} hint={`${brl(Number(r.receita))}${r.reembolsados ? ` · ${num(r.reembolsados)} reembolsados` : ""}`} />
+            <KpiCard label="Assistiram (sábado)" value={pct(r.sabado_unicos, r.pagos)} hint={`${num(r.sabado_unicos)} de ${num(r.pagos)} compradores`} />
             <KpiCard
               label="Ficaram até domingo"
               value={pct(r.domingo_unicos, r.sabado_unicos)}
               hint={`${num(r.domingo_unicos)} de ${num(r.sabado_unicos)} do sábado`}
               tone={r.sabado_unicos && r.domingo_unicos / r.sabado_unicos < 0.5 ? "warn" : "neutral"}
             />
+            <KpiCard label="Entraram no grupo VIP" value={pct(r.vip_unicos, r.sabado_unicos)} hint={`${num(r.vip_unicos)} pessoas · % de quem assistiu`} />
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
