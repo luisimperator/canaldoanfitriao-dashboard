@@ -1,4 +1,4 @@
-// LP de venda da Imersão A5E (ingresso R$ 19,90), servida em
+// LP de venda da Imersão A5E (ingresso R$ 27), servida em
 // link.canaldoanfitriao.com.br/imersao-chuva-de-reservas-airbnb.
 //
 // Base: LP longa 01c da Imersão Chuva de Reservas (out/2025, WordPress),
@@ -16,7 +16,9 @@ const PROVA = {
   alunos: "1.300",
   views: "6 milhões",
 };
-const PRECO = { reais: "19", centavos: "90" };
+// Preço do ingresso: tem que bater com o produto na Eduzz.
+const PRECO = { reais: "27", centavos: "00" };
+const PRECO_NUM = Number(`${PRECO.reais}.${PRECO.centavos}`);
 const SUPORTE_WHATSAPP = { texto: "(11) 93091-2696", link: "https://wa.me/5511930912696" };
 
 const A = "/lp/imersao"; // pasta das imagens
@@ -112,7 +114,7 @@ export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null):
   ];
 
   const pixel = pixelId
-    ? `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',${JSON.stringify(pixelId)});fbq('track','PageView');document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-comprar]');if(a)fbq('track','InitiateCheckout',{value:19.9,currency:'BRL'})});</script>`
+    ? `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',${JSON.stringify(pixelId)});fbq('track','PageView');document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-comprar]');if(a)fbq('track','InitiateCheckout',{value:${PRECO_NUM},currency:'BRL'})});</script>`
     : "";
 
   return `<!doctype html>
