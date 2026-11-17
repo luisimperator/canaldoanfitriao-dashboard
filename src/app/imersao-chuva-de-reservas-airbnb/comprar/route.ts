@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
       turma_data: turmaParaCompra(new Date()),
       momento: destino ? "checkout" : "sem_checkout",
       destino,
+      variante: params.get("v") === "curta" ? "curta" : "longa",
     });
   }
 

@@ -173,7 +173,10 @@ export interface LpTurma {
   horario: string;
 }
 
-export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null): string {
+export type Variante = "longa" | "curta";
+
+export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null, variante: Variante = "longa"): string {
+  const longa = variante === "longa";
   const quando = `Sábado e domingo, ${esc(t.dias)}, das ${esc(t.horario)}`;
   const href = esc(comprarHref);
   const botao = (texto = "Garantir meu ingresso", extra = "") =>
@@ -218,6 +221,9 @@ export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null):
       r: `Sim. Você pode pedir o reembolso em até 7 dias depois da compra. Se tiver qualquer dúvida, fale com o nosso suporte no WhatsApp <a href="${SUPORTE_WHATSAPP.link}" target="_blank" rel="noopener">${SUPORTE_WHATSAPP.texto}</a>.`,
     },
   ];
+
+  // Versão curta: só as perguntas que mais apareceram no chat.
+  const FAQ_CURTA = ["Quando acontece?", "Vai ter replay?", "Como eu acesso a imersão?", "Posso desistir do meu ingresso?"];
 
   const pixel = pixelId
     ? `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',${JSON.stringify(pixelId)});fbq('track','PageView');document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-comprar]');if(a)fbq('track','InitiateCheckout',{value:${PRECO.por},currency:'BRL'})});</script>`
@@ -338,7 +344,7 @@ section{position:relative}
 .float .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--creme);font-size:16px}
 .f1{left:-2%;top:62%}
 .f2{right:0;top:12%;animation-delay:-2s}
-.f3{right:4%;bottom:22%;animation-delay:-4s;padding:6px 10px}
+.f3{right:4%;bottom:22%;animation-delay:-4s;padding:0;background:none;box-shadow:none;border-radius:0;filter:drop-shadow(0 14px 22px rgba(0,0,0,.18))}
 .f3 img{width:120px}
 @keyframes boia{50%{transform:translateY(-12px)}}
 @media(max-width:600px){.f1{left:0;top:auto;bottom:30%}.f2{top:6%}.f3 img{width:96px}}
@@ -523,7 +529,7 @@ ${pixel}
 <div class="topo"><div class="wrap">
   <div class="t1">Turma de <b>${esc(t.sabadoCurto)} e ${esc(t.domingoCurto)}</b><br>começa em</div>
   ${contador("topo")}
-  <div class="chip">${precoDe} <b>R$ ${PRECO.por}</b> <a href="${href}" data-comprar>Garantir</a></div>
+  <div class="chip">${precoDe} <b>R$ ${PRECO.por}</b> <a href="#ingresso">Garantir</a></div>
 </div></div>
 
 <header class="hero">
@@ -551,7 +557,7 @@ ${pixel}
   <div class="ticker" aria-hidden="true"><div class="trilho">${[...TICKER, ...TICKER].map((x) => `<span>${x}</span>`).join("")}</div></div>
 </header>
 
-<section class="s"><div class="wrap">
+${longa ? `<section class="s"><div class="wrap">
   <span class="eyebrow rv">O que você vai dominar</span>
   <h2 class="titulo rv" style="--d:.08s">Cinco alavancas que separam o anúncio <span class="serif grad-txt">invisível</span> do que lota.</h2>
   <div class="bento">
@@ -573,7 +579,7 @@ ${pixel}
       (n, i) => `<div class="num rv" style="--d:${i * 0.08}s"><b data-conta="${n.valor}" data-pre="${n.prefixo}" data-suf="${n.sufixo}">${n.prefixo}${n.valor.toLocaleString("pt-BR")}${n.sufixo}</b><span>${n.rotulo}</span></div>`
     ).join("\n    ")}
   </div>
-</div></section>
+</div></section>` : ""}
 
 <section class="s segredos"><div class="wrap">
   <span class="eyebrow rv" style="color:var(--coral)">Direto da última turma</span>
@@ -600,7 +606,7 @@ ${pixel}
   </div>
 </div></section>
 
-<section class="s" style="background:var(--creme)"><div class="wrap">
+${longa ? `<section class="s" style="background:var(--creme)"><div class="wrap">
   <span class="eyebrow rv">Programação</span>
   <h2 class="titulo rv" style="--d:.08s">Dois dias. <span class="serif">Um anúncio</span> pronto pra competir.</h2>
   <div class="dias">
@@ -617,7 +623,7 @@ ${pixel}
       .join("\n    ")}
   </div>
   <blockquote class="fala rv" style="color:var(--tinta)">“${FALAS[1]}”<cite>RÔMULO VILLELA</cite></blockquote>
-</div></section>
+</div></section>` : ""}
 
 <section class="s ingresso" id="ingresso"><div class="wrap">
   <span class="eyebrow rv" style="display:flex;justify-content:center">Ingresso</span>
@@ -657,16 +663,16 @@ ${pixel}
   <span class="eyebrow rv" style="display:flex;justify-content:center">Dúvidas</span>
   <h2 class="titulo c rv" style="--d:.08s;text-align:center">Perguntas frequentes</h2>
   <div class="faq">
-    ${faq.map((f, i) => `<details class="rv" style="--d:${i * 0.05}s"><summary>${f.p}<i>+</i></summary><div class="r"><p>${f.r}</p></div></details>`).join("\n    ")}
+    ${(longa ? faq : faq.filter((f) => FAQ_CURTA.includes(f.p))).map((f, i) => `<details class="rv" style="--d:${i * 0.05}s"><summary>${f.p}<i>+</i></summary><div class="r"><p>${f.r}</p></div></details>`).join("\n    ")}
   </div>
 </div></section>
 
-<section class="s final"><div class="wrap">
+${longa ? `<section class="s final"><div class="wrap">
   <h2 class="rv">Seu próximo fim de semana pode encher o seu <span class="serif">calendário.</span></h2>
   <p class="rv" style="--d:.1s">${quando}. De R$ ${PRECO.de} por <b>R$ ${PRECO.por}</b>.</p>
   <div class="rv" style="--d:.2s">${botao("Quero meu ingresso", "grande")}</div>
   ${contador("final")}
-</div></section>
+</div></section>` : ""}
 
 <footer><div class="wrap">
   <div>Imersão Chuva de Reservas no seu Airbnb</div>
