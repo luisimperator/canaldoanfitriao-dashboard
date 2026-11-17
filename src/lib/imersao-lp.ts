@@ -314,7 +314,6 @@ section{position:relative}
 .aurora i:nth-child(3){width:30vw;height:30vw;left:-6%;top:-8%;background:#ffe3ea;animation-duration:26s}
 @keyframes flutua{to{transform:translate3d(-6%,8%,0) scale(1.15)}}
 .hero .grid{display:grid;gap:12px;align-items:center}
-@media(min-width:960px){.hero .grid{grid-template-columns:1.1fr .9fr;gap:32px}.hero{padding-top:48px}.hero .foto{margin-top:40px}}
 .hero .txt{padding-bottom:28px}
 .selo-top{display:inline-flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--linha);border-radius:999px;padding:6px 14px 6px 8px;font-size:13px;font-weight:600;box-shadow:0 8px 24px -14px rgba(0,0,0,.25)}
 .selo-top .dot{width:9px;height:9px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulso 1.8s infinite}
@@ -337,12 +336,21 @@ section{position:relative}
 .float{position:absolute;background:#fff;border-radius:18px;box-shadow:0 20px 40px -18px rgba(0,0,0,.35);padding:10px 14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px;animation:boia 6s ease-in-out infinite}
 .float small{display:block;font-weight:500;color:var(--tinta2);font-size:11px}
 .float .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--creme);font-size:16px}
-.f1{left:-2%;top:30%}
+.f1{left:-2%;top:62%}
 .f2{right:0;top:12%;animation-delay:-2s}
 .f3{right:4%;bottom:22%;animation-delay:-4s;padding:6px 10px}
 .f3 img{width:120px}
 @keyframes boia{50%{transform:translateY(-12px)}}
 @media(max-width:600px){.f1{left:0;top:auto;bottom:30%}.f2{top:6%}.f3 img{width:96px}}
+@media(min-width:1100px){
+  .hero .grid{grid-template-columns:1.1fr .9fr;gap:32px;align-items:stretch}
+  .hero{padding-top:48px}
+  .hero .foto{align-self:stretch;max-width:none;margin:0;min-height:560px}
+  .hero .foto img.p{position:absolute;bottom:0;left:50%;transform:translateX(-46%);height:100%;max-height:760px;width:auto;max-width:none}
+  .f1{left:-4%;top:auto;bottom:24%}
+  .f2{right:-2%;top:16%}
+  .f3{right:2%;bottom:10%}
+}
 
 /* ticker */
 .ticker{background:var(--noite);color:#fff;overflow:hidden;padding:18px 0;transform:rotate(-1.2deg) scale(1.03);margin:10px 0 0}
