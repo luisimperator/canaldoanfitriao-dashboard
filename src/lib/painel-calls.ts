@@ -7,7 +7,7 @@
 //    marcação no painel ou venda ligada à call (confirma na hora, sem esperar
 //    a gravação; migração 0087);
 //  * falta: nada disso depois de apurada (24h), nota #faltou ou marcação;
-//  * venda da call: paga em até 48h depois do início, ligada por e-mail,
+//  * venda da call: paga em até 7 dias depois do início, ligada por e-mail,
 //    telefone ou nome.
 
 export type Situacao = "aconteceu" | "falta" | "apuracao" | "sem_dado" | "futura" | "cancelada";
@@ -138,7 +138,7 @@ export interface Resumo {
   futuras: number;
   /** aconteceram ÷ (aconteceram + faltas) */
   comparecimento: Taxa;
-  /** aconteceram com venda em 48h ÷ aconteceram */
+  /** aconteceram com venda em 7 dias ÷ aconteceram */
   fechamento: Taxa;
   /** soma das vendas das calls que aconteceram */
   receita: number;
@@ -187,7 +187,7 @@ export interface Comprador {
 export interface Dia {
   dia: string;
   rotulo: string;
-  /** aconteceram e viraram venda em até 48h (fica na base da barra) */
+  /** aconteceram e viraram venda em até 7 dias (fica na base da barra) */
   compraram: number;
   /** aconteceram sem venda */
   aconteceram: number;
@@ -280,7 +280,7 @@ export interface EtapaFunil {
 
 /**
  * Funil do período, por lead (a mesma régua dos KPIs): falaram com o Téo →
- * marcaram call (que já passou) → a call aconteceu → compraram em até 48h
+ * marcaram call (que já passou) → a call aconteceu → compraram em até 7 dias
  * depois de uma call que aconteceu. Canceladas e agendadas não entram. Lead com mais de uma call conta
  * uma vez só.
  */
@@ -309,7 +309,7 @@ export function funilDoPeriodo(
       ...(falaram !== null ? [{ rotulo: "Falaram com o Téo", valor: falaram }] : []),
       { rotulo: "Marcaram call", valor: leads.length },
       { rotulo: "A call aconteceu", valor: aconteceu.length },
-      { rotulo: "Compraram em até 48h", valor: compraram.length },
+      { rotulo: "Compraram em até 7 dias", valor: compraram.length },
     ],
     emApuracao,
   };
