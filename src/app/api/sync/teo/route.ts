@@ -341,7 +341,7 @@ function avisoCompraRecente(c: { produto: string; quando: string }, utm: string)
   const data = dataBr(c.quando);
   return [
     `COMPRA RECENTE (${c.produto}, paga em ${data}, de outubro pra frente): existe uma condição pra este lead, mas SÓ SE ELE PEDIR (pedir pra abater o que pagou, dizer que acabou de comprar, renovar ou ainda está pagando, ou pedir condição melhor por isso). Vale acima da objeção "acabei de comprar" do bloco de upgrade.`,
-    `A condição (regra do Fernando): a Black inteira por R$ 1.997 à vista ou 12x de R$ 199,70 no cartão (o cupom já vai no link). Nunca ofereça nem mencione por conta própria; até ele pedir, a condição é a de aluno, R$ 4.997 (ou R$ 2.997, se ele já é do Gigantes). É condição individual: não diga que é pra todo mundo nem que existe cupom aberto.`,
+    `A condição (regra do Fernando): a Black inteira por R$ 1.997 à vista ou 12x de R$ 199,70 no cartão (o cupom já vai no link). Nunca ofereça nem mencione por conta própria; até ele pedir, a condição é a de aluno, R$ 4.997. É condição individual: não diga que é pra todo mundo nem que existe cupom aberto.`,
     `Se ele pedir, confirme com naturalidade (quem comprou de outubro pra frente tem esse abatimento) e mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(UPGRADE_1997.pix, utm)} · Cartão ${linkComUtm(UPGRADE_1997.cartao, utm)} · Boleto parcelado na TMB ${linkComUtm(UPGRADE_1997.boleto, utm)} (12x de R$ 206,54 com o financiamento do boleto). Garantia de 7 dias, como na Black. Anote na ficha "Black por R$ 1.997 (cupom de upgrade): comprou ${c.produto} em ${data}".`,
   ].join(" ");
 }
@@ -356,6 +356,7 @@ const GIGANTES_2997_LINKS: { pix: string; cartao: string; boleto: string | null 
   boleto: "https://pay.tmb.com.br/CANALDOANFIT/1D8335692O9",
 };
 
+const GIGANTES_2997_ATIVA = false;
 function avisoJaTemGigantes(temCompraRecente: boolean, utm: string): string {
   const fechar = GIGANTES_2997_LINKS
     ? `Quando ele topar, mande o link da forma de pagamento que ele escolher: Pix ${linkComUtm(GIGANTES_2997_LINKS.pix, utm)} · Cartão ${linkComUtm(GIGANTES_2997_LINKS.cartao, utm)}${GIGANTES_2997_LINKS.boleto ? ` · Boleto parcelado na TMB ${linkComUtm(GIGANTES_2997_LINKS.boleto, utm)} (12x de R$ 309,96 com o financiamento do boleto, a primeira como entrada)` : ""}. O cupom já vai no link (não diga o código). Nunca mande o link de aluno de R$ 4.997 pra ele.${GIGANTES_2997_LINKS.boleto ? "" : ' Boleto parcelado nesse valor ainda não tem link: se ele quiser boleto, diga que o link chega por aqui em instantes e chame passar_para_humano (motivo "black") com "Black por R$ 2.997 no boleto (já é do Gigantes)".'}`
@@ -2116,7 +2117,12 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           !jaComprouBlack && compraDeCurso && !ehCurso(compraDeCurso.produto)
             ? `Black, condição de aluno: confirmada pela compra de "${compraDeCurso.produto}" (quem fez imersão, foi a um Encontro ou comprou o Airbnb do Zero também é aluno). Se antes nesta conversa você passou o preço de quem não é aluno (R$ 8.997), corrija com naturalidade e sem esconder: estava errado, a condição dela é a de aluno. Ela ainda não tem o Anfitrião 5 Estrelas: no upgrade, a Black é o jeito de ter o Anfitrião 5 Estrelas, o Gigantes e todo o resto pelo preço de aluno.`
             : null,
-          upgrade?.temGigantes ? avisoJaTemGigantes(Boolean(upgrade.recente), utmDoLead(especialista)) : null,
+          // Condição de R$ 2.997 pra quem tem ou teve Gigantes desligada (Fernando,
+          // 17/11: "essa condição não vale"; era exceção de 14/11 que virou
+          // regra). Quem é ou foi do Gigantes paga como aluno.
+          GIGANTES_2997_ATIVA && upgrade?.temGigantes
+            ? avisoJaTemGigantes(Boolean(upgrade.recente), utmDoLead(especialista))
+            : null,
           upgrade?.recente ? avisoCompraRecente(upgrade.recente, utmDoLead(especialista)) : null,
           disparo && !jaComprouBlack ? avisoDisparo(disparo, vendaTeo) : null,
           cupom ? avisoCupom(cupom, !cupomEsperando) : null,
