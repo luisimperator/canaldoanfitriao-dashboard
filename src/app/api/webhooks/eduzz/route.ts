@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, action: "ping" });
   }
 
-  // --- Imersão A5E (ingresso de R$ 19,90, lançamento pago semanal) ---
+  // --- Imersão A5E (ingresso de R$ 27, lançamento pago semanal) ---
   // Vai pra imersao_compradores (turma do próximo sábado + tags), e NÃO pra
   // `sales`: o ingresso contaria como venda do A5E nas métricas do time
   // (leads por venda, capacidade do vendedor) e marcaria o lead como

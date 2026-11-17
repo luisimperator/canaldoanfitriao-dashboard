@@ -7,7 +7,7 @@ import { ImersaoTurmaForm, type TurmaFormValores } from "@/components/ImersaoTur
 import { brl, num } from "@/lib/format";
 import { TAG_FIXA, TURMA_COLS, tagDatada, turmaParaCompra, type Turma } from "@/lib/imersao";
 
-// Lançamento pago semanal (Imersão A5E, R$ 19,90): turmas, compradores, cliques
+// Lançamento pago semanal (Imersão A5E, R$ 27): turmas, compradores, cliques
 // nos links fixos (/imersao e /vip) e o funil de cada turma.
 
 export const dynamic = "force-dynamic";
@@ -199,7 +199,7 @@ export default async function LancamentoPagoPage({
       <PageHeader
         eyebrow="Lançamento pago"
         title="Imersão A5E"
-        subtitle={`Ingresso de R$ 19,90, turma toda semana (sábado e domingo, 9h às 16h). Quem compra agora entra na turma de ${fmtData(emVenda)}.`}
+        subtitle={`Ingresso de R$ 27, turma toda semana (sábado e domingo, 9h às 16h). Quem compra agora entra na turma de ${fmtData(emVenda)}.`}
       />
 
       {errTurmas && (

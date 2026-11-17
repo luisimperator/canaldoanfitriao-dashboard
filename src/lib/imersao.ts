@@ -1,4 +1,4 @@
-// Lançamento pago semanal: Imersão A5E (ingresso R$ 19,90).
+// Lançamento pago semanal: Imersão A5E (ingresso R$ 27).
 //
 // Turma = data do sábado do evento (AAAA-MM-DD). Evento sábado e domingo, 9h às
 // 16h em São Paulo, sem replay. Quem compra a partir de sábado 9h (início do
