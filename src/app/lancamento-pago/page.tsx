@@ -178,9 +178,9 @@ export default async function LancamentoPagoPage({
   const funil = r
     ? [
         { etapa: "Compraram (pagos)", valor: r.pagos, nota: "ingressos pagos, sem reembolsos" },
-        { etapa: "Abriram o grupo VIP (/vip)", valor: r.vip_unicos, nota: `${num(r.vip_cliques)} cliques` },
         { etapa: "Entraram no sábado (/imersao)", valor: r.sabado_unicos, nota: `${num(r.sabado_cliques)} cliques` },
         { etapa: "Entraram no domingo (/imersao)", valor: r.domingo_unicos, nota: `${num(r.domingo_cliques)} cliques` },
+        { etapa: "Entraram no grupo VIP (QR na imersão)", valor: r.vip_unicos, nota: `${num(r.vip_cliques)} cliques em /vip` },
       ]
     : [];
   const topo = Math.max(1, ...funil.map((f) => f.valor));
@@ -207,7 +207,7 @@ export default async function LancamentoPagoPage({
           <div className="space-y-3 text-sm">
             {[
               { path: "/imersao", desc: "Sala do evento: leva pra sala do dia (abre 30 min antes)." },
-              { path: "/vip", desc: "Grupo de avisos da turma (página de obrigado e e-mails)." },
+              { path: "/vip", desc: "Grupo VIP da turma em andamento: vai no QR Code mostrado durante a imersão." },
             ].map((l) => (
               <div key={l.path} className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
@@ -218,8 +218,8 @@ export default async function LancamentoPagoPage({
               </div>
             ))}
             <p className="text-xs text-ink-2">
-              Repassam UTMs; a sala também recebe nome/e-mail/telefone se vierem na URL. No e-mail, dá pra fixar a
-              turma do grupo com <code>/vip?turma=AAAA-MM-DD</code>.
+              A página de obrigado da Eduzz aponta pra <code>/imersao</code>. A sala recebe UTMs e nome/e-mail/telefone
+              se vierem na URL. Pra fixar a turma do grupo: <code>/vip?turma=AAAA-MM-DD</code>.
             </p>
           </div>
         </Card>
@@ -317,15 +317,15 @@ export default async function LancamentoPagoPage({
             Turma de {fmtData(foco.turma_data)}
           </div>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <KpiCard label="Ingressos pagos" value={num(r.pagos)} hint={r.reembolsados ? `${num(r.reembolsados)} reembolsados` : undefined} />
-            <KpiCard label="Receita" value={brl(Number(r.receita))} />
-            <KpiCard label="Entraram no grupo" value={pct(r.vip_unicos, r.pagos)} hint={`${num(r.vip_unicos)} pessoas`} />
+            <KpiCard label="Ingressos pagos" value={num(r.pagos)} hint={`${brl(Number(r.receita))}${r.reembolsados ? ` · ${num(r.reembolsados)} reembolsados` : ""}`} />
+            <KpiCard label="Assistiram (sábado)" value={pct(r.sabado_unicos, r.pagos)} hint={`${num(r.sabado_unicos)} de ${num(r.pagos)} compradores`} />
             <KpiCard
               label="Ficaram até domingo"
               value={pct(r.domingo_unicos, r.sabado_unicos)}
               hint={`${num(r.domingo_unicos)} de ${num(r.sabado_unicos)} do sábado`}
               tone={r.sabado_unicos && r.domingo_unicos / r.sabado_unicos < 0.5 ? "warn" : "neutral"}
             />
+            <KpiCard label="Entraram no grupo VIP" value={pct(r.vip_unicos, r.sabado_unicos)} hint={`${num(r.vip_unicos)} pessoas · % de quem assistiu`} />
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
