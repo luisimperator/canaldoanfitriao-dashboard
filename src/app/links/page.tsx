@@ -1,7 +1,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { getDashboardData } from "@/lib/data";
 import { isMql } from "@/lib/origin";
-import { num } from "@/lib/format";
+import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, PageHeader } from "@/components/ui";
 import { CreateLinkForm } from "@/components/CreateLinkForm";
 import { CopyButton } from "@/components/CopyButton";
@@ -27,6 +27,13 @@ interface LinkRow {
   created_at: string;
 }
 
+interface VendaDoLead {
+  lead_id: string;
+  sale_date: string;
+  amount: number | null;
+  preco: number | null;
+}
+
 function ytId(url: string | null): string | null {
   if (!url) return null;
   const m = url.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([A-Za-z0-9_-]{11})/);
@@ -42,6 +49,7 @@ export default async function LinksPage() {
   let links: LinkRow[] = [];
   let deletados = 0;
   const scansBySlug = new Map<string, number>();
+  const vendasPorLead = new Map<string, VendaDoLead[]>();
   if (supabase) {
     const { data: l } = await supabase
       .from("tracked_links")
@@ -59,16 +67,42 @@ export default async function LinksPage() {
     const { data: s } = await supabase.from("link_scans").select("slug");
     for (const r of (s as { slug: string }[]) ?? [])
       scansBySlug.set(r.slug, (scansBySlug.get(r.slug) ?? 0) + 1);
+    // Vendas pagas ligadas a um lead (o webhook da Eduzz liga pelo e-mail),
+    // em páginas de 1.000 (limite do Supabase por consulta).
+    for (let de = 0; ; de += 1000) {
+      const { data: v } = await supabase
+        .from("sales")
+        .select("lead_id, sale_date, amount, preco")
+        .eq("status", "paga")
+        .not("lead_id", "is", null)
+        .order("id")
+        .range(de, de + 999);
+      const pagina = (v as VendaDoLead[]) ?? [];
+      for (const r of pagina) {
+        const lista = vendasPorLead.get(r.lead_id) ?? [];
+        lista.push(r);
+        vendasPorLead.set(r.lead_id, lista);
+      }
+      if (pagina.length < 1000) break;
+    }
   }
 
-  // leads/MQL por slug (o redirect grava vidorigem = slug).
-  const leadsBySlug = new Map<string, { leads: number; mql: number }>();
+  // leads/MQL por slug (o redirect grava vidorigem = slug) e o que esses leads
+  // compraram depois de entrar pelo link: quantos compraram e quanto rendeu
+  // (preço do produto, sem os juros do parcelamento; venda antiga sem preço
+  // usa o valor pago). Venda pela TMB ainda não entra (não fica em sales).
+  const leadsBySlug = new Map<string, { leads: number; mql: number; compradores: number; receita: number }>();
   for (const lead of data.leads) {
     const slug = lead.utm?.vidorigem?.trim() || lead.utm?.content?.trim();
     if (!slug) continue;
-    const e = leadsBySlug.get(slug) ?? { leads: 0, mql: 0 };
+    const e = leadsBySlug.get(slug) ?? { leads: 0, mql: 0, compradores: 0, receita: 0 };
     e.leads += 1;
     if (isMql(lead)) e.mql += 1;
+    const depois = (vendasPorLead.get(lead.id) ?? []).filter((v) => v.sale_date >= lead.createdAt.slice(0, 10));
+    if (depois.length) {
+      e.compradores += 1;
+      e.receita += depois.reduce((t, v) => t + Number(v.preco ?? v.amount ?? 0), 0);
+    }
     leadsBySlug.set(slug, e);
   }
 
@@ -97,7 +131,7 @@ export default async function LinksPage() {
           {links.map((lk) => {
             const short = shortLinkFor(SHORT_BASE, lk.slug);
             const scans = scansBySlug.get(lk.slug) ?? 0;
-            const lead = leadsBySlug.get(lk.slug) ?? { leads: 0, mql: 0 };
+            const lead = leadsBySlug.get(lk.slug) ?? { leads: 0, mql: 0, compradores: 0, receita: 0 };
             const conv = scans > 0 ? (lead.leads / scans) * 100 : null;
             const yid = ytId(lk.youtube_url);
             const porta = portaDe(lk.utm_source, lk.utm_medium);
@@ -152,7 +186,7 @@ export default async function LinksPage() {
                     <LinkTrashButton slug={lk.slug} />
                   </div>
                   <p className="mt-1 text-[11px] text-slate-400 dark:text-zinc-500 truncate">→ {lk.destination}</p>
-                  <div className="mt-2 flex gap-5 text-sm tabular-nums">
+                  <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm tabular-nums">
                     <span>
                       <span className="font-semibold text-slate-900 dark:text-zinc-100">{num(scans)}</span>{" "}
                       <span className="text-slate-400 dark:text-zinc-500 text-xs">scans</span>
@@ -171,6 +205,16 @@ export default async function LinksPage() {
                         <span className="text-slate-400 dark:text-zinc-500 text-xs">scan→lead</span>
                       </span>
                     )}
+                    <span title="Leads deste link que compraram depois de entrar (Eduzz e Asaas)">
+                      <span className="font-semibold text-slate-900 dark:text-zinc-100">{num(lead.compradores)}</span>{" "}
+                      <span className="text-slate-400 dark:text-zinc-500 text-xs">
+                        {lead.compradores === 1 ? "venda" : "vendas"}
+                      </span>
+                    </span>
+                    <span title="Preço dos produtos vendidos, sem os juros do parcelamento">
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{brl(lead.receita)}</span>{" "}
+                      <span className="text-slate-400 dark:text-zinc-500 text-xs">rendeu</span>
+                    </span>
                   </div>
                 </div>
                 {yid && (

@@ -117,6 +117,9 @@ export async function POST(req: NextRequest) {
   );
   const saleDate = spDay(String(data.paidAt ?? data.createdAt ?? new Date().toISOString()));
   const product = String(data.items?.[0]?.name ?? data.product?.name ?? "Canal do Anfitrião");
+  // Preço do produto (com cupom, sem os juros do parcelamento): o que a
+  // empresa recebe. amount continua com o valor pago, como no histórico.
+  const preco = Number(data.price?.value ?? data.items?.[0]?.price?.value ?? 0) || null;
 
   // UTMs vêm em campos diferentes conforme a versão do payload; guarda o que houver.
   const utm = data.utm ?? data.tracker ?? data.utmParameters ?? null;
@@ -182,6 +185,7 @@ export async function POST(req: NextRequest) {
       eduzz_invoice_id: invoiceId,
       sale_date: saleDate,
       amount,
+      preco,
       product,
       status: "paga",
       seller_id: sellerId,
@@ -208,12 +212,11 @@ export async function POST(req: NextRequest) {
     // No aviso vai o preço do produto (com cupom, sem os juros do
     // parcelamento) e em quantas vezes; a venda continua gravada com o valor
     // pago (amount), como no histórico.
-    const preco = Number(data.price?.value ?? data.items?.[0]?.price?.value ?? 0) || amount;
     const parcelas = Number(data.installments ?? 0) || null;
     await notificarVenda({
       chave: `eduzz:${invoiceId}`,
       plataforma: "Eduzz",
-      valor: preco,
+      valor: preco ?? amount,
       produto: product,
       vendedor,
       parcelas,
