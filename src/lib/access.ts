@@ -25,6 +25,7 @@ export const TABS: TabDef[] = [
   { href: "/origem", label: "Origem dos leads", icon: "◆", section: "Aquisição" },
   { href: "/links", label: "Links & QR", icon: "🔗", section: "Aquisição" },
   { href: "/cac", label: "CAC / ROAS", icon: "↗", section: "Aquisição" },
+  { href: "/lancamento-pago", label: "Imersão A5E", icon: "🎟", section: "Lançamento pago" },
   { href: "/ltv", label: "LTV & recompra", icon: "∞", section: "Comercial" },
   { href: "/suporte", label: "Tickets", icon: "🛟", section: "Suporte" },
   { href: "/suporte/inbox", label: "WhatsApp", icon: "💬", section: "Suporte" },

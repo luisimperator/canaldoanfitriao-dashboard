@@ -5,16 +5,34 @@ import { ALL_TAB_HREFS, canAccess, tabForPath } from "@/lib/access";
 // Porteiro do dashboard: sem login, redireciona tudo para /login.
 // Webhooks e syncs ficam de fora (são chamados por serviços externos e
 // validam suas próprias chaves). Sem Supabase configurado (modo demo), não há login.
+// LP de venda da Imersão A5E (página, botão de comprar e as imagens dela em
+// public/lp/): pública nos dois domínios.
+const LP_IMERSAO = "/imersao-chuva-de-reservas-airbnb";
+// /t/pv e /t/click: contador próprio da LP (sendBeacon), também público.
+function ehLpPublica(p: string): boolean {
+  return (
+    p === LP_IMERSAO ||
+    p.startsWith(LP_IMERSAO + "/") ||
+    p.startsWith("/lp/") ||
+    p === "/icon-192.png" ||
+    p === "/t/pv" ||
+    p === "/t/click"
+  );
+}
+
 export async function proxy(request: NextRequest) {
-  // Subdomínio dos links curtos (link.canaldoanfitriao.com.br): tudo nele é
-  // slug de QR. Serve o slug NA RAIZ (link.../<slug>, sem /r/) reescrevendo
-  // internamente pra rota /r/[slug]. O painel, no subdomínio dele, fica intacto.
+  // Subdomínio dos links curtos (link.canaldoanfitriao.com.br): só rotas
+  // públicas de link. Os links fixos da Imersão (/imersao, /vip) passam direto;
+  // o resto é slug de QR, servido NA RAIZ (link.../<slug>, sem /r/) reescrevendo
+  // internamente pra rota /r/[slug] — inclusive caminhos do painel, que aqui
+  // não existem. O painel, no subdomínio dele, fica intacto.
   const host = (request.headers.get("host") ?? "").split(":")[0];
   if (host.split(".")[0] === "link") {
     const p = request.nextUrl.pathname;
-    if (p === "/" || p === "") {
+    if (p === "/") {
       return NextResponse.redirect("https://canaldoanfitriao.com.br");
     }
+    if (p === "/imersao" || p === "/vip" || ehLpPublica(p)) return NextResponse.next();
     if (p.startsWith("/r/")) return NextResponse.next();
     const u = request.nextUrl.clone();
     u.pathname = `/r${p}`; // /<slug> -> /r/<slug>
@@ -70,6 +88,11 @@ export async function proxy(request: NextRequest) {
   // Redirect curto dos QR codes/links: público (é escaneado por qualquer um,
   // antes de virar lead). Valida o slug por conta própria.
   if (pathname.startsWith("/r/")) {
+    return NextResponse.next();
+  }
+  // Links fixos da Imersão A5E (sala da turma e grupo VIP): públicos, vão pro
+  // comprador. Também respondem no domínio do painel.
+  if (pathname === "/imersao" || pathname === "/vip" || ehLpPublica(pathname)) {
     return NextResponse.next();
   }
 
