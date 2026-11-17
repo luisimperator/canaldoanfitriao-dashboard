@@ -201,7 +201,7 @@ export default async function CallsPage({
     <div>
       <PageHeader
         title="Painel Calls"
-        subtitle="Calls marcadas pelo Téo: quem apareceu, quem fechou e quanto vendeu. Venda da call é a paga em até 48h, ligada ao lead por e-mail, telefone ou nome."
+        subtitle="Calls marcadas pelo Téo: quem apareceu, quem fechou e quanto vendeu. Venda da call é a paga em até 7 dias, ligada ao lead por e-mail, telefone ou nome (ou ligada à mão)."
       />
 
       {error && (
@@ -238,7 +238,7 @@ export default async function CallsPage({
         <KpiCard
           label="Fechamento em call"
           value={pct(r.fechamento)}
-          hint={`${r.fechamento.ok} de ${r.fechamento.base} · venda em até 48h`}
+          hint={`${r.fechamento.ok} de ${r.fechamento.base} · venda em até 7 dias`}
         />
         <KpiCard
           label="Receita das calls"
@@ -259,7 +259,7 @@ export default async function CallsPage({
         <KpiCard
           label="Faltaram e compraram"
           value={num(r.faltaramMasCompraram.length)}
-          hint={r.faltaramMasCompraram.length ? "pode ser call fora do Teams sem nota" : "em até 48h da call"}
+          hint={r.faltaramMasCompraram.length ? "pode ser call fora do Teams sem nota" : "em até 7 dias da call"}
           tone={r.faltaramMasCompraram.length ? "warn" : "neutral"}
         />
       </div>
@@ -344,7 +344,7 @@ export default async function CallsPage({
               </tbody>
             </table>
           <p className="text-xs text-slate-400 dark:text-zinc-500 mt-3">
-            Fechou: calls que aconteceram e viraram venda paga em até 48h. Comparecimento: aconteceram ÷ (aconteceram + faltas).
+            Fechou: calls que aconteceram e viraram venda paga em até 7 dias. Comparecimento: aconteceram ÷ (aconteceram + faltas).
           </p>
       </Card>
 
@@ -390,7 +390,7 @@ export default async function CallsPage({
       </div>
 
       {r.faltaramMasCompraram.length > 0 && (
-        <Card title="Faltaram e compraram em até 48h" className="mb-4">
+        <Card title="Faltaram e compraram em até 7 dias" className="mb-4">
           <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
             Sem gravação e sem nota, mas o lead comprou depois. Se a call aconteceu fora do Teams, o vendedor deixa a nota #call na
             conversa (ou marque aqui).
@@ -481,7 +481,7 @@ export default async function CallsPage({
                   <th className={`${TH} hidden md:table-cell`}>Vendedor</th>
                   <th className={TH}>Situação</th>
                   <th className={`${TH} text-right hidden lg:table-cell`}>Duração</th>
-                  <th className={`${TH} hidden sm:table-cell`}>Venda em 48h</th>
+                  <th className={`${TH} hidden sm:table-cell`}>Venda em 7 dias</th>
                   <th className={`${TH} hidden sm:table-cell`}>Corrigir</th>
                 </tr>
               </thead>
@@ -556,7 +556,7 @@ export default async function CallsPage({
             Teams ainda não chegou. Fica fora das taxas.
           </li>
           <li>
-            <strong className="text-slate-800 dark:text-zinc-200">Venda da call</strong>: venda paga (Eduzz, Asaas ou TMB) em até 48h
+            <strong className="text-slate-800 dark:text-zinc-200">Venda da call</strong>: venda paga (Eduzz, Asaas ou TMB) em até 7 dias
             depois do início, do mesmo lead pelo e-mail do convite, pelo telefone do WhatsApp ou pelo nome. Cada venda conta uma
             vez só.
           </li>
