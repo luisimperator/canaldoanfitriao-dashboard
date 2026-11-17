@@ -141,7 +141,14 @@ export function repassarParams(origem: URLSearchParams, destino: string): string
 export async function registrarClique(
   supabase: SupabaseClient,
   req: { headers: Headers; params: URLSearchParams },
-  c: { rota: "imersao" | "vip" | "lp" | "checkout"; turma_data: string | null; momento: string; destino: string | null }
+  c: {
+    rota: "imersao" | "vip" | "lp" | "checkout";
+    turma_data: string | null;
+    momento: string;
+    destino: string | null;
+    /** versão da LP (lp/checkout): "longa", "curta"… */
+    variante?: string | null;
+  }
 ): Promise<void> {
   const email = (req.params.get("email") ?? "").trim().toLowerCase() || null;
   const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();

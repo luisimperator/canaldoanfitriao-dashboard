@@ -32,6 +32,14 @@ interface Resumo {
   checkout_unicos: number;
 }
 
+interface VarianteRow {
+  variante: string;
+  visitas: number;
+  visitas_unicas: number;
+  checkouts: number;
+  checkouts_unicos: number;
+}
+
 interface CompradorRow {
   id: string;
   nome: string | null;
@@ -153,6 +161,13 @@ export default async function LancamentoPagoPage({
     null;
   const r = foco ? resumo.get(foco.turma_data) : undefined;
   const compradores = foco ? await todosCompradores(supabase, foco.turma_data) : [];
+  const { data: variantesRaw } = foco
+    ? await supabase
+        .from("imersao_variantes")
+        .select("variante, visitas, visitas_unicas, checkouts, checkouts_unicos")
+        .eq("turma_data", foco.turma_data)
+    : { data: [] };
+  const variantes = ((variantesRaw ?? []) as VarianteRow[]).sort((a, b) => b.visitas_unicas - a.visitas_unicas);
 
   // Sala agora (turma ativa = a mais próxima com fim_domingo >= agora).
   const ativa = [...turmas]
@@ -212,7 +227,8 @@ export default async function LancamentoPagoPage({
         <Card title="Links fixos">
           <div className="space-y-3 text-sm">
             {[
-              { path: "/imersao-chuva-de-reservas-airbnb", desc: "LP de venda: mostra a turma à venda e leva pro checkout com as UTMs." },
+              { path: "/imersao-chuva-de-reservas-airbnb", desc: "LP de venda (versão longa): mostra a turma à venda e leva pro checkout com as UTMs." },
+              { path: "/imersao-chuva-de-reservas-airbnb/curta", desc: "LP de venda, versão curta (teste de versões abaixo)." },
               { path: "/imersao", desc: "Sala do evento: leva pra sala do dia (abre 30 min antes)." },
               { path: "/vip", desc: "Grupo VIP da turma em andamento: vai no QR Code mostrado durante a imersão." },
             ].map((l) => (
@@ -362,6 +378,37 @@ export default async function LancamentoPagoPage({
               <p className="mt-4 text-[11px] text-ink-2">
                 Únicos por pessoa: pelo e-mail quando vem na URL, senão por aparelho (IP + navegador) — é aproximado.
                 {r.fora_cliques ? ` ${num(r.fora_cliques)} acessos a /imersao caíram fora do horário da sala.` : ""}
+              </p>
+            </Card>
+
+            <Card title="Versões da LP (teste)">
+              {variantes.length === 0 ? (
+                <p className="text-sm text-ink-2">Sem visitas na LP nessa turma ainda.</p>
+              ) : (
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-line">
+                      <th className={th}>Versão</th>
+                      <th className={th}>Visitas</th>
+                      <th className={th}>Clicaram em comprar</th>
+                      <th className={th}>Taxa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {variantes.map((v) => (
+                      <tr key={v.variante} className="border-b border-line">
+                        <td className={td}>{v.variante}</td>
+                        <td className={`${td} tabular-nums`}>{num(v.visitas_unicas)}</td>
+                        <td className={`${td} tabular-nums`}>{num(v.checkouts_unicos)}</td>
+                        <td className={`${td} tabular-nums font-semibold`}>{pct(v.checkouts_unicos, v.visitas_unicas)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              <p className="mt-3 text-[11px] text-ink-2">
+                Pessoas únicas por versão (aproximado). A compra é atribuída pelas UTMs: use um utm_content diferente pra cada
+                versão nos anúncios e compare em “De onde vieram os compradores”.
               </p>
             </Card>
 
