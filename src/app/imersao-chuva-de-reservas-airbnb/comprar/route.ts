@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { registrarClique, repassarParams, turmaParaCompra } from "@/lib/imersao";
+import { registrarClique, repassarTodos, turmaParaCompra } from "@/lib/imersao";
 import { paginaAviso } from "@/lib/imersao-pagina";
 
 // Botão "Garantir meu ingresso" da LP: registra o clique (funil da turma) e
-// manda pro checkout da Eduzz (IMERSAO_CHECKOUT_URL) com as UTMs da visita —
-// é por elas que a venda chega no webhook com a origem e o comprador aparece
-// com utm_* no painel.
+// manda pro checkout da Eduzz (IMERSAO_CHECKOUT_URL) com todos os parâmetros
+// da visita (UTMs, fbclid…) — é pelas UTMs que a venda chega no webhook com a
+// origem e o comprador aparece com utm_* no painel.
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const checkout = process.env.IMERSAO_CHECKOUT_URL?.trim() || null;
-  const destino = checkout ? repassarParams(params, checkout) : null;
+  const destino = checkout ? repassarTodos(params, checkout, ["v"]) : null;
 
   const supabase = getSupabaseAdmin();
   if (supabase) {

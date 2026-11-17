@@ -2,8 +2,10 @@
 // link.canaldoanfitriao.com.br/imersao-chuva-de-reservas-airbnb.
 //
 // Formato semanal: um ingresso só, turma todo fim de semana, sem lote, sem
-// VIP/replay, sem Zoom e sem dizer "ao vivo" nem "gravado". A data e os
-// contadores vêm da turma à venda (próximo sábado cujo 9h ainda não chegou).
+// VIP/replay, sem Zoom e sem dizer "ao vivo". Uma linha discreta no FAQ diz
+// que o conteúdo é a gravação da imersão completa, exibida no horário marcado.
+// A data e os contadores vêm da turma à venda (próximo sábado cujo 9h ainda
+// não chegou).
 // Imagens em public/lp/imersao/.
 //
 // O texto fica todo nos blocos de dados logo abaixo (CONTEUDO); o HTML/CSS/JS
@@ -14,7 +16,9 @@
 // ---------- preço (tem que bater com o produto na Eduzz) ----------
 const PRECO = { de: 97, por: 27 };
 const DESCONTO = Math.round((1 - PRECO.por / PRECO.de) * 100);
-const SUPORTE_WHATSAPP = { texto: "(11) 93091-2696", link: "https://wa.me/5511930912696" };
+const SUPORTE_WHATSAPP = { texto: "(11) 92507-2167", link: "https://wa.me/5511925072167" };
+// Pixel do Meta da conta do Canal do Anfitrião (IMERSAO_META_PIXEL_ID na Vercel sobrepõe).
+export const PIXEL_PADRAO = "809047156423185";
 
 // ---------- conteúdo ----------
 const PROVA = {
@@ -54,7 +58,7 @@ const CARDS = [
     titulo: "Decifrando o algoritmo do Airbnb",
     sub: "Por que você sumiu das buscas e como voltar.",
     texto: `Quem aparece primeiro, o que mudou e o que fazer quando o anúncio some do nada. Estratégias que eu uso nos mais de ${PROVA.imoveis} imóveis que administro.`,
-    sai: "Você descobre se está invisível e volta a aparecer.",
+    sai: "Como descobrir se está invisível e voltar a aparecer.",
   },
   {
     img: "analise",
@@ -170,6 +174,8 @@ const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 export interface LpTurma {
+  /** turma (data do sábado, AAAA-MM-DD) */
+  turma: string;
   /** ISO do início de sábado (contador) */
   inicioSabado: string;
   /** "21 e 22 de novembro" */
@@ -198,7 +204,7 @@ export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null, 
     },
     {
       p: "Quando acontece?",
-      r: `${quando} (horário de Brasília). A sala abre 30 minutos antes.`,
+      r: `${quando} (horário de Brasília). A sala abre 30 minutos antes. O conteúdo é uma gravação da imersão completa, exibida no horário marcado.`,
     },
     {
       p: "Serve pra quarto, studio, chalé ou casa de praia?",
@@ -211,10 +217,6 @@ export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null, 
     {
       p: "Fala de imposto, CNPJ ou regras de condomínio?",
       r: "Não. A imersão é sobre o anúncio, o preço, o algoritmo e as avaliações. Imposto e questões jurídicas ficam de fora.",
-    },
-    {
-      p: "Vai ter replay?",
-      r: "Não. A imersão acontece só no sábado e no domingo, no horário marcado, e não fica disponível depois. Reserve o seu fim de semana.",
     },
     {
       p: "Como eu acesso a imersão?",
@@ -231,10 +233,14 @@ export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null, 
   ];
 
   // Versão curta: só as perguntas que mais apareceram no chat.
-  const FAQ_CURTA = ["Quando acontece?", "Vai ter replay?", "Como eu acesso a imersão?", "Posso desistir do meu ingresso?"];
+  const FAQ_CURTA = ["Quando acontece?", "Como eu acesso a imersão?", "Posso desistir do meu ingresso?"];
 
+  // Pixel do Meta: PageView ao carregar. O clique em qualquer botão de compra
+  // ([data-comprar]) é tratado no script do fim da página (InitiateCheckout +
+  // /t/click antes de seguir pro checkout).
   const pixel = pixelId
-    ? `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',${JSON.stringify(pixelId)});fbq('track','PageView');document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-comprar]');if(a)fbq('track','InitiateCheckout',{value:${PRECO.por},currency:'BRL'})});</script>`
+    ? `<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',${JSON.stringify(pixelId)});fbq('track','PageView');</script>
+<noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=${encodeURIComponent(pixelId)}&ev=PageView&noscript=1"></noscript>`
     : "";
 
   const contador = (id: string) => `<div class="cd" data-cd="${id}" aria-label="Contagem regressiva">
@@ -346,24 +352,35 @@ section{position:relative}
 .confia{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px;font-size:13px;color:var(--tinta2)}
 .confia span:before{content:"✓ ";color:#16a34a;font-weight:800}
 .hero .foto{position:relative;align-self:end;max-width:560px;margin:0 auto;width:100%}
+.hero .foto .pw{position:relative;container-type:inline-size}
 .hero .foto img.p{width:100%;-webkit-mask-image:linear-gradient(to bottom,#000 78%,transparent);mask-image:linear-gradient(to bottom,#000 78%,transparent)}
-.float{position:absolute;background:#fff;border-radius:18px;box-shadow:0 20px 40px -18px rgba(0,0,0,.35);padding:10px 14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px;animation:boia 6s ease-in-out infinite}
+/* card "Maragogi": cartão de verdade NA FRENTE da foto, cobrindo o que vem
+   impresso na imagem (lá ele fica atrás do ombro e com o texto cortado) */
+.mg{position:absolute;left:54.6%;top:25.2%;width:40.4%;min-height:41.6%;z-index:2;background:#fff;border-radius:3.2cqw;overflow:hidden;box-shadow:0 3cqw 6cqw -2cqw rgba(20,10,20,.45)}
+/* foto do card: o recorte da praia que já está na hero-celular.webp */
+.mg .ft{display:block;aspect-ratio:320/168;background:url(${A}/hero-celular.webp) 89.81% 32.29%/265.625% auto no-repeat}
+.mg div{padding:2.6cqw 3cqw;line-height:1.25}
+.mg b{display:block;font-size:3.6cqw;font-weight:800;color:var(--tinta)}
+.mg span{display:block;font-size:2cqw;color:var(--tinta2);margin-top:.6cqw}
+.mg hr{border:0;border-top:1px solid var(--linha);margin:1.6cqw 0 1.2cqw}
+.float{position:absolute;z-index:3;background:#fff;border-radius:18px;box-shadow:0 20px 40px -18px rgba(0,0,0,.35);padding:10px 14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px;animation:boia 6s ease-in-out infinite}
 .float small{display:block;font-weight:500;color:var(--tinta2);font-size:11px}
 .float .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--creme);font-size:16px}
 .f1{left:-2%;top:62%}
-.f2{right:0;top:12%;animation-delay:-2s}
-.f3{right:4%;bottom:22%;animation-delay:-4s;padding:0;background:none;box-shadow:none;border-radius:0;filter:drop-shadow(0 14px 22px rgba(0,0,0,.18))}
+.f2{right:0;top:4%;animation-delay:-2s}
+.f3{right:4%;bottom:8%;animation-delay:-4s;padding:0;background:none;box-shadow:none;border-radius:0;filter:drop-shadow(0 14px 22px rgba(0,0,0,.18))}
 .f3 img{width:120px}
 @keyframes boia{50%{transform:translateY(-12px)}}
-@media(max-width:600px){.f1{left:0;top:auto;bottom:30%}.f2{top:6%}.f3 img{width:96px}}
+@media(max-width:600px){.f1{left:0;top:auto;bottom:30%}.f2{top:2%}.f3 img{width:96px}}
 @media(min-width:1100px){
   .hero .grid{grid-template-columns:1.1fr .9fr;gap:32px;align-items:stretch}
   .hero{padding-top:48px}
   .hero .foto{align-self:stretch;max-width:none;margin:0;min-height:560px}
-  .hero .foto img.p{position:absolute;bottom:0;left:50%;transform:translateX(-46%);height:100%;max-height:760px;width:auto;max-width:none}
+  .hero .foto .pw{position:absolute;bottom:0;left:50%;transform:translateX(-46%);height:100%;max-height:760px;aspect-ratio:850/840}
+  .hero .foto img.p{width:100%;height:100%}
   .f1{left:-4%;top:auto;bottom:24%}
-  .f2{right:-2%;top:16%}
-  .f3{right:2%;bottom:10%}
+  .f2{right:-2%;top:6%}
+  .f3{right:2%;bottom:4%}
 }
 
 /* ticker */
@@ -561,7 +578,7 @@ ${pixel}
       <span class="selo-top rv"><span class="dot"></span>Imersão online · ${esc(t.dias)}</span>
       <img class="logo rv" style="--d:.05s" src="${A}/logo.svg" alt="Imersão Chuva de Reservas" width="158" height="81">
       <h1 class="rv vis-palavras">${palavras("Seu anúncio no")} <span class="palavra serif grad-txt" style="--d:.36s">topo</span> ${palavras("do ranking do Airbnb", 0.42)} <span class="palavra serif" style="--d:.8s">em um fim de semana.</span></h1>
-      <p class="sub rv" style="--d:.5s">Dois dias, sábado e domingo das ${esc(t.horario)}, aprendendo o que o algoritmo do Airbnb quer ver e montando o anúncio que aparece nas buscas, cobra o preço certo e enche o calendário.</p>
+      <p class="sub rv" style="--d:.5s">Dois dias, sábado e domingo, das ${esc(t.horario)}, aprendendo o que o algoritmo do Airbnb quer ver e montando o anúncio que aparece nas buscas, cobra o preço certo e enche o calendário.</p>
       <div class="oferta rv" style="--d:.6s">
         <div class="preco"><span class="de">de ${precoDe}</span><span class="por">por</span><span class="valor"><small>R$</small>${PRECO.por}</span></div>
         <span class="tag-off">${DESCONTO}% OFF</span>
@@ -570,7 +587,10 @@ ${pixel}
       <div class="confia rv" style="--d:.8s"><span>Pagamento seguro Eduzz</span><span>Reembolso em 7 dias</span><span>Assista no computador ou no celular</span></div>
     </div>
     <div class="foto rv" style="--d:.2s" data-parallax>
-      <img class="p" src="${A}/hero-celular.webp" alt="Rômulo Villela" width="850" height="840" fetchpriority="high">
+      <div class="pw">
+        <img class="p" src="${A}/hero-celular.webp" alt="Rômulo Villela" width="850" height="840" fetchpriority="high">
+        <div class="mg" aria-hidden="true"><i class="ft"></i><div><b>Maragogi</b><span>Espaço inteiro hospedado por Rômulo</span><hr><span>Alagoas</span></div></div>
+      </div>
       <div class="float f1"><span class="ic">🔍</span><div>Topo das buscas<small>anúncio otimizado</small></div></div>
       <div class="float f2"><span class="ic">📅</span><div>Nova reserva<small>5 noites · instantânea</small></div></div>
       <div class="float f3"><img src="${A}/selo-preferido.webp" alt="Preferido dos hóspedes" width="454" height="170"></div>
@@ -668,7 +688,7 @@ ${longa ? "" : `<section class="s curta"><div class="wrap">
       <li>Dá pra assistir no computador ou no celular (melhor no computador)</li>
     </ul>
     <div class="de">de ${precoDe} por</div>
-    <div class="valor"><small>R$</small>${PRECO.por}<sup>,00</sup></div>
+    <div class="valor"><small>R$</small>${PRECO.por}</div>
     <span class="ec">Economia de R$ ${PRECO.de - PRECO.por} · ${DESCONTO}% OFF</span>
     <div>${botao("Garantir meu ingresso", "grande")}</div>
     ${contador("caixa")}
@@ -711,7 +731,7 @@ ${longa ? `<section class="s final"><div class="wrap">
 
 <footer><div class="wrap">
   <div>Imersão Chuva de Reservas no seu Airbnb</div>
-  <div><a href="https://www.instagram.com/romulovillela/" rel="noopener">Instagram</a><a href="https://www.youtube.com/@romulovillela" rel="noopener">YouTube</a>© ${new Date().getFullYear()} Canal do Anfitrião</div>
+  <div><a href="${SUPORTE_WHATSAPP.link}" target="_blank" rel="noopener">Suporte no WhatsApp ${SUPORTE_WHATSAPP.texto}</a><a href="https://www.instagram.com/romulovillela/" rel="noopener">Instagram</a><a href="https://www.youtube.com/@romulovillela" rel="noopener">YouTube</a>© ${new Date().getFullYear()} Canal do Anfitrião</div>
 </div></footer>
 
 <div class="barra" id="barra" aria-hidden="true">
@@ -780,6 +800,27 @@ function rolar(){
   barra.classList.toggle('on',passouHero&&!naCaixa);
 }
 addEventListener('scroll',rolar,{passive:true}); rolar();
+
+// rastreamento: /t/pv ao carregar; no clique em comprar, InitiateCheckout no
+// pixel + /t/click e só então segue pro checkout (com todos os parâmetros da URL)
+var turma=${JSON.stringify(t.turma)}, variante=${JSON.stringify(variante)};
+function beacon(rota,extra){
+  var d={u:location.search,ref:document.referrer||'',turma:turma,variante:variante};
+  if(extra)for(var k in extra)d[k]=extra[k];
+  var b=JSON.stringify(d);
+  try{if(navigator.sendBeacon&&navigator.sendBeacon(rota,new Blob([b],{type:'text/plain'})))return}catch(e){}
+  try{fetch(rota,{method:'POST',body:b,keepalive:true,headers:{'Content-Type':'text/plain'}})}catch(e){}
+}
+beacon('/t/pv');
+document.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('[data-comprar]');
+  if(!a||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey)return;
+  e.preventDefault();
+  var href=a.getAttribute('href');
+  try{if(window.fbq)fbq('track','InitiateCheckout',{value:${PRECO.por},currency:'BRL',content_name:'Imersão Chuva de Reservas',content_category:variante})}catch(x){}
+  beacon('/t/click',{destino:href});
+  setTimeout(function(){location.href=href},350);
+});
 
 // FAQ: abre/fecha suave
 document.querySelectorAll('details').forEach(function(d){

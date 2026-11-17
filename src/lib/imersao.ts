@@ -137,12 +137,31 @@ export function repassarParams(origem: URLSearchParams, destino: string): string
   return u.toString();
 }
 
+/**
+ * Copia TODOS os parâmetros da URL recebida (utm_*, fbclid, gclid, dados do
+ * participante…) para o destino, menos os internos (ex.: "v", versão da LP)
+ * e os que o destino já tem.
+ */
+export function repassarTodos(origem: URLSearchParams, destino: string, ignorar: string[] = []): string {
+  let u: URL;
+  try {
+    u = new URL(destino);
+  } catch {
+    return destino;
+  }
+  for (const [k, v] of origem) {
+    if (ignorar.includes(k) || !v.trim() || u.searchParams.has(k)) continue;
+    u.searchParams.set(k, v.trim());
+  }
+  return u.toString();
+}
+
 /** Registra o clique (best-effort: não pode travar o redirect). */
 export async function registrarClique(
   supabase: SupabaseClient,
   req: { headers: Headers; params: URLSearchParams },
   c: {
-    rota: "imersao" | "vip" | "lp" | "checkout";
+    rota: "imersao" | "vip" | "lp" | "checkout" | "lp_pv" | "lp_click";
     turma_data: string | null;
     momento: string;
     destino: string | null;
