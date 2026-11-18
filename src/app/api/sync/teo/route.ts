@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { graphToken } from "@/lib/graph";
+import { notificarCall } from "@/lib/push";
 import {
   anotar,
   enviarTexto,
@@ -1591,6 +1592,7 @@ async function marcarCall(
     `📅 Call marcada pelo Téo: ${quando} com ${slot.vendedor} — ${email}\n${args.resumo}`
   );
   await log(supabase, "call marcada", { contact_id: c.contact_id, nome: c.nome, horario, email, vendedor: slot.vendedor });
+  let remarcou = false;
   // Remarcação: a call nova substitui as outras do lead que ainda não
   // aconteceram (senão a antiga continua mandando lembrete e "te esperando").
   // O convite antigo é cancelado na agenda, e a Graph avisa o lead e o vendedor.
@@ -1602,6 +1604,7 @@ async function marcarCall(
       .neq("id", nova.id)
       .neq("status", "cancelada")
       .gte("inicio", new Date().toISOString());
+    remarcou = (antigas ?? []).length > 0;
     for (const a of antigas ?? []) {
       await supabase.from("teo_calls").update({ status: "cancelada" }).eq("id", a.id);
       if (a.evento_id) {
@@ -1618,6 +1621,17 @@ async function marcarCall(
     }
   }
   if (nova) await criarConvite(supabase, cfg, nova).catch(() => false);
+  // Aviso no celular de quem ativou o sino (Fernando, 18/11): call agendada,
+  // com ícone azul de calendário pra não confundir com venda.
+  if (nova) {
+    await notificarCall({
+      id: String(nova.id),
+      nome: (nova.nome as string | null) ?? c.nome,
+      inicio: String(nova.inicio),
+      vendedor: (nova.vendedor as string | null) ?? slot.vendedor,
+      remarcada: Boolean(remarcou),
+    }).catch(() => null);
+  }
   // O link vai pelo WhatsApp já na confirmação, não só no e-mail (Fernando,
   // 18/11: "manda o link pra ele logo depois de gerado na agenda, e depois de
   // novo na hora"). Marca como enviado: quem manda é o Téo, nesta resposta.

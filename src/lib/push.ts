@@ -51,6 +51,9 @@ export interface PushPayload {
   body: string;
   url?: string;
   tag?: string;
+  /** Ícone próprio (ex.: call em azul, pra não confundir com venda). */
+  icon?: string;
+  badge?: string;
 }
 
 type Assinatura = { id: string; endpoint: string; p256dh: string; auth: string };
@@ -145,5 +148,50 @@ export async function notificarVenda(v: VendaNova): Promise<void> {
       .join(" · "),
     url: "/vendas",
     tag: v.chave,
+  });
+}
+
+export interface CallNova {
+  id: string;
+  nome: string | null;
+  /** ISO do início da call. */
+  inicio: string;
+  vendedor: string | null;
+  /** Substituiu uma call que o lead já tinha. */
+  remarcada?: boolean;
+}
+
+/**
+ * Avisa call agendada pelo Téo, uma vez só por call (Fernando, 18/11: "eu
+ * gosto de saber quando tem call agendada", com ícone e cor diferentes da
+ * venda: calendário azul).
+ */
+export async function notificarCall(c: CallNova): Promise<void> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return;
+  const chave = `call:${c.id}`;
+  const { data: nova } = await admin
+    .from("vendas_notificadas")
+    .upsert({ chave }, { onConflict: "chave", ignoreDuplicates: true })
+    .select("chave");
+  if (!nova || nova.length === 0) return;
+  const quando = new Date(c.inicio).toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const primeiro = (s: string | null) => (s ?? "").trim().split(/\s+/)[0] || null;
+  await pushParaTodos({
+    title: `${c.remarcada ? "🔁 Call remarcada" : "📅 Call agendada"} · ${quando}`,
+    body: [primeiro(c.nome) ?? "Lead", c.vendedor ? `com ${primeiro(c.vendedor)}` : null, "marcada pelo Téo"]
+      .filter(Boolean)
+      .join(" · "),
+    url: "/calls",
+    tag: chave,
+    icon: "/icon-call-192.png",
+    badge: "/icon-call-badge.png",
   });
 }
