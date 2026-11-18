@@ -26,7 +26,9 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    window.location.href = "/";
+    // Volta pra página pedida (proxy manda ?de=/caminho); só caminho interno.
+    const de = new URLSearchParams(window.location.search).get("de") ?? "";
+    window.location.href = de.startsWith("/") && !de.startsWith("//") ? de : "/";
   }
 
   async function handleReset(e: React.FormEvent) {

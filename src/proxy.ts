@@ -85,6 +85,10 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/cofre" || pathname.startsWith("/cofre/")) {
     return NextResponse.next();
   }
+  // Manifesto e ícones do app Agenda (o iPhone busca ao instalar).
+  if (pathname === "/agenda.webmanifest" || pathname === "/apple-touch-icon-agenda.png" || pathname.startsWith("/icon-agenda-")) {
+    return NextResponse.next();
+  }
   // Redirect curto dos QR codes/links: público (é escaneado por qualquer um,
   // antes de virar lead). Valida o slug por conta própria.
   if (pathname.startsWith("/r/")) {
@@ -120,7 +124,11 @@ export async function proxy(request: NextRequest) {
   const isReset = pathname === "/atualizar-senha";
   if (!user) {
     if (isLogin || isReset) return response;
-    return NextResponse.redirect(new URL("/login", request.url));
+    // Volta pra página pedida depois do login (o app Agenda abre em
+    // /calls/agenda e tem login próprio no iPhone).
+    const login = new URL("/login", request.url);
+    if (!pathname.startsWith("/api") && pathname !== "/") login.searchParams.set("de", pathname);
+    return NextResponse.redirect(login);
   }
   if (isLogin) {
     return NextResponse.redirect(new URL("/", request.url));
