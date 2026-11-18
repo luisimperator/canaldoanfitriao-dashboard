@@ -175,17 +175,16 @@ export async function notificarCall(c: CallNova): Promise<void> {
     .upsert({ chave }, { onConflict: "chave", ignoreDuplicates: true })
     .select("chave");
   if (!nova || nova.length === 0) return;
-  const quando = new Date(c.inicio).toLocaleString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // No iPhone o ícone do aviso é sempre o do app (a Apple ignora o `icon`),
+  // então a diferença pra venda (💰 Venda nova) fica no título: bolinha azul,
+  // telefone e CALL em maiúsculas (Fernando, 18/11: "precisa diferenciar").
+  const p = (o: Intl.DateTimeFormatOptions) =>
+    new Date(c.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", ...o });
+  const dia = `${p({ weekday: "short" }).replace(".", "")} ${p({ day: "2-digit", month: "2-digit" })}`;
+  const hora = p({ hour: "2-digit", minute: "2-digit" }).replace(":00", "h").replace(":", "h");
   const primeiro = (s: string | null) => (s ?? "").trim().split(/\s+/)[0] || null;
   await pushParaTodos({
-    title: `${c.remarcada ? "🔁 Call remarcada" : "📅 Call agendada"} · ${quando}`,
+    title: `🔵📞 ${c.remarcada ? "CALL REMARCADA" : "CALL AGENDADA"} · ${dia} às ${hora}`,
     body: [primeiro(c.nome) ?? "Lead", c.vendedor ? `com ${primeiro(c.vendedor)}` : null, "marcada pelo Téo"]
       .filter(Boolean)
       .join(" · "),
