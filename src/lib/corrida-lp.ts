@@ -77,6 +77,12 @@ h1 .serif{font-size:1.12em;letter-spacing:-.01em}
 .doa{display:flex;gap:12px;align-items:center;max-width:600px;font-size:13.5px;color:#e9e4ea;padding:11px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,138,101,.14),rgba(189,30,89,.08));border:1px solid rgba(255,138,101,.28)}
 .doa b{color:#fff}
 .doa i{font-style:normal;font-size:22px;line-height:1}
+.doa small{display:block;margin-top:3px;font-size:12px;color:var(--cinza)}
+.doa small a{color:var(--pessego);font-weight:700;text-decoration:none}
+.doa small a:hover{text-decoration:underline}
+.doa .sefras{flex:none;margin-left:auto;display:grid;place-items:center;background:#fff;border-radius:10px;padding:5px 8px;opacity:.92;transition:opacity .2s}
+.doa .sefras:hover{opacity:1}
+.doa .sefras img{display:block;height:20px;width:auto}
 
 .acao{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .btn{position:relative;isolation:isolate;overflow:hidden;display:inline-flex;align-items:center;gap:14px;background:var(--grad);background-size:160% 100%;color:#fff;font-weight:800;font-size:18px;text-decoration:none;padding:17px 34px;border-radius:999px;box-shadow:0 18px 40px -16px rgba(230,30,77,.85),inset 0 1px 0 rgba(255,255,255,.25);transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,background-position .6s;white-space:nowrap}
@@ -152,6 +158,10 @@ h1 .serif{font-size:1.12em;letter-spacing:-.01em}
   .btn{justify-content:center;font-size:18px;padding:18px 20px}
   .vagas{text-align:center}
   .preco{text-align:center}
+  .doa{flex-wrap:wrap}
+  .doa span{flex:1 1 calc(100% - 60px)}
+  .doa .sefras{margin-left:42px;padding:4px 7px}
+  .doa .sefras img{height:17px}
   .local{grid-template-columns:1fr}
   .local iframe{min-height:190px}
   .rodape{padding:18px 20px;justify-content:center;text-align:center}
@@ -203,7 +213,7 @@ h1 .serif{font-size:1.12em;letter-spacing:-.01em}
       <li><span>💬</span>Bate-papo entre anfitriões</li>
     </ul>
 
-    <div class="doa rv" style="--d:.26s"><i>🤝</i><span>Ingresso: <b>R$ 147,00 + 1 kg de alimento não perecível</b>, que será doado para o programa Chá do Padre da Paróquia São Francisco de Assis.</span></div>
+    <div class="doa rv" style="--d:.26s"><i>🤝</i><span>Ingresso: <b>R$ 147,00 + 1 kg de alimento não perecível</b>, que será doado para o programa Chá do Padre da Paróquia São Francisco de Assis.<small>O Chá do Padre é um serviço do Sefras – Ação Social Franciscana. <a href="https://www.sefras.org.br/" target="_blank" rel="noopener">Conheça o trabalho do Sefras ↗</a></small></span><a class="sefras" href="https://www.sefras.org.br/" target="_blank" rel="noopener" aria-label="Sefras – Ação Social Franciscana (abre em nova aba)"><img src="/lp/corrida/sefras.webp" alt="Sefras – Ação Social Franciscana" width="240" height="55" loading="lazy"></a></div>
 
     <div class="acao rv" style="--d:.3s">
       <span class="preco"><b>R$ 147,00</b>+ 1 kg de alimento</span>
