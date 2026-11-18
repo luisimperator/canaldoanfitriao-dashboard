@@ -29,6 +29,9 @@ export const maxDuration = 300;
 const ORCAMENTO_MS = 240_000;
 const PARALELO = 3;
 const ESPERA_MS = 25_000; // junta mensagens seguidas do lead antes de responder
+// Contato antigo de vendedor que volta a escrever: tempo pro vendedor responder
+// antes de o Téo entrar (Fernando, 18/11: "o Téo atravessou o Breno").
+const ESPERA_VENDEDOR_MS = 5 * 60_000;
 const JANELA_MS = 23.5 * 3600_000;
 
 interface Conversa {
@@ -1932,6 +1935,29 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       // Janela aberta: se o lead acabou de escrever, espera juntar as mensagens.
       if (ultima?.senderBy === "contact" && Date.now() - new Date(ultima.date).getTime() < ESPERA_MS) {
         return "esperando o lead terminar";
+      }
+      // Contato antigo de um vendedor (o time já tinha falado com ele antes de
+      // ele escrever agora) e ainda atribuído a esse vendedor: o vendedor tem
+      // ESPERA_VENDEDOR_MS pra responder antes de o Téo entrar. Se ele escrever
+      // nesse tempo, a trava "vendedor assumiu" acima devolve a conversa pra ele
+      // (Bárbara, 17/11: o Breno respondeu no mesmo minuto e o Téo atravessou).
+      // Lead novo atribuído na hora pela automação do Unnichat não tem histórico
+      // do time e não espera.
+      const entrou = new Date(c.criado_em).getTime();
+      const espera = entrou + ESPERA_VENDEDOR_MS - Date.now();
+      if (
+        espera > 0 &&
+        (cfg.vendedores ?? []).length > 0 &&
+        reais.some((m) => m.senderBy === "user" && new Date(m.date).getTime() < entrou - 3600_000)
+      ) {
+        const r = await unnichat(supabase, "GET", `/contact/${c.contact_id}/assign`);
+        const dono = (r.body as { data?: { id?: string; name?: string } | null } | null)?.data ?? null;
+        // Só vendedor ativo do rodízio (quem saiu, como a Priscila, não responde).
+        const vendedor = dono?.id ? (cfg.vendedores ?? []).find((v) => v.atendente_id === dono.id) : undefined;
+        if (r.status === 200 && vendedor) {
+          await adiar(supabase, c.contact_id, espera);
+          return `esperando o vendedor responder (${primeiroNome(vendedor.nome)})`;
+        }
       }
       // A automação do Unnichat acabou de mandar a pesquisa (flow): espera até
       // 15 min a pessoa responder, em vez de abrir com as mesmas perguntas por
