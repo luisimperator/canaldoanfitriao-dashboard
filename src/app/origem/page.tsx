@@ -181,8 +181,11 @@ export default async function OrigemPage({
         <>
           <Card title="De onde vêm os leads (canal)">
             <p className="mb-3 text-xs text-slate-400 dark:text-zinc-500">
-              Entre os {num(origin.trackedPct, 0)}% de leads com rastreio. A barra
-              é o volume; a porcentagem em destaque é quantos viraram MQL.
+              Entre os {num(origin.trackedPct, 0)}% de leads com rastreio
+              {origin.whatsappDireto > 0
+                ? ` (sem contar os ${num(origin.whatsappDireto)} que entraram direto pelo WhatsApp, sem formulário)`
+                : ""}
+              . A barra é o volume; a porcentagem em destaque é quantos viraram MQL.
             </p>
             <div className="space-y-3">
               {origin.byChannel.map((r) => (

@@ -14,8 +14,7 @@ import { brl, num } from "@/lib/format";
 import { Card, DemoBanner, KpiCard, PageHeader } from "@/components/ui";
 import { PainelMqlOrigem } from "@/components/PainelMqlOrigem";
 import { agruparPorTags } from "@/lib/tag-groups";
-import { classifyChannel } from "@/lib/channels";
-import { hasUtm } from "@/lib/origin";
+import { canalDoLead, hasUtm } from "@/lib/origin";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import Link from "next/link";
 
@@ -126,7 +125,7 @@ export default async function VisaoGeralPage({
   // tira tags no cliente.
   // A origem (canal das UTMs) vai junto, para a origem dos leads seguir a mesma
   // janela e as mesmas tags tiradas do gráfico.
-  const porTags = agruparPorTags(data.leads, (l) => ({ canal: classifyChannel(l.utm), rastreado: hasUtm(l) }));
+  const porTags = agruparPorTags(data.leads, (l) => ({ canal: canalDoLead(l), rastreado: hasUtm(l) }));
   // Faturamento gerado pelo time (vendas pagas com vendedor), por dia — a
   // sobreposição opcional do gráfico de MQLs.
   const fatTimePorDia: Record<string, number> = {};
