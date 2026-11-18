@@ -343,7 +343,7 @@ export function TeoWhatsApp() {
             placeholder="Buscar nome, telefone ou mensagem"
             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
           />
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+          <div className="flex flex-wrap gap-1.5">
             {chip("todas", "Todas")}
             {chip("teo", "Com o Téo")}
             {chip("vendedor", "Com o time")}

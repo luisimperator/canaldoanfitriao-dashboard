@@ -23,6 +23,13 @@ const DONO_RECENTE_DIAS = 15;
 async function vendedorRecente(supabase: SupabaseClient, id: string, desdeHumano: string | null): Promise<boolean> {
   const limite = Date.now() - DONO_RECENTE_DIAS * 86400_000;
   if (!desdeHumano || new Date(desdeHumano).getTime() >= limite) return true;
+  return vendedorFalouRecente(supabase, id);
+}
+
+// Alguém do time escreveu (mensagem digitada) ou tem call com o lead nos
+// últimos DONO_RECENTE_DIAS? Conversa com o Diego conta como sim.
+async function vendedorFalouRecente(supabase: SupabaseClient, id: string): Promise<boolean> {
+  const limite = Date.now() - DONO_RECENTE_DIAS * 86400_000;
   const { data: calls } = await supabase
     .from("teo_calls")
     .select("id")
@@ -52,7 +59,7 @@ export async function inscreverEntrada(
   const contato = (body as { contact?: { id?: string; name?: string; phoneNumber?: string } } | null)?.contact;
   const id = contato?.id;
   if (!id) return { ok: true };
-  const { data: cfg } = await supabase.from("teo_config").select("black_ate, ligado").eq("id", 1).maybeSingle();
+  const { data: cfg } = await supabase.from("teo_config").select("black_ate, ligado, vendedores").eq("id", 1).maybeSingle();
   if (!cfg?.ligado || !cfg.black_ate || new Date(cfg.black_ate).getTime() < Date.now()) return { ok: true };
 
   const { data: ja } = await supabase
@@ -97,18 +104,33 @@ export async function inscreverEntrada(
   }
 
   const dono = await supabase.rpc("teo_unnichat", { p_method: "GET", p_path: `/contact/${id}/assign`, p_body: null });
-  const atual = ((dono.data as { body?: { data?: { name?: string } | null } } | null)?.body?.data?.name ?? "") as string;
+  const donoData = (dono.data as { body?: { data?: { id?: string; name?: string } | null } } | null)?.body?.data ?? null;
+  const atual = (donoData?.name ?? "") as string;
   if (/diego/i.test(atual)) return { ok: true };
+  // Primeira vez no Téo, mas o vendedor a quem o contato está atribuído falou
+  // com ele (ou tem call) nos últimos DONO_RECENTE_DIAS: fica com o vendedor,
+  // como na conversa que já existia (a regra valia só pra quem já estava no Téo).
+  // Só vendedor ativo (teo_config.vendedores): quem saiu do time não segura o lead.
+  const vendedores = ((cfg as { vendedores?: { atendente_id?: string }[] | null }).vendedores ?? []) as { atendente_id?: string }[];
+  const comVendedor =
+    Boolean(donoData?.id) &&
+    vendedores.some((v) => v.atendente_id === donoData?.id) &&
+    (await vendedorFalouRecente(supabase, id));
 
   const { error } = await supabase.from("teo_conversas").insert({
     contact_id: id,
     nome: contato?.name ?? null,
     telefone: contato?.phoneNumber ?? null,
-    estado: "novo",
+    estado: comVendedor ? "humano" : "novo",
+    ...(comVendedor ? { motivo_humano: "vendedor" } : {}),
   });
   if (error && !/duplicate|unique/i.test(error.message)) return { ok: false, erro: error.message };
   if (!error) {
-    await supabase.from("webhook_log").insert({ source: "teo", note: "inscrito (entrada)", body: { contact_id: id, nome: contato?.name ?? null, estava_com: atual || null } });
+    await supabase.from("webhook_log").insert({
+      source: "teo",
+      note: comVendedor ? "entrada: fica com o vendedor (falou nos últimos 15 dias)" : "inscrito (entrada)",
+      body: { contact_id: id, nome: contato?.name ?? null, estava_com: atual || null },
+    });
   }
   return { ok: true };
 }
