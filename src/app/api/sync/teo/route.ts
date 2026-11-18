@@ -687,11 +687,12 @@ function avisoJaComprouBlack(compra: { origem: string; quando: string; email: st
     timeZone: "America/Sao_Paulo",
     day: "2-digit",
     month: "2-digit",
+    year: "numeric",
   });
   return [
-    `JÁ COMPROU A BLACK (vale acima do MODO BLACK FRIDAY e dos ajustes do dono): este lead comprou a Black Friday Histórica em ${dia} (${compra.origem}, e-mail ${compra.email}).`,
-    "Não ofereça nem venda a Black de novo, não mande link de pagamento e não ofereça call de venda.",
-    "Se ele escreveu, agradeça a confiança e ajude no que ele pedir. Dúvida de acesso, login, grupos ou conteúdo é com o suporte: chame passar_para_humano (suporte). A exceção é o assistente de IA: veja o aviso do Max.",
+    `JÁ COMPROU A BLACK (vale acima do MODO BLACK FRIDAY, da missão de marcar call e dos ajustes do dono): este lead comprou a Black Friday Histórica em ${dia} (${compra.origem}, e-mail ${compra.email}). Quem comprou a Black, deste ano ou do ano passado, já tem tudo: não há nada pra vender pra ele (Fernando, 18/11).`,
+    "Não ofereça nem venda a Black de novo, nem condição de aluno, produto, link de pagamento ou call de venda.",
+    "Se ele escreveu, agradeça a confiança e pergunte como você pode ajudar; depois ajude no que ele pedir. Dúvida de acesso, login, grupos ou conteúdo é com o suporte: chame passar_para_humano (suporte). A exceção é o assistente de IA: veja o aviso do Max.",
     "Se esta for uma mensagem de acompanhamento (retomar a conversa com quem parou de responder), não mande nada: responda só [ENCERRAR].",
   ].join(" ");
 }
@@ -2012,6 +2013,25 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         if (ultima?.senderBy === "contact") {
           await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
           return "já tratada";
+        }
+        // Quem já comprou a Black (deste ano ou do passado) não recebe
+        // acompanhamento: não há nada pra vender (Fernando, 18/11). Com a janela
+        // aberta, o aviso da compra já faz o Téo responder [ENCERRAR]; com ela
+        // fechada, o template saía direto (André, 11, 13 e 17/11). Se ele
+        // escrever de novo, a entrada reabre a conversa e o Téo pergunta como ajudar.
+        if (!janelaAberta && blackAtiva(cfg)) {
+          const cadastro = await carregarLead(supabase, c).catch(() => null);
+          const comprou = await acharCompraDaBlack(supabase, emailsDaConversa(cadastro?.email ?? null, msgs), c.telefone).catch(
+            () => null
+          );
+          if (comprou) {
+            await supabase
+              .from("teo_conversas")
+              .update({ estado: "encerrado", motivo_humano: "ja_comprou", atualizado_em: new Date().toISOString() })
+              .eq("contact_id", c.contact_id);
+            await log(supabase, "acompanhamento cancelado (já comprou a Black)", { contact_id: c.contact_id, nome: c.nome });
+            return "já comprou a Black: sem acompanhamento";
+          }
         }
         // O lead parou de responder: é hora de acompanhar?
         const a = await acompanhar(supabase, c, cfg, telefone, ultima, janelaAberta);
