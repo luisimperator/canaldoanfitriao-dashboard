@@ -214,8 +214,17 @@ async function carregarLead(supabase: SupabaseClient, c: Conversa): Promise<Lead
     respostas,
     tags,
     formulario,
-    email: data?.email ?? null,
+    email: data?.email ?? (await emailDoContato(supabase, c)),
   };
+}
+
+// E-mail que já temos do contato fora do cadastro do lead (disparo, compra na
+// Eduzz ou na TMB, lead pelo telefone): o Téo não pede e-mail de quem já
+// comprou (Fernando, 18/11: "vai buscar a porra do email").
+async function emailDoContato(supabase: SupabaseClient, c: Conversa): Promise<string | null> {
+  const { data, error } = await supabase.rpc("teo_email_do_contato", { p_contact: c.contact_id, p_telefone: c.telefone });
+  if (error) return null;
+  return typeof data === "string" && data.includes("@") ? data : null;
 }
 
 async function log(supabase: SupabaseClient, note: string, body: Record<string, unknown>) {
@@ -486,17 +495,17 @@ function avisoDisparo(d: { onda: number; mensagem: string | null; enviado_em: st
   return [
     `DISPARO PRA ALUNOS (onda ${d.onda}, ${quando}): este lead é aluno ou ex-aluno do Anfitrião 5 Estrelas e recebeu a mensagem "${msg}". Se ele está respondendo a ela, siga daí, sem repetir a pergunta e sem se apresentar de novo do zero. O caminho é o "Upgrade pra Black".`,
     imoveis
-      ? "Ele está dizendo quantos imóveis tem: agradeça numa frase e use o número pra escolher o caminho (2 ou mais, ou gestão pra terceiros: o Gigantes no centro; 1 ou nenhum: o vitalício e o curso da perna bamba dele). Venda por permissão (Fernando, 14/11: \"primeiro pergunta se a pessoa tá interessada, em vez de sair falando um preço\"): nesta resposta diga numa frase por que perguntou e pergunte se ele quer saber mais, SEM PREÇO e sem lista (ex.: \"Perguntei porque, pra quem já foi aluno, a Black do Rômulo tem uma condição que junta o Gigantes e os outros cursos, e com X imóveis ela encaixa bem. Quer saber mais?\")." +
+      ? "Ele está dizendo quantos imóveis tem: agradeça numa frase e use o número pra escolher o caminho (2 ou mais, ou gestão pra terceiros: o Gigantes no centro; 1 ou nenhum: o vitalício e o curso da perna bamba dele)." +
         (porAqui
-          ? " Se ele quiser: o que serve pro caso dele em 2 ou 3 pontos curtos, sem preço, e \"faz sentido pra você ou não tem nada a ver?\"; se fizer, \"quer saber o preço?\". Preço e link só quando ele pedir (passo 4 do roteiro)."
-          : " Se ele quiser: o que serve pro caso dele em 2 ou 3 pontos curtos, sem preço, e ofereça a call de 20 min com o especialista, que mostra a condição de aluno pro caso dele (dois horários da lista).")
+          ? " Venda por permissão (Fernando, 14/11: \"primeiro pergunta se a pessoa tá interessada, em vez de sair falando um preço\"): nesta resposta diga numa frase por que perguntou e pergunte se ele quer saber mais, SEM PREÇO e sem lista (ex.: \"Perguntei porque, pra quem já foi aluno, a Black do Rômulo tem uma condição que junta o Gigantes e os outros cursos, e com X imóveis ela encaixa bem. Quer saber mais?\"). Se ele quiser: o que serve pro caso dele em 2 ou 3 pontos curtos, sem preço, e \"faz sentido pra você ou não tem nada a ver?\"; se fizer, \"quer saber o preço?\". Preço e link só quando ele pedir (passo 4 do roteiro)."
+          : " Nesta resposta diga numa frase por que perguntou, SEM PREÇO e sem lista, e já ofereça a call com os três horários (ex.: \"Perguntei porque, pra quem já foi aluno, a Black do Rômulo tem uma condição que junta o Gigantes e os outros cursos, e com X imóveis ela encaixa bem. O especialista te mostra na call: hoje às 15h com o Breno, às 16h30 com o Flávio ou amanhã às 10h?\").")
       : "Ele pediu pra saber da condição, então o \"quer saber mais?\" já foi respondido." +
         (porAqui
           ? " Venda por permissão (Fernando, 14/11: \"deixa a pessoa pedir o preço; ela pedindo o preço, você fecha\"): nesta resposta conte o que é, curto e SEM PREÇO: a Black do Rômulo, que junta os cursos com acesso vitalício e 4 anos de comunidade, com um preço especial pra quem é ou foi aluno (2 ou 3 pontos, nunca a lista inteira). Termine com UMA pergunta: se faz sentido pra ele e se quer saber o valor (ex.: \"Faz sentido pra você? Quer que eu te passe o valor?\"). Se ele pedir o valor, aí sim: o preço dele, a garantia de 7 dias e o link, numa mensagem curta (passo 4 do roteiro)."
-          : " Nesta resposta conte o que é, curto e SEM PREÇO: a Black do Rômulo, que junta os cursos com acesso vitalício e 4 anos de comunidade, com uma condição especial pra quem é ou foi aluno (2 ou 3 pontos, nunca a lista inteira), e ofereça a call de 20 min com o especialista, que mostra essa condição pro caso dele (dois horários da lista)."),
+          : " Nesta resposta diga numa frase o que é, SEM PREÇO (a Black do Rômulo, que junta os cursos com acesso vitalício e 4 anos de comunidade, com uma condição especial pra quem é ou foi aluno), e já ofereça a call de 20 min com o especialista, que mostra essa condição pro caso dele (os três horários da lista)."),
     porAqui
       ? ""
-      : "O objetivo aqui é a CALL com o especialista (Fernando, 16/11). Se ele perguntar o preço, diga o dele sem esconder e emende com a call; não mande link de pagamento. Link só se ele disser que já quer comprar (aí vale a regra de quem já está fechando).",
+      : "O objetivo aqui é a CALL com o especialista (Fernando, 16/11 e 18/11): nada de \"quer saber mais?\" nem \"faz sentido?\" antes, vá direto pros horários. Se ele perguntar o preço pela primeira vez, diga que o especialista mostra a condição dele na call e emende os horários; se insistir, diga o preço dele (em parcelas) e emende a call. Não mande link de pagamento, a não ser que ele diga que já quer comprar (aí vale a regra de quem já está fechando). Se ele não quiser call, entenda numa frase o que ele quer e passe pro especialista (passar_para_humano, motivo \"black\").",
   ]
     .filter(Boolean)
     .join(" ");
@@ -613,7 +622,7 @@ function blocoBlack(o: {
     "QUEM JÁ ESTÁ FECHANDO NÃO VAI PRA CALL: se a pessoa já decidiu comprar (pede o link, pergunta como paga, diz que vai fechar, ou a única dúvida que sobrou é de pagamento e você sabe responder), marcar call só adia a venda. Não ofereça call: passe o link de pagamento certo e ajude a concluir aqui mesmo. Call só se ela pedir.",
     o.vendaTeo
       ? ""
-      : "Se a pessoa não puder ou não quiser call e preferir resolver por mensagem, quem atende por mensagem é você: siga tirando as dúvidas por aqui com as informações abaixo, passe a página de pagamento certa quando ela quiser comprar e deixe a call só como opção, sem insistir. Não diga que um vendedor vai atender por mensagem.",
+      : "Se a pessoa não quiser call: pergunte numa frase o que ela quer (resolver por mensagem, só o preço, comprar já, outra coisa) e, com a resposta, chame passar_para_humano (motivo \"black\", resumo de uma linha com o que ela quer e se é aluna) e diga que o especialista fala com ela por aqui. Não fique tirando dúvida nem dando dica por conta própria (Fernando, 18/11: \"se a pessoa não quiser call, tenta entender o que a pessoa quer, e manda pro vendedor\"). Quem já decidiu comprar recebe o link (regra acima).",
     o.vendaTeo
       ? ""
       : o.retomou
@@ -624,12 +633,12 @@ function blocoBlack(o: {
           "Não chame passar_para_humano por causa da Black de novo; só pra suporte, mentorado, se a pessoa pedir uma pessoa, ou se ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado).",
         ].join(" ")
       : [
-          'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda com as informações abaixo e ofereça dois horários da lista pra call com o especialista (a não ser que ela já esteja fechando: aí feche por aqui).',
+          'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda numa frase com as informações abaixo (preço só se ela insistir: na primeira vez, o especialista explica na call) e ofereça os três horários da lista pra call com o especialista (a não ser que ela já esteja fechando: aí feche por aqui).',
           o.plantao
             ? 'Só chame passar_para_humano (motivo "black", com um resumo de uma linha: se é aluna e o que quer) se a pessoa pedir pra falar com uma pessoa, ou se, sem call, ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado, outra forma de pagamento). Nesse caso diga que esse ponto o especialista responde por aqui; o resto você mesmo resolve.'
             : o.fds
-              ? "Se a pessoa não quiser call, a venda segue com você por aqui até o fim."
-              : "Se a pessoa recusar a call e pedir uma pessoa, diga que um especialista fala com ela a partir das 9h e chame passar_para_humano (pediu_humano).",
+              ? "Se a pessoa não quiser call, entenda numa frase o que ela quer e passe pro especialista (passar_para_humano, motivo \"black\", com o que ela quer): ele fala com ela segunda a partir das 9h. Quem já decidiu comprar recebe o link agora."
+              : "Se a pessoa recusar a call, entenda numa frase o que ela quer, diga que um especialista fala com ela por aqui a partir das 9h e chame passar_para_humano (motivo \"black\", com o que ela quer).",
         ].join(" "),
     o.fds
       ? 'FIM DE SEMANA: o time de vendas não trabalha sábado e domingo e só volta segunda às 9h. Quem atende é você, e a conversa continua com você. Não prometa resposta de especialista antes de segunda às 9h. Se a pessoa pedir uma pessoa ou precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado, outra forma de pagamento, curso avulso sem link), diga que esse ponto o especialista responde na segunda, a partir das 9h, chame passar_para_humano uma vez (motivo "black", ou "pediu_humano" se ela pediu uma pessoa, com um resumo de uma linha) e siga respondendo o resto por aqui.'
@@ -1545,8 +1554,18 @@ async function marcarCall(
   if (!slot) {
     return `Esse horário não está livre. Livres agora: ${lista(livres)}.`;
   }
-  const email = args.email.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "E-mail inválido: peça o e-mail de novo.";
+  // Sem e-mail no pedido: usa o que já temos (cadastro, disparo, compra). Só
+  // volta pra pedir quando não há nenhum.
+  let email = args.email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const salvo = await emailDoContato(supabase, c);
+    if (!salvo) {
+      return email
+        ? "E-mail inválido: peça o e-mail de novo."
+        : "Não temos e-mail deste lead: peça o e-mail (é só pra call entrar na agenda; o link vai por aqui) e chame marcar_call de novo.";
+    }
+    email = salvo.trim().toLowerCase();
+  }
   const { data: nova, error } = await supabase
     .from("teo_calls")
     .insert({
