@@ -58,6 +58,13 @@ export interface PushPayload {
 
 type Assinatura = { id: string; endpoint: string; p256dh: string; auth: string };
 
+/**
+ * "vendas": o app do painel (ícone rosa). "calls": o app Agenda (ícone azul,
+ * /calls/agenda), que só recebe call agendada. No iPhone o ícone do aviso é o
+ * do app que assinou, por isso são dois apps.
+ */
+export type CanalPush = "vendas" | "calls";
+
 async function enviar(assinaturas: Assinatura[], payload: PushPayload): Promise<number> {
   const admin = getSupabaseAdmin();
   if (!admin || assinaturas.length === 0 || !(await configurar())) return 0;
@@ -91,12 +98,28 @@ async function enviar(assinaturas: Assinatura[], payload: PushPayload): Promise<
   return ok;
 }
 
-/** Manda pra todos os aparelhos que ativaram o aviso. */
+/** Manda pra todos os aparelhos que ativaram o aviso no app do painel. */
 export async function pushParaTodos(payload: PushPayload): Promise<number> {
   const admin = getSupabaseAdmin();
   if (!admin) return 0;
-  const { data } = await admin.from("push_assinaturas").select("id,endpoint,p256dh,auth");
+  const { data } = await admin.from("push_assinaturas").select("id,endpoint,p256dh,auth").eq("canal", "vendas");
   return enviar((data ?? []) as Assinatura[], payload);
+}
+
+/**
+ * Aviso de call: vai pro app Agenda (ícone azul). Quem ainda não instalou o
+ * Agenda recebe no app do painel, como antes.
+ */
+async function pushDeCall(payload: PushPayload): Promise<number> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return 0;
+  const { data } = await admin.from("push_assinaturas").select("id,endpoint,p256dh,auth,email,canal");
+  const todas = (data ?? []) as (Assinatura & { email: string | null; canal: CanalPush })[];
+  const comAgenda = new Set(todas.filter((a) => a.canal === "calls").map((a) => a.email ?? ""));
+  return enviar(
+    todas.filter((a) => a.canal === "calls" || !comAgenda.has(a.email ?? "")),
+    payload
+  );
 }
 
 /** Manda só pra um aparelho (o teste logo depois de ativar). */
@@ -163,8 +186,8 @@ export interface CallNova {
 
 /**
  * Avisa call agendada pelo Téo, uma vez só por call (Fernando, 18/11: "eu
- * gosto de saber quando tem call agendada", com ícone e cor diferentes da
- * venda: calendário azul).
+ * gosto de saber quando tem call agendada", com ícone diferente da venda).
+ * Vai pro app Agenda (ícone azul); sem ele, pro app do painel.
  */
 export async function notificarCall(c: CallNova): Promise<void> {
   const admin = getSupabaseAdmin();
@@ -175,20 +198,20 @@ export async function notificarCall(c: CallNova): Promise<void> {
     .upsert({ chave }, { onConflict: "chave", ignoreDuplicates: true })
     .select("chave");
   if (!nova || nova.length === 0) return;
-  // No iPhone o ícone do aviso é sempre o do app (a Apple ignora o `icon`),
-  // então a diferença pra venda (💰 Venda nova) fica no título: bolinha azul,
-  // telefone e CALL em maiúsculas (Fernando, 18/11: "precisa diferenciar").
+  // Dia e hora no começo do título: o iPhone corta o fim do título numa linha
+  // só (Fernando, 18/11: "tá cortando a data e horário, pra mim isso é
+  // importante"). O resto vai no corpo, que quebra linha.
   const p = (o: Intl.DateTimeFormatOptions) =>
     new Date(c.inicio).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", ...o });
-  const dia = `${p({ weekday: "short" }).replace(".", "")} ${p({ day: "2-digit", month: "2-digit" })}`;
+  const semana = p({ weekday: "short" }).replace(".", "");
+  const dia = `${semana.charAt(0).toUpperCase()}${semana.slice(1)} ${p({ day: "2-digit", month: "2-digit" })}`;
   const hora = p({ hour: "2-digit", minute: "2-digit" }).replace(":00", "h").replace(":", "h");
   const primeiro = (s: string | null) => (s ?? "").trim().split(/\s+/)[0] || null;
-  await pushParaTodos({
-    title: `🔵📞 ${c.remarcada ? "CALL REMARCADA" : "CALL AGENDADA"} · ${dia} às ${hora}`,
-    body: [primeiro(c.nome) ?? "Lead", c.vendedor ? `com ${primeiro(c.vendedor)}` : null, "marcada pelo Téo"]
-      .filter(Boolean)
-      .join(" · "),
-    url: "/calls",
+  const quem = [primeiro(c.nome) ?? "Lead", c.vendedor ? `com ${primeiro(c.vendedor)}` : null].filter(Boolean).join(" ");
+  await pushDeCall({
+    title: `📞 ${dia} às ${hora}${c.remarcada ? " · remarcada" : ""}`,
+    body: `${c.remarcada ? "Call remarcada" : "Call agendada"}: ${quem} · marcada pelo Téo`,
+    url: "/calls/agenda",
     tag: chave,
     icon: "/icon-call-192.png",
     badge: "/icon-call-badge.png",

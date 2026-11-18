@@ -1,0 +1,17 @@
+{
+  "id": "/calls/agenda",
+  "name": "Agenda — Canal do Anfitrião",
+  "short_name": "Agenda",
+  "description": "Calls marcadas pelo Téo, com aviso no celular a cada call nova",
+  "start_url": "/calls/agenda",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1d4ed8",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/icon-agenda-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-agenda-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-agenda-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
