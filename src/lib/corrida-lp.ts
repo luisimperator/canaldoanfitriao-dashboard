@@ -22,9 +22,9 @@ export function corridaHtml(checkout: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Corre Anfitrião · 12/12/2026 · Canal do Anfitrião</title>
-<meta name="description" content="Bora correr 5 km para fechar o ano de 2026, tomar um café da manhã juntos e ajudar com um quilo de alimento não perecível para pessoas em situação de rua. 12/12, 7h, Campus da USP.">
+<meta name="description" content="Bora correr 5 km para fechar o ano de 2026, tomar um café da manhã juntos e ajudar pessoas em situação de rua. Ingresso: R$ 147,00 + 1 kg de alimento não perecível, que será doado para o programa Chá do Padre da Paróquia São Francisco de Assis. 12/12, 7h, Campus da USP.">
 <meta property="og:title" content="Corre Anfitrião · 12/12/2026">
-<meta property="og:description" content="5 km pra fechar 2026, café da manhã juntos e 1 kg de alimento para pessoas em situação de rua. Campus da USP, 7h. 100 vagas.">
+<meta property="og:description" content="5 km pra fechar 2026 e café da manhã juntos. Ingresso: R$ 147,00 + 1 kg de alimento não perecível, doado para o programa Chá do Padre da Paróquia São Francisco de Assis. Campus da USP, 7h. 100 vagas.">
 <meta property="og:image" content="https://link.canaldoanfitriao.com.br/lp/corrida/og.jpg">
 <meta name="theme-color" content="#0e0d10">
 <link rel="icon" href="/icon-192.png">
@@ -87,6 +87,8 @@ h1 .serif{font-size:1.12em;letter-spacing:-.01em}
 @keyframes brilho{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
 .vagas{font-size:14px;color:var(--cinza);line-height:1.35}
 .vagas b{display:block;color:#fff;font-size:16px}
+.preco{font-size:13px;color:var(--cinza);line-height:1.2;white-space:nowrap}
+.preco b{display:block;color:#fff;font-size:26px;font-weight:800;letter-spacing:-.02em}
 
 .local{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:0;max-width:600px;border-radius:16px;overflow:hidden;border:1px solid var(--linha);background:var(--noite2)}
 .local .end{padding:12px 16px;font-size:14px;color:#d9d4dc;display:flex;flex-direction:column;justify-content:center;gap:2px}
@@ -149,6 +151,7 @@ h1 .serif{font-size:1.12em;letter-spacing:-.01em}
   .acao{flex-direction:column;align-items:stretch;gap:10px}
   .btn{justify-content:center;font-size:18px;padding:18px 20px}
   .vagas{text-align:center}
+  .preco{text-align:center}
   .local{grid-template-columns:1fr}
   .local iframe{min-height:190px}
   .rodape{padding:18px 20px;justify-content:center;text-align:center}
@@ -185,7 +188,7 @@ h1 .serif{font-size:1.12em;letter-spacing:-.01em}
     </h2>
 
     <h1 class="rv" style="--d:.1s">5 km pra <span class="serif grad-txt">fechar 2026</span> juntos.</h1>
-    <p class="lead rv" style="--d:.14s">Bora correr 5 km para fechar o ano de 2026, tomar um café da manhã juntos e ajudar com um quilo de alimento não perecível para pessoas em situação de rua.</p>
+    <p class="lead rv" style="--d:.14s">Bora correr 5 km para fechar o ano de 2026, tomar um café da manhã juntos e ajudar com um quilo de alimento não perecível para pessoas em situação de rua, doado para o programa Chá do Padre da Paróquia São Francisco de Assis.</p>
 
     <div class="quando rv" style="--d:.18s">
       <div><small>Data</small><b>12/12/2026</b></div>
@@ -200,9 +203,10 @@ h1 .serif{font-size:1.12em;letter-spacing:-.01em}
       <li><span>💬</span>Bate-papo entre anfitriões</li>
     </ul>
 
-    <div class="doa rv" style="--d:.26s"><i>🤝</i><span>Leve <b>1 kg de alimento não perecível</b> para doar às pessoas em situação de rua.</span></div>
+    <div class="doa rv" style="--d:.26s"><i>🤝</i><span>Ingresso: <b>R$ 147,00 + 1 kg de alimento não perecível</b>, que será doado para o programa Chá do Padre da Paróquia São Francisco de Assis.</span></div>
 
     <div class="acao rv" style="--d:.3s">
+      <span class="preco"><b>R$ 147,00</b>+ 1 kg de alimento</span>
       <a class="btn" id="comprar" href="${attr(checkout)}">Comprar agora <i>→</i></a>
       <span class="vagas"><b>100 participantes</b>Vagas limitadas</span>
     </div>
