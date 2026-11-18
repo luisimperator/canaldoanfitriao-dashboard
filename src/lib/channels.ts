@@ -14,6 +14,7 @@ export type Channel =
   | "E-mail"
   | "Orgânico / Direto"
   | "Outro (rastreado)"
+  | "WhatsApp direto"
   | "Sem rastreio";
 
 export const CHANNEL_ORDER: Channel[] = [
@@ -26,6 +27,7 @@ export const CHANNEL_ORDER: Channel[] = [
   "E-mail",
   "Orgânico / Direto",
   "Outro (rastreado)",
+  "WhatsApp direto",
   "Sem rastreio",
 ];
 
@@ -39,6 +41,7 @@ export const CHANNEL_COLOR: Record<Channel, string> = {
   "E-mail": "#f59e0b",
   "Orgânico / Direto": "#64748b",
   "Outro (rastreado)": "#94a3b8",
+  "WhatsApp direto": "#0d9488",
   "Sem rastreio": "#cbd5e1",
 };
 

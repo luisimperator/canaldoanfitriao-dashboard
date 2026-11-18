@@ -29,8 +29,16 @@ export interface Lead {
   phone?: string | null;
   /** campos adicionais vindos do Unnichat (produto, atendente etc.) */
   extra?: Record<string, unknown> | null;
-  /** origem do lead (utm_* + vidorigem) gravada no Mailchimp pela landing page */
+  /**
+   * origem do lead (utm_* + vidorigem) gravada no Mailchimp pela landing page;
+   * sem ela, a UTM da compra da imersão do mesmo e-mail/telefone
+   */
   utm?: LeadUtm | null;
+  /**
+   * entrou só pelo WhatsApp: contato do Unnichat que nunca passou pelo
+   * formulário (sem cadastro no Mailchimp), então não tem como trazer UTM
+   */
+  soWhatsapp?: boolean;
   /**
    * quando o lead virou MQL = momento em que recebeu uma das tags lead-a5e /
    * lead-gigantes / lead-quente / lead-muito-quente / lead-frio (histórico do CRM)

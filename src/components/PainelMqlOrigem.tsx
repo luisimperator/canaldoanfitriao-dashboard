@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
 import { Card } from "@/components/ui";
 import {
   JANELA_MQL_PADRAO,
@@ -11,6 +10,7 @@ import {
   type JanelaMql,
 } from "@/components/charts";
 import { FiltroTags } from "@/components/FiltroTags";
+import { CoberturaOrigem } from "@/components/CoberturaOrigem";
 import { CHANNEL_COLOR, CHANNEL_ORDER } from "@/lib/channels";
 import { num } from "@/lib/format";
 import { gravar, useGuardado } from "@/lib/guardado";
@@ -19,9 +19,6 @@ import { contarTags, somarOrigem, somarPorDia, type PorTags } from "@/lib/tag-gr
 // Tags tiradas ficam salvas neste navegador (ex.: quem sempre olha sem a Black).
 const CHAVE_TAGS = "grafico-mql-tags-fora";
 const CHAVE_MODO = "grafico-mql-modo";
-
-// Abaixo disso a origem dos leads deixa de ser confiável (alarme de cobertura).
-const COBERTURA_MINIMA = 60;
 
 function br(d: string): string {
   return `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(2, 4)}`;
@@ -75,11 +72,8 @@ export function PainelMqlOrigem({
       value: porCanal.get(ch) ?? 0,
       color: CHANNEL_COLOR[ch],
     }));
-    return { data, total, rastreados };
+    return { data, total, rastreados, whatsappDireto: porCanal.get("WhatsApp direto") ?? 0 };
   }, [porTags, tiradas, de, ate]);
-
-  const cobertura = origem.total > 0 ? (origem.rastreados / origem.total) * 100 : null;
-  const baixa = cobertura !== null && cobertura < COBERTURA_MINIMA;
 
   return (
     <>
@@ -145,20 +139,11 @@ export function PainelMqlOrigem({
           ) : (
             <p className="text-sm text-slate-400 dark:text-zinc-500 py-8 text-center">Nenhum lead no período.</p>
           )}
-          {cobertura !== null && (
-            <p
-              className={`text-xs mt-2 ${
-                baixa ? "text-rose-600 dark:text-rose-400 font-semibold" : "text-slate-400 dark:text-zinc-500"
-              }`}
-            >
-              {baixa ? "⚠ " : ""}
-              {num(cobertura, 1)}% dos leads com origem rastreada ({num(origem.rastreados)} de{" "}
-              {num(origem.total)}).{" "}
-              <Link href="/origem" className="underline">
-                Ver origem detalhada
-              </Link>
-            </p>
-          )}
+          <CoberturaOrigem
+            rastreados={origem.rastreados}
+            total={origem.total}
+            whatsappDireto={origem.whatsappDireto}
+          />
         </Card>
         {funil}
       </div>

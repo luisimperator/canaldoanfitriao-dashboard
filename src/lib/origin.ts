@@ -20,6 +20,19 @@ export function hasUtm(l: Lead): boolean {
   return Boolean(u && (u.source || u.medium || u.campaign || u.content || u.term || u.vidorigem));
 }
 
+// Entrou direto pelo WhatsApp e sem UTM: não passou por formulário, então não
+// tem como ter origem rastreada. Fica numa fatia própria e fora da conta da
+// cobertura (o alarme vermelho é pra formulário que parou de gravar UTM).
+export function entrouPeloWhatsapp(l: Lead): boolean {
+  return Boolean(l.soWhatsapp) && !hasUtm(l);
+}
+
+/** Canal do lead: pela UTM; sem UTM, "WhatsApp direto" ou "Sem rastreio". */
+export function canalDoLead(l: Lead): Channel {
+  if (hasUtm(l)) return classifyChannel(l.utm);
+  return l.soWhatsapp ? "WhatsApp direto" : "Sem rastreio";
+}
+
 export function leadTags(l: Lead): string[] {
   const t = l.extra && typeof l.extra === "object" ? (l.extra as Record<string, unknown>).tags : null;
   return Array.isArray(t) ? t.filter((x): x is string => typeof x === "string") : [];
@@ -78,7 +91,10 @@ export interface ChannelRow {
 export interface LeadOrigin {
   totalLeads: number;
   tracked: number;
+  /** % rastreado entre os leads que passaram por formulário (sem os que entraram direto pelo WhatsApp) */
   trackedPct: number;
+  /** entraram direto pelo WhatsApp, sem formulário (fora da conta do trackedPct) */
+  whatsappDireto: number;
   /** MQLs entre os leads rastreados */
   trackedMql: number;
   byChannel: ChannelRow[];
@@ -191,11 +207,14 @@ export function leadOrigin(leads: Lead[]): LeadOrigin {
     .sort((a, b) => b.leads - a.leads);
 
   const trackedMql = trackedLeads.filter(isMql).length;
+  const whatsappDireto = leads.filter(entrouPeloWhatsapp).length;
+  const base = totalLeads - whatsappDireto;
 
   return {
     totalLeads,
     tracked,
-    trackedPct: totalLeads ? (tracked / totalLeads) * 100 : 0,
+    trackedPct: base ? (tracked / base) * 100 : 0,
+    whatsappDireto,
     trackedMql,
     byChannel,
     byContent: rank(trackedLeads, (l) => l.utm?.content?.trim() || null),

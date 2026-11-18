@@ -12,6 +12,7 @@ import type {
   FinCategory,
   FinTransaction,
   Lead,
+  LeadUtm,
   Sale,
   Seller,
 } from "./types";
@@ -109,15 +110,65 @@ async function selectAll(
   return paginas.flat();
 }
 
+// Chave do telefone pra casar o comprador da imersão com o lead: DDD + 8
+// últimos dígitos (sem o 55 e sem depender do 9 extra, que às vezes falta).
+function chaveFone(fone: unknown): string | null {
+  let d = String(fone ?? "").replace(/\D/g, "");
+  if (d.length >= 12 && d.startsWith("55")) d = d.slice(2);
+  if (d.length < 10) return null;
+  return d.slice(0, 2) + d.slice(-8);
+}
+
+function temAlgumaUtm(u: unknown): u is LeadUtm {
+  if (!u || typeof u !== "object") return false;
+  const o = u as Record<string, unknown>;
+  return ["source", "medium", "campaign", "content", "term", "vidorigem"].some((k) => Boolean(o[k]));
+}
+
+// Origem de quem comprou a imersão (Fernando, 18/11: "0% dos leads com origem
+// rastreada"). O checkout da imersão grava a UTM da compra em
+// imersao_compradores, mas o lead nasce pelo Mailchimp ou pelo Unnichat sem
+// ela. Lead sem UTM própria herda a da primeira compra da imersão com o mesmo
+// e-mail ou o mesmo telefone. Só na leitura: nada é gravado no lead.
+async function utmDaImersao(supabase: ReturnType<typeof getSupabase>) {
+  const porEmail = new Map<string, LeadUtm>();
+  const porFone = new Map<string, LeadUtm>();
+  try {
+    const linhas = await selectAll(
+      supabase,
+      "imersao_compradores",
+      "email, telefone, utm_source, utm_medium, utm_campaign, utm_content, utm_term, created_at",
+      "created_at"
+    );
+    for (const r of linhas) {
+      const utm: LeadUtm = {
+        source: r.utm_source || null,
+        medium: r.utm_medium || null,
+        campaign: r.utm_campaign || null,
+        content: r.utm_content || null,
+        term: r.utm_term || null,
+      };
+      if (!temAlgumaUtm(utm)) continue;
+      const email = String(r.email ?? "").trim().toLowerCase();
+      if (email && !porEmail.has(email)) porEmail.set(email, utm);
+      const fone = chaveFone(r.telefone);
+      if (fone && !porFone.has(fone)) porFone.set(fone, utm);
+    }
+  } catch {
+    /* sem a tabela da imersão o painel segue só com a UTM do lead */
+  }
+  return { porEmail, porFone };
+}
+
 async function fetchDashboardFromSupabase(): Promise<DashboardData> {
   const supabase = getSupabase();
-  const [sellers, leads, sales, adSpend, finCategories, finTransactions] =
+  const [sellers, leads, sales, adSpend, finCategories, finTransactions, imersao] =
     await Promise.all([
       selectAll(supabase, "sellers", "id, name, is_active"),
       selectAll(
         supabase,
         "leads",
-        "id, created_at, source, status, seller_id, pipeline_stage, name, phone, extra, mql_at"
+        "id, created_at, source, status, seller_id, pipeline_stage, name, phone, email, mailchimp_id, unnichat_id, extra, mql_at"
       ),
       selectAll(supabase, "sales", "id, sale_date, amount, seller_id, product, status, utm"),
       selectAll(supabase, "ad_spend", "date, platform, amount", "date"),
@@ -127,7 +178,22 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         "fin_transactions",
         "id, transaction_date, amount, direction, description, counterparty, category_id"
       ),
+      utmDaImersao(supabase),
     ]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const utmDoLead = (r: any): LeadUtm | null => {
+    const propria = r.extra && typeof r.extra === "object" ? r.extra.utm : null;
+    if (temAlgumaUtm(propria)) return propria;
+    const email = String(r.email ?? "").trim().toLowerCase();
+    const fone = chaveFone(r.phone);
+    return (
+      (email ? imersao.porEmail.get(email) : undefined) ??
+      (fone ? imersao.porFone.get(fone) : undefined) ??
+      propria ??
+      null
+    );
+  };
 
   return {
     sellers: sellers.map(
@@ -144,7 +210,9 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
         name: r.name,
         phone: r.phone,
         extra: r.extra,
-        utm: (r.extra && typeof r.extra === "object" ? r.extra.utm : null) ?? null,
+        utm: utmDoLead(r),
+        // undefined (e não false) pra não pesar no cache dos ~50 mil leads
+        soWhatsapp: !r.mailchimp_id && r.unnichat_id ? true : undefined,
         mqlAt: r.mql_at ? spDay(String(r.mql_at)) : null,
       })
     ),
@@ -190,7 +258,7 @@ async function fetchDashboardFromSupabase(): Promise<DashboardData> {
 // 5 minutos não atrasa nada e transforma a navegação em instantânea.
 const getCachedDashboardData = unstable_cache(
   fetchDashboardFromSupabase,
-  ["dashboard-data-v1"],
+  ["dashboard-data-v2"],
   { revalidate: 300, tags: ["dashboard"] }
 );
 
