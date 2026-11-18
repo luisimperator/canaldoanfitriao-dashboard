@@ -742,6 +742,8 @@ function avisoCallMarcada(call: { inicio: string; vendedor: string | null; meet_
       ? ""
       : "Se pela conversa ele ainda não recebeu a confirmação (por exemplo, a sua última mensagem não fala do horário marcado), confirme agora esse horário em uma mensagem curta.",
     "Não marque outro horário e nunca diga que o horário foi preenchido: só chame marcar_call de novo se ele pedir pra mudar.",
+    // Fernando, 18/11 (Jenny): "marcou call já era, não fica mudando de assunto".
+    "Com a call marcada, a venda é do especialista: não puxe assunto novo (nada de Max, produto, condição, curso ou novidade) e não faça pergunta. Se a pessoa só agradecer ou se despedir, responda numa frase curta lembrando o dia e a hora (ex.: \"Imagina! Até amanhã às 14h.\") e pare. Só responda o que ela perguntar (remarcar, link, como entrar, dúvida rápida).",
     call.meet_url
       ? `NÃO CONSEGUE ENTRAR: se perto do horário ele disser que não consegue entrar (link não abre, pede app, não acha a sala), responda na hora, curto: mande de novo ESTE link da call (${call.meet_url}) e o passo a passo. Celular: precisa do app Microsoft Teams (grátis; ${LOJAS_TEAMS}); depois de instalar, abre o link de novo e toca em "Entrar como convidado", digita o nome e entra. Computador: abre o link no Chrome ou no Edge e escolhe "Continuar neste navegador". Nunca mande outro link (Meet, outra sala), não diga que o especialista já está na sala e não remarque: o especialista foi avisado e entra por esse mesmo link.`
       : "",
@@ -2134,7 +2136,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         [
           callMarcada ? avisoCallMarcada(callMarcada) : null,
           temMax ? AVISO_MAX : null,
-          temMax ? AVISO_PERGUNTE_MAX : null,
+          temMax && !callMarcada ? AVISO_PERGUNTE_MAX : null,
           jaComprouBlack
             ? avisoJaComprouBlack(jaComprouBlack)
             : blackAtiva(cfg) && !compraDeCurso
