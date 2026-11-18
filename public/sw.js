@@ -35,7 +35,8 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
-// Aviso de venda nova (web push). O servidor manda {title, body, url, tag}.
+// Avisos do painel (web push): venda nova e call agendada. O servidor manda
+// {title, body, url, tag, icon?, badge?}.
 self.addEventListener("push", (event) => {
   let d = {};
   try {
@@ -46,8 +47,9 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(d.title || "Canal do Anfitrião", {
       body: d.body || "",
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
+      // Cada aviso pode trazer o seu ícone (call agendada: calendário azul).
+      icon: d.icon || "/icon-192.png",
+      badge: d.badge || "/icon-192.png",
       tag: d.tag,
       data: { url: d.url || "/" },
     })
