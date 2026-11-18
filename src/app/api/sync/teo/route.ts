@@ -1599,7 +1599,22 @@ async function marcarCall(
     }
   }
   if (nova) await criarConvite(supabase, cfg, nova).catch(() => false);
-  return `Marcado: ${quando} (horário de Brasília) com ${primeiroNomeVendedor(slot.vendedor)}. O convite vai pro e-mail ${email}.`;
+  // O link vai pelo WhatsApp já na confirmação, não só no e-mail (Fernando,
+  // 18/11: "manda o link pra ele logo depois de gerado na agenda, e depois de
+  // novo na hora"). Marca como enviado: quem manda é o Téo, nesta resposta.
+  const { data: comLink } = nova
+    ? await supabase.from("teo_calls").select("meet_url").eq("id", nova.id).maybeSingle()
+    : { data: null };
+  const link = (comLink?.meet_url as string | null) ?? null;
+  if (nova && link) {
+    await supabase.from("teo_calls").update({ link_enviado_em: new Date().toISOString() }).eq("id", nova.id);
+  }
+  return (
+    `Marcado: ${quando} (horário de Brasília) com ${primeiroNomeVendedor(slot.vendedor)}. O convite vai pro e-mail ${email}.` +
+    (link
+      ? ` Link da sala (mande na confirmação, nesta mesma resposta): ${link}`
+      : " O link da sala ainda não saiu: ele vai por aqui antes da call, no lembrete.")
+  );
 }
 
 async function garantirTeo(supabase: SupabaseClient, c: Conversa, atendenteId: string): Promise<void> {
@@ -2384,7 +2399,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
   const agora = Date.now();
   const { data: calls } = await supabase
     .from("teo_calls")
-    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status, evento_id, reuniao_id")
+    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status, evento_id, reuniao_id, link_enviado_em")
     .in("status", ["marcada", "convite_enviado"])
     .gte("inicio", new Date(agora - 2 * 3600_000).toISOString());
   for (const k of calls ?? []) {
@@ -2442,6 +2457,28 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
       return Boolean(ult && agora - new Date(ult.date).getTime() < JANELA_MS);
     };
     try {
+      // Link logo depois de gerado (convite criado pela rodada, não pelo
+      // marcar_call, que já manda o link na confirmação): sai por aqui com a
+      // janela de 24h aberta, no horário de iniciativa. Com a janela fechada,
+      // o link vai no lembrete e na hora da call.
+      if (!k.link_enviado_em && k.meet_url && conv?.telefone && t - agora > 2 * 3600_000 && podeChamar()) {
+        const aberta = await janela();
+        if (aberta) {
+          const diaLink = DIAS_SEMANA[new Date(`${local(k.inicio).slice(0, 10)}T12:00:00-03:00`).getUTCDay()];
+          await enviarTexto(
+            supabase,
+            conv.telefone,
+            `Oi, ${nome}! Aqui o link do seu papo de 20 min com ${vend}, ${diaLink} às ${horaFala}: ${k.meet_url}\n\nNa hora é só entrar por ele. Eu te mando de novo antes, pra você não precisar procurar.`
+          );
+        }
+        await supabase.from("teo_calls").update({ link_enviado_em: new Date().toISOString() }).eq("id", k.id);
+        await log(supabase, aberta ? "link da call enviado" : "link da call sem janela (vai no lembrete)", {
+          contact_id: k.contact_id,
+          nome: k.nome,
+          hora,
+        });
+        if (aberta) feitos.push(`link ${k.nome}`);
+      }
       // Véspera: a call é amanhã (horário de Brasília) e são 18h–21h. Se a
       // conversa teve mensagem nas últimas 3h (acabou de marcar ou de falar),
       // não precisa: só registra.
