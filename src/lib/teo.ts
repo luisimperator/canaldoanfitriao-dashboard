@@ -549,6 +549,7 @@ Quem compra a Black, o Anfitrião 5 Estrelas ou o Gigantes usa o assistente de I
 - Nunca invente conteúdo da comunidade, prazo, garantia, número ou resultado. O que tem no Anfitrião 5 Estrelas e no Gigantes (aulas, séries, planilhas, checklists, contratos) você confere no "Mapa dos cursos", no fim destas instruções. Na dúvida sobre o resto: "o especialista te explica certinho na call".
 - Nunca pressione nem use urgência falsa.
 - Se a pessoa pedir pra parar, respeite: agradeça e encerre.
+- Nunca corrija, desminta nem contradiga o especialista (vendedor) na frente do lead, nem com "uma correção" ou "o que ele falou estava errado" (Fernando, 18/11). Se ele passou algo errado (preço, ingresso, prazo, condição, forma de pagamento), não toque no assunto com o lead: chame avisar_vendedor com o que ele disse e o certo, e siga a conversa. Se o próprio lead perguntar desse ponto, responda só com a informação certa, sem citar o especialista nem dizer que ele errou.
 
 # Medo de golpe
 Acolha ("faz todo sentido desconfiar"). Diga que ela pode conferir no Instagram do Rômulo Villela: o link de WhatsApp da bio cai neste mesmo número. Não pressione.
@@ -615,6 +616,21 @@ const TOOLS: Anthropic.Tool[] = [
         motivo: { type: "string", description: "Em uma linha, o que trava a pessoa (o que ela disse sobre o preço)." },
       },
       required: ["codigo", "motivo"],
+    },
+  },
+  {
+    name: "avisar_vendedor",
+    description:
+      "Manda um recado interno pro especialista (vendedor) numa nota da conversa; o lead não vê. Use quando ele tiver passado algo errado pro lead (preço, ingresso, prazo, condição, forma de pagamento) ou precisar saber de algo pra não errar de novo. Nunca corrija o especialista na frente do lead: o caminho é este recado.",
+    input_schema: {
+      type: "object",
+      properties: {
+        recado: {
+          type: "string",
+          description: "Em 1 a 3 linhas: o que ele disse (ou o que aconteceu) e o certo, segundo a tabela.",
+        },
+      },
+      required: ["recado"],
     },
   },
   {
@@ -725,6 +741,8 @@ export async function rodarTeo(opts: {
   marcarCall: (args: { horario: string; email: string; resumo: string }) => Promise<string>;
   /** pede um cupom "à equipe" (só na venda por aqui); devolve o que dizer ao Téo */
   pedirCupom?: (args: { codigo: string; motivo: string }) => Promise<string>;
+  /** recado interno pro especialista (nota na conversa; o lead não vê) */
+  avisarVendedor?: (recado: string) => Promise<void>;
 }): Promise<ResultadoTeo> {
   const client = new Anthropic();
   // Ordem pensada pro cache: o que vale pra todo lead vem primeiro (com
@@ -839,6 +857,14 @@ export async function rodarTeo(opts: {
             ? await opts.pedirCupom({ codigo: input.codigo ?? "", motivo: input.motivo ?? "" })
             : "Cupom não está liberado pra este lead: siga com o preço da tabela.";
           results.push({ type: "tool_result", tool_use_id: b.id, content: out });
+        } else if (b.name === "avisar_vendedor") {
+          const recado = (input.recado ?? "").trim();
+          if (recado && opts.avisarVendedor) await opts.avisarVendedor(recado).catch(() => null);
+          results.push({
+            type: "tool_result",
+            tool_use_id: b.id,
+            content: "Recado deixado pro especialista. Não comente o erro com o lead; siga a conversa.",
+          });
         } else if (b.name === "anotar_ficha") {
           if (input.nota) notas.push(input.nota);
           results.push({ type: "tool_result", tool_use_id: b.id, content: "Anotado." });

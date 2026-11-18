@@ -5,6 +5,7 @@ import { graphToken, vttParaTexto } from "@/lib/graph";
 import { pareceIngles, transcreverGravacoes, turnosDaTeams, type Gravacao } from "@/lib/transcrever-gravacao";
 import { historico, type MsgUnnichat } from "@/lib/teo";
 import { marcaDaNota, NOTA_ANTES_MS, NOTA_DEPOIS_MS, soOTimeFalou, type Presenca } from "@/lib/calls-presenca";
+import { notasPosCall } from "@/lib/calls-feedback";
 
 // Acervo das calls do Teams (tabela call_transcricoes), separado do Téo: guarda
 // a transcrição e as gravações de toda call da agenda do anfitriao@, pra
@@ -41,6 +42,8 @@ const POR_RODADA = 6;
 // A refação baixa vídeo e transcreve: só começa uma nova até 200 s de rodada
 // (maxDuration 300 s).
 const REFAZER_ATE_MS = 200_000;
+// A nota pós-call chama o Claude (até ~1-2 min por call): só começa até 150 s.
+const NOTAS_VENDEDOR_ATE_MS = 150_000;
 
 type Cfg = {
   teams_tenant_id: string | null;
@@ -393,7 +396,13 @@ async function rodar() {
   // A etapa pesada só entra com folga no tempo da função (maxDuration).
   const refeitas = Date.now() - inicio < 60_000 ? await refazer(supabase, g.auth, inicio) : [];
   const presencas = await lerNotas(supabase, inicio);
-  return NextResponse.json({ ok: true, novas, salvas, refeitas, presencas, ms: Date.now() - inicio });
+  // Nota de próximo passo pro vendedor (src/lib/calls-feedback.ts): só com
+  // folga no tempo da função; o que sobrar entra na próxima rodada (30 min).
+  const notasVendedor =
+    Date.now() - inicio < NOTAS_VENDEDOR_ATE_MS
+      ? await notasPosCall(supabase, inicio, NOTAS_VENDEDOR_ATE_MS, (n, b) => log(supabase, n, b))
+      : [];
+  return NextResponse.json({ ok: true, novas, salvas, refeitas, presencas, notasVendedor, ms: Date.now() - inicio });
 }
 
 // Presença pela nota do vendedor (#call / #faltou na conversa do lead no

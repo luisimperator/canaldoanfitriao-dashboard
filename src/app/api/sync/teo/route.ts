@@ -2234,6 +2234,12 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`
       ),
       marcarCall: (args) => marcarCall(supabase, c, cfg, especialista, args),
+      // Fernando, 18/11: o Téo não corrige o vendedor na frente do lead; o
+      // recado vai numa nota da conversa.
+      avisarVendedor: async (recado) => {
+        await anotar(supabase, c.contact_id, `🤖 Recado do Téo pro especialista: ${recado}`);
+        await log(supabase, "recado pro vendedor", { contact_id: c.contact_id, nome: c.nome, recado });
+      },
       pedirCupom: (args) =>
         pedirCupom(
           supabase,
@@ -2808,10 +2814,9 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
     // que só o time faz, ex.: gerar o link de renovação): não retoma outra vez.
     // Sem isso o lead recebia a mesma resposta a cada 10 min (Fernando Luiz,
     // 11/11). Se o lead escrever de novo, a retomada volta a valer.
-    const ultimaDoLead = Math.max(
-      0,
-      ...msgs.filter((m) => m.senderBy === "contact").map((m) => new Date(m.date).getTime())
-    );
+    const doLeadParada = msgs.filter((m) => m.senderBy === "contact");
+    if (soAgradecimentoOuDespedida(doLeadParada[doLeadParada.length - 1]?.message)) continue;
+    const ultimaDoLead = Math.max(0, ...doLeadParada.map((m) => new Date(m.date).getTime()));
     const { count: jaRetomou } = await supabase
       .from("webhook_log")
       .select("id", { count: "exact", head: true })
@@ -2847,6 +2852,24 @@ async function cuidarDaBlack(supabase: SupabaseClient, cfg: Config): Promise<str
   }
   feitos.push(...(await retomarVendedorParado(supabase, cfg)));
   return feitos;
+}
+
+// Mensagem do lead que só agradece ou se despede ("obrigada pela atenção",
+// "valeu", "até amanhã"): não é motivo pro Téo entrar no lugar do vendedor
+// (Fernando, 18/11: Taymison agradeceu o Breno e o Téo respondeu a despedida).
+const SO_FECHA =
+  /\b(obrigad[oa]s?|obg|brigad[oa]|agradec\w*|grat[oa]|valeu|vlw|tchau|ate|abracos?|bjs?|beijos?|boa (noite|tarde)|bom dia|igualmente|combinado|beleza|blz|perfeito|show|top|joia|ok|okay|certo|entendi|ta bom|tudo bem)\b/;
+const TEM_PEDIDO =
+  /\?|\b(quero|queria|comprar|link|pix|cartao|boleto|valor|preco|quanto|parcela|como|quando|onde|qual|duvida|mas|porem|so que|me (manda|envia|passa)|pode me)\b/;
+
+function soAgradecimentoOuDespedida(texto: string | null | undefined): boolean {
+  const t = (texto ?? "").trim();
+  if (!t || t.length > 140) return false;
+  // Sem acento (o \b do JS não vê "ã" como letra) e em minúsculas.
+  const n = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  // Só emoji/pontuação (👍, 🙏): também fecha.
+  if (!/[a-z0-9]/.test(n)) return true;
+  return SO_FECHA.test(n) && !TEM_PEDIDO.test(n);
 }
 
 // Black: o vendedor já tinha respondido (a conversa ficou com ele, motivo
@@ -2891,6 +2914,7 @@ async function retomarVendedorParado(supabase: SupabaseClient, cfg: Config): Pro
     if (!ultimaDoLead) continue;
     const t = new Date(ultimaDoLead.date).getTime();
     if (agora - t < ESPERA_BLACK_MS || agora - t > 6 * 3600_000) continue;
+    if (soAgradecimentoOuDespedida(ultimaDoLead.message)) continue;
     // Já retomou por esta mensagem (e devolveu): só volta se o lead escrever de novo.
     if (p.black_retomou_em && new Date(p.black_retomou_em as string).getTime() >= t) continue;
     const respondida = msgs.some(
