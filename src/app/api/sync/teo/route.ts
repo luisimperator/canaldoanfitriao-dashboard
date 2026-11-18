@@ -687,11 +687,12 @@ function avisoJaComprouBlack(compra: { origem: string; quando: string; email: st
     timeZone: "America/Sao_Paulo",
     day: "2-digit",
     month: "2-digit",
+    year: "numeric",
   });
   return [
-    `JÁ COMPROU A BLACK (vale acima do MODO BLACK FRIDAY e dos ajustes do dono): este lead comprou a Black Friday Histórica em ${dia} (${compra.origem}, e-mail ${compra.email}).`,
-    "Não ofereça nem venda a Black de novo, não mande link de pagamento e não ofereça call de venda.",
-    "Se ele escreveu, agradeça a confiança e ajude no que ele pedir. Dúvida de acesso, login, grupos ou conteúdo é com o suporte: chame passar_para_humano (suporte). A exceção é o assistente de IA: veja o aviso do Max.",
+    `JÁ COMPROU A BLACK (vale acima do MODO BLACK FRIDAY, da missão de marcar call e dos ajustes do dono): este lead comprou a Black Friday Histórica em ${dia} (${compra.origem}, e-mail ${compra.email}). Quem comprou a Black, deste ano ou do ano passado, já tem tudo: não há nada pra vender pra ele (Fernando, 18/11).`,
+    "Não ofereça nem venda a Black de novo, nem condição de aluno, produto, link de pagamento ou call de venda.",
+    "Se ele escreveu, agradeça a confiança e pergunte como você pode ajudar; depois ajude no que ele pedir. Dúvida de acesso, login, grupos ou conteúdo é com o suporte: chame passar_para_humano (suporte). A exceção é o assistente de IA: veja o aviso do Max.",
     "Se esta for uma mensagem de acompanhamento (retomar a conversa com quem parou de responder), não mande nada: responda só [ENCERRAR].",
   ].join(" ");
 }
@@ -742,6 +743,8 @@ function avisoCallMarcada(call: { inicio: string; vendedor: string | null; meet_
       ? ""
       : "Se pela conversa ele ainda não recebeu a confirmação (por exemplo, a sua última mensagem não fala do horário marcado), confirme agora esse horário em uma mensagem curta.",
     "Não marque outro horário e nunca diga que o horário foi preenchido: só chame marcar_call de novo se ele pedir pra mudar.",
+    // Fernando, 18/11 (Jenny): "marcou call já era, não fica mudando de assunto".
+    "Com a call marcada, a venda é do especialista: não puxe assunto novo (nada de Max, produto, condição, curso ou novidade) e não faça pergunta. Se a pessoa só agradecer ou se despedir, responda numa frase curta lembrando o dia e a hora (ex.: \"Imagina! Até amanhã às 14h.\") e pare. Só responda o que ela perguntar (remarcar, link, como entrar, dúvida rápida).",
     call.meet_url
       ? `NÃO CONSEGUE ENTRAR: se perto do horário ele disser que não consegue entrar (link não abre, pede app, não acha a sala), responda na hora, curto: mande de novo ESTE link da call (${call.meet_url}) e o passo a passo. Celular: precisa do app Microsoft Teams (grátis; ${LOJAS_TEAMS}); depois de instalar, abre o link de novo e toca em "Entrar como convidado", digita o nome e entra. Computador: abre o link no Chrome ou no Edge e escolhe "Continuar neste navegador". Nunca mande outro link (Meet, outra sala), não diga que o especialista já está na sala e não remarque: o especialista foi avisado e entra por esse mesmo link.`
       : "",
@@ -2011,6 +2014,25 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           await adiar(supabase, c.contact_id, intervaloDeChecagem(ocioso));
           return "já tratada";
         }
+        // Quem já comprou a Black (deste ano ou do passado) não recebe
+        // acompanhamento: não há nada pra vender (Fernando, 18/11). Com a janela
+        // aberta, o aviso da compra já faz o Téo responder [ENCERRAR]; com ela
+        // fechada, o template saía direto (André, 11, 13 e 17/11). Se ele
+        // escrever de novo, a entrada reabre a conversa e o Téo pergunta como ajudar.
+        if (!janelaAberta && blackAtiva(cfg)) {
+          const cadastro = await carregarLead(supabase, c).catch(() => null);
+          const comprou = await acharCompraDaBlack(supabase, emailsDaConversa(cadastro?.email ?? null, msgs), c.telefone).catch(
+            () => null
+          );
+          if (comprou) {
+            await supabase
+              .from("teo_conversas")
+              .update({ estado: "encerrado", motivo_humano: "ja_comprou", atualizado_em: new Date().toISOString() })
+              .eq("contact_id", c.contact_id);
+            await log(supabase, "acompanhamento cancelado (já comprou a Black)", { contact_id: c.contact_id, nome: c.nome });
+            return "já comprou a Black: sem acompanhamento";
+          }
+        }
         // O lead parou de responder: é hora de acompanhar?
         const a = await acompanhar(supabase, c, cfg, telefone, ultima, janelaAberta);
         if (!a.retomar) return a.status;
@@ -2134,7 +2156,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
         [
           callMarcada ? avisoCallMarcada(callMarcada) : null,
           temMax ? AVISO_MAX : null,
-          temMax ? AVISO_PERGUNTE_MAX : null,
+          temMax && !callMarcada ? AVISO_PERGUNTE_MAX : null,
           jaComprouBlack
             ? avisoJaComprouBlack(jaComprouBlack)
             : blackAtiva(cfg) && !compraDeCurso
