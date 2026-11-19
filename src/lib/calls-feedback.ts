@@ -27,6 +27,14 @@ const FATOS_BLACK = [
   "- Pra aluno, a conta que vende: renovar o Anfitrião 5 Estrelas custa R$ 997/ano (4 anos = R$ 3.988); na Black o curso fica vitalício, com as duas comunidades por 4 anos, o Max e o ingresso.",
 ].join("\n");
 
+// Ingresso do Encontro: o 2º com 20% vale em qualquer compra de ingresso
+// (Fernando, 19/11: "O ingresso de 20% pro acompanhante é padrão, não é só
+// pra Black").
+const FATOS_ENCONTRO = [
+  "- Ingresso Standard: R$ 997, vale os 2 dias do evento.",
+  "- O 2º ingresso (acompanhante) sai com 20% de desconto: é padrão em qualquer compra de ingresso, não só na Black.",
+].join("\n");
+
 const SISTEMA = `Você é o coach de vendas do Canal do Anfitrião (cursos de Airbnb do Rômulo Villela). Lê a transcrição de uma call de vendas de 20-40 min entre um especialista (vendedor) e um lead e escreve UMA nota interna curta pro vendedor, que ele lê na conversa do lead no WhatsApp (Unnichat) antes do próximo contato.
 
 Formato (texto puro, sem markdown, sem títulos, nunca comece com "#"):
@@ -60,6 +68,25 @@ function quando(iso: string | null): { dia: string; hora: string } {
   return { dia, hora };
 }
 
+// Tabela de preços, Black (enquanto teo_config.black_ate não passou) e a
+// escada de cupons, como o Claude lê nas análises de call. Também usada pelo
+// feedback privado do vendedor (src/lib/calls-feedback-vendedor.ts).
+export async function tabelaDePrecos(supabase: SupabaseClient): Promise<string> {
+  const { data: cfg } = await supabase.from("teo_config").select("precos, cupons, black_ate").eq("id", 1).maybeSingle();
+  const blackAtiva = cfg?.black_ate ? new Date(cfg.black_ate as string).getTime() > Date.now() : false;
+  const cupons = ((cfg?.cupons ?? []) as { produto: string; degrau: number; condicao: string; quando: string }[])
+    .map((c) => `- ${c.produto}, degrau ${c.degrau}: ${c.condicao} (só quando: ${c.quando})`)
+    .join("\n");
+  return [
+    `# Tabela de preços e condições\n${(cfg?.precos as string | null) ?? ""}`,
+    blackAtiva ? `# Black\n${FATOS_BLACK}` : null,
+    `# Encontro 2027 (ingresso)\n${FATOS_ENCONTRO}`,
+    cupons ? `# Escada de desconto (cupons; um degrau por vez, só depois de tratar o "caro")\n${cupons}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 export async function notasPosCall(
   supabase: SupabaseClient,
   inicioRodada: number,
@@ -79,18 +106,7 @@ export async function notasPosCall(
   const linhas = (data ?? []) as Linha[];
   if (!linhas.length) return [];
 
-  const { data: cfg } = await supabase.from("teo_config").select("precos, cupons, black_ate").eq("id", 1).maybeSingle();
-  const blackAtiva = cfg?.black_ate ? new Date(cfg.black_ate as string).getTime() > Date.now() : false;
-  const cupons = ((cfg?.cupons ?? []) as { produto: string; degrau: number; condicao: string; quando: string }[])
-    .map((c) => `- ${c.produto}, degrau ${c.degrau}: ${c.condicao} (só quando: ${c.quando})`)
-    .join("\n");
-  const tabela = [
-    `# Tabela de preços e condições\n${(cfg?.precos as string | null) ?? ""}`,
-    blackAtiva ? `# Black\n${FATOS_BLACK}` : null,
-    cupons ? `# Escada de desconto (cupons; um degrau por vez, só depois de tratar o "caro")\n${cupons}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  const tabela = await tabelaDePrecos(supabase);
 
   const client = new Anthropic();
   const feitos: string[] = [];

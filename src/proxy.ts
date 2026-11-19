@@ -57,6 +57,11 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/foley/")) {
     return NextResponse.next();
   }
+  // Rota do OpenClaw que entrega o feedback das calls aos vendedores: sem
+  // sessão, exige o Bearer OPENCLAW_FEEDBACK_TOKEN e responde 401 sem ele.
+  if (pathname.startsWith("/api/openclaw/")) {
+    return NextResponse.next();
+  }
   // Agenda das calls (.ics) assinada no Google Agenda: o Google busca sem
   // sessão; a rota exige a chave dela (?k=) e responde 404 sem ela.
   if (pathname.startsWith("/api/agenda/")) {
