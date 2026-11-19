@@ -10,7 +10,9 @@ export interface PlacarDia {
   ingressos: number;
   bruto: number;
   liquido: number;
+  /** com os 12,15% de impostos da Meta */
   gasto: number;
+  gasto_sem_imposto?: number;
   cliques: number;
   checkouts: number;
   compras_meta: number;
@@ -163,7 +165,8 @@ export function PlacarImersao({ placar, hoje }: { placar: Placar; hoje: string }
           )}
 
           <p className="mt-3 text-[11px] text-ink-2">
-            Gasto das campanhas do Meta que começam com CDR, como o Meta mostra (sem os impostos que a Meta cobra à parte).
+            Gasto das campanhas do Meta que começam com CDR, com os 12,15% de impostos que a Meta cobra à parte (o
+            Gerenciador de Anúncios mostra sem).
             Vendido líquido é o que a Eduzz repassa. CPA líquido negativo: o ingresso pagou o anúncio.
             {placar.meta_atualizado_em ? ` Meta atualizado às ${hora(placar.meta_atualizado_em)}.` : ""}
           </p>
