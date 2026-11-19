@@ -52,6 +52,11 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/webhooks") || pathname.startsWith("/api/import")) {
     return NextResponse.next();
   }
+  // Rotas do Foley (agente dos grupos no WhatsApp): sem sessão, exigem o
+  // Bearer FOLEY_API_TOKEN e respondem 401 sem ele.
+  if (pathname.startsWith("/api/foley/")) {
+    return NextResponse.next();
+  }
   // Agenda das calls (.ics) assinada no Google Agenda: o Google busca sem
   // sessão; a rota exige a chave dela (?k=) e responde 404 sem ela.
   if (pathname.startsWith("/api/agenda/")) {
