@@ -9,8 +9,10 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // Authorization: Bearer <OPENCLAW_FEEDBACK_TOKEN>   (variável de ambiente da Vercel)
 //
 // Cada feedback vai pra dois lugares (Fernando, 19/11): o WhatsApp privado do
-// vendedor (campo texto) e o grupo "Gestão Comercial" (campo texto_grupo, o
-// mesmo texto com o nome do vendedor no topo). Cada destino tem a sua entrega.
+// vendedor (campo texto) e o grupo "Feedback Calls Canal do Anfitrião" (campo texto_grupo, o
+// mesmo texto com o nome do vendedor no topo; o ID do grupo vem em
+// grupo_whatsapp, de teo_config.grupo_gestao_whatsapp). Cada destino tem a sua
+// entrega.
 //
 // GET /api/openclaw/feedbacks
 //   Os prontos com algum destino ainda não entregue, do mais antigo pro mais
@@ -88,16 +90,26 @@ function formatar(l: Linha, time: Vendedor[]) {
   };
 }
 
-async function timeDeVendas(supabase: NonNullable<ReturnType<typeof getSupabaseAdmin>>): Promise<Vendedor[]> {
-  const { data } = await supabase.from("teo_config").select("vendedores").eq("id", 1).maybeSingle();
-  return ((data?.vendedores ?? []) as Vendedor[]).filter((v) => v && typeof v.nome === "string");
+// Time de vendas e o ID do grupo "Feedback Calls Canal do Anfitrião" (teo_config, migração 0130).
+async function timeDeVendas(
+  supabase: NonNullable<ReturnType<typeof getSupabaseAdmin>>
+): Promise<{ time: Vendedor[]; grupo: string | null }> {
+  const { data } = await supabase
+    .from("teo_config")
+    .select("vendedores, grupo_gestao_whatsapp")
+    .eq("id", 1)
+    .maybeSingle();
+  return {
+    time: ((data?.vendedores ?? []) as Vendedor[]).filter((v) => v && typeof v.nome === "string"),
+    grupo: (data?.grupo_gestao_whatsapp as string | null) ?? null,
+  };
 }
 
 export async function GET(req: NextRequest) {
   if (!autorizado(req)) return NextResponse.json({ ok: false, erro: "não autorizado" }, { status: 401 });
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ ok: false, erro: "banco não configurado" }, { status: 500 });
-  const time = await timeDeVendas(supabase);
+  const { time, grupo } = await timeDeVendas(supabase);
   const call = req.nextUrl.searchParams.get("call");
   if (call) {
     if (!/^[0-9a-f-]{36}$/i.test(call)) return NextResponse.json({ ok: false, erro: "call inválida" }, { status: 400 });
@@ -110,11 +122,12 @@ export async function GET(req: NextRequest) {
         .maybeSingle();
       return NextResponse.json({
         ok: true,
+        grupo_whatsapp: grupo,
         feedback: null,
         situacao: t ? `transcrição ${t.status}: o feedback sai quando a transcrição estiver ok` : "call sem transcrição no sistema",
       });
     }
-    return NextResponse.json({ ok: true, feedback: formatar(data as Linha, time) });
+    return NextResponse.json({ ok: true, grupo_whatsapp: grupo, feedback: formatar(data as Linha, time) });
   }
   const todos = req.nextUrl.searchParams.get("todos") === "1";
   let q = supabase.from("call_feedbacks").select(CAMPOS).order("gerado_em", { ascending: true }).limit(100);
@@ -123,7 +136,11 @@ export async function GET(req: NextRequest) {
     : q.eq("status", "pronto").or("entregue_em.is.null,entregue_grupo_em.is.null");
   const { data, error } = await q;
   if (error) return NextResponse.json({ ok: false, erro: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true, feedbacks: ((data ?? []) as Linha[]).map((l) => formatar(l, time)) });
+  return NextResponse.json({
+    ok: true,
+    grupo_whatsapp: grupo,
+    feedbacks: ((data ?? []) as Linha[]).map((l) => formatar(l, time)),
+  });
 }
 
 export async function POST(req: NextRequest) {
