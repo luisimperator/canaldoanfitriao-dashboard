@@ -32,7 +32,11 @@ Formato (WhatsApp: *negrito* com um asterisco, sem markdown de título, sem "#",
 • 2 ou 3 coisas, cada uma com a fala real dele entre aspas.
 
 ❌ *O que ajustar*
-• Cada erro com a fala real dele entre aspas e o certo (ou o que dizer no lugar). Do mais importante pro menos.
+• Cada erro com a fala real dele entre aspas e o certo (ou o que dizer no lugar). Do mais importante pro menos. Trailer não mostrado e call sem os slides entram aqui sempre.
+
+🧭 *Roteiro e slides*
+✓ Fez: as etapas e slides do roteiro que ele fez, em poucas palavras, separados por vírgula.
+✗ Pulou: as que ele pulou, na ordem do roteiro (ex.: "rotular o problema, combinado dos dois sentimentos, trailer (slide 2), mesinha de 3 pernas, Calculadora (slide 10), resumo antes do preço, garantia junto do preço, link na call"). Seja literal: é cobrança de aderência ao roteiro, não sugestão.
 
 💰 *Preço e condições* (só se houve preço/condição dita errada, preço que faltou dizer ou desconto fora da escada; senão, omita a seção)
 
@@ -41,6 +45,8 @@ Formato (WhatsApp: *negrito* com um asterisco, sem markdown de título, sem "#",
 👉 *Próximo passo*
 • O que mandar, quando (dia e hora) e com qual preço/condição da tabela.
 
+A aderência ao roteiro e aos slides (bloco "Roteiro da call e slides" abaixo) é cobrada em toda call (Fernando, 19/11: "eu quero que você cobre a aderência ao roteiro. Se no roteiro tem um trailer pra passar, tem que cobrar"). O que mais pesa: trailer com som, os slides na tela, a mesinha de 3 pernas, o combinado dos dois sentimentos, a Calculadora com os números do lead, o resumo com as palavras dele antes do preço e a garantia junto do preço.
+
 O que olhar na call: abriu pelo caso do lead? aprofundou a dor ("me conta mais", "o que você já tentou")? resumiu o caso nas palavras do lead antes de apresentar? ligou o produto à dor que o lead disse (e não à que ele imaginou)? ofereceu um produto atrás do outro a cada "não" sem perguntar o porquê? citou a garantia junto com o preço? contou caso de aluno? disse o preço? mandou o link na call? marcou retorno com dia e hora? convidou quem decide junto (cônjuge, sócio)? errou o nome do lead? prometeu resultado ou faturamento?
 
 Regras:
@@ -48,8 +54,23 @@ Regras:
 - Não cite faturamento, patrimônio nem estrutura societária do Rômulo/empresa. Se o vendedor citou, aponte o erro SEM repetir o número nem a fala ("citou o faturamento do Rômulo: não cite").
 - Use só o primeiro nome do lead. Nada de telefone ou e-mail.
 - A transcrição tem ruído (palavras soltas em inglês, nomes trocados pelo reconhecimento de voz): não aponte como erro do vendedor algo que pode ser erro da transcrição.
-- Até 2.200 caracteres.
+- Até 2.800 caracteres.
 - Se a call não aconteceu de verdade (sala vazia, lead não apareceu, só cumprimento), responda exatamente [SEM_CALL].`;
+
+// O roteiro novo (src/lib/roteiros/nova.html) e o deck que o vendedor
+// compartilha na tela (deck-a5e: /deck do painel, conteúdo no storage
+// pub/deck-a5e/deck.txt). Se o roteiro ou o deck mudarem, atualize aqui.
+const ROTEIRO_E_SLIDES = `# Roteiro da call e slides (o que o vendedor tem que fazer, nesta ordem)
+Etapa 1 · Abertura pela ficha do Téo. Sem "você conhece o Rômulo?".
+Etapa 2 · Rotular: "Deixa eu ver se entendi: hoje você [onde está], quer chegar em [meta], e o que está no caminho é [problema]. É isso?" Se ela corrigir, rotula de novo.
+Etapa 3 · Ciclo da dor: o que já tentou, como foi, o que gostou e o que não gostou; alguém decide junto?; quer aprender ou que façam por você?; munição pro preço (diária média e noites ocupadas por mês); achar a perna bamba (mensagem chega e não fecha, ou nem chega? preço na mão, no automático ou fixo?).
+Etapa 4 · Transição: "Posso te mostrar?" e o combinado dos dois sentimentos ("faz sentido pro meu momento" ou "não era isso que eu precisava"), esperando o "combinado".
+Etapa 5 · Vender a viagem com os slides na tela (deck de 19 slides): slide 1 capa (comunidade, 12 meses: calendário cheio, 5 estrelas, o Pix caindo); slide 2 TRAILER do Anfitrião 5 Estrelas COM SOM (3min46, obrigatório, antes dos pilares); slide 3 o Rômulo numa frase (quartinho no Airbnb em 2016, hoje mais de 60 imóveis); slide 4 a mesinha de 3 pernas (anúncio que converte, virar queridinho do algoritmo, experiência 5 estrelas; ciclo virtuoso), com "faz sentido?" depois de cada perna e mais tempo na perna bamba; slide 5 comunidade (grupo no WhatsApp com o Rômulo dentro + lives mensais); slides 6 a 9 o Max, concierge de IA 24h; slide 10 Calculadora de Ganhos com a diária e as noites do lead (+10% na diária e +3 noites por mês); slides 11 a 14 o que vem junto, aulas, calls ao vivo e masterclasses (rápido, sem tour de módulos). Chamar de comunidade, não de curso.
+Etapa 6 · Fechamento: slide 15 "Resumindo: lembra do que você me disse? Hoje / meta / no caminho. Faz sentido pra você?" e "qual dos dois sentimentos ficou?"; slide 16 investimento (Anfitrião 5 Estrelas R$ 2.997 ou 12x R$ 299,70) com a garantia de 14 dias ("a lei dá 7, a gente dá 14"); slide 17 casos de quem já fez; slide 18 primeiros passos depois do sim; slide 19 "Bora começar hoje?" e o link na própria call.
+Etapa 7 · Objeções: caso de aluno do Cofre de Cases, o mais parecido com o lead; escada de preço com prazo (R$ 2.997 sempre primeiro; R$ 2.797 só com objeção de preço; R$ 2.497 só com trava concreta; depois só o bônus de Booking). Saída sem sim: retorno com dia e hora, chamando quem decide junto.
+Em call de Black ou de upgrade de aluno, o caminho é o mesmo com o produto trocado (preços e garantia pela tabela).
+
+Como ver pela transcrição: o trailer tocou com som quando aparecem falas do Rômulo como "Onde é que está o seu imóvel, no campo, na cidade ou no litoral?", "Rômulo, não complica" ou "de norte a sul desse brasilzão" (às vezes atribuídas ao vendedor, porque o som sai pelo computador dele). Se nenhuma aparece, o trailer NÃO foi mostrado (sem som conta como não mostrado). Slides: "posso compartilhar minha tela?", "tá vendo?", "aqui na tela" e o vendedor lendo o texto dos slides. Sem tela compartilhada = não usou os slides.`;
 
 type Transcricao = {
   join_url: string;
@@ -193,7 +214,7 @@ export async function feedbacksDoVendedor(
         thinking: { type: "adaptive" },
         system: [
           { type: "text", text: SISTEMA },
-          { type: "text", text: tabela, cache_control: { type: "ephemeral" } },
+          { type: "text", text: `${ROTEIRO_E_SLIDES}\n\n${tabela}`, cache_control: { type: "ephemeral" } },
         ],
         messages: [
           {
@@ -217,7 +238,7 @@ export async function feedbacksDoVendedor(
         await log("feedback do vendedor: call não aconteceu", { teo_call_id: l.teo_call_id, nome: k?.nome });
         continue;
       }
-      await salvar({ ...base, status: "pronto", texto: texto.slice(0, 3500), erro: null, gerado_em: new Date().toISOString() });
+      await salvar({ ...base, status: "pronto", texto: texto.slice(0, 4000), erro: null, gerado_em: new Date().toISOString() });
       await log("feedback do vendedor pronto", {
         teo_call_id: l.teo_call_id,
         nome: k?.nome,
