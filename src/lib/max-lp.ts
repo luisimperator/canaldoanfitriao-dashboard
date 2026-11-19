@@ -41,7 +41,9 @@ export function mensagemMax(utmSource: string | null | undefined): string {
 }
 
 // Preço do Max avulso (o da página que o Fernando mandou em 19/11).
-const PRECO = { ano: "R$ 997", parcela: "12x de R$ 99,70" };
+// A parcela é o destaque; o à vista vem menor (Fernando, 19/11: "o 99,70 por
+// mês que tem que ser o destaque. o valor à vista menor").
+const PRECO = { vezes: "12x de", parcela: "R$ 99,70", vista: "R$ 997" };
 
 function attr(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -334,9 +336,10 @@ section{position:relative;padding:clamp(64px,10vw,110px) 0}
 @property --ang{syntax:"<angle>";initial-value:0deg;inherits:false}
 @keyframes borda{to{--ang:360deg}}
 .cartao .gratis{display:inline-block;font-family:var(--label);font-weight:700;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--teal);padding:6px 14px;border-radius:999px;margin-bottom:18px}
-.cartao .big{font-family:var(--title);font-weight:800;font-size:clamp(2.6rem,9vw,3.8rem);line-height:1;color:#fff}
-.cartao .big small{font-size:1.1rem;font-weight:600;color:#bdbdbd}
-.cartao .sub{color:#bdbdbd;margin:8px 0 26px}
+.cartao .vezes{font-family:var(--title);font-weight:600;font-size:1.15rem;color:#d6d6d6}
+.cartao .big{font-family:var(--title);font-weight:800;font-size:clamp(3.2rem,12vw,4.6rem);line-height:1;color:#fff;margin-top:4px;letter-spacing:-.03em}
+.cartao .big small{font-size:1.15rem;font-weight:600;color:#bdbdbd;letter-spacing:0}
+.cartao .sub{color:#a9a9a9;font-size:.95rem;margin:12px 0 26px}
 .cartao ul{list-style:none;text-align:left;margin:0 auto 30px;display:grid;gap:10px;color:#e6e6e6;max-width:380px}
 .cartao li{display:flex;gap:10px;align-items:flex-start}
 .cartao li::before{content:"✓";flex:none;width:22px;height:22px;border-radius:50%;background:rgba(226,61,89,.18);color:var(--coral);font-weight:700;font-size:.8rem;display:grid;place-items:center;margin-top:2px}
@@ -631,8 +634,9 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
     <h2 class="rv" style="--d:.1s">Tenha o Max com você <span class="c">o ano inteiro</span>.</h2>
     <div class="cartao rv pop" style="--d:.2s">
       <span class="gratis">Primeiro, a análise grátis</span>
-      <div class="big">${PRECO.ano} <small>por ano</small></div>
-      <div class="sub">ou em até ${PRECO.parcela}</div>
+      <div class="vezes">${PRECO.vezes}</div>
+      <div class="big">${PRECO.parcela} <small>/mês</small></div>
+      <div class="sub">ou ${PRECO.vista} à vista · acesso de 1 ano</div>
       <ul>
         <li>Max no seu WhatsApp, 24 horas</li>
         <li>Raio-x de todos os seus anúncios, quantas vezes quiser</li>
