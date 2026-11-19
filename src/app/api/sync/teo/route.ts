@@ -61,6 +61,8 @@ interface Conversa {
   cupom_em?: string | null;
   /** Atendido na venda direta: continua com o Téo até aqui (migration 0096). */
   venda_direta_ate?: string | null;
+  /** Último erro (ex.: "template 400: …" quando a abertura falhou). */
+  erro?: string | null;
 }
 
 /** Degrau da escada de cupons (teo_config.cupons). */
@@ -92,7 +94,7 @@ interface CupomPedido {
 }
 
 const CAMPOS_CONVERSA =
-  "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo, cupom_pendente, cupom_em, venda_direta_ate";
+  "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo, cupom_pendente, cupom_em, venda_direta_ate, erro";
 
 interface Config {
   ligado: boolean;
@@ -970,7 +972,8 @@ async function vendedorDoLead(supabase: SupabaseClient, cfg: Config, contato: st
 // atendem em paralelo (cada um no seu computador): o mesmo horário aceita uma
 // call por vendedor. Em cada horário vai o vendedor livre que ordemDoDia()
 // escolhe. Se alguém do time já conversou com o lead, só os horários dessa
-// pessoa.
+// pessoa. Num dia sem nenhum horário com 1h de folga, entram os encaixes
+// (30 min entre os inícios).
 async function horariosLivres(
   supabase: SupabaseClient,
   cfg: Config,
@@ -995,7 +998,11 @@ async function horariosLivres(
   ]);
   // Entre o início de uma call e o da próxima do mesmo vendedor, no mínimo 1h
   // (a call continua com 30 min no convite; a meia hora que sobra é folga).
+  // Dia lotado (nenhum horário com essa folga no dia): encaixa entre as calls,
+  // com 30 min de um início pro outro, a duração do convite (Fernando, 19/11:
+  // "Quando lota o dia, pode encaixar call entre as outras calls").
   const INTERVALO_MS = 60 * 60_000;
+  const ENCAIXE_MS = 30 * 60_000;
   if (contato && marcadas) {
     for (let i = marcadas.length - 1; i >= 0; i--) if (marcadas[i].contact_id === contato) marcadas.splice(i, 1);
   }
@@ -1006,7 +1013,8 @@ async function horariosLivres(
     lista.push(new Date(m.inicio).getTime());
     inicios.set(m.vendedor, lista);
   }
-  const ocupado = (ts: number, v: string) => (inicios.get(v) ?? []).some((t) => Math.abs(t - ts) < INTERVALO_MS);
+  const ocupado = (ts: number, v: string, folga = INTERVALO_MS) =>
+    (inicios.get(v) ?? []).some((t) => Math.abs(t - ts) < folga);
   // Calls de vendedores diferentes podem acontecer no mesmo horário (cada um
   // no seu computador): o Téo oferece os horários mais próximos, sem evitar
   // sobreposição. (De 04/11 a 12/11 ele preferia horário sem call de outro
@@ -1017,15 +1025,23 @@ async function horariosLivres(
   for (const m of marcadas ?? []) {
     if (m.vendedor) carga.set(`${dia(m.inicio)}|${m.vendedor}`, (carga.get(`${dia(m.inicio)}|${m.vendedor}`) ?? 0) + 1);
   }
-  const out: { horario: string; vendedor: string }[] = [];
-  for (const h of todos) {
-    const ts = new Date(h).getTime();
-    const livres = vendedores.filter((v) => !ocupado(ts, v));
-    if (livres.length === 0) continue;
-    const [escolhido] = ordemDoDia(livres, (v) => carga.get(`${dia(h)}|${v}`) ?? 0, taxa);
-    out.push({ horario: local(h), vendedor: escolhido });
-  }
-  return out;
+  const livresCom = (folga: number) => {
+    const res: { h: string; horario: string; vendedor: string }[] = [];
+    for (const h of todos) {
+      const ts = new Date(h).getTime();
+      const livres = vendedores.filter((v) => !ocupado(ts, v, folga));
+      if (livres.length === 0) continue;
+      const [escolhido] = ordemDoDia(livres, (v) => carga.get(`${dia(h)}|${v}`) ?? 0, taxa);
+      res.push({ h, horario: local(h), vendedor: escolhido });
+    }
+    return res;
+  };
+  const comFolga = livresCom(INTERVALO_MS);
+  const diasComHorario = new Set(comFolga.map((s) => dia(s.h)));
+  const encaixes = livresCom(ENCAIXE_MS).filter((s) => !diasComHorario.has(dia(s.h)));
+  return [...comFolga, ...encaixes]
+    .sort((a, b) => new Date(a.h).getTime() - new Date(b.h).getTime())
+    .map(({ horario, vendedor }) => ({ horario, vendedor }));
 }
 
 type CallConvite = {
@@ -1943,7 +1959,10 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       // Encerrado por falta de resposta ou porque a pessoa recusou: só volta se
       // ela escrever de novo.
       const voltou = ultima?.senderBy === "contact" && ultima.id !== c.ultima_msg_tratada;
-      const retomavel = c.motivo_humano === "sem_resposta" || c.motivo_humano === "sem_interesse";
+      // template_falhou: a abertura foi recusada 2x (número que a Unnichat não
+      // acha); só volta se a pessoa escrever.
+      const retomavel =
+        c.motivo_humano === "sem_resposta" || c.motivo_humano === "sem_interesse" || c.motivo_humano === "template_falhou";
       if (!retomavel || !voltou) {
         await adiar(supabase, c.contact_id, retomavel ? 2 * 3600_000 : 24 * 3600_000);
         return "encerrado";
@@ -1971,25 +1990,32 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           bodyParameters: [{ type: "text", text: primeiroNome(c.nome) }],
         });
         const ok = r.status >= 200 && r.status < 300;
+        // Recusa da Unnichat (4xx, ex.: "Contact not found!" com telefone mal
+        // cadastrado) pela 2ª vez seguida: para de tentar (Fernando, 19/11).
+        // Até aqui o Téo insistia de 6 em 6 h pra sempre: Jucimar, Edgard e
+        // Geovanna desde 15/11. Falha da Unnichat fora do ar (5xx, timeout)
+        // continua tentando.
+        const recusou = r.status >= 400 && r.status < 500;
+        const parar = recusou && /^template 4\d\d/.test(c.erro ?? "");
         await supabase
           .from("teo_conversas")
           .update({
             template_em: ok ? new Date().toISOString() : null,
-            estado: ok ? "em_conversa" : "novo",
+            estado: ok ? "em_conversa" : parar ? "encerrado" : "novo",
+            ...(parar ? { motivo_humano: "template_falhou" } : {}),
             erro: ok ? null : `template ${r.status}: ${JSON.stringify(r.body).slice(0, 300)}`,
             atualizado_em: new Date().toISOString(),
           })
           .eq("contact_id", c.contact_id);
-        await log(supabase, ok ? "template enviado" : "template falhou", {
+        await log(supabase, ok ? "template enviado" : parar ? "template falhou 2x: parou" : "template falhou", {
           contact_id: c.contact_id,
           nome: c.nome,
           status: r.status,
         });
-        // Falhou (ex.: "Contact not found!" com telefone mal cadastrado, como o
-        // da Geovanna Porto em 15/11 com 16 dígitos): sem espera, o Téo tentava
-        // de novo a cada minuto (31 vezes em 30 min). Agora espera 6 h.
-        if (!ok) await adiar(supabase, c.contact_id, 6 * 3600_000);
-        return ok ? "template" : "template falhou";
+        // Falhou: sem espera, o Téo tentava de novo a cada minuto (31 vezes em
+        // 30 min, Geovanna em 15/11). Espera 6 h antes da 2ª tentativa.
+        if (!ok) await adiar(supabase, c.contact_id, parar ? 24 * 3600_000 : 6 * 3600_000);
+        return ok ? "template" : parar ? "template falhou 2x: parou" : "template falhou";
       }
       // Janela aberta: se o lead acabou de escrever, espera juntar as mensagens.
       if (ultima?.senderBy === "contact" && Date.now() - new Date(ultima.date).getTime() < ESPERA_MS) {
