@@ -1748,7 +1748,7 @@ async function combinarRetorno(
   const outro = alvo !== pedido ? ` (${diaFala(pedido)} não tem agenda; o primeiro dia com agenda depois é ${diaFala(alvo)})` : "";
   return (
     `Combinado: ${diaFala(alvo)}, de manhã, esta conversa volta pra você com os horários daquele dia${outro}. ` +
-    `Diga a ela numa frase que você chama ${diaFala(alvo)} de manhã com os horários do dia pra marcar a call no próprio dia. Não prometa horário agora e não marque call pra esse dia.`
+    `Diga a ela numa frase que você chama ${diaFala(alvo)} de manhã pra confirmar o horário. Se ela já disse um horário, diga que guardou a preferência e confirma no dia (sem garantir que estará livre). Não explique regra interna de agenda e não marque call pra esse dia.`
   );
 }
 
@@ -1909,6 +1909,7 @@ async function acompanhar(
         retomar:
           `[Instrução interna, o lead não vê: hoje é o dia em que você combinou de voltar pra marcar a call. ` +
           `Mande UMA mensagem curta: cumprimente, lembre que combinaram de falar hoje e ofereça os três horários de HOJE mais próximos da lista "Horários livres" (com quem é cada um); se hoje não tiver três, complete com os primeiros de amanhã. ` +
+          `Se ela já tinha dito um horário preferido pra hoje (veja a conversa) e ele está na lista, ofereça esse primeiro ("o das 16h com o Flávio continua livre, confirmo?"). ` +
           `Se a pessoa disse claramente que não tem interesse, responda só [ENCERRAR].]`,
       };
     }
