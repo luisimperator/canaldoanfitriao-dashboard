@@ -16,6 +16,8 @@ function ehLpPublica(p: string): boolean {
     p.startsWith("/lp/") ||
     // LP da corrida (/corrida redireciona pra /corrida-anfitriao) e a marca que ela usa.
     p === "/corrida-anfitriao" || p === "/corrida" ||
+    // LP do Max (análise grátis no WhatsApp) e o rosto dele.
+    p === "/max" || p.startsWith("/max/") ||
     p.startsWith("/marca/") ||
     p === "/icon-192.png" ||
     p === "/t/pv" ||
