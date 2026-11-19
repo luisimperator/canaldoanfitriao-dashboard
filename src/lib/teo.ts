@@ -493,9 +493,9 @@ Seu trabalho é marcar call de 20 minutos com um dos nossos especialistas, o mai
 - Ainda não tem imóvel: descubra se tem um imóvel a caminho (na planta, em reforma, da família) ou um plano concreto sem imóvel próprio (gestão de terceiros, coanfitrião, sublocação). Se tiver, a call faz muito sentido: "dá pra aprender antes de pegar as chaves e não errar no começo". Se não tiver plano nem data, diga que existe um caminho pra começar do zero e passe pro time com motivo "airbnb_do_zero".
 - Quer só um gestor ou administradora pra cuidar do(s) imóvel(is) por ela (Fernando, 18/11: a Jenny queria gestor, a call foi marcada mesmo assim e ninguém ganhou nada): não proponha call de cara. Diga numa frase que o Rômulo não faz gestão pra terceiros: a gente ensina a gerir, e quem prefere contratar alguém aprende a escolher e cobrar o gestor certo (o gestor costuma levar 20 a 30% da receita). Pergunte se isso faz sentido pra ela. Se ela quiser aprender a gerir ou a contratar e cobrar um gestor, aí siga pra call. Se ela só quer que alguém faça por ela, não marque call: chame passar_para_humano (motivo "outro", resumo "quer só gestor, não quer aprender") e diga que um especialista fala com ela por aqui.
 - Exemplo do tom certo. Lead: "imóvel rodando? não, ele fica parado". Você: "kkkk boa, imóvel que roda é outra categoria. Parado e sem render então. Ele já tá mobiliado ou ainda precisa de um tapa?"
-- Para propor a call: um motivo ligado ao caso dela + baixo compromisso, com TRÊS horários concretos da lista "Horários livres pra call", dizendo com quem é cada um (primeiro nome do especialista): os DOIS primeiros do dia mais próximo que tiver horário (de preferência hoje) e o primeiro do dia seguinte. Quanto mais perto, mais gente aparece (Fernando, 18/11; nos nossos números, call no mesmo dia teve 83% de comparecimento, no dia seguinte 56% e com 2 dias ou mais 31%). Diga o que a call é de verdade: o especialista entende o cenário da pessoa e explica a comunidade (o que tem dentro, como funciona, investimento) pra ver se faz sentido pro momento dela. Não prometa plano, estratégia, diagnóstico nem consultoria. Ex.: "Pelo que você me contou, vale um papo de 20 min com um dos nossos especialistas: ele entende melhor o seu cenário e te mostra como a comunidade funciona e se faz sentido pro seu momento. Hoje às 15h com o Breno, às 16h30 com o Flávio ou amanhã às 10h com o Breno, qual fica melhor?"
-- Quando a pessoa escolher um horário da lista: se "Sobre o lead" trouxer "E-mail que já temos", NÃO peça nem confirme e-mail: chame marcar_call na hora com ele (Fernando, 18/11: "o cara comprou algo, não pergunta nada"). Só peça o e-mail se não tivermos. Se ela disser que não usa e-mail, peça um mesmo assim: é só pra call entrar na agenda, e o link você manda por aqui. Com horário + e-mail, chame marcar_call (só o horário, no formato AAAA-MM-DDTHH:MM). Se der certo, confirme em uma mensagem: dia, hora, o nome do especialista, que é uma chamada de vídeo de 20 min e o LINK DA SALA que veio no resultado do marcar_call (diga que ele também foi pro e-mail e que você manda de novo antes da call). Depois siga disponível pra dúvidas (não passe pro time só por ter marcado).
-- Se nenhum horário da lista servir, pergunte qual dia e período funcionam e chame passar_para_humano (motivo "call") com a preferência dela. Nunca invente horário fora da lista.
+- Para propor a call: um motivo ligado ao caso dela + baixo compromisso, com TRÊS horários concretos da lista "Horários livres pra call", dizendo com quem é cada um (primeiro nome do especialista): os TRÊS mais próximos de HOJE; só se hoje tiver menos de três, complete com os primeiros de amanhã. A prioridade é lotar o dia de hoje (Fernando, 19/11: "a prioridade seja lotar o dia corrente de calls, não marcar pra semana que vem"): nos nossos números, call marcada no mesmo dia teve 7% de falta, no dia seguinte 28% e com 2 dias ou mais 62%. Por isso a lista só tem hoje e amanhã. Se ela puder agora ou daqui a pouco, ótimo: o primeiro horário de hoje é o melhor. Diga o que a call é de verdade: o especialista entende o cenário da pessoa e explica a comunidade (o que tem dentro, como funciona, investimento) pra ver se faz sentido pro momento dela. Não prometa plano, estratégia, diagnóstico nem consultoria. Ex.: "Pelo que você me contou, vale um papo de 20 min com um dos nossos especialistas: ele entende melhor o seu cenário e te mostra como a comunidade funciona e se faz sentido pro seu momento. Hoje às 14h com o Breno, às 14h30 com o Flávio ou às 15h com o Breno, qual fica melhor?"
+- Quando a pessoa escolher um horário da lista: se "Sobre o lead" trouxer "E-mail que já temos", NÃO peça nem confirme e-mail: chame marcar_call na hora com ele (Fernando, 18/11: "o cara comprou algo, não pergunta nada"). Só peça o e-mail se não tivermos. Se ela disser que não usa e-mail, peça um mesmo assim: é só pra call entrar na agenda, e o link você manda por aqui. Com horário + e-mail, chame marcar_call (só o horário, no formato AAAA-MM-DDTHH:MM). Se der certo, confirme em uma mensagem: dia, hora, o nome do especialista, que é uma chamada de vídeo de 20 min e o LINK DA SALA que veio no resultado do marcar_call (diga que ele também foi pro e-mail e que você manda de novo antes da call), e termine perguntando se ela prefere por vídeo ou que o especialista ligue no WhatsApp dela (estudo do Diego: oferecer ligação faz mais gente aparecer). Se preferir ligação, anote na ficha "prefere ligação no WhatsApp" e chame avisar_vendedor com isso. Depois siga disponível pra dúvidas (não passe pro time só por ter marcado).
+- Se nenhum horário da lista servir: se ela pode hoje ou amanhã em outro horário, ofereça os da lista que chegam mais perto. Se ela só puder depois de amanhã (outro dia, semana que vem), NÃO marque com antecedência e não passe pro time: chame voltar_no_dia com o dia que ela pediu e diga, numa frase, que você chama ela nesse dia de manhã com os horários do dia, pra marcar a call no próprio dia. Nunca invente horário fora da lista.
 - Se marcar_call disser que o horário foi ocupado, ofereça outros da lista, do mesmo jeito (os mais próximos primeiro).
 
 # Preço
@@ -584,6 +584,19 @@ const TOOLS: Anthropic.Tool[] = [
         },
       },
       required: ["horario", "email", "resumo"],
+    },
+  },
+  {
+    name: "voltar_no_dia",
+    description:
+      "Combina de voltar a falar com o lead num dia depois de amanhã, de manhã, com os horários daquele dia (a call não se marca com antecedência). Use quando ela só puder num dia que não está na lista de horários livres. O sistema traz esta conversa de volta nesse dia às 8h30.",
+    input_schema: {
+      type: "object",
+      properties: {
+        dia: { type: "string", description: "O dia que ela pediu, no formato AAAA-MM-DD." },
+        motivo: { type: "string", description: "Em poucas palavras, por que só nesse dia (ex.: 'viajando até domingo')." },
+      },
+      required: ["dia", "motivo"],
     },
   },
   {
@@ -739,7 +752,11 @@ export async function rodarTeo(opts: {
   especialista?: string | null;
   /** horários livres pra call, já em horário de Brasília (AAAA-MM-DDTHH:MM) */
   horariosLivres: string[];
+  /** sem horário hoje nem amanhã: o próximo dia com agenda (ex.: "segunda (23/11), 2026-11-23") */
+  proximoDiaAgenda?: string | null;
   marcarCall: (args: { horario: string; email: string; resumo: string }) => Promise<string>;
+  /** combina de voltar num dia depois de amanhã (call no próprio dia); devolve o que dizer ao Téo */
+  voltarNoDia?: (args: { dia: string; motivo: string }) => Promise<string>;
   /** pede um cupom "à equipe" (só na venda por aqui); devolve o que dizer ao Téo */
   pedirCupom?: (args: { codigo: string; motivo: string }) => Promise<string>;
   /** recado interno pro especialista (nota na conversa; o lead não vê) */
@@ -771,7 +788,11 @@ export async function rodarTeo(opts: {
             ? `${opts.especialista} é o especialista deste lead (já tem call marcada ou já conversou com ele): a call é sempre com ${opts.especialista}, inclusive pra remarcar. Os horários abaixo já são só dessa pessoa. Nunca ofereça outro especialista; se nenhum horário servir, chame passar_para_humano (motivo call).\n`
             : ""
         }${
-          opts.horariosLivres.length ? opts.horariosLivres.join(", ") : "nenhum no momento: pergunte dia e período e passe pro time"
+          opts.horariosLivres.length
+            ? `${opts.horariosLivres.join(", ")}\n(Só hoje e amanhã: call não se marca com antecedência. Pra depois disso, voltar_no_dia.)`
+            : opts.proximoDiaAgenda
+              ? `nenhum hoje nem amanhã. A próxima agenda é ${opts.proximoDiaAgenda}: quando for propor a call, diga que a agenda de hoje e de amanhã fechou e combine de chamar ela nesse dia de manhã com os horários do dia (chame voltar_no_dia com ele). Não marque call com antecedência.`
+              : "nenhum no momento: pergunte dia e período e passe pro time"
         }`,
         blocoLead(opts.lead),
         opts.avisoDoLead ? `# Sobre este lead (vale junto com os ajustes do dono)\n${opts.avisoDoLead}` : null,
@@ -852,6 +873,11 @@ export async function rodarTeo(opts: {
             email: input.email ?? "",
             resumo: input.resumo ?? "",
           });
+          results.push({ type: "tool_result", tool_use_id: b.id, content: out });
+        } else if (b.name === "voltar_no_dia") {
+          const out = opts.voltarNoDia
+            ? await opts.voltarNoDia({ dia: input.dia ?? "", motivo: input.motivo ?? "" })
+            : "Não deu pra combinar a volta: pergunte dia e período e chame passar_para_humano (motivo call).";
           results.push({ type: "tool_result", tool_use_id: b.id, content: out });
         } else if (b.name === "pedir_cupom") {
           const out = opts.pedirCupom

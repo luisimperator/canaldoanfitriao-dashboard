@@ -63,6 +63,8 @@ interface Conversa {
   venda_direta_ate?: string | null;
   /** Último erro (ex.: "template 400: …" quando a abertura falhou). */
   erro?: string | null;
+  /** Volta combinada (voltar_no_dia): o Téo retoma neste dia de manhã com os horários do dia (migration 0131). */
+  call_retorno_em?: string | null;
 }
 
 /** Degrau da escada de cupons (teo_config.cupons). */
@@ -94,7 +96,7 @@ interface CupomPedido {
 }
 
 const CAMPOS_CONVERSA =
-  "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo, cupom_pendente, cupom_em, venda_direta_ate, erro";
+  "contact_id, nome, telefone, estado, ultima_msg_tratada, respostas, ficha, template_em, criado_em, formulario, formulario_em, motivo_humano, followup_etapa, silencio_desde, followup_em, black_passou_em, black_vendedor, black_retomou_em, venda_teo, cupom_pendente, cupom_em, venda_direta_ate, erro, call_retorno_em";
 
 interface Config {
   ligado: boolean;
@@ -757,6 +759,10 @@ function avisoCallMarcada(call: { inicio: string; vendedor: string | null; meet_
     "Não marque outro horário e nunca diga que o horário foi preenchido: só chame marcar_call de novo se ele pedir pra mudar.",
     // Fernando, 18/11 (Jenny): "marcou call já era, não fica mudando de assunto".
     "Com a call marcada, a venda é do especialista: não puxe assunto novo (nada de Max, produto, condição, curso ou novidade) e não faça pergunta. Se a pessoa só agradecer ou se despedir, responda numa frase curta lembrando o dia e a hora (ex.: \"Imagina! Até amanhã às 14h.\") e pare. Só responda o que ela perguntar (remarcar, link, como entrar, dúvida rápida).",
+    // Estudo do Diego (Fernando, 19/11: "vamos aplicar as sugestões"): oferecer
+    // ligação no lugar do vídeo; um lead que pediu ligação comprou no mesmo dia.
+    `VÍDEO OU LIGAÇÃO: se ela disser que prefere que o especialista ligue (ou que não pode por vídeo), confirme numa frase que ${call.vendedor ? primeiroNomeVendedor(call.vendedor) : "o especialista"} liga no WhatsApp dela no horário, anote na ficha "prefere ligação no WhatsApp" e chame avisar_vendedor com isso. Se preferir vídeo, confirme numa frase com o link.`,
+    "REMARCAR: se ela pedir pra mudar, ofereça os horários de hoje da lista (os mais próximos primeiro), depois os de amanhã. Se ela só puder depois de amanhã, use voltar_no_dia em vez de marcar com antecedência (a call antiga continua até ela escolher um horário novo).",
     call.meet_url
       ? `NÃO CONSEGUE ENTRAR: se perto do horário ele disser que não consegue entrar (link não abre, pede app, não acha a sala), responda na hora, curto: mande de novo ESTE link da call (${call.meet_url}) e o passo a passo. Celular: precisa do app Microsoft Teams (grátis; ${LOJAS_TEAMS}); depois de instalar, abre o link de novo e toca em "Entrar como convidado", digita o nome e entra. Computador: abre o link no Chrome ou no Edge e escolhe "Continuar neste navegador". Nunca mande outro link (Meet, outra sala), não diga que o especialista já está na sala e não remarque: o especialista foi avisado e entra por esse mesmo link.`
       : "",
@@ -968,7 +974,46 @@ async function vendedorDoLead(supabase: SupabaseClient, cfg: Config, contato: st
   return v && (cfg.vendedores ?? []).some((x) => x.nome === v) ? v : null;
 }
 
-// Horários da config daqui a 1h+ em que algum vendedor está livre. Os três
+// Call só pra hoje e amanhã (Fernando, 19/11: "Teo precisa parar de marcar call
+// pra semana que vem", "a prioridade seja lotar o dia corrente de calls"). Nos
+// nossos números, call marcada no mesmo dia teve 7% de falta, no dia seguinte
+// 28% e com 2 dias ou mais 62%. Quem só pode depois disso: o Téo combina de
+// voltar no dia (voltar_no_dia) e marca no próprio dia.
+const HORIZONTE_DIAS = 1;
+// Antecedência mínima de um horário (era 1h; com 30 min cabe mais call no dia).
+const ANTECEDENCIA_MS = 30 * 60_000;
+
+function diaSP(ms: number): string {
+  return local(new Date(ms).toISOString()).slice(0, 10);
+}
+
+// Dias com agenda (horários da config) daqui pra frente, em ordem.
+function diasComAgenda(cfg: Config): string[] {
+  const agora = Date.now();
+  return [
+    ...new Set(
+      (cfg.horarios ?? [])
+        .filter((h) => typeof h === "string" && new Date(h).getTime() > agora)
+        .map((h) => local(h).slice(0, 10))
+    ),
+  ].sort();
+}
+
+// "segunda (23/11)"
+function diaFala(dia: string): string {
+  const semana = DIAS_SEMANA[new Date(`${dia}T12:00:00-03:00`).getUTCDay()];
+  return `${semana} (${dia.slice(8, 10)}/${dia.slice(5, 7)})`;
+}
+
+// Próximo dia com agenda depois do horizonte (quando hoje e amanhã não têm
+// horário livre, é o dia em que o Téo combina de voltar).
+function proximoDiaComAgenda(cfg: Config): string | null {
+  const limite = diaSP(Date.now() + HORIZONTE_DIAS * 86400_000);
+  return diasComAgenda(cfg).find((d) => d > limite) ?? null;
+}
+
+// Horários da config de hoje e amanhã (daqui a 30 min+) em que algum vendedor
+// está livre. Os três
 // atendem em paralelo (cada um no seu computador): o mesmo horário aceita uma
 // call por vendedor. Em cada horário vai o vendedor livre que ordemDoDia()
 // escolhe. Se alguém do time já conversou com o lead, só os horários dessa
@@ -984,8 +1029,10 @@ async function horariosLivres(
 ): Promise<{ horario: string; vendedor: string }[]> {
   const time = (cfg.vendedores ?? []).map((v) => v.nome);
   const vendedores = especialista && time.includes(especialista) ? [especialista] : time;
+  const limite = diaSP(Date.now() + HORIZONTE_DIAS * 86400_000);
   const todos = (cfg.horarios ?? []).filter(
-    (h) => typeof h === "string" && new Date(h).getTime() > Date.now() + 3600_000
+    (h) =>
+      typeof h === "string" && new Date(h).getTime() > Date.now() + ANTECEDENCIA_MS && local(h).slice(0, 10) <= limite
   );
   if (todos.length === 0 || vendedores.length === 0) return [];
   const [{ data: marcadas }, taxa] = await Promise.all([
@@ -1608,6 +1655,11 @@ async function marcarCall(
     `📅 Call marcada pelo Téo: ${quando} com ${slot.vendedor} — ${email}\n${args.resumo}`
   );
   await log(supabase, "call marcada", { contact_id: c.contact_id, nome: c.nome, horario, email, vendedor: slot.vendedor });
+  // Marcou: a volta combinada (voltar_no_dia), se havia, não precisa mais.
+  if (c.call_retorno_em) {
+    await supabase.from("teo_conversas").update({ call_retorno_em: null }).eq("contact_id", c.contact_id);
+    c.call_retorno_em = null;
+  }
   let remarcou = false;
   // Remarcação: a call nova substitui as outras do lead que ainda não
   // aconteceram (senão a antiga continua mandando lembrete e "te esperando").
@@ -1663,6 +1715,40 @@ async function marcarCall(
     (link
       ? ` Link da sala (mande na confirmação, nesta mesma resposta): ${link}`
       : " O link da sala ainda não saiu: ele vai por aqui antes da call, no lembrete.")
+  );
+}
+
+// O lead só pode num dia depois de amanhã: em vez de marcar com antecedência,
+// o Téo combina de voltar nesse dia às 8h30 com os horários do dia (Fernando,
+// 19/11: "Esse negócio de ficar marcando com antecedência grande é queimar
+// lead"). Quem retoma é acompanhar(), no dia combinado.
+async function combinarRetorno(
+  supabase: SupabaseClient,
+  c: Conversa,
+  cfg: Config,
+  args: { dia: string; motivo: string }
+): Promise<string> {
+  const pedido = args.dia.trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(pedido)) return "Dia inválido: mande no formato AAAA-MM-DD.";
+  const limite = diaSP(Date.now() + HORIZONTE_DIAS * 86400_000);
+  if (pedido <= limite) {
+    return "Esse dia é hoje ou amanhã: não precisa combinar volta. Ofereça os horários da lista desse dia (se nenhum servir, os mais próximos).";
+  }
+  const alvo = diasComAgenda(cfg).find((d) => d >= pedido);
+  if (!alvo) {
+    return "A agenda desse dia ainda não abriu: diga que o especialista fala com ela por aqui pra combinar e chame passar_para_humano (motivo call) com a preferência dela.";
+  }
+  const em = new Date(`${alvo}T08:30:00-03:00`).toISOString();
+  await supabase
+    .from("teo_conversas")
+    .update({ call_retorno_em: em, atualizado_em: new Date().toISOString() })
+    .eq("contact_id", c.contact_id);
+  c.call_retorno_em = em;
+  await log(supabase, "volta combinada", { contact_id: c.contact_id, nome: c.nome, dia: alvo, pedido, motivo: args.motivo });
+  const outro = alvo !== pedido ? ` (${diaFala(pedido)} não tem agenda; o primeiro dia com agenda depois é ${diaFala(alvo)})` : "";
+  return (
+    `Combinado: ${diaFala(alvo)}, de manhã, esta conversa volta pra você com os horários daquele dia${outro}. ` +
+    `Diga a ela numa frase que você chama ${diaFala(alvo)} de manhã com os horários do dia pra marcar a call no próprio dia. Não prometa horário agora e não marque call pra esse dia.`
   );
 }
 
@@ -1784,6 +1870,80 @@ async function acompanhar(
     const falta = new Date(call[0].inicio as string).getTime() - agora;
     await adiar(supabase, c.contact_id, falta < 24 * 3600_000 ? 60_000 : Math.min(intervaloDeChecagem(ocioso), 10 * 60_000));
     return { status: "call marcada" };
+  }
+
+  // Volta combinada (voltar_no_dia): até o dia, nada de acompanhamento; no dia,
+  // às 8h30, o Téo retoma com os horários de hoje e a contagem dos
+  // acompanhamentos recomeça dali.
+  // Se já conversaram no dia combinado (ela escreveu antes das 8h30), a volta
+  // já aconteceu: segue o acompanhamento normal.
+  if (c.call_retorno_em && ultima) {
+    const inicioDoDia = new Date(`${diaSP(new Date(c.call_retorno_em).getTime())}T00:00:00-03:00`).getTime();
+    if (new Date(ultima.date).getTime() >= inicioDoDia) {
+      await supabase.from("teo_conversas").update({ call_retorno_em: null }).eq("contact_id", c.contact_id);
+      c.call_retorno_em = null;
+    }
+  }
+  if (c.call_retorno_em) {
+    const alvo = new Date(c.call_retorno_em).getTime();
+    if (agora < alvo) {
+      await adiar(supabase, c.contact_id, Math.min(alvo - agora, Math.max(intervaloDeChecagem(ocioso), 10 * 60_000)));
+      return { status: `volta combinada ${quando(c.call_retorno_em)}` };
+    }
+    if (!podeChamar()) {
+      await adiar(supabase, c.contact_id, proximas8hSP().getTime() - agora);
+      return { status: "volta combinada (às 8h)" };
+    }
+    const agoraIso = new Date().toISOString();
+    await supabase
+      .from("teo_conversas")
+      .update({ call_retorno_em: null, silencio_desde: agoraIso, followup_etapa: 0, followup_em: null, atualizado_em: agoraIso })
+      .eq("contact_id", c.contact_id);
+    c.call_retorno_em = null;
+    c.silencio_desde = agoraIso;
+    c.followup_etapa = 0;
+    c.followup_em = null;
+    if (janelaAberta) {
+      return {
+        status: "retomar",
+        retomar:
+          `[Instrução interna, o lead não vê: hoje é o dia em que você combinou de voltar pra marcar a call. ` +
+          `Mande UMA mensagem curta: cumprimente, lembre que combinaram de falar hoje e ofereça os três horários de HOJE mais próximos da lista "Horários livres" (com quem é cada um); se hoje não tiver três, complete com os primeiros de amanhã. ` +
+          `Se a pessoa disse claramente que não tem interesse, responda só [ENCERRAR].]`,
+      };
+    }
+    // Janela de 24h fechada: o primeiro modelo de acompanhamento abre a
+    // conversa; quando ela responder, o Téo oferece os horários do dia.
+    const tpl = (cfg.followup_templates ?? [])[0];
+    if (!tpl) {
+      await log(supabase, "volta combinada sem template", { contact_id: c.contact_id, nome: c.nome });
+      return { status: "volta combinada sem template" };
+    }
+    const r = await unnichat(supabase, "POST", "/meta/templates", {
+      phone: telefone,
+      templateId: tpl,
+      bodyParameters: [{ type: "text", text: primeiroNome(c.nome) }],
+    });
+    const ok = r.status >= 200 && r.status < 300;
+    if (ok) {
+      await supabase
+        .from("teo_conversas")
+        .update({ followup_etapa: 1, followup_em: agoraIso, proxima_checagem: null })
+        .eq("contact_id", c.contact_id);
+    } else {
+      // Não saiu: volta a combinar pra daqui a 30 min.
+      await supabase
+        .from("teo_conversas")
+        .update({ call_retorno_em: new Date(agora + 30 * 60_000).toISOString() })
+        .eq("contact_id", c.contact_id);
+    }
+    await log(supabase, ok ? "volta combinada (template)" : "volta combinada falhou", {
+      contact_id: c.contact_id,
+      nome: c.nome,
+      template: tpl,
+      status: r.status,
+    });
+    return { status: ok ? "volta combinada (template)" : "volta combinada falhou" };
   }
 
   const horas = cfg.followup_horas?.length ? cfg.followup_horas : FOLLOWUP_HORAS_PADRAO;
@@ -2267,7 +2427,12 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       horariosLivres: (await horariosLivres(supabase, cfg, especialista, c.contact_id)).map(
         (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`
       ),
+      proximoDiaAgenda: (() => {
+        const d = proximoDiaComAgenda(cfg);
+        return d ? `${diaFala(d)}, ${d}` : null;
+      })(),
       marcarCall: (args) => marcarCall(supabase, c, cfg, especialista, args),
+      voltarNoDia: (args) => combinarRetorno(supabase, c, cfg, args),
       // Fernando, 18/11: o Téo não corrige o vendedor na frente do lead; o
       // recado vai numa nota da conversa.
       avisarVendedor: async (recado) => {
@@ -2472,7 +2637,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
   const agora = Date.now();
   const { data: calls } = await supabase
     .from("teo_calls")
-    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status, evento_id, reuniao_id, link_enviado_em")
+    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status, evento_id, reuniao_id, link_enviado_em, confirmacao_em, alerta_silencio_em")
     .in("status", ["marcada", "convite_enviado"])
     .gte("inicio", new Date(agora - 2 * 3600_000).toISOString());
   for (const k of calls ?? []) {
@@ -2577,6 +2742,51 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         await log(supabase, `véspera ${r}`, { contact_id: k.contact_id, nome: k.nome, hora });
         if (r !== "recente") feitos.push(`véspera ${k.nome}`);
       }
+      // Regra das 24h (estudo do Diego; Fernando, 19/11: "vamos aplicar as
+      // sugestões"): lead que não mandou nada nas 24h antes da call quase
+      // sempre falta (Téo: 3 de 4; Diego: 4 de 5). No dia da call, de 5h a
+      // 1h30 antes, ele recebe uma pergunta que pede resposta. 1h antes, se
+      // seguir calado, o vendedor recebe uma nota pra ligar.
+      const calado = async () => {
+        const doLead = (await msgs()).filter((m) => m.senderBy === "contact");
+        const ult = doLead[doLead.length - 1];
+        return !ult || agora - new Date(ult.date).getTime() >= 24 * 3600_000;
+      };
+      if (
+        !k.confirmacao_em &&
+        conv?.telefone &&
+        diaCall === diaSP(agora) &&
+        agora >= t - 5 * 3600_000 &&
+        agora < t - 90 * 60_000 &&
+        podeChamar()
+      ) {
+        const r = (await calado())
+          ? await avisarDaCall(
+              supabase,
+              cfg,
+              conv.telefone,
+              await janela(),
+              `Oi, ${nome}! Hoje às ${horaFala} é o seu papo de 20 min com ${vend}. Prefere por vídeo ou que ${vend} te ligue no WhatsApp?`,
+              [nome, vend, `hoje às ${horaFala}`]
+            )
+          : "ativo";
+        await supabase.from("teo_calls").update({ confirmacao_em: new Date().toISOString() }).eq("id", k.id);
+        await log(supabase, `confirmação do dia ${r}`, { contact_id: k.contact_id, nome: k.nome, hora });
+        if (r !== "ativo") feitos.push(`confirmação ${k.nome}`);
+      }
+      if (!k.alerta_silencio_em && agora >= t - 60 * 60_000 && agora < t - 15 * 60_000) {
+        const quieto = await calado();
+        await supabase.from("teo_calls").update({ alerta_silencio_em: new Date().toISOString() }).eq("id", k.id);
+        if (quieto) {
+          await anotar(
+            supabase,
+            k.contact_id,
+            `⚠️ ${nome} não manda nada no WhatsApp há mais de 24h (não respondeu o "Tá de pé?" nem a confirmação de hoje). Nos nossos números, quase sempre vira falta. ${vend}: liga pra ${nome} agora no WhatsApp pra confirmar a call das ${hora}.`
+          );
+          await log(supabase, "alerta de silêncio", { contact_id: k.contact_id, nome: k.nome, vendedor: k.vendedor, hora });
+          feitos.push(`alerta silêncio ${k.nome}`);
+        }
+      }
       if (!k.lembrete_em && k.meet_url && conv?.telefone && agora >= t - 90 * 60_000 && agora < t - 5 * 60_000) {
         const r = await avisarDaCall(
           supabase,
@@ -2607,6 +2817,22 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         const vendedorFalou = (await msgs()).some(
           (m) => ehDoVendedor(m) && new Date(m.date).getTime() >= t - 3 * 3600_000
         );
+        // Já oferece remarcar pra mais tarde no mesmo dia (estudo do Diego: ele
+        // remarcava na hora pro mesmo dia e a call acontecia), com 2 horários
+        // livres de hoje do mesmo vendedor.
+        let maisTarde = "";
+        if (!escreveu && !vendedorFalou) {
+          const hoje = (await horariosLivres(supabase, cfg, k.vendedor, k.contact_id).catch(() => []))
+            .filter((l) => l.horario.slice(0, 10) === diaCall)
+            .slice(0, 2)
+            .map((l) => {
+              const hh = l.horario.slice(11, 16);
+              return hh.endsWith(":00") ? `${Number(hh.slice(0, 2))}h` : hh.replace(":", "h");
+            });
+          if (hoje.length) {
+            maisTarde = `\n\nSe não der pra entrar agora, sem problema: me fala que eu remarco pra hoje mais tarde, às ${hoje.join(" ou às ")}.`;
+          }
+        }
         const r = escreveu
           ? "lead por perto"
           : vendedorFalou
@@ -2616,7 +2842,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
                 cfg,
                 conv.telefone,
                 await janela(),
-                `Oi, ${nome}! Chegou a hora do seu papo com ${vend}. Se ainda não entrou, é por este link: ${k.meet_url}\n\n${APP_TEAMS}`,
+                `Oi, ${nome}! Chegou a hora do seu papo com ${vend}. Se ainda não entrou, é por este link: ${k.meet_url}\n\n${APP_TEAMS}${maisTarde}`,
                 [nome, vend, `começou agora`]
               );
         await supabase.from("teo_calls").update({ esperando_em: new Date().toISOString() }).eq("id", k.id);
@@ -2629,7 +2855,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         await anotar(
           supabase,
           k.contact_id,
-          `📞 Call agora às ${hora} com ${k.vendedor ?? "o especialista"} (marcada pelo Téo). 🎥 Ao entrar na sala do Teams, confira se está gravando; se não estiver, clique em Gravar e transcrever. 📝 Se a call não for pela sala do Teams, deixe aqui uma nota começando com #call e o que rolou (ou #faltou, se o lead não apareceu): sem gravação e sem essa nota, a call conta como falta no Painel Calls. Depois da call, o follow-up é seu: proposta e link logo em seguida.\n${k.resumo ?? ""}${conv?.ficha ? `\n\nFicha:\n${conv.ficha}` : ""}`
+          `📞 Call agora às ${hora} com ${k.vendedor ?? "o especialista"} (marcada pelo Téo). 🎥 Ao entrar na sala do Teams, confira se está gravando; se não estiver, clique em Gravar e transcrever. 📝 Se a call não for pela sala do Teams, deixe aqui uma nota começando com #call e o que rolou (ou #faltou, se o lead não apareceu): sem gravação e sem essa nota, a call conta como falta no Painel Calls. 📲 Se o lead não entrar em 3 min, liga pra ele no WhatsApp (se a ficha disser que prefere ligação, liga direto). Depois da call, o follow-up é seu: proposta e link logo em seguida.\n${k.resumo ?? ""}${conv?.ficha ? `\n\nFicha:\n${conv.ficha}` : ""}`
         );
         await supabase
           .from("teo_conversas")
@@ -2642,8 +2868,10 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
       // Passou pro vendedor, mas o lead escreveu perto da hora (pedindo pra
       // remarcar, sem conseguir entrar…) e o vendedor não respondeu em 5 min:
       // o Téo retoma a conversa em vez de deixar o lead sem resposta. Só até
-      // 15 min depois do horário; dali em diante a conversa é do vendedor.
-      if (k.passou_vendedor_em && agora < t + 15 * 60_000) {
+      // 30 min depois do horário (era 15; com o "remarco pra hoje mais tarde"
+      // do te esperando, a resposta dela chega depois); dali em diante a
+      // conversa é do vendedor.
+      if (k.passou_vendedor_em && agora < t + 30 * 60_000) {
         const desde = new Date(k.passou_vendedor_em).getTime();
         const depois = (await msgs()).filter((m) => new Date(m.date).getTime() > desde);
         const doLead = depois.filter((m) => m.senderBy === "contact");
