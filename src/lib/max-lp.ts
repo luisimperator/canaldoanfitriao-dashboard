@@ -12,6 +12,34 @@ import { PIXEL_PADRAO } from "@/lib/imersao-lp";
 export const MAX_WHATSAPP = "5511911647699";
 export const MAX_MENSAGEM = "Oi, Max! Vim pegar minha análise grátis 🎁";
 
+// A mensagem pronta muda conforme o utm_source do link (Fernando, 19/11:
+// "quando o UTM é story ou stories, aí a mensagem é: vi nos stories do Rômulo e
+// vim pegar o negócio grátis"). O clique pro WhatsApp não leva UTM; assim o Max
+// sabe de onde a pessoa veio. Toda variação mantém "vim pegar minha análise
+// grátis". Origem fora da lista vai entre parênteses no fim.
+const ORIGENS: [RegExp, string][] = [
+  [/^(ig_?|insta(gram)?_?)?stor(y|ies|ie)$/, "nos stories do Rômulo"],
+  [/^(ig|insta|instagram|bio|feed|reels?)$/, "no Instagram do Rômulo"],
+  [/^(yt|youtube)$/, "no YouTube do Rômulo"],
+  [/^(e-?mail|mailchimp|newsletter)$/, "no e-mail do Rômulo"],
+  [/^live$/, "na live do Rômulo"],
+  [/^tiktok$/, "no TikTok do Rômulo"],
+  [/^(fb|facebook|meta|ads?|anuncio|paid)$/, "o anúncio do Rômulo"],
+];
+
+export function mensagemMax(utmSource: string | null | undefined): string {
+  const s = (utmSource ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim();
+  if (!s) return MAX_MENSAGEM;
+  const achou = ORIGENS.find(([re]) => re.test(s));
+  if (achou) return `Oi, Max! Vi ${achou[1]} e vim pegar minha análise grátis 🎁`;
+  const limpo = s.replace(/[^a-z0-9_-]/g, "").slice(0, 30);
+  return limpo ? `${MAX_MENSAGEM} (${limpo})` : MAX_MENSAGEM;
+}
+
 // Preço do Max avulso (o da página que o Fernando mandou em 19/11).
 const PRECO = { ano: "R$ 997", parcela: "12x de R$ 99,70" };
 
@@ -19,14 +47,15 @@ function attr(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
-export function maxLink(): string {
-  return `https://wa.me/${MAX_WHATSAPP}?text=${encodeURIComponent(MAX_MENSAGEM)}`;
+export function maxLink(mensagem: string = MAX_MENSAGEM): string {
+  return `https://wa.me/${MAX_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
 }
 
 const WA_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.2.1-1.9-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5.1-4.5-.1-.2-1.2-1.6-1.2-3.1s.8-2.2 1-2.5c.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.2.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.6-.1 1.3z"/></svg>`;
 
-export function maxHtml(): string {
-  const link = attr(maxLink());
+export function maxHtml(opts: { mensagem?: string } = {}): string {
+  const mensagem = opts.mensagem ?? MAX_MENSAGEM;
+  const link = attr(maxLink(mensagem));
   const pixel = process.env.MAX_META_PIXEL_ID?.trim() || process.env.IMERSAO_META_PIXEL_ID?.trim() || PIXEL_PADRAO;
   const cta = (texto: string, extra = "") =>
     `<a class="cta${extra}" href="${link}" target="_blank" rel="noopener" data-cta>${WA_ICON}<span>${texto}</span></a>`;
@@ -417,7 +446,7 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
         <div class="screen">
           <div class="wa-head"><span class="av"><img src="/max/avatar.jpg" alt="Max"></span><div><b>Max, o Concierge</b><span>online</span></div></div>
           <div class="wa-body" data-chat="hero">
-            <div class="m out" data-p="600"><div class="b">Oi, Max! Vim pegar minha análise grátis 🎁<span class="tm">21:07</span></div></div>
+            <div class="m out" data-p="600"><div class="b">${attr(mensagem)}<span class="tm">21:07</span></div></div>
             <div class="m" data-p="1100" data-max><div class="b"><div class="who">Max, o Concierge</div>Oi! Que bom que você veio 🏡 Me manda o link do seu anúncio no Airbnb que eu faço a análise agora.<span class="tm">21:07</span></div></div>
             <div class="m out" data-p="1300"><div class="b">airbnb.com.br/rooms/…<span class="tm">21:08</span></div></div>
             <div class="m" data-p="1800" data-max><div class="b"><div class="who">Max, o Concierge</div>Olhei tudo! Os 3 pontos que mais pesam:<ol><li>A capa é o banheiro: troca pela sala com a varanda.</li><li>O título não fala da vista, que é o seu diferencial.</li><li>No fim de semana, a sua diária está abaixo dos vizinhos.</li></ol><span class="tm">21:08</span></div></div>
@@ -731,9 +760,20 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
     barra.classList.toggle('on', y > fimHero);
   }
   window.addEventListener('scroll', rolar, {passive:true}); rolar();
+  // rastreio próprio (tabela max_lp_eventos): visita e clique, com as UTMs do link
+  function beacon(tipo){
+    var b = JSON.stringify({t:tipo, u:location.search, ref:document.referrer||''});
+    try{if(navigator.sendBeacon && navigator.sendBeacon('/max/t', new Blob([b],{type:'text/plain'})))return}catch(e){}
+    try{fetch('/max/t',{method:'POST',body:b,keepalive:true})}catch(e){}
+  }
+  beacon('pv');
+  var origem = new URLSearchParams(location.search).get('utm_source') || 'direto';
   // clique no WhatsApp: evento próprio no pixel (não muda a otimização dos anúncios)
   document.querySelectorAll('[data-cta]').forEach(function(a){
-    a.addEventListener('click', function(){try{if(window.fbq)fbq('trackCustom','MaxWhatsApp')}catch(e){}});
+    a.addEventListener('click', function(){
+      beacon('clique');
+      try{if(window.fbq)fbq('trackCustom','MaxWhatsApp',{origem:origem})}catch(e){}
+    });
   });
 })();
 </script>
