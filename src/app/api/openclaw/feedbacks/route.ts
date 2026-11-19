@@ -9,7 +9,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // Authorization: Bearer <OPENCLAW_FEEDBACK_TOKEN>   (variável de ambiente da Vercel)
 //
 // Cada feedback vai pra dois lugares (Fernando, 19/11): o WhatsApp privado do
-// vendedor (campo texto) e o grupo "Gestão Comercial" (campo texto_grupo, o
+// vendedor (campo texto) e o grupo "Feedback Calls Canal do Anfitrião" (campo texto_grupo, o
 // mesmo texto com o nome do vendedor no topo; o ID do grupo vem em
 // grupo_whatsapp, de teo_config.grupo_gestao_whatsapp). Cada destino tem a sua
 // entrega.
@@ -90,7 +90,7 @@ function formatar(l: Linha, time: Vendedor[]) {
   };
 }
 
-// Time de vendas e o ID do grupo "Gestão Comercial" (teo_config, migração 0130).
+// Time de vendas e o ID do grupo "Feedback Calls Canal do Anfitrião" (teo_config, migração 0130).
 async function timeDeVendas(
   supabase: NonNullable<ReturnType<typeof getSupabaseAdmin>>
 ): Promise<{ time: Vendedor[]; grupo: string | null }> {
