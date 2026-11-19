@@ -14,6 +14,9 @@ function ehLpPublica(p: string): boolean {
     p === LP_IMERSAO ||
     p.startsWith(LP_IMERSAO + "/") ||
     p.startsWith("/lp/") ||
+    // LP da corrida (/corrida redireciona pra /corrida-anfitriao) e a marca que ela usa.
+    p === "/corrida-anfitriao" || p === "/corrida" ||
+    p.startsWith("/marca/") ||
     p === "/icon-192.png" ||
     p === "/t/pv" ||
     p === "/t/click"
