@@ -40,10 +40,8 @@ export function mensagemMax(utmSource: string | null | undefined): string {
   return limpo ? `${MAX_MENSAGEM} (${limpo})` : MAX_MENSAGEM;
 }
 
-// Preço do Max avulso (o da página que o Fernando mandou em 19/11).
-// A parcela é o destaque; o à vista vem menor (Fernando, 19/11: "o 99,70 por
-// mês que tem que ser o destaque. o valor à vista menor").
-const PRECO = { vezes: "12x de", parcela: "R$ 99,70", vista: "R$ 997" };
+// Sem preço na página (Fernando, 19/11: "tira o preço da pagina. tamo perdendo
+// aura"): o Max passa a condição no WhatsApp, depois da análise grátis.
 
 function attr(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -634,9 +632,7 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
     <h2 class="rv" style="--d:.1s">Tenha o Max com você <span class="c">o ano inteiro</span>.</h2>
     <div class="cartao rv pop" style="--d:.2s">
       <span class="gratis">Primeiro, a análise grátis</span>
-      <div class="vezes">${PRECO.vezes}</div>
-      <div class="big">${PRECO.parcela} <small>/mês</small></div>
-      <div class="sub">ou ${PRECO.vista} à vista · acesso de 1 ano</div>
+      <div class="sub" style="margin-top:4px">Depois da análise, se fizer sentido, o Max te mostra como ter ele com você o ano inteiro.</div>
       <ul>
         <li>Max no seu WhatsApp, 24 horas</li>
         <li>Raio-x de todos os seus anúncios, quantas vezes quiser</li>
@@ -644,7 +640,6 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
         <li>Tudo com o método do Rômulo Villela</li>
       </ul>
       ${cta("Começar pela análise grátis")}
-      <p class="nota">Primeiro o Max analisa o seu anúncio de graça. Se fizer sentido, ele mesmo te passa o link de assinatura.</p>
     </div>
   </div>
 </section>
