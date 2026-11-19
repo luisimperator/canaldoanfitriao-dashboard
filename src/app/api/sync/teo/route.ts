@@ -1690,11 +1690,19 @@ function horaSP(): number {
   return new Date(Date.now() - 3 * 3600_000).getUTCHours();
 }
 
-// Chamar alguém por iniciativa (template, acompanhamento) só das 8h às 21h.
+// Minutos desde a meia-noite em Brasília.
+function minutoSP(): number {
+  const d = new Date(Date.now() - 3 * 3600_000);
+  return d.getUTCHours() * 60 + d.getUTCMinutes();
+}
+
+// Chamar alguém por iniciativa (template, acompanhamento, véspera da call) só
+// das 8h às 22h30 (Fernando, 19/11: "estende o Téo até 22h30"; era até 21h).
 // Responder a quem escreveu vale a qualquer hora.
+const INICIATIVA_ATE_MIN = 22 * 60 + 30;
 function podeChamar(): boolean {
-  const h = horaSP();
-  return h >= 8 && h < 21;
+  const m = minutoSP();
+  return m >= 8 * 60 && m < INICIATIVA_ATE_MIN;
 }
 
 function proximas8hSP(): Date {
@@ -2425,7 +2433,7 @@ async function avisarDaCall(
 }
 
 // Antes de cada call:
-// * véspera, das 18h às 21h: "amanhã às 15h com o Flávio, tá de pé?" (se a
+// * véspera, das 18h às 22h30: "amanhã às 15h com o Flávio, tá de pé?" (se a
 //   pessoa responder, a janela de 24h reabre pro lembrete do dia);
 // * ~90 min antes: lembrete com o link;
 // * 10 min antes: a conversa passa pro vendedor no Unnichat, com a ficha;
@@ -2518,13 +2526,13 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
         });
         if (aberta) feitos.push(`link ${k.nome}`);
       }
-      // Véspera: a call é amanhã (horário de Brasília) e são 18h–21h. Se a
+      // Véspera: a call é amanhã (horário de Brasília) e são 18h–22h30. Se a
       // conversa teve mensagem nas últimas 3h (acabou de marcar ou de falar),
       // não precisa: só registra.
       const diaCall = local(k.inicio).slice(0, 10);
       const amanha = local(new Date(agora + 86400_000).toISOString()).slice(0, 10);
       const h = horaSP();
-      if (!k.vespera_em && conv?.telefone && diaCall === amanha && h >= 18 && h < 21) {
+      if (!k.vespera_em && conv?.telefone && diaCall === amanha && h >= 18 && minutoSP() < INICIATIVA_ATE_MIN) {
         const reais = (await msgs()).filter((m) => m.senderBy !== "platform");
         const ultima = reais[reais.length - 1];
         const recente = ultima && agora - new Date(ultima.date).getTime() < 3 * 3600_000;
