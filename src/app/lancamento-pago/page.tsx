@@ -5,7 +5,8 @@ import { CopyButton } from "@/components/CopyButton";
 import { SyncButton } from "@/components/SyncButton";
 import { ImersaoTurmaForm, type TurmaFormValores } from "@/components/ImersaoTurmaForm";
 import { brl, num } from "@/lib/format";
-import { TAG_FIXA, TURMA_COLS, tagDatada, turmaParaCompra, type Turma } from "@/lib/imersao";
+import { TAG_FIXA, TURMA_COLS, diaSP, tagDatada, turmaParaCompra, type Turma } from "@/lib/imersao";
+import { PlacarImersao, type Placar } from "@/components/PlacarImersao";
 
 // Lançamento pago semanal (Imersão A5E, R$ 27): turmas, compradores, cliques
 // nos links fixos (/imersao e /vip) e o funil de cada turma.
@@ -168,6 +169,11 @@ export default async function LancamentoPagoPage({
         .eq("turma_data", foco.turma_data)
     : { data: [] };
   const variantes = ((variantesRaw ?? []) as VarianteRow[]).sort((a, b) => b.visitas_unicas - a.visitas_unicas);
+  // Placar no formato do card do Foley (gasto CDR no Meta, ingressos, líquido, CPA).
+  const { data: placarRaw } = foco
+    ? await supabase.rpc("imersao_placar", { p_turma: foco.turma_data })
+    : { data: null };
+  const placar = (placarRaw ?? null) as Placar | null;
 
   // Sala agora (turma ativa = a mais próxima com fim_domingo >= agora).
   const ativa = [...turmas]
@@ -216,6 +222,8 @@ export default async function LancamentoPagoPage({
         title="Imersão A5E"
         subtitle={`Ingresso de R$ 27, turma toda semana (sábado e domingo, 9h às 16h). Quem compra agora entra na turma de ${fmtData(emVenda)}.`}
       />
+
+      {placar && <PlacarImersao placar={placar} hoje={diaSP(agora)} />}
 
       {errTurmas && (
         <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
@@ -430,8 +438,12 @@ export default async function LancamentoPagoPage({
             </Card>
           </div>
 
-          <Card title={`Compradores (${num(compradores.length)})`} className="mt-4">
-            <div className="-mx-2 overflow-x-auto">
+          <Card className="mt-4">
+            <details>
+              <summary className="cursor-pointer text-[15px] font-semibold tracking-[-0.01em] text-ink">
+                Compradores ({num(compradores.length)}) <span className="text-xs font-normal text-ink-2">· toque pra abrir a lista</span>
+              </summary>
+            <div className="-mx-2 mt-4 overflow-x-auto">
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-line">
@@ -481,6 +493,7 @@ export default async function LancamentoPagoPage({
                 </tbody>
               </table>
             </div>
+            </details>
           </Card>
         </>
       )}
