@@ -112,6 +112,27 @@ section{position:relative;padding:clamp(64px,10vw,110px) 0}
 .hero .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .hero .chips span{font-family:var(--label);font-weight:600;font-size:.85rem;letter-spacing:.06em;color:rgba(255,255,255,.75);padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04)}
 .hero .chips span b{color:var(--coral)}
+/* Rômulo grande na abertura (Fernando, 19/11: "e aí, que Rômulo? Quem é esse Rômulo?") */
+.hero .palco{display:block;position:relative}
+.retrato{position:relative;height:620px;border-radius:30px;overflow:hidden;background:#1a1a1a;border:1px solid rgba(255,255,255,.08);box-shadow:0 40px 90px rgba(0,0,0,.5)}
+.retrato .foto{position:absolute;inset:0;background:url("/marca/a5e-hero.webp") 76% 22%/auto 100% no-repeat;transform-origin:72% 28%;animation:kb 18s ease-in-out infinite alternate}
+@keyframes kb{to{transform:scale(1.08)}}
+.retrato::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(20,20,20,.9) 100%);pointer-events:none}
+.retrato .nome{position:absolute;right:24px;bottom:24px;z-index:2;max-width:58%;text-align:right}
+.retrato .nome b{display:block;font-family:var(--title);font-weight:700;font-size:1.6rem;line-height:1.1;color:#fff}
+.retrato .nome span{display:block;margin-top:6px;font-family:var(--label);font-weight:600;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.78);line-height:1.45}
+.retrato .nome span i{font-style:normal;color:var(--coral)}
+.hero .celular{position:absolute;left:-50px;bottom:-46px;width:270px;z-index:3}
+.hero .phone{width:100%;border-radius:36px;padding:9px}
+.hero .screen{border-radius:28px}
+.hero .wa-head{padding:12px 12px 9px}
+.hero .wa-head b{font-size:.86rem}
+.hero .m .b{font-size:.74rem}
+.hero .halo{right:-34px;top:-30px;bottom:auto;width:80px;height:80px}
+.hero .etiqueta{left:14px;transform:none;font-size:.68rem;padding:6px 12px}
+.hero .halo img{border-width:5px}
+.hero .halo::before{inset:-10px}
+.hero .halo::after{width:15px;height:15px;right:4px;bottom:4px;border-width:3px}
 
 /* celular com conversa (como o slide "Max em ação") */
 .palco{position:relative;display:flex;justify-content:center}
@@ -326,7 +347,17 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
   .hero .txt{text-align:left}
   .palco{margin-top:4px}
   .rv.dir,.rv.esq{transform:translateY(34px)}
-  .halo{width:64px;height:64px;right:calc(50% - 170px);bottom:auto;top:-30px}
+  .hero{padding-top:84px}
+  .hero .grid{display:flex;flex-direction:column;align-items:stretch;gap:28px}
+  .hero .palco{display:contents}
+  .retrato{order:-1;height:min(80vw,340px);border-radius:24px}
+  .retrato .foto{background-position:70% 18%}
+  .retrato .nome{right:auto;left:18px;bottom:18px;text-align:left;max-width:62%}
+  .retrato .nome b{font-size:1.3rem}
+  .retrato .nome span{font-size:.7rem}
+  .hero .celular{position:relative;left:auto;bottom:auto;width:min(100%,340px);margin:6px auto 0}
+  .hero .m .b{font-size:.84rem}
+  .hero .halo{width:64px;height:64px;right:-8px;top:-26px}
   .halo::before{inset:-9px}
   .halo::after{width:14px;height:14px;right:2px;bottom:2px;border-width:3px}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -370,12 +401,17 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
     <div class="txt">
       <span class="pill coral rv">🎁 Análise grátis do seu anúncio</span>
       <h1 class="rv" style="--d:.1s">O Rômulo no seu bolso, <span class="c">24 horas</span>.</h1>
-      <p class="lead rv" style="--d:.2s">O Max é o concierge com IA do Canal do Anfitrião. Ele estudou todas as aulas do Rômulo e as regras do Airbnb e do Booking, lê o seu anúncio e te diz o que mudar pra ter mais reservas.</p>
+      <p class="lead rv" style="--d:.2s">O Max é o concierge com IA do Rômulo Villela. Ele estudou todas as aulas do Rômulo e as regras do Airbnb e do Booking, lê o seu anúncio e te diz o que mudar pra ter mais reservas.</p>
       <div class="rv" style="--d:.3s">${cta("Pegar minha análise grátis")}</div>
       <p class="nota rv" style="--d:.35s">Grátis. Sem cadastro e sem formulário: é só mandar um oi no WhatsApp.</p>
       <div class="chips rv" style="--d:.45s"><span><b>✓</b> Fotos e capa</span><span><b>✓</b> Título e descrição</span><span><b>✓</b> Preço e regras</span></div>
     </div>
-    <div class="palco rv dir" style="--d:.25s">
+    <div class="palco">
+      <div class="retrato rv pop" style="--d:.15s" role="img" aria-label="Rômulo Villela">
+        <div class="foto"></div>
+        <div class="nome"><b>Rômulo Villela</b><span>Anfitrião desde 2016<br><i>60+ imóveis</i> · 1.700+ alunos</span></div>
+      </div>
+      <div class="celular rv" style="--d:.45s">
       <div class="phone flutua">
         <span class="pill etiqueta">Exemplo de análise</span>
         <div class="screen">
@@ -390,6 +426,7 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
         </div>
       </div>
       <div class="halo"><img src="/max/avatar.jpg" alt=""></div>
+      </div>
     </div>
   </div>
 </section>
