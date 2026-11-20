@@ -70,7 +70,8 @@ export async function GET(req: NextRequest) {
   await clique(antesDoSabado ? "antes" : "intervalo", null);
   const abre = horaHumana(ms(prox.inicio) - ABRE_ANTES_MS);
   return paginaAviso(
-    antesDoSabado ? "A Imersão ainda não começou" : "O primeiro dia terminou",
+    // Fernando, 20/11: inscrito via o aviso e achava que o link não funcionava.
+    antesDoSabado ? "✅ Seu link está certo: a Imersão ainda não começou" : "O primeiro dia terminou",
     [
       `${antesDoSabado ? "Começa" : "Continua"} ${diaHumano(prox.inicio)}, às ${horaHumana(prox.inicio)}. A sala abre às ${abre}.`,
       "Guarde este link: é por ele que você entra na sala. Esta página atualiza sozinha.",
