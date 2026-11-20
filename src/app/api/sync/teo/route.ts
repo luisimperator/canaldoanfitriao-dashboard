@@ -1605,7 +1605,7 @@ async function marcarCall(
   c: Conversa,
   cfg: Config,
   especialista: string | null,
-  args: { horario: string; email: string; resumo: string }
+  args: { horario: string; email: string; resumo: string; nome?: string }
 ): Promise<string> {
   const livres = await horariosLivres(supabase, cfg, especialista, c.contact_id);
   const horario = args.horario.trim().slice(0, 16);
@@ -1618,23 +1618,42 @@ async function marcarCall(
   if (!slot) {
     return `Esse horário não está livre. Livres agora: ${lista(livres)}.`;
   }
+  // Nome: contato que chega do WhatsApp sem nome gerava call sem nome (19/11:
+  // a venda da Caroline não bateu com a call no painel). Sem nome, não marca:
+  // o Téo pergunta e chama de novo (Fernando, 20/11: "Tem que perguntar o
+  // nome ao gravar a call").
+  const nomeDito = (args.nome ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
+  const nomeOk = nomeDito.length >= 2 && !/[@\d]/.test(nomeDito) ? nomeDito : null;
+  const nome = c.nome?.trim() || nomeOk;
   // Sem e-mail no pedido: usa o que já temos (cadastro, disparo, compra). Só
   // volta pra pedir quando não há nenhum.
   let email = args.email.trim().toLowerCase();
+  let faltaEmail: string | null = null;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     const salvo = await emailDoContato(supabase, c);
     if (!salvo) {
-      return email
-        ? "E-mail inválido: peça o e-mail de novo."
-        : "Não temos e-mail deste lead: peça o e-mail (é só pra call entrar na agenda; o link vai por aqui) e chame marcar_call de novo.";
+      faltaEmail = email
+        ? "o e-mail veio inválido: peça de novo"
+        : "não temos e-mail deste lead: peça o e-mail (é só pra call entrar na agenda; o link vai por aqui)";
+    } else {
+      email = salvo.trim().toLowerCase();
     }
-    email = salvo.trim().toLowerCase();
+  }
+  if (!nome || faltaEmail) {
+    const faltas = [
+      !nome ? "não temos o nome deste lead: pergunte como ele se chama (vai na ficha do especialista)" : null,
+      faltaEmail,
+    ].filter(Boolean);
+    return `Ainda não marquei: ${faltas.join("; e ")}. Peça tudo numa mensagem só e chame marcar_call de novo${!nome ? " com nome" : ""}.`;
+  }
+  if (!c.nome?.trim() && nomeOk) {
+    await supabase.from("teo_conversas").update({ nome: nomeOk }).eq("contact_id", c.contact_id);
   }
   const { data: nova, error } = await supabase
     .from("teo_calls")
     .insert({
       contact_id: c.contact_id,
-      nome: c.nome,
+      nome,
       inicio: `${horario}:00-03:00`,
       email,
       resumo: args.resumo,
@@ -1654,7 +1673,7 @@ async function marcarCall(
     c.contact_id,
     `📅 Call marcada pelo Téo: ${quando} com ${slot.vendedor} — ${email}\n${args.resumo}`
   );
-  await log(supabase, "call marcada", { contact_id: c.contact_id, nome: c.nome, horario, email, vendedor: slot.vendedor });
+  await log(supabase, "call marcada", { contact_id: c.contact_id, nome, horario, email, vendedor: slot.vendedor });
   // Marcou: a volta combinada (voltar_no_dia), se havia, não precisa mais.
   if (c.call_retorno_em) {
     await supabase.from("teo_conversas").update({ call_retorno_em: null }).eq("contact_id", c.contact_id);
