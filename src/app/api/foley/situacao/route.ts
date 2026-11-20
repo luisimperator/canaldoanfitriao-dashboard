@@ -10,8 +10,11 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 //   Authorization: Bearer <FOLEY_API_TOKEN>   (variável de ambiente da Vercel)
 //   { "pessoas": [{ "telefone": "5511...", "email": "opcional", "grupo": "a5e" | "gigantes" }] }
 // Resposta, na mesma ordem: decisao (fica | sai | sai_agora | protegido |
-// nao_achei), motivo, fonte, ultimo_pagamento, valido_ate, dias_atraso e
-// mudou/decisao_anterior (comparado com a consulta anterior da mesma pessoa).
+// nao_achei | pausado), motivo, fonte, ultimo_pagamento, valido_ate,
+// dias_atraso e mudou/decisao_anterior (comparado com a consulta anterior da
+// mesma pessoa). "pausado" = remoções pausadas em foley_config (migração
+// 0135): quem a regra tiraria vem como pausado, com a decisão da regra em
+// decisao_regra, e o robô não tira ninguém.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
