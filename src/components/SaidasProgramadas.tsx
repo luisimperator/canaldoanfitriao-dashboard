@@ -10,8 +10,9 @@ import { dayLabel } from "@/components/ProvisaoTimeline";
 // Grava em provisao_saidas via /api/financeiro/provisao/saidas.
 //
 // `pagas` são previsões que o extrato já quitou (conciliação automática por
-// valor + data + beneficiário): ficam listadas como comprovante, sem pesar no
-// saldo projetado.
+// valor + data + beneficiário, ou pelo beneficiário perto do vencimento quando o
+// valor previsto não bate): ficam listadas como comprovante, sem pesar no saldo
+// projetado. Vencida que não apareceu no extrato continua pesando (0133).
 
 export function SaidasProgramadas({
   saidas,
@@ -97,6 +98,15 @@ export function SaidasProgramadas({
                 </div>
                 <div className="text-xs text-slate-400 dark:text-zinc-500">
                   {dayLabel(s.data, hoje)}
+                  {s.data < hoje && (
+                    <>
+                      {" "}
+                      ·{" "}
+                      <span className="rounded bg-rose-100 dark:bg-rose-500/15 px-1 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">
+                        vencida — ainda não saiu do banco
+                      </span>
+                    </>
+                  )}
                   {s.prevista && (
                     <>
                       {" "}
@@ -190,7 +200,7 @@ export function SaidasProgramadas({
         />
         <input
           className={`${field} w-full sm:w-44`}
-          placeholder="Beneficiário no extrato"
+          placeholder="Beneficiário no extrato (ex.: fulano|ciclano)"
           title="Trecho do nome como aparece no extrato (ex.: facebook). Serve para dar baixa sozinho quando o pagamento cair."
           value={form.matchTexto}
           onChange={(e) => setForm((f) => ({ ...f, matchTexto: e.target.value }))}

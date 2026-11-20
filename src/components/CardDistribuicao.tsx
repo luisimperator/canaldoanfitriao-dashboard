@@ -186,6 +186,20 @@ export function CardDistribuicao({
         {shortDate(p.diaDoVale)}, com {brl(p.menorCaixaDoPeriodo)}), já descontadas as contas
         do período — inclusive a fatura do Meta do mês que vem. Tirar esse valor não fura o
         colchão em nenhum dia.
+        {p.entradaTmbPorDia > 0 && (
+          <>
+            {" "}
+            A TMB entra pela média do que ela pagou nos últimos 90 dias (
+            {brl(p.entradaTmbPorDia * 30)}/mês).
+          </>
+        )}
+        {p.saidasVencidas > 0 && (
+          <>
+            {" "}
+            Conta vencida que ainda não apareceu no extrato continua descontada (
+            {brl(p.saidasVencidas)}).
+          </>
+        )}
         {!cofreMandaNoColchao && (
           <>
             {" "}

@@ -118,6 +118,8 @@ function parsePolitica(j: Record<string, unknown> | null): PoliticaDistribuicao 
     cofreDepois: n("cofre_depois"),
     metaValor: n("meta_valor"),
     progressoMeta: j.progresso_meta == null ? null : Number(j.progresso_meta),
+    entradaTmbPorDia: n("entrada_tmb_por_dia"),
+    saidasVencidas: n("saidas_vencidas"),
   };
 }
 
