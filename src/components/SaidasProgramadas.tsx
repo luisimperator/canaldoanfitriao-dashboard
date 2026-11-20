@@ -18,10 +18,13 @@ export function SaidasProgramadas({
   saidas,
   pagas = [],
   hoje,
+  agendadasNoInter = [],
 }: {
   saidas: SaidaProgramada[];
   pagas?: SaidaProgramada[];
   hoje: string;
+  /** Ids que já estão agendados no Inter: na curva conta só o agendamento. */
+  agendadasNoInter?: string[];
 }) {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -98,6 +101,15 @@ export function SaidasProgramadas({
                 </div>
                 <div className="text-xs text-slate-400 dark:text-zinc-500">
                   {dayLabel(s.data, hoje)}
+                  {agendadasNoInter.includes(s.id) && (
+                    <>
+                      {" "}
+                      ·{" "}
+                      <span className="rounded bg-sky-100 dark:bg-sky-500/15 px-1 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
+                        agendada no Inter — conta uma vez só
+                      </span>
+                    </>
+                  )}
                   {s.data < hoje && (
                     <>
                       {" "}
