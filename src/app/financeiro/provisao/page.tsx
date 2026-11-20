@@ -119,11 +119,30 @@ export default async function ProvisaoPage() {
         ]
       : [];
 
+  // Saída cadastrada que já está agendada no Inter (mesmo valor, até 5% ou
+  // R$ 500, e data a até 15 dias) é o mesmo pagamento: fica só o agendamento,
+  // senão conta dobrado. Ex.: o Simples de 10/2026 previsto pra 20/11 e o
+  // agendado no Inter pro dia útil seguinte (23/11).
+  const diasEntre = (a: string, b: string) =>
+    Math.abs(Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / 86_400_000;
+  const agendadasNoInter = new Set(
+    p.saidasProgramadas
+      .filter((s) =>
+        inter.saidas.some(
+          (a) =>
+            diasEntre(a.data, s.data) <= 15 &&
+            Math.abs(a.valor - s.valor) <= Math.min(s.valor * 0.05, 500)
+        )
+      )
+      .map((s) => s.id)
+  );
+  const programadas = p.saidasProgramadas.filter((s) => !agendadasNoInter.has(s.id));
+
   // saídas previstas = agendados no Inter (boletos/pagamentos) + manuais
   //                    + a retirada dos sócios
   const saidasFuturas = [
     ...inter.saidas.map((s) => ({ dia: s.data, valor: s.valor })),
-    ...p.saidasProgramadas.map((s) => ({ dia: s.data, valor: s.valor })),
+    ...programadas.map((s) => ({ dia: s.data, valor: s.valor })),
     ...saidaDistribuicao.map((s) => ({ dia: s.dia, valor: s.valor })),
   ];
   const saidasMes = Math.round(
@@ -279,7 +298,7 @@ export default async function ProvisaoPage() {
           ]}
           saidas={[
             ...inter.saidas.map((s) => ({ dia: s.data, valor: s.valor, nome: s.descricao })),
-            ...p.saidasProgramadas.map((s) => ({
+            ...programadas.map((s) => ({
               dia: s.data,
               valor: s.valor,
               nome: s.prevista ? `${s.descricao} (previsão)` : s.descricao,
@@ -417,7 +436,12 @@ export default async function ProvisaoPage() {
           </div>
         )}
 
-        <SaidasProgramadas saidas={p.saidasProgramadas} pagas={p.saidasPagas} hoje={p.hoje} />
+        <SaidasProgramadas
+          saidas={p.saidasProgramadas}
+          pagas={p.saidasPagas}
+          hoje={p.hoje}
+          agendadasNoInter={[...agendadasNoInter]}
+        />
       </Card>
 
       <p className="mt-4 text-xs text-slate-400 dark:text-zinc-500">
