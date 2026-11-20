@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { horaSP, registrarClique, repassarParams, turmaAtiva, turmaParaCompra } from "@/lib/imersao";
-import { diaHumano, horaHumana, paginaAviso } from "@/lib/imersao-pagina";
+import { diaHumano, horaHumana, paginaAviso, paginaEspera } from "@/lib/imersao-pagina";
 
 // Link fixo da sala do evento: link.canaldoanfitriao.com.br/imersao
 //
@@ -68,13 +68,18 @@ export async function GET(req: NextRequest) {
   const antesDoSabado = t < ms(turma.inicio_sabado);
   const prox = antesDoSabado ? dias[0] : dias[1];
   await clique(antesDoSabado ? "antes" : "intervalo", null);
-  const abre = horaHumana(ms(prox.inicio) - ABRE_ANTES_MS);
-  return paginaAviso(
-    // Fernando, 20/11: inscrito via o aviso e achava que o link não funcionava.
-    antesDoSabado ? "✅ Seu link está certo: a Imersão ainda não começou" : "O primeiro dia terminou",
-    [
-      `${antesDoSabado ? "Começa" : "Continua"} ${diaHumano(prox.inicio)}, às ${horaHumana(prox.inicio)}. A sala abre às ${abre}.`,
-      "Guarde este link: é por ele que você entra na sala. Esta página atualiza sozinha.",
-    ]
-  );
+  // Página de espera com contagem, foto do Rômulo e a cara da LP (Fernando,
+  // 20/11: inscrito via "a Imersão ainda não começou" e achava que o link não
+  // funcionava; "coloca um countdown").
+  const abreMs = ms(prox.inicio) - ABRE_ANTES_MS;
+  const dia = diaHumano(prox.inicio);
+  return paginaEspera({
+    titulo: antesDoSabado ? "A Imersão ainda não começou." : "O primeiro dia terminou.",
+    frase: antesDoSabado ? "Começa em:" : "O segundo começa em:",
+    quando: `${dia.charAt(0).toUpperCase()}${dia.slice(1)}, das ${horaHumana(prox.inicio)} às ${horaHumana(prox.fim)}`,
+    abreTexto: `A sala abre às ${horaHumana(abreMs)}.`,
+    inicioMs: ms(prox.inicio),
+    abreMs,
+    agoraMs: t,
+  });
 }
