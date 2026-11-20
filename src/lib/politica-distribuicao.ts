@@ -6,7 +6,8 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 //
 // O "livre" é o menor saldo projetado do horizonte (mês corrente + seguinte)
 // menos o colchão exigido, que é o maior entre o piso operacional e o cofre já
-// acumulado. Contas em @/supabase/migrations/0021+0022.
+// acumulado. Contas em @/supabase/migrations/0021+0022; desde a 0133 a TMB
+// entra pela média dos últimos 90 dias e conta vencida só sai quando paga.
 
 export interface PoliticaDistribuicao {
   hoje: string;
@@ -26,6 +27,10 @@ export interface PoliticaDistribuicao {
   cofreDepois: number;
   metaValor: number;
   progressoMeta: number | null;
+  /** Média diária do que a TMB pagou nos últimos 90 dias (entra na curva). */
+  entradaTmbPorDia: number;
+  /** Saídas programadas vencidas que ainda não apareceram no extrato. */
+  saidasVencidas: number;
 }
 
 interface RpcShape {
@@ -46,6 +51,8 @@ interface RpcShape {
   cofre_depois: number;
   meta_valor: number;
   progresso_meta: number | null;
+  entrada_tmb_por_dia?: number;
+  saidas_vencidas?: number;
 }
 
 /** Próxima data de distribuição: o dia `dia` deste mês, ou do mês que vem se já passou. */
@@ -96,6 +103,8 @@ async function fetchPolitica(data?: string): Promise<PoliticaDistribuicao | null
       cofreDepois: r.cofre_depois ?? 0,
       metaValor: r.meta_valor ?? 0,
       progressoMeta: r.progresso_meta,
+      entradaTmbPorDia: r.entrada_tmb_por_dia ?? 0,
+      saidasVencidas: r.saidas_vencidas ?? 0,
     };
   } catch {
     return null;
