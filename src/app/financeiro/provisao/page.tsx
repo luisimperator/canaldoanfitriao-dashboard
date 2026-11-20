@@ -74,7 +74,10 @@ export default async function ProvisaoPage() {
       : p.saldoEduzzAncora != null
         ? p.saldoEduzzAncora.valor + p.liberadoDesdeAncora
         : null;
-  const disponivel = p.saldoInter + (saldoEduzz ?? 0) + asaas.saldo;
+  // Saque que saiu da Eduzz e ainda não caiu no Inter: é nosso e já não está
+  // em nenhum dos dois saldos. A política de distribuição conta (caixa_hoje);
+  // sem ele aqui a curva ficava R$ 54,7 mil abaixo e ia pro negativo em 19/11.
+  const disponivel = p.saldoInter + (saldoEduzz ?? 0) + asaas.saldo + p.saquesTransitoTotal;
 
   // Eduzz + Asaas fundidos por dia (mesmo shape, mesmas séries do gráfico)
   const pagoAll = fundeDias(p.pagoPorDia, asaas.pagoPorDia);
@@ -198,6 +201,9 @@ export default async function ProvisaoPage() {
               <> · Eduzz não informado</>
             )}
             {asaas.ok && <> · Asaas {brl(asaas.saldo)}</>}
+            {p.saquesTransitoTotal > 0 && (
+              <> · a caminho do Inter {brl(p.saquesTransitoTotal)} (saque da Eduzz)</>
+            )}
           </div>
           {p.saldoEduzzExtrato == null && (
             <div className="mt-1.5">
@@ -304,6 +310,9 @@ export default async function ProvisaoPage() {
               O degrau de {shortDate(distrib.dataDistribuicao)} é a retirada dos sócios
               ({brl(distrib.valor)}
               {distrib.fechado ? ", cravada" : ", prévia — muda até " + shortDate(distrib.dataFechamento)}).
+              {" "}A curva só tem o que já está contratado ou agendado; a conta da distribuição
+              também soma a média de vendas novas e da TMB e desconta a média do gasto de
+              rotina, por isso o saldo dela depois da retirada é diferente do daqui.
             </>
           )}
         </p>

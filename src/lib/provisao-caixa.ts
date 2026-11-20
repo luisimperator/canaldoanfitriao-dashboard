@@ -48,6 +48,9 @@ export interface ProvisaoCaixa {
   saidasProgramadas: SaidaProgramada[];
   /** Previsões já quitadas (conciliadas com o extrato) — fora do saldo projetado. */
   saidasPagas: SaidaProgramada[];
+  /** Saque que saiu da Eduzz e ainda não apareceu no extrato do Inter. */
+  saquesTransito: { id: string; valor: number; saiu_em: string; chega_em: string }[];
+  saquesTransitoTotal: number;
 }
 
 interface RpcShape {
@@ -65,6 +68,8 @@ interface RpcShape {
   lags: Record<string, number>;
   saidas_programadas: SaidaProgramada[];
   saidas_pagas: SaidaProgramada[] | null;
+  saques_transito?: { id: string; valor: number; saiu_em: string; chega_em: string }[] | null;
+  saques_transito_total?: number | null;
 }
 
 // A RPC varre eduzz_sales_raw inteira (~2,3s). Sem cache, a página pagava isso
@@ -72,7 +77,7 @@ interface RpcShape {
 // mesma função por dentro.
 const getProvisaoCaixaCached = unstable_cache(
   fetchProvisaoCaixa,
-  ["provisao-caixa-v2"],
+  ["provisao-caixa-v3"],
   { revalidate: 60, tags: ["provisao"] }
 );
 
@@ -106,6 +111,8 @@ async function fetchProvisaoCaixa(): Promise<ProvisaoCaixa | null> {
       lags: raw.lags ?? {},
       saidasProgramadas: raw.saidas_programadas ?? [],
       saidasPagas: raw.saidas_pagas ?? [],
+      saquesTransito: raw.saques_transito ?? [],
+      saquesTransitoTotal: Number(raw.saques_transito_total ?? 0),
     };
   } catch {
     return null;
