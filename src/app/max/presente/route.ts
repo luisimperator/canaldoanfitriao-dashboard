@@ -9,7 +9,9 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
-const MENSAGEM = "Oi, Max! Vim pegar meus 30 minutos de presente 🎁";
+// "Vim do Téo" fica na mensagem pra rastrear a origem do lado do Max
+// (Fernando, 20/11: "é bom pra gente depois traquear a source").
+const MENSAGEM = "Oi, Max! Vim do Téo, ele me mandou pegar meus 30 minutos grátis 🎁";
 const ROBO = /facebookexternalhit|facebot|whatsapp|bot|crawler|spider|preview|telegram|slack|discord/i;
 
 const esc = (s: string) =>
