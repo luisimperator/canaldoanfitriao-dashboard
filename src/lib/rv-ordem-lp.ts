@@ -36,10 +36,11 @@ export type OrdemDoDia = {
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 function grade(c: Casa): string {
+  if (!c.fotos.length) return "";
   const [g, ...p] = c.fotos;
   const abre = (cls: string) => (c.link ? `<a class="f ${cls}" href="${c.link}" target="_blank" rel="noopener">` : `<div class="f ${cls}">`);
   const fecha = c.link ? "</a>" : "</div>";
-  return `<div class="grade">
+  return `<div class="grade g${c.fotos.length}">
       ${abre("f0")}<img src="${g.src}" alt="${esc(g.alt)}" loading="lazy" width="1280" height="853">${fecha}
       ${p.map((f, i) => `${abre(`f${i + 1}`)}<img src="${f.src}" alt="${esc(f.alt)}" loading="lazy" width="760" height="506">${fecha}`).join("\n      ")}
       ${c.link ? `<a class="todas" href="${c.link}" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M1 1h4v4H1zm5 0h4v4H6zm5 0h4v4h-4zM1 6h4v4H1zm5 0h4v4H6zm5 0h4v4h-4zM1 11h4v4H1zm5 0h4v4H6zm5 0h4v4h-4z"/></svg>Ver anúncio</a>` : ""}
@@ -174,6 +175,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
 .grade{position:relative;display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;height:clamp(300px,44vw,480px);border-radius:18px;overflow:hidden}
 .grade .f{position:relative;overflow:hidden;background:#1d1a1f}
 .grade .f0{grid-row:1/3}
+.grade.g3{grid-template-columns:2fr 1fr}
 .grade img{width:100%;height:100%;object-fit:cover;transition:transform .5s cubic-bezier(.2,.8,.2,1),filter .3s}
 .grade .f:hover img{transform:scale(1.04);filter:brightness(.92)}
 .todas{position:absolute;right:14px;bottom:14px;display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;text-decoration:none;color:var(--noite);background:#fff;border:1px solid #222;border-radius:9px;padding:7px 13px;box-shadow:0 6px 18px -8px rgba(0,0,0,.6)}
@@ -238,6 +240,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
   .obs{margin-left:0}
   .grade{grid-template-columns:1fr 1fr;grid-template-rows:2fr 1fr 1fr;height:auto;aspect-ratio:3/4}
   .grade .f0{grid-row:auto;grid-column:1/3}
+  .grade.g3{grid-template-rows:2fr 1fr;aspect-ratio:4/3}
   .casa-info{grid-template-columns:1fr}
   .mapa-box{grid-template-columns:1fr}
   .pino .et{font-size:11px;padding:5px 9px}
