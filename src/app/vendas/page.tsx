@@ -17,6 +17,7 @@ import { getMqlCohort, getMqlFlow } from "@/lib/mql-flow";
 import { getBuyerTempMonth, PERFIL_ORDER, type BuyerTempRow } from "@/lib/buyer-temp";
 import { getVendasPorDia } from "@/lib/vendas-dia";
 import { VendasDiaADia } from "@/components/VendasDiaADia";
+import { getVendidoPeloTime } from "@/lib/vendas-time";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +90,7 @@ export default async function VendasPage({
 
   const stats = sellerStats(data, refDate);
 
-  const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load, cohort, buyerTemp, vendasDia] =
+  const [{ rows: speed, total: speedTotal }, mqlFlow, d0Load, cohort, buyerTemp, vendasDia, vendidoTime] =
     await Promise.all([
       getSpeedToLead(30),
       getMqlFlow(),
@@ -97,7 +98,9 @@ export default async function VendasPage({
       getMqlCohort(),
       getBuyerTempMonth(`${selectedMonth}-01`, lastDayOf(selectedMonth)),
       getVendasPorDia(periodFrom, periodTo),
+      getVendidoPeloTime(periodFrom, periodTo),
     ]);
+  const ativos = new Set(data.sellers.filter((s) => s.isActive).map((s) => s.name));
 
   // Compradores do mês × temperatura: visão geral + por vendedor.
   const perfilTotals = new Map<string, number>();
@@ -250,6 +253,45 @@ export default async function VendasPage({
         <span className="text-xs text-slate-500 dark:text-zinc-400">Período dos indicadores</span>
         <DateRangePicker placeholder="Últimos 30 dias" />
       </div>
+
+      {/* Vendido pelo time (topo, como o Painel Calls): tudo que tem vendedor,
+          pelo link dele (WhatsApp, e-mail, mensagem) ou numa call. */}
+      {vendidoTime && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-3">
+            <div className="col-span-2 [&>div]:h-full">
+              <KpiCard
+                label={`Vendido pelo time (${periodLabel})`}
+                value={brl(vendidoTime.valor)}
+                tone="good"
+                hint={
+                  vendidoTime.vendas
+                    ? `${num(vendidoTime.vendas)} venda${vendidoTime.vendas === 1 ? "" : "s"} · ticket ${brl(vendidoTime.valor / vendidoTime.vendas)} · ${num(vendidoTime.emCall)} em call (${brl(vendidoTime.valorEmCall)}) · ${num(vendidoTime.soLink)} pelo link no WhatsApp, e-mail ou mensagem (${brl(vendidoTime.valorSoLink)})${
+                        vendidoTime.porOrigem.TMB ? ` · TMB ${brl(vendidoTime.porOrigem.TMB)}` : ""
+                      }`
+                    : "nenhuma venda com vendedor no período"
+                }
+              />
+            </div>
+            {vendidoTime.porVendedor.map((v) => (
+              <KpiCard
+                key={v.vendedor}
+                label={`${v.vendedor === "Téo" ? "Téo (IA)" : v.vendedor.split(" ")[0]}${
+                  v.vendedor !== "Téo" && !ativos.has(v.vendedor) ? " · saiu" : ""
+                }`}
+                value={brl(v.valor)}
+                hint={`${num(v.vendas)} venda${v.vendas === 1 ? "" : "s"}${v.emCall ? ` · ${num(v.emCall)} em call` : ""}${
+                  v.tmb ? ` · ${num(v.tmb)} TMB` : ""
+                } · ${num(vendidoTime.valor ? (v.valor / vendidoTime.valor) * 100 : 0, 0)}%`}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mb-4">
+            Conta a venda com o link do vendedor (a UTM dele, na Eduzz e na TMB) ou ligada a uma call dele no
+            Painel Calls. Venda sem dono (orgânico, LP, Max) fica de fora.
+          </p>
+        </>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
         <KpiCard
