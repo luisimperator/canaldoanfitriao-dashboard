@@ -13,6 +13,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { findCustomer, blocoLabel, KB_BLOCOS, type KbItem } from "@/lib/support";
+import { consultarImersao } from "@/lib/support-imersao";
 
 // Modelo padrão: Claude Opus 5.5 — mais novo e 20% mais barato que o 4.8
 // ($4/$20 por milhão contra $5/$25; leitura de cache $0,20 contra $0,50).
@@ -225,6 +226,19 @@ const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "consultar_imersao",
+    description:
+      "Imersão Chuva de Reservas (R$ 27, todo fim de semana): acha a compra da pessoa e diz a turma DELA (o fim de semana), os horários de sábado e domingo, a hora em que a sala abre, o que está acontecendo agora e o link. Use SEMPRE que perguntarem da imersão (horário, link, quando é, não consigo entrar): o horário muda de semana pra semana, nunca responda de memória. Sem parâmetros busca pelo telefone da conversa; se não achar, peça o e-mail da compra e consulte de novo.",
+    input_schema: {
+      type: "object",
+      properties: {
+        email: { type: "string", description: "e-mail usado na compra da imersão" },
+        telefone: { type: "string", description: "deixe em branco: usa o telefone da conversa" },
+        nome: { type: "string", description: "nome completo (só se não houver e-mail nem telefone)" },
+      },
+    },
+  },
+  {
     name: "create_handoff",
     description:
       "Abre um caso na fila de atendimento humano quando a conclusão exige ação interna (cancelamento de renovação, reembolso, divergência/cashback, brinde não recebido, transferência de ingresso, alteração de dados) ou para encaminhar um lead ao comercial. Colete o máximo de informação ANTES de escalar. Chame UMA vez por caso: se você já registrou este caso na conversa, não chame de novo — apenas confirme ao cliente que está registrado.",
@@ -283,6 +297,21 @@ async function runTool(
       };
     }
     return { text: partes.join("\n\n") };
+  }
+  if (name === "consultar_imersao") {
+    const admin = getSupabaseAdmin();
+    if (!admin) return { text: JSON.stringify({ error: "sem banco" }) };
+    return {
+      text: await consultarImersao(
+        admin,
+        {
+          email: input?.email ? String(input.email) : undefined,
+          telefone: input?.telefone ? String(input.telefone) : undefined,
+          nome: input?.nome ? String(input.nome) : undefined,
+        },
+        contact?.phone ?? null
+      ),
+    };
   }
   if (name === "lookup_customer") {
     const result = await findCustomer({
