@@ -187,6 +187,8 @@ export interface LpTurma {
   horario: string;
   /** domingo, "9h15 às 15h" */
   horarioDomingo: string;
+  /** "A sala abre às 10h no sábado e às 8h45 no domingo." (vem da turma) */
+  salaAbre?: string;
 }
 
 export type Variante = "longa" | "curta";
@@ -211,7 +213,7 @@ export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null, 
     },
     {
       p: "Quando acontece?",
-      r: `${quando} (horário de Brasília). A sala abre 30 minutos antes. O conteúdo é uma gravação da imersão completa, exibida no horário marcado.`,
+      r: `${quando} (horário de Brasília). ${esc(t.salaAbre ?? "A sala abre 30 minutos antes.")} O conteúdo é uma gravação da imersão completa, exibida no horário marcado.`,
     },
     {
       p: "Serve pra quarto, studio, chalé ou casa de praia?",
