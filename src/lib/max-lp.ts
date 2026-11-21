@@ -310,6 +310,31 @@ section{position:relative;padding:clamp(64px,10vw,110px) 0}
 .depo.big .by{color:#fff}.depo.big .by::before{background:#fff}
 .depo .aspas{position:absolute;right:20px;top:2px;font-family:var(--title);font-size:5rem;line-height:1;color:var(--coral-wash)}
 .depo.big .aspas{color:rgba(255,255,255,.22)}
+/* depoimento em print do grupo, com as reações aparecendo (Fernando, 21/11:
+   "Num dos testimonials, inclui animação das reações") */
+.depo.zap{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:28px;align-items:center;background:var(--teal-wash);border-color:var(--teal-light)}
+.zap-txt b{display:block;font-family:var(--title);font-weight:700;font-size:1.45rem;line-height:1.2;color:var(--ink)}
+.zap-txt b em{font-style:normal;color:var(--coral)}
+.zap-txt span{display:block;margin-top:10px;font-family:var(--label);font-weight:700;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+.zap-tela{border-radius:20px;padding:18px 16px 14px;background:#efeae2;display:flex;flex-direction:column;gap:22px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
+.zap-bolha{position:relative;max-width:560px;padding:10px 14px 8px;background:#fff;border-radius:4px 16px 16px 16px;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.zap-bolha.resp{align-self:flex-start;max-width:340px}
+.zap-nome{font-family:var(--body);font-weight:700;font-size:.92rem;color:#c2185b;margin-bottom:2px}
+.zap-nome.az{color:#2563eb}
+.zap-bolha q{display:block;font-family:var(--body);font-weight:500;font-size:1.02rem;line-height:1.45;color:#111;quotes:none}
+.zap-bolha q b{color:var(--ink);background:#fff3b0;padding:0 3px;border-radius:4px}
+.zap-cit{margin:4px 0 6px;padding:6px 10px;border-left:4px solid #c2185b;border-radius:6px;background:#f2f2f2;font-size:.85rem;color:#555;line-height:1.35}
+.zap-hora{display:block;text-align:right;font-size:.72rem;color:#8a8a8a;margin-top:2px}
+.zap-reacoes{position:absolute;left:12px;bottom:-17px;display:flex;align-items:center;gap:2px;padding:3px 9px;background:#fff;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.18);font-size:1rem;line-height:1.2;min-height:26px}
+.zap-reacoes i{font-style:normal;display:inline-block}
+.zap-reacoes.anima i{display:none}
+.zap-reacoes.anima i.on{display:inline-block;animation:reacao .45s cubic-bezier(.3,1.6,.5,1) both}
+.zap-reacoes b{margin-left:5px;font-family:var(--body);font-weight:600;font-size:.82rem;color:#555;min-width:.7em}
+.zap-reacoes b.pula{animation:pula .35s ease}
+.zap-voa{position:absolute;left:18px;bottom:-14px;z-index:2;font-size:1.25rem;pointer-events:none;animation:voa 1.6s ease-out forwards}
+@keyframes reacao{0%{transform:scale(0);opacity:0}60%{transform:scale(1.35);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes pula{50%{transform:translateY(-4px)}}
+@keyframes voa{0%{transform:translate(0,0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translate(var(--x,14px),-70px) scale(1.2);opacity:0}}
 
 /* rômulo */
 .romulo{background:var(--dark) url("/marca/a5e-hero.webp") 78% center/cover no-repeat;overflow:hidden}
@@ -370,6 +395,7 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
   .selos .selo:last-child{grid-column:span 2}
   .depos{grid-template-columns:1fr 1fr}
   .depo.big{grid-column:span 2;grid-row:auto}
+  .depo.zap{grid-template-columns:1fr;gap:18px}
 }
 @media (max-width:860px){
   .hero{padding-top:96px}
@@ -399,6 +425,7 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
 @media (max-width:560px){
   .depos{grid-template-columns:1fr}
   .depo.big{grid-column:auto}
+  .depo.zap{grid-column:auto;padding:22px 16px 20px}
   .selos{grid-template-columns:1fr}
   .selos .selo:last-child{grid-column:auto}
   .selo{flex-direction:row;text-align:left;gap:18px;padding:20px}
@@ -412,6 +439,7 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   .rv,.m,.marca-x,.lcard{opacity:1!important;transform:none!important;filter:none!important}
+  .zap-reacoes i{display:inline-block!important;opacity:1!important;transform:none!important}
 }
 </style>
 <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',${JSON.stringify(pixel)});fbq('track','PageView');</script>
@@ -601,6 +629,23 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
       <div class="depo rv pop" style="--d:.25s"><span class="aspas">“</span><q>Passei meus anúncios para o Max e foi muito boa a análise, <b>ajudou bastante</b>.</q><div class="by">Helen · 10/11</div></div>
       <div class="depo rv pop" style="--d:.35s"><span class="aspas">“</span><q>O Max é um <b>fenômeno</b>… 6 dias que eu comprei o curso (…) assinei meu primeiro contrato como Coanfitriã 🎉</q><div class="by">Francielle · 12/11</div></div>
       <div class="depo rv pop" style="--d:.45s"><span class="aspas">“</span><q>Adiciona ele e bate papo no privado. Ele é <b>FANTÁSTICO</b></q><div class="by">Katia · 12/11</div></div>
+      <div class="depo zap rv pop" style="--d:.1s" id="depo-zap">
+        <div class="zap-txt"><b>Um ajuste que o Max pediu. <em>Reserva da virada</em>, sem desconto.</b><span>Grupo de alunos · 21/11</span></div>
+        <div class="zap-tela" aria-label="Mensagem da Juliana no grupo de alunos, com 5 reações">
+          <div class="zap-bolha">
+            <div class="zap-nome">~ Juliana</div>
+            <q>Só fiz um ajuste que o Max pediu no anúncio e acabei de receber a reserva da virada do ano (mínimo 5 noites) no valor que queria, <b>sem dar desconto!</b> Max é o máximo!!! 🥰</q>
+            <span class="zap-hora">09:44</span>
+            <div class="zap-reacoes" aria-hidden="true"><i>❤️</i><i>👏🏽</i><i>🎉</i><b>5</b></div>
+          </div>
+          <div class="zap-bolha resp">
+            <div class="zap-nome az">~ Maria Eduarda</div>
+            <div class="zap-cit">Só fiz um ajuste que o Max pediu no anúncio e acabei de receber a reserva da virada do ano…</div>
+            <q>Que massa!!</q>
+            <span class="zap-hora">09:45</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -685,6 +730,36 @@ footer{background:var(--dark-2);color:#8a8a8a;text-align:center;padding:30px 20p
   else{
     var io = new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}})},{threshold:.15,rootMargin:'0px 0px -6% 0px'});
     rvs.forEach(function(e){io.observe(e)});
+  }
+  // reações do depoimento do grupo: ❤️ 👏🏽 🎉 entram uma a uma, o contador
+  // sobe até 5 e cada reação nova solta um emoji que sobe e some.
+  var zap = document.getElementById('depo-zap');
+  if(zap && !reduz){
+    var pill = zap.querySelector('.zap-reacoes');
+    var ems = [].slice.call(pill.querySelectorAll('i'));
+    var cont = pill.querySelector('b');
+    var bolha = zap.querySelector('.zap-bolha');
+    cont.textContent = '';
+    pill.classList.add('anima');
+    function voar(txt){
+      var v = document.createElement('span');
+      v.className = 'zap-voa'; v.textContent = txt;
+      v.style.setProperty('--x', (Math.round(Math.random()*40) - 8) + 'px');
+      bolha.appendChild(v);
+      setTimeout(function(){ v.remove(); }, 1700);
+    }
+    function contar(n){ cont.textContent = n; cont.classList.remove('pula'); void cont.offsetWidth; cont.classList.add('pula'); }
+    var seq = [['❤️',0],['👏🏽',1],['🎉',2],['❤️',-1],['👏🏽',-1]];
+    quando(zap, function(){
+      seq.forEach(function(r, k){
+        setTimeout(function(){
+          if(r[1] >= 0) ems[r[1]].classList.add('on');
+          contar(k + 1); voar(r[0]);
+        }, 700 + k * 650);
+      });
+      // de tempos em tempos, mais um "❤️" subindo (sem mudar o número)
+      setInterval(function(){ if(!document.hidden) voar(['❤️','👏🏽','🎉'][Math.floor(Math.random()*3)]); }, 4200);
+    }, .45);
   }
   // conversas com "digitando"
   function tocar(body, aoMax){
