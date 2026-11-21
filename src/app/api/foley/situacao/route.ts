@@ -19,6 +19,9 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // sai_agora com motivo nao_quer_renovar, até pagar de novo. O painel guarda o
 // WhatsApp de cada pessoa consultada aqui (foley_membros): é pra esse número
 // que vão os avisos de atraso (atraso_1/3/6, cron das 10h07).
+// Vaga transferida (migração 0141, /api/foley/vagas): quem entrou pela vaga de
+// outro membro vem com a decisão da compra do dono, motivo "vaga_transferida",
+// "dono" e "decisao_propria" (se tiver compra própria valendo, vale a própria).
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;

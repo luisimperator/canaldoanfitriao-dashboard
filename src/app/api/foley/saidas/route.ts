@@ -7,8 +7,15 @@ import { unnichat } from "@/lib/teo";
 // (Utilidade, aprovado em 20/11): "Oi, {{1}}! Aqui é o Téo, da equipe do
 // Rômulo. Seu acesso ao {{2}} não foi renovado, por isso você saiu do grupo.
 // Se achar que foi engano, responde aqui que a gente confere 💛".
-// Reembolso/chargeback não recebe (não é "não foi renovado"). Uma linha por
-// pessoa/grupo/dia: mandar de novo não repete o aviso.
+// Uma linha por pessoa/grupo/dia: mandar de novo não repete o aviso.
+//
+// Qual mensagem (Fernando, 21/11, pelo Foley: "toma suas decisões, cobre todos
+// os cenários"; uma mensagem só por saída):
+// - venceu/atraso/cancelada/vaga transferida que caiu: renova_volta_a5e ou
+//   renova_volta_gig (Marketing, botão de renovação), NO LUGAR do saida_aviso;
+// - reembolso/chargeback: nada (quem tira e avisa é o Max, à mão);
+// - nao_achei / nao_quer_renovar / sem motivo: saida_aviso ("se achar que foi
+//   engano, responde aqui").
 //
 // POST /api/foley/saidas
 //   Authorization: Bearer <FOLEY_API_TOKEN>
@@ -20,6 +27,9 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const TEMPLATE_SAIDA_AVISO = "1012087258621434";
+const TEMPLATE_RENOVA = { a5e: "1622016159049550", gigantes: "1402115521777068" } as const;
+const NOME_RENOVA = { a5e: "renova_volta_a5e", gigantes: "renova_volta_gig" } as const;
+const SAIDA_AVISO = /nao_achei|n[aã]o achei|nao_quer_renovar|n[aã]o quer renovar/i;
 const PRODUTO = { a5e: "Anfitrião 5 Estrelas", gigantes: "Gigantes da Temporada" } as const;
 const SEM_AVISO = /reembols|chargeback|estorno|contesta/i;
 
@@ -105,21 +115,25 @@ async function processar(req: NextRequest): Promise<NextResponse> {
     if (motivo && SEM_AVISO.test(motivo)) {
       await supabase
         .from("foley_saidas")
-        .update({ aviso_status: "sem_aviso", aviso_detalhe: "reembolso/chargeback: sem saida_aviso" })
+        .update({ aviso_status: "sem_aviso", aviso_detalhe: "reembolso/chargeback: quem avisa é o Max" })
         .eq("id", nova!.id);
       resultados.push({ i, aviso: "sem_aviso", detalhe: "reembolso/chargeback" });
       continue;
     }
 
     try {
+      const renova = Boolean(motivo) && !SAIDA_AVISO.test(motivo!);
+      const template = renova ? NOME_RENOVA[grupo] : "saida_aviso";
       const enviar = () =>
         unnichat(supabase, "POST", "/meta/templates", {
           phone: telefone,
-          templateId: TEMPLATE_SAIDA_AVISO,
-          bodyParameters: [
-            { type: "text", text: primeiroNome(nome) },
-            { type: "text", text: PRODUTO[grupo] },
-          ],
+          templateId: renova ? TEMPLATE_RENOVA[grupo] : TEMPLATE_SAIDA_AVISO,
+          bodyParameters: renova
+            ? [{ type: "text", text: primeiroNome(nome) }]
+            : [
+                { type: "text", text: primeiroNome(nome) },
+                { type: "text", text: PRODUTO[grupo] },
+              ],
         });
       let r = await enviar();
       // Quem nunca falou com a gente não é contato no Unnichat ("Contact not
@@ -129,7 +143,7 @@ async function processar(req: NextRequest): Promise<NextResponse> {
         r = await enviar();
       }
       const ok = r.status >= 200 && r.status < 300;
-      const detalhe = ok ? null : `${r.status} ${JSON.stringify(r.body).slice(0, 200)}`;
+      const detalhe = ok ? template : `${template}: ${r.status} ${JSON.stringify(r.body).slice(0, 200)}`;
       await supabase
         .from("foley_saidas")
         .update({ aviso_status: ok ? "enviado" : "erro", aviso_em: new Date().toISOString(), aviso_detalhe: detalhe })
