@@ -110,7 +110,7 @@ export function rvAntonioHtml(): string {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&display=swap" rel="stylesheet">
-<link rel="preload" as="image" href="${IMG}/antonio-1.webp">
+<link rel="preload" as="image" href="${IMG}/praia-topo.webp">
 <style>
 :root{
   --coral:#ff385c;--rosa:#e61e4d;--vinho:#bd1e59;--pessego:#ff8a65;
@@ -132,7 +132,7 @@ h2{margin:0;font-weight:800;font-size:clamp(24px,2.6vw,34px);line-height:1.1;let
 
 /* topo */
 .hero{position:relative;min-height:min(92vh,760px);display:flex;align-items:flex-end;overflow:hidden}
-.hero picture,.hero picture img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 55%}
+.hero picture,.hero picture img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:62% 50%}
 .hero:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,var(--noite) 2%,rgba(14,13,16,.55) 45%,rgba(14,13,16,.25) 75%,rgba(14,13,16,.6)),radial-gradient(70% 60% at 0% 100%,rgba(230,30,77,.28),transparent 70%)}
 .hero .wrap{position:relative;z-index:2;padding-bottom:clamp(28px,6vh,60px)}
 .topo{position:absolute;z-index:3;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px clamp(20px,4vw,40px)}
@@ -245,7 +245,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
 </head>
 <body>
 <header class="hero">
-  <picture><img src="${IMG}/antonio-1.webp" alt="Casa com piscina em São Sebastião" width="1280" height="853" fetchpriority="high"></picture>
+  <picture><img src="${IMG}/praia-topo.webp" alt="Vista para o mar e Ilhabela da casa da Praia Deserta" width="1440" height="1078" fetchpriority="high"></picture>
   <div class="topo">
     <div class="marca"><img src="/marca/cda-icone.png" alt="" width="34" height="34">Canal do Anfitrião</div>
     <span class="pill">Ordem do dia</span>
