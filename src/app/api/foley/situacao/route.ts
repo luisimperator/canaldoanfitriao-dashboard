@@ -15,6 +15,10 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // mesma pessoa). "pausado" = remoções pausadas em foley_config (migração
 // 0135): quem a regra tiraria vem como pausado, com a decisão da regra em
 // decisao_regra, e o robô não tira ninguém.
+// Quem tocou em "Não quero renovar" no aviso de atraso (migração 0139) vem como
+// sai_agora com motivo nao_quer_renovar, até pagar de novo. O painel guarda o
+// WhatsApp de cada pessoa consultada aqui (foley_membros): é pra esse número
+// que vão os avisos de atraso (atraso_1/3/6, cron das 10h07).
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
