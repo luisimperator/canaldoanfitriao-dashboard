@@ -12,13 +12,23 @@ async function contagens(): Promise<{ porGrupo: Record<GrupoChave, Record<string
   const porGrupo: Record<GrupoChave, Record<string, number>> = { a5e: {}, gigantes: {} };
   const supabase = getSupabaseAdmin();
   if (!supabase) return { porGrupo, atualizado: null };
-  const { data } = await supabase
-    .from("grupo_mensagens_diarias")
-    .select("grupo, data, mensagens, atualizado_em")
-    .order("data", { ascending: true })
-    .limit(10000);
+  // O PostgREST corta em 1000 linhas por leitura e o histórico vem desde 2021:
+  // lê em páginas até acabar.
+  const PAGE = 1000;
+  const linhas: unknown[] = [];
+  for (let de = 0; ; de += PAGE) {
+    const { data, error } = await supabase
+      .from("grupo_mensagens_diarias")
+      .select("grupo, data, mensagens, atualizado_em")
+      .order("data", { ascending: true })
+      .order("grupo", { ascending: true })
+      .range(de, de + PAGE - 1);
+    if (error || !data) break;
+    linhas.push(...data);
+    if (data.length < PAGE) break;
+  }
   let atualizado: string | null = null;
-  for (const r of (data ?? []) as { grupo: string; data: string; mensagens: number; atualizado_em: string }[]) {
+  for (const r of linhas as { grupo: string; data: string; mensagens: number; atualizado_em: string }[]) {
     if (r.grupo !== "a5e" && r.grupo !== "gigantes") continue;
     porGrupo[r.grupo][r.data] = Number(r.mensagens ?? 0);
     if (!atualizado || r.atualizado_em > atualizado) atualizado = r.atualizado_em;
