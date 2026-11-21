@@ -23,7 +23,7 @@ const JANELA_PADRAO: JanelaMql = {
 };
 
 // Mensagens por dia nos grupos de membros, no mesmo gráfico dos Leads da Visão
-// geral (dia/semana/mês, últimos N, datas, linha de média). O filtro escolhe
+// geral (dia/semana/mês, últimos N ou "tudo", datas, linha de média). O filtro escolhe
 // os dois grupos somados ou um só, e fica salvo neste navegador.
 export function MovimentacaoGrupos({
   hoje,
@@ -36,7 +36,6 @@ export function MovimentacaoGrupos({
   const [janela, setJanela] = useState<JanelaMql>(JANELA_PADRAO);
   const salvo = useGuardado(CHAVE_FILTRO);
   const filtro: "todos" | GrupoChave = salvo === "a5e" || salvo === "gigantes" ? salvo : "todos";
-  const { de, ate } = intervaloDaJanelaMql(janela, hoje);
 
   const porDia = useMemo(() => {
     if (filtro !== "todos") return porGrupo[filtro];
@@ -46,6 +45,15 @@ export function MovimentacaoGrupos({
     }
     return soma;
   }, [porGrupo, filtro]);
+
+  // primeiro dia com dado do que está no gráfico (A5E 2021, Gigantes 2024):
+  // base do "tudo" e do calendário
+  const desde = useMemo(() => {
+    let min: string | undefined;
+    for (const d of Object.keys(porDia)) if (!min || d < min) min = d;
+    return min;
+  }, [porDia]);
+  const { de, ate } = intervaloDaJanelaMql(janela, hoje, desde);
 
   // Quanto cada grupo mandou na mesma janela do gráfico.
   const naJanela = useMemo(() => {
@@ -71,6 +79,7 @@ export function MovimentacaoGrupos({
         onJanela={setJanela}
         rotulo="mensagem"
         rotuloPlural="mensagens"
+        desde={desde}
         controles={
           <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-0.5">
             {opcoes.map(([k, label]) => (

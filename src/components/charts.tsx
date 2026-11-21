@@ -535,6 +535,9 @@ const MQL_GRANS: { key: Granularidade; label: string }[] = [
   { key: "ano", label: "Ano" },
 ];
 
+/** valor de "últimos N" que significa desde o primeiro dia com dado */
+export const JANELA_TUDO = 0;
+
 export interface JanelaMql {
   gran: Granularidade;
   /** últimos N, guardado por granularidade */
@@ -555,8 +558,11 @@ export const JANELA_MQL_PADRAO: JanelaMql = {
 };
 
 /** Datas que a janela cobre: as escolhidas no calendário ou os últimos N períodos. */
-export function intervaloDaJanelaMql(j: JanelaMql, hoje: string): { de: string; ate: string } {
-  return j.datas ? { de: j.datas.from, ate: j.datas.to } : intervaloDaJanela(hoje, j.gran, j.janelas[j.gran]);
+export function intervaloDaJanelaMql(j: JanelaMql, hoje: string, desde?: string): { de: string; ate: string } {
+  if (j.datas) return { de: j.datas.from, ate: j.datas.to };
+  // 0 = "tudo": do primeiro dia com dado até hoje
+  if (j.janelas[j.gran] === JANELA_TUDO && desde) return { de: desde, ate: hoje };
+  return intervaloDaJanela(hoje, j.gran, j.janelas[j.gran]);
 }
 
 function Segmentos<T extends string | number>({
@@ -598,6 +604,7 @@ export function MqlHistoryChart({
   rotulo = "MQL",
   rotuloPlural,
   controles,
+  desde,
 }: {
   porDia: Record<string, number>;
   hoje: string;
@@ -611,6 +618,8 @@ export function MqlHistoryChart({
   rotuloPlural?: string;
   /** controles extras na linha de cima (ex.: MQLs ↔ Leads, filtro de tags) */
   controles?: ReactNode;
+  /** primeiro dia com dado (YYYY-MM-DD): liga a opção "tudo" e libera o calendário desde esse ano */
+  desde?: string;
 }) {
   const [comFaturamento, setComFaturamento] = useState(false);
   const gran = janela.gran;
@@ -619,12 +628,18 @@ export function MqlHistoryChart({
   const datas = janela.datas;
   const data = useMemo(() => {
     const agrupa = (m: Record<string, number>) =>
-      datas ? agruparIntervalo(m, datas.from, datas.to, gran, hoje) : agrupar(m, hoje, gran, n);
+      datas
+        ? agruparIntervalo(m, datas.from, datas.to, gran, hoje)
+        : n === JANELA_TUDO && desde
+          ? agruparIntervalo(m, desde, hoje, gran, hoje)
+          : agrupar(m, hoje, gran, n);
     const mql = agrupa(porDia);
     // mesmos períodos, mesma ordem: casa por índice
     const fat = faturamentoPorDia ? agrupa(faturamentoPorDia) : null;
     return mql.map((b, i) => ({ ...b, faturamento: fat ? fat[i].valor : 0 }));
-  }, [porDia, faturamentoPorDia, hoje, gran, n, datas]);
+  }, [porDia, faturamentoPorDia, hoje, gran, n, datas, desde]);
+  const opcoesN = cfg.opcoes.map((o) => ({ key: o, label: String(o) }));
+  if (desde) opcoesN.push({ key: JANELA_TUDO, label: "tudo" });
   const fechados = data.filter((d) => !d.parcial);
   const media = fechados.length ? fechados.reduce((a, d) => a + d.valor, 0) / fechados.length : 0;
   const total = data.reduce((a, d) => a + d.valor, 0);
@@ -637,17 +652,17 @@ export function MqlHistoryChart({
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-slate-500 dark:text-zinc-400">últimos</span>
           <Segmentos
-            opcoes={cfg.opcoes.map((o) => ({ key: o, label: String(o) }))}
+            opcoes={opcoesN}
             atual={datas ? null : n}
             onChange={(v) => onJanela({ ...janela, janelas: { ...janela.janelas, [gran]: v }, datas: null })}
           />
           <span className="text-xs text-slate-500 dark:text-zinc-400">
-            {!datas && n === 1 ? cfg.unidade : cfg.plural}
+            {!datas && n === JANELA_TUDO ? "desde o início" : !datas && n === 1 ? cfg.unidade : cfg.plural}
           </span>
         </div>
         <DateRangePicker
           placeholder="Datas"
-          minYear={2024}
+          minYear={desde ? Math.min(2024, Number(desde.slice(0, 4))) : 2024}
           value={datas}
           onChange={(from, to) => onJanela({ ...janela, datas: { from, to } })}
         />
