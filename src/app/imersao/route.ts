@@ -73,7 +73,14 @@ export async function GET(req: NextRequest) {
   // funcionava; "coloca um countdown").
   const abreMs = ms(prox.inicio) - ABRE_ANTES_MS;
   const dia = diaHumano(prox.inicio);
+  const hhmm = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(prox.inicio));
   return paginaEspera({
+    destaque: `${antesDoSabado ? "Começamos" : "Voltamos"} às ${hhmm}`,
     titulo: antesDoSabado ? "A Imersão ainda não começou." : "O primeiro dia terminou.",
     frase: antesDoSabado ? "Começa em:" : "O segundo começa em:",
     quando: `${dia.charAt(0).toUpperCase()}${dia.slice(1)}, das ${horaHumana(prox.inicio)} às ${horaHumana(prox.fim)}`,

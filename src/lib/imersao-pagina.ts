@@ -50,6 +50,8 @@ ${opts.recarregar === false ? "" : '<meta http-equiv="refresh" content="60">'}
 export function paginaEspera(o: {
   titulo: string;
   frase: string;
+  /** Faixa bem grande acima do título (Fernando, 21/11: "Coloca bem grande: COMEÇAMOS ÀS 10:00"). */
+  destaque?: string;
   quando: string;
   abreTexto: string;
   inicioMs: number;
@@ -88,6 +90,8 @@ main{width:100%;max-width:440px;text-align:center}
 .foto i{display:block;width:100%;height:100%;border-radius:50%;border:3px solid var(--papel);background:#000 url(${A}/romulo.webp) 50% 24%/185% auto no-repeat}
 .quem{margin:10px 0 0;font-size:13px;color:var(--tinta2)}
 .quem b{color:var(--tinta)}
+.destaque{margin:20px auto 4px;font-size:clamp(34px,10.5vw,54px);font-weight:800;line-height:1.1;letter-spacing:-.035em;text-transform:uppercase;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .ok{display:inline-flex;align-items:center;gap:8px;margin:22px 0 10px;background:#fff;border:1px solid var(--linha);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;color:#15803d}
 h1{margin:0;font-size:clamp(26px,7vw,34px);font-weight:800;letter-spacing:-.03em;line-height:1.1}
 h1 .serif{font-family:"Instrument Serif",Georgia,serif;font-style:italic;font-weight:400;letter-spacing:-.01em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -108,6 +112,7 @@ h1 .serif{font-family:"Instrument Serif",Georgia,serif;font-style:italic;font-we
   <img class="logo" src="${A}/logo.svg" alt="Canal do Anfitrião">
   <div class="foto" role="img" aria-label="Rômulo Villela"><i></i></div>
   <p class="quem">com <b>Rômulo Villela</b></p>
+  ${o.destaque ? `<p class="destaque">${esc(o.destaque)}</p>` : ""}
   <div class="ok">✅ Seu link está certo</div>
   <h1>${esc(o.titulo)}<br><span class="serif">${esc(o.frase)}</span></h1>
   <div class="cd" id="cd" aria-live="polite">
