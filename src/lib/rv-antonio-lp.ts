@@ -1,6 +1,6 @@
 // Ordem do dia da gravação do Rômulo Visita com o Antonio Carlos (Praia &
 // Montanha, São Sebastião/SP), sexta 27/11/2026:
-// link.canaldoanfitriao.com.br/rv-antonio
+// link.canaldoanfitriao.com.br/internos/rv-antonio (páginas internas ficam em /internos/)
 //
 // Página pro convidado e pra equipe: linha do tempo do dia, as duas casas
 // (fotos do anúncio do Airbnb em public/lp/rv-antonio/) e o mapinha entre elas.
