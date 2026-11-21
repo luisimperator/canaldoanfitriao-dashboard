@@ -52,13 +52,35 @@ async function vendedorFalouRecente(supabase: SupabaseClient, id: string): Promi
   );
 }
 
+// Resposta aos avisos de atraso dos grupos (migração 0139): quem recebeu
+// atraso_1/3/6 nos últimos 10 dias e tocou em "Quero regularizar" ganha a 2ª
+// via; em "Não quero renovar", para de receber aviso e sai do grupo na próxima
+// consulta do Foley. O painel trata e o Téo não entra. Qualquer outra mensagem
+// segue o caminho de sempre.
+async function respostaAvisoAtraso(
+  supabase: SupabaseClient,
+  contato: { id?: string; phoneNumber?: string; lastMessage?: string } | undefined
+): Promise<boolean> {
+  const texto = contato?.lastMessage?.trim();
+  if (!contato?.id || !contato.phoneNumber || !texto || texto.length > 60) return false;
+  const { data, error } = await supabase.rpc("foley_botao", {
+    p_contact_id: contato.id,
+    p_phone: contato.phoneNumber,
+    p_texto: texto,
+  });
+  if (error) throw new Error(`foley_botao: ${error.message}`);
+  return ((data as { acao?: string } | null)?.acao ?? "nada") !== "nada";
+}
+
 export async function inscreverEntrada(
   supabase: SupabaseClient,
   body: unknown
 ): Promise<{ ok: true } | { ok: false; erro: string }> {
-  const contato = (body as { contact?: { id?: string; name?: string; phoneNumber?: string } } | null)?.contact;
+  const contato = (body as { contact?: { id?: string; name?: string; phoneNumber?: string; lastMessage?: string } } | null)
+    ?.contact;
   const id = contato?.id;
   if (!id) return { ok: true };
+  if (await respostaAvisoAtraso(supabase, contato)) return { ok: true };
   const { data: cfg } = await supabase.from("teo_config").select("black_ate, ligado, vendedores").eq("id", 1).maybeSingle();
   if (!cfg?.ligado || !cfg.black_ate || new Date(cfg.black_ate).getTime() < Date.now()) return { ok: true };
 

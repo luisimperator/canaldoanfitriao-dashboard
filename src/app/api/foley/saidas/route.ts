@@ -49,7 +49,7 @@ function diaSP(iso: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(iso));
 }
 
-export async function POST(req: NextRequest) {
+async function processar(req: NextRequest): Promise<NextResponse> {
   if (!autorizado(req)) return NextResponse.json({ ok: false, erro: "não autorizado" }, { status: 401 });
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ ok: false, erro: "banco não configurado" }, { status: 500 });
@@ -112,14 +112,22 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const r = await unnichat(supabase, "POST", "/meta/templates", {
-        phone: telefone,
-        templateId: TEMPLATE_SAIDA_AVISO,
-        bodyParameters: [
-          { type: "text", text: primeiroNome(nome) },
-          { type: "text", text: PRODUTO[grupo] },
-        ],
-      });
+      const enviar = () =>
+        unnichat(supabase, "POST", "/meta/templates", {
+          phone: telefone,
+          templateId: TEMPLATE_SAIDA_AVISO,
+          bodyParameters: [
+            { type: "text", text: primeiroNome(nome) },
+            { type: "text", text: PRODUTO[grupo] },
+          ],
+        });
+      let r = await enviar();
+      // Quem nunca falou com a gente não é contato no Unnichat ("Contact not
+      // found!", Vinicius em 20/11): cria o contato e tenta de novo.
+      if (r.status >= 400 && r.status < 500 && /contact not found/i.test(JSON.stringify(r.body ?? ""))) {
+        await supabase.rpc("foley_unnichat_contato", { p_phone: telefone, p_nome: nome });
+        r = await enviar();
+      }
       const ok = r.status >= 200 && r.status < 300;
       const detalhe = ok ? null : `${r.status} ${JSON.stringify(r.body).slice(0, 200)}`;
       await supabase
@@ -135,4 +143,27 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, resultados });
+}
+
+// Sempre JSON, inclusive em erro inesperado (o Foley leu corpo vazio em 20/11
+// às 11h: a rota ainda não existia e a Vercel devolveu a página de erro).
+export async function POST(req: NextRequest) {
+  try {
+    return await processar(req);
+  } catch (e) {
+    return NextResponse.json({ ok: false, erro: String(e).slice(0, 300) }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json(
+    {
+      ok: false,
+      erro: "use POST",
+      formato: {
+        pessoas: [{ telefone: "5511...", nome: "opcional", grupo: "a5e | gigantes", motivo: "o motivo que o /situacao deu", removido_em: "ISO, opcional" }],
+      },
+    },
+    { status: 405 }
+  );
 }
