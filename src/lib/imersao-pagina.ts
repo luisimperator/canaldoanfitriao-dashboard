@@ -150,6 +150,71 @@ h1 .serif{font-family:"Instrument Serif",Georgia,serif;font-style:italic;font-we
   });
 }
 
+// Suporte no WhatsApp: o mesmo da LP (SUPORTE_WHATSAPP em src/lib/imersao-lp.ts).
+const SUPORTE_WHATSAPP = { texto: "(11) 92507-2167", link: "https://wa.me/5511925072167" };
+
+// Turma que já acabou (/imersao sem turma antiga em andamento, ou /i/<codigo>
+// depois do fim_domingo da turma). Mesma cara da página de espera, sem
+// contagem, sem horário, sem citar próxima turma nem replay.
+export function paginaEncerrada(): Response {
+  const A = "/lp/imersao";
+  const titulo = "Esta turma da Imersão já foi encerrada";
+  const html = `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#fffaf7">
+<title>${esc(titulo)} · Imersão Chuva de Reservas</title>
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--coral:#ff385c;--rosa:#e61e4d;--vinho:#bd1e59;--pessego:#ff8a65;--papel:#fffaf7;--tinta:#141216;--tinta2:#5b5660;--linha:#f1dcd8;
+  --grad:linear-gradient(100deg,var(--pessego),var(--coral) 45%,var(--rosa) 75%,var(--vinho))}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:var(--papel);color:var(--tinta);
+  font:16px/1.55 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;position:relative}
+.aurora{position:fixed;inset:0;z-index:-1;filter:blur(60px);opacity:.7;pointer-events:none;overflow:hidden}
+.aurora i{position:absolute;border-radius:50%;mix-blend-mode:multiply;animation:flutua 18s ease-in-out infinite alternate}
+.aurora i:nth-child(1){width:70vw;height:70vw;left:40%;top:-20%;background:#ffc3cf}
+.aurora i:nth-child(2){width:60vw;height:60vw;left:-25%;top:50%;background:#ffd8c2;animation-duration:22s}
+@keyframes flutua{to{transform:translate3d(-6%,8%,0) scale(1.12)}}
+main{width:100%;max-width:440px;text-align:center}
+.logo{width:116px;margin:0 auto 22px;display:block}
+.foto{width:112px;height:112px;margin:0 auto;border-radius:50%;padding:3px;background:var(--grad);box-shadow:0 18px 40px -18px rgba(189,30,89,.55)}
+.foto i{display:block;width:100%;height:100%;border-radius:50%;border:3px solid var(--papel);background:#000 url(${A}/romulo.webp) 50% 24%/185% auto no-repeat}
+.quem{margin:10px 0 0;font-size:13px;color:var(--tinta2)}
+.quem b{color:var(--tinta)}
+h1{margin:26px 0 0;font-size:clamp(26px,7vw,34px);font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.texto{margin:14px auto 0;max-width:380px;color:var(--tinta2);font-size:16px}
+.wa{display:inline-flex;align-items:center;gap:8px;margin:24px 0 0;padding:14px 22px;border-radius:999px;background:#25d366;color:#fff;
+  font-weight:800;text-decoration:none;box-shadow:0 14px 30px -16px rgba(18,140,70,.7)}
+.wa:hover{filter:brightness(.96)}
+@media (prefers-reduced-motion:reduce){.aurora i{animation:none}}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i></div>
+<main>
+  <img class="logo" src="${A}/logo.svg" alt="Canal do Anfitrião">
+  <div class="foto" role="img" aria-label="Rômulo Villela"><i></i></div>
+  <p class="quem">com <b>Rômulo Villela</b></p>
+  <h1>${esc(titulo)}</h1>
+  <p class="texto">A Imersão Chuva de Reservas desta turma já aconteceu. Ficou com alguma dúvida? Fala com o nosso suporte.</p>
+  <a class="wa" href="${SUPORTE_WHATSAPP.link}" target="_blank" rel="noopener">Suporte no WhatsApp ${esc(SUPORTE_WHATSAPP.texto)}</a>
+</main>
+</body>
+</html>`;
+  return new Response(html, {
+    status: 200,
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+  });
+}
+
 /** "sábado, 21/11" no horário de São Paulo. */
 export function diaHumano(iso: string): string {
   return new Intl.DateTimeFormat("pt-BR", {

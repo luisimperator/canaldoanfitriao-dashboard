@@ -27,7 +27,7 @@ function ehLpPublica(p: string): boolean {
 
 export async function proxy(request: NextRequest) {
   // Subdomínio dos links curtos (link.canaldoanfitriao.com.br): só rotas
-  // públicas de link. Os links fixos da Imersão (/imersao, /vip) passam direto;
+  // públicas de link. Os links fixos da Imersão (/imersao, /i/<codigo>, /vip) passam direto;
   // o resto é slug de QR, servido NA RAIZ (link.../<slug>, sem /r/) reescrevendo
   // internamente pra rota /r/[slug] — inclusive caminhos do painel, que aqui
   // não existem. O painel, no subdomínio dele, fica intacto.
@@ -37,7 +37,7 @@ export async function proxy(request: NextRequest) {
     if (p === "/") {
       return NextResponse.redirect("https://canaldoanfitriao.com.br");
     }
-    if (p === "/imersao" || p === "/vip" || ehLpPublica(p)) return NextResponse.next();
+    if (p === "/imersao" || p === "/vip" || p.startsWith("/i/") || ehLpPublica(p)) return NextResponse.next();
     if (p.startsWith("/r/")) return NextResponse.next();
     const u = request.nextUrl.clone();
     u.pathname = `/r${p}`; // /<slug> -> /r/<slug>
@@ -109,9 +109,9 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/r/")) {
     return NextResponse.next();
   }
-  // Links fixos da Imersão A5E (sala da turma e grupo VIP): públicos, vão pro
+  // Links fixos da Imersão A5E (sala da turma, /i/<codigo> e grupo VIP): públicos, vão pro
   // comprador. Também respondem no domínio do painel.
-  if (pathname === "/imersao" || pathname === "/vip" || ehLpPublica(pathname)) {
+  if (pathname === "/imersao" || pathname === "/vip" || pathname.startsWith("/i/") || ehLpPublica(pathname)) {
     return NextResponse.next();
   }
 
