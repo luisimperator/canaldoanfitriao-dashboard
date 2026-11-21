@@ -13,16 +13,16 @@ export const RV_ANTONIO_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 const IMG = "/lp/rv-antonio";
 
 // ---------- conteúdo ----------
-const AGENDA: { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean }[] = [
+const AGENDA: { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string } }[] = [
   { hora: "07h30", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
   { hora: "08h15", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo.", icone: "🤝" },
   { hora: "08h30", titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e Tamoios, com uma parada rápida no caminho.", icone: "🛣️" },
   { hora: "~12h00", titulo: "Chegada em São Sebastião", texto: "Cerca de 3h30 de estrada numa sexta de manhã.", icone: "🌊" },
   { hora: "12h15", titulo: "Almoço com calma", texto: "Tempo pra comer bem antes de começar.", icone: "🍽️" },
   { hora: "13h30", titulo: "Chegada na casa", texto: "Montagem de câmeras e luz, e um café com o Antonio.", icone: "🏡" },
-  { hora: "14h00", titulo: "Gravação 1 · Casa da piscina", texto: "O Rômulo conduz a conversa com o Antonio e a gente percorre a casa.", icone: "🎬", destaque: true },
+  { hora: "14h00", titulo: "Gravação 1 · Casa da piscina", texto: "O Rômulo conduz a conversa com o Antonio e a gente percorre a casa.", icone: "🎬", destaque: true, foto: { src: `${IMG}/antonio-1.webp`, alt: "Casa da piscina" } },
   { hora: "16h15", titulo: "Rumo à Praia Deserta", texto: "Uns 5 minutos de carro até a segunda casa.", icone: "🚗" },
-  { hora: "16h25", titulo: "Gravação 2 · Casa vista mar", texto: "Gravação curta, aproveitando a luz do fim de tarde.", icone: "🎬", destaque: true },
+  { hora: "16h25", titulo: "Gravação 2 · Casa vista mar", texto: "Gravação curta, aproveitando a luz do fim de tarde.", icone: "🎬", destaque: true, foto: { src: `${IMG}/praia-1.webp`, alt: "Casa vista mar na Praia Deserta" } },
   { hora: "17h30", titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
   { hora: "~21h00", titulo: "Chegada em São Paulo", texto: "Fim do dia.", icone: "🌙" },
 ];
@@ -164,6 +164,9 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
 .tl li.on .ic{background:var(--grad);border-color:transparent;box-shadow:0 10px 26px -10px rgba(230,30,77,.9)}
 .tl li.on .c{background:linear-gradient(100deg,rgba(255,138,101,.16),rgba(189,30,89,.1));border-color:rgba(255,56,92,.4)}
 .tl li.on .h{color:#ffb4a2}
+.tl .c.tem-foto{display:flex;align-items:center;gap:12px}
+.tl .c.tem-foto>div{flex:1;min-width:0}
+.tl .c .mini{flex:none;width:72px;height:72px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 20px -10px rgba(0,0,0,.8)}
 .obs{margin:14px 0 0 140px;font-size:13px;color:#8f8893}
 
 /* casas */
@@ -232,6 +235,8 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
   .tl .c{margin-left:8px;padding:10px 13px}
   .tl .c b{font-size:15px}
   .tl .c span{font-size:13px}
+  .tl .c .mini{width:64px;height:64px;border-radius:11px}
+  .tl .c.tem-foto{gap:10px;padding-right:10px}
   .obs{margin-left:0}
   .grade{grid-template-columns:1fr 1fr;grid-template-rows:2fr 1fr 1fr;height:auto;aspect-ratio:3/4}
   .grade .f0{grid-row:auto;grid-column:1/3}
@@ -272,7 +277,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
       <p>Horários de estrada estimados pra uma sexta-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.</p>
     </div>
     <ol class="tl">
-      ${AGENDA.map((a) => `<li${a.destaque ? ' class="on"' : ""}><span class="h">${a.hora}</span><span class="ic">${a.icone}</span><div class="c"><b>${a.titulo}</b><span>${a.texto}</span></div></li>`).join("\n      ")}
+      ${AGENDA.map((a) => `<li${a.destaque ? ' class="on"' : ""}><span class="h">${a.hora}</span><span class="ic">${a.icone}</span>${a.foto ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span></div><img class="mini" src="${a.foto.src}" alt="${a.foto.alt}" loading="lazy" width="72" height="72"></div>` : `<div class="c"><b>${a.titulo}</b><span>${a.texto}</span></div>`}</li>`).join("\n      ")}
     </ol>
   </section>
 
