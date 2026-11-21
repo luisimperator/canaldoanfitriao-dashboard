@@ -42,3 +42,34 @@ export function escolherTurmaPorCodigo<T extends TurmaEscolhivel>(turmas: T[], c
   if (!turma.ativa || terminou(turma, agora)) return { tipo: "encerrada", turma };
   return { tipo: "turma", turma };
 }
+
+// ---------- faixa grande da página de espera ----------
+
+const SP = "America/Sao_Paulo";
+const diaSPde = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: SP }).format(d);
+const diasEntre = (de: string, ate: string) => {
+  const utc = (s: string) => {
+    const [y, m, d] = s.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((utc(ate) - utc(de)) / 86400000);
+};
+
+/**
+ * Faixa grande acima do título da espera, antes do sábado. "Começamos às 10:00"
+ * só no próprio dia (pedido de 21/11: na turma da semana seguinte a hora
+ * aparecia já no sábado anterior). Antes disso: "Começa amanhã", "Começa no
+ * próximo sábado" (até 7 dias) ou "Começa sábado, 28/11".
+ */
+export function destaqueAntes(inicio: Date, agora: Date): string {
+  const faltam = diasEntre(diaSPde(agora), diaSPde(inicio));
+  if (faltam <= 0) {
+    const hhmm = new Intl.DateTimeFormat("pt-BR", { timeZone: SP, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(inicio);
+    return `Começamos às ${hhmm}`;
+  }
+  if (faltam === 1) return "Começa amanhã";
+  const semana = new Intl.DateTimeFormat("pt-BR", { timeZone: SP, weekday: "long" }).format(inicio).replace(/-feira$/, "");
+  if (faltam <= 7) return `Começa no próximo ${semana}`;
+  const ddmm = new Intl.DateTimeFormat("pt-BR", { timeZone: SP, day: "2-digit", month: "2-digit" }).format(inicio);
+  return `Começa ${semana}, ${ddmm}`;
+}

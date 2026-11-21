@@ -5,7 +5,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TURMA_COLS, horaSP, registrarClique, repassarParams, turmaParaCompra, type Turma } from "@/lib/imersao";
-import type { Escolha } from "@/lib/imersao-escolha";
+import { destaqueAntes, type Escolha } from "@/lib/imersao-escolha";
 import { diaHumano, horaHumana, paginaAviso, paginaEncerrada, paginaEspera } from "@/lib/imersao-pagina";
 
 export type TurmaComCodigo = Turma & { codigo: string | null };
@@ -110,7 +110,9 @@ export async function responderSala(
     hourCycle: "h23",
   }).format(new Date(prox.inicio));
   return paginaEspera({
-    destaque: `${antesDoSabado ? "Começamos" : "Voltamos"} às ${hhmm}`,
+    // Antes do sábado, a hora só aparece no próprio dia (destaqueAntes); no
+    // intervalo entre os dias, "Voltamos às 9:00".
+    destaque: antesDoSabado ? destaqueAntes(new Date(prox.inicio), agora) : `Voltamos às ${hhmm}`,
     titulo: antesDoSabado ? "A Imersão ainda não começou." : "O primeiro dia terminou.",
     frase: antesDoSabado ? "Começa em:" : "O segundo começa em:",
     quando: `${dia.charAt(0).toUpperCase()}${dia.slice(1)}, das ${horaHumana(prox.inicio)} às ${horaHumana(prox.fim)}`,
