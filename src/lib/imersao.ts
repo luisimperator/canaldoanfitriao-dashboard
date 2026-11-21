@@ -23,6 +23,9 @@ export interface Turma {
   fim_sabado: string;
   inicio_domingo: string;
   fim_domingo: string;
+  /** Hora em que a sala abre; vazio = 30 min antes do início. */
+  sala_abre_sabado: string | null;
+  sala_abre_domingo: string | null;
   grupo_vip_url: string | null;
   grupo_vip_url_2: string | null;
   grupo_vip_cheio: boolean;
@@ -32,7 +35,7 @@ export interface Turma {
 }
 
 export const TURMA_COLS =
-  "turma_data, sala_url_sabado, sala_url_domingo, inicio_sabado, fim_sabado, inicio_domingo, fim_domingo, grupo_vip_url, grupo_vip_url_2, grupo_vip_cheio, ativa, unnichat_tag_id, created_at";
+  "turma_data, sala_url_sabado, sala_url_domingo, inicio_sabado, fim_sabado, inicio_domingo, fim_domingo, sala_abre_sabado, sala_abre_domingo, grupo_vip_url, grupo_vip_url_2, grupo_vip_cheio, ativa, unnichat_tag_id, created_at";
 
 // ---------- datas em São Paulo ----------
 
