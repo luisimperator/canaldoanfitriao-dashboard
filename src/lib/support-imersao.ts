@@ -22,6 +22,7 @@ type TurmaRow = {
   fim_domingo: string;
   sala_abre_sabado: string | null;
   sala_abre_domingo: string | null;
+  codigo: string | null;
 };
 
 function descreverTurma(t: TurmaRow, agora: number) {
@@ -38,6 +39,8 @@ function descreverTurma(t: TurmaRow, agora: number) {
   else agoraTexto = "essa turma já aconteceu";
   return {
     turma: t.turma_data,
+    // Turma com codigo tem link próprio (/i/<codigo>); as antigas usam o /imersao.
+    link: t.codigo ? `https://link.canaldoanfitriao.com.br/i/${t.codigo}` : LINK,
     sabado: dia(t.inicio_sabado, t.fim_sabado, abreSab),
     domingo: dia(t.inicio_domingo, t.fim_domingo, abreDom),
     agora: agoraTexto,
@@ -75,7 +78,7 @@ export async function consultarImersao(
   const datas = [...new Set([...compras.map((c) => c.turma_data).filter(Boolean), proxima])] as string[];
   const { data: turmas } = await admin
     .from("imersao_turmas")
-    .select("turma_data, inicio_sabado, fim_sabado, inicio_domingo, fim_domingo, sala_abre_sabado, sala_abre_domingo")
+    .select("turma_data, inicio_sabado, fim_sabado, inicio_domingo, fim_domingo, sala_abre_sabado, sala_abre_domingo, codigo")
     .in("turma_data", datas);
   const porData = new Map(((turmas ?? []) as TurmaRow[]).map((t) => [t.turma_data, t]));
   const turmaInfo = (d: string | null) => {
@@ -89,12 +92,11 @@ export async function consultarImersao(
       buscou_por: { email: email || null, telefone_final: tel ? tel.slice(-4) : null, nome: filtros.length ? null : nome || null },
       dica: "Peça o e-mail usado na compra e consulte de novo. Quem compra agora entra na turma abaixo.",
       proxima_turma_a_venda: turmaInfo(proxima),
-      link: LINK,
     });
   }
   return JSON.stringify({
     achou_compra: true,
-    link: LINK,
+    regra: "mande o link da turma da pessoa (campo link de cada compra)",
     compras: compras.map((c) => ({
       nome: c.nome,
       email: c.email,
