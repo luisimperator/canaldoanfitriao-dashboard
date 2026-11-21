@@ -16,8 +16,8 @@ function ehLpPublica(p: string): boolean {
     p.startsWith("/lp/") ||
     // LP da corrida (/corrida redireciona pra /corrida-anfitriao) e a marca que ela usa.
     p === "/corrida-anfitriao" || p === "/corrida" ||
-    // Ordem do dia do Rômulo Visita com o Antonio Carlos (vira redirect em 04/12/2026).
-    p === "/rv-antonio" ||
+    // Páginas internas (ex.: ordem do dia do Rômulo Visita).
+    p.startsWith("/internos/") ||
     // LP do Max (análise grátis no WhatsApp) e o rosto dele.
     p === "/max" || p.startsWith("/max/") ||
     p.startsWith("/marca/") ||
