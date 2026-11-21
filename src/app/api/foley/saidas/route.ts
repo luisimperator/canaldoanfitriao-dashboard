@@ -28,10 +28,15 @@ function autorizado(req: NextRequest): boolean {
   return Boolean(token) && req.headers.get("authorization") === `Bearer ${token}`;
 }
 
-function telefoneBr(bruto: string): string | null {
-  let d = bruto.replace(/\D/g, "");
-  if (d.length === 10 || d.length === 11) d = `55${d}`;
-  return /^55\d{10,11}$/.test(d) ? d : null;
+// O Foley manda o número do WhatsApp, que já vem com o código do país. Só põe
+// 55 na frente do que tem cara de número brasileiro sem DDI: celular com 11
+// dígitos (DDD + 9xxxx-xxxx) ou fixo com 10 (DDD + 2 a 5). Em 20/11 o Rudson
+// (+1 240...) e a Marie (+33 6...) viraram 5512.../5533... e o aviso falhou.
+function telefoneWhatsApp(bruto: string): string | null {
+  let d = bruto.replace(/\D/g, "").replace(/^0+/, "");
+  if ((d.length === 11 && d[2] === "9") || (d.length === 10 && /[2-5]/.test(d[2]))) d = `55${d}`;
+  if (d.startsWith("55")) return /^55\d{10,11}$/.test(d) ? d : null;
+  return /^\d{8,15}$/.test(d) ? d : null;
 }
 
 function primeiroNome(nome: string | null): string {
@@ -63,7 +68,7 @@ export async function POST(req: NextRequest) {
   const resultados: Record<string, unknown>[] = [];
   for (const [i, bruto] of lista.entries()) {
     const p = (bruto ?? {}) as Record<string, unknown>;
-    const telefone = telefoneBr(String(p.telefone ?? ""));
+    const telefone = telefoneWhatsApp(String(p.telefone ?? ""));
     const g = String(p.grupo ?? "").toLowerCase();
     const grupo = g.startsWith("gig") ? "gigantes" : g === "a5e" ? "a5e" : null;
     if (!telefone || !grupo) {
