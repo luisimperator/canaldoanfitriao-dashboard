@@ -15,7 +15,7 @@ export const LP_BASE = "/imersao-chuva-de-reservas-airbnb";
 
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
-function descreve(turma: string, inicioSab: string, fimSab: string, inicioDom: string): LpTurma {
+function descreve(turma: string, inicioSab: string, fimSab: string, inicioDom: string, fimDom: string): LpTurma {
   const [, m, d] = turma.split("-").map(Number);
   const dom = new Date(inicioDom);
   const dDom = Number(new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", day: "numeric" }).format(dom));
@@ -29,6 +29,7 @@ function descreve(turma: string, inicioSab: string, fimSab: string, inicioDom: s
     sabadoCurto: `${dd(d)}/${dd(m)}`,
     domingoCurto: `${dd(dDom)}/${dd(mDom)}`,
     horario: `${horaHumana(inicioSab)} às ${horaHumana(fimSab)}`,
+    horarioDomingo: `${horaHumana(inicioDom)} às ${horaHumana(fimDom)}`,
   };
 }
 
@@ -41,13 +42,14 @@ export async function servirLp(req: NextRequest, variante: Variante): Promise<Re
     turmaData,
     horaSP(turmaData, 10).toISOString(),
     horaSP(turmaData, 15).toISOString(),
-    horaSP(somaDias(turmaData, 1), 9, 15).toISOString()
+    horaSP(somaDias(turmaData, 1), 9, 15).toISOString(),
+    horaSP(somaDias(turmaData, 1), 15).toISOString()
   );
   if (supabase) {
     try {
       await garantirTurma(supabase, turmaData);
       const turma = await turmaPorData(supabase, turmaData);
-      if (turma) t = descreve(turmaData, turma.inicio_sabado, turma.fim_sabado, turma.inicio_domingo);
+      if (turma) t = descreve(turmaData, turma.inicio_sabado, turma.fim_sabado, turma.inicio_domingo, turma.fim_domingo);
       await registrarClique(supabase, { headers: req.headers, params }, {
         rota: "lp",
         turma_data: turmaData,

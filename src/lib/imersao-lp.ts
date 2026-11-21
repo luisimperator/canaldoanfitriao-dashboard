@@ -183,15 +183,22 @@ export interface LpTurma {
   /** "21/11" e "22/11" */
   sabadoCurto: string;
   domingoCurto: string;
-  /** "9h às 16h" */
+  /** sábado, "10h às 15h" */
   horario: string;
+  /** domingo, "9h15 às 15h" */
+  horarioDomingo: string;
 }
 
 export type Variante = "longa" | "curta";
 
+const HORAS = {
+  sabado: ["Manhã 10h–12h", "Almoço 12h–13h30", "Tarde 13h30–15h"],
+  domingo: ["Manhã 9h15–11h30", "Almoço 11h30–13h", "Tarde 13h–15h"],
+} as const;
+
 export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null, variante: Variante = "longa"): string {
   const longa = variante === "longa";
-  const quando = `Sábado e domingo, ${esc(t.dias)}, das ${esc(t.horario)}`;
+  const quando = `${esc(t.dias)}, sábado das ${esc(t.horario)} e domingo das ${esc(t.horarioDomingo)}`;
   const href = esc(comprarHref);
   const botao = (texto = "Garantir meu ingresso", extra = "") =>
     `<a class="btn ${extra}" href="${href}" data-comprar><span>${texto}</span><i aria-hidden="true">→</i></a>`;
@@ -578,7 +585,7 @@ ${pixel}
       <span class="selo-top rv"><span class="dot"></span>Imersão online · ${esc(t.dias)}</span>
       <img class="logo rv" style="--d:.05s" src="${A}/logo.svg" alt="Imersão Chuva de Reservas" width="158" height="81">
       <h1 class="rv vis-palavras">${palavras("Seu anúncio no")} <span class="palavra serif grad-txt" style="--d:.36s">topo</span> ${palavras("do ranking do Airbnb", 0.42)} <span class="palavra serif" style="--d:.8s">em um fim de semana.</span></h1>
-      <p class="sub rv" style="--d:.5s">Dois dias, sábado e domingo, das ${esc(t.horario)}, aprendendo o que o algoritmo do Airbnb quer ver e montando o anúncio que aparece nas buscas, cobra o preço certo e enche o calendário.</p>
+      <p class="sub rv" style="--d:.5s">Dois dias, sábado das ${esc(t.horario)} e domingo das ${esc(t.horarioDomingo)}, aprendendo o que o algoritmo do Airbnb quer ver e montando o anúncio que aparece nas buscas, cobra o preço certo e enche o calendário.</p>
       <div class="oferta rv" style="--d:.6s">
         <div class="preco"><span class="de">de ${precoDe}</span><span class="por">por</span><span class="valor"><small>R$</small>${PRECO.por}</span></div>
         <span class="tag-off">${DESCONTO}% OFF</span>
@@ -659,7 +666,7 @@ ${longa ? `<section class="s" style="background:var(--creme)"><div class="wrap">
       <div class="q"><b>${k === "sabado" ? "Sábado" : "Domingo"}</b><span>${esc(k === "sabado" ? t.sabadoCurto : t.domingoCurto)}</span></div>
       <h3>${d.tema}</h3>
       <ul class="tl">${d.topicos.map((x) => `<li>${x}</li>`).join("")}</ul>
-      <div class="horas"><span>Manhã 9h–12h</span><span>Almoço 12h–13h30</span><span>Tarde 13h30–16h</span></div>
+      <div class="horas">${HORAS[k].map((x) => `<span>${x}</span>`).join("")}</div>
     </div>`;
       })
       .join("\n    ")}
@@ -682,7 +689,7 @@ ${longa ? "" : `<section class="s curta"><div class="wrap">
     <img class="logo" src="${A}/logo.svg" alt="" width="158" height="81">
     <div class="q">${quando} · 100% online</div>
     <ul>
-      <li>2 dias de imersão: sábado e domingo, das ${esc(t.horario)}</li>
+      <li>2 dias de imersão: sábado das ${esc(t.horario)} e domingo das ${esc(t.horarioDomingo)}</li>
       <li>Anúncio, preço, algoritmo, métricas e avaliações</li>
       <li>Análise de anúncios reais, com as métricas de cada um</li>
       <li>Dá pra assistir no computador ou no celular (melhor no computador)</li>
