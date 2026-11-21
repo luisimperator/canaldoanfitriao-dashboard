@@ -46,12 +46,15 @@ export async function GET(req: NextRequest) {
   const t = agora.getTime();
   const ms = (iso: string) => new Date(iso).getTime();
   const dias = [
-    { momento: "sabado", inicio: turma.inicio_sabado, fim: turma.fim_sabado, sala: turma.sala_url_sabado },
-    { momento: "domingo", inicio: turma.inicio_domingo, fim: turma.fim_domingo, sala: turma.sala_url_domingo },
+    { momento: "sabado", inicio: turma.inicio_sabado, fim: turma.fim_sabado, sala: turma.sala_url_sabado, abre: turma.sala_abre_sabado },
+    { momento: "domingo", inicio: turma.inicio_domingo, fim: turma.fim_domingo, sala: turma.sala_url_domingo, abre: turma.sala_abre_domingo },
   ];
+  // A sala abre 30 min antes do início, a não ser que a turma diga outra hora
+  // (sala_abre_*; Fernando, 21/11: "Abra a sala só às 10:00 mesmo").
+  const abreEm = (d: (typeof dias)[number]) => (d.abre ? ms(d.abre) : ms(d.inicio) - ABRE_ANTES_MS);
 
   for (const d of dias) {
-    if (t >= ms(d.inicio) - ABRE_ANTES_MS && t <= ms(d.fim)) {
+    if (t >= abreEm(d) && t <= ms(d.fim)) {
       if (!d.sala) {
         await clique(d.momento, null);
         return paginaAviso("A sala abre em instantes", [
@@ -71,7 +74,7 @@ export async function GET(req: NextRequest) {
   // Página de espera com contagem, foto do Rômulo e a cara da LP (Fernando,
   // 20/11: inscrito via "a Imersão ainda não começou" e achava que o link não
   // funcionava; "coloca um countdown").
-  const abreMs = ms(prox.inicio) - ABRE_ANTES_MS;
+  const abreMs = abreEm(prox);
   const dia = diaHumano(prox.inicio);
   const hhmm = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
