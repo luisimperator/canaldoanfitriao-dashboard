@@ -56,6 +56,17 @@ export async function POST(req: NextRequest) {
   const note = String(b?.event ?? dados?.status_pedido ?? dados?.status_pagamento ?? b?.status ?? "evento");
   await supabase.from("webhook_log").insert({ source: "tmb", note: simulacao ? `simulação: ${note}` : note, body });
 
+  // Pedido novo entra na hora em tmb_pedidos_raw (migração 0143; antes só pela
+  // cópia de hora em hora, e a venda demorava pra aparecer na Visão geral).
+  // Só grava pedido que ainda não existe; quem atualiza é a cópia.
+  if (!simulacao && b && typeof b.status_pedido === "string" && b.valor_total != null) {
+    try {
+      await supabase.rpc("tmb_pedido_do_webhook", { p: b });
+    } catch {
+      /* a cópia de hora em hora pega depois */
+    }
+  }
+
   // Aviso de venda nova no celular: pedido que virou "Efetivado" (1ª parcela
   // paga), uma vez por pedido. Simulação não avisa.
   if (!simulacao) {

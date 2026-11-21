@@ -36,6 +36,26 @@ async function imersoesPagas(): Promise<{ dia: string; valor: number }[]> {
   }));
 }
 
+// Vendas parceladas na TMB (boleto) efetivadas: ficam em tmb_pedidos_raw, fora
+// de `sales` (que só recebe Eduzz). Entram no faturamento e na contagem de
+// vendas (Fernando, 21/11: "Demorando pro dado refletir o real" — as 13 vendas
+// da TMB de novembro, R$ 71,8 mil, não apareciam). Valor = valor total do
+// pedido, no dia em que foi efetivado (data da TMB, horário de Brasília).
+async function vendasTmb(): Promise<{ dia: string; valor: number }[]> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from("tmb_pedidos_raw")
+    .select("data_efetivado, valor_total")
+    .eq("status_pedido", "Efetivado")
+    .not("data_efetivado", "is", null)
+    .limit(5000);
+  return ((data ?? []) as { data_efetivado: string; valor_total: number | string | null }[]).map((r) => ({
+    dia: String(r.data_efetivado).slice(0, 10),
+    valor: Number(r.valor_total ?? 0),
+  }));
+}
+
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const reYMD = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -88,11 +108,19 @@ export default async function VisaoGeralPage({
   // Imersão (ingresso de R$ 27): fica em imersao_compradores, fora de `sales`
   // pra não contar como venda do time; entra só no faturamento (Fernando,
   // 17/11: "tivemos vendas hoje da imersão paga, pq não tá contando?").
-  const imersoes = await imersoesPagas();
+  const [imersoes, tmb] = await Promise.all([imersoesPagas(), vendasTmb()]);
   const imersoesHoje = imersoes.filter((i) => i.dia === today);
   const imersoesP = noPeriodo(imersoes, (i) => i.dia);
-  const revenueToday = sum(salesToday.map((s) => s.amount)) + sum(imersoesHoje.map((i) => i.valor));
-  const revenueP = sum(salesP.map((s) => s.amount)) + sum(imersoesP.map((i) => i.valor));
+  const tmbHoje = tmb.filter((t) => t.dia === today);
+  const tmbP = noPeriodo(tmb, (t) => t.dia);
+  const revenueToday =
+    sum(salesToday.map((s) => s.amount)) + sum(tmbHoje.map((t) => t.valor)) + sum(imersoesHoje.map((i) => i.valor));
+  const revenueP = sum(salesP.map((s) => s.amount)) + sum(tmbP.map((t) => t.valor)) + sum(imersoesP.map((i) => i.valor));
+  // Vendas = Eduzz (sales) + TMB; "(n pela TMB)" quando houver.
+  const vendasHoje = salesToday.length + tmbHoje.length;
+  const vendasP = salesP.length + tmbP.length;
+  const textoVendas = (n: number, nTmb: number) =>
+    `${num(n)} venda${n === 1 ? "" : "s"}${nTmb ? ` (${num(nTmb)} pela TMB)` : ""}`;
   const extraImersao = (lista: { valor: number }[]) =>
     lista.length ? ` + ${num(lista.length)} imers${lista.length === 1 ? "ão" : "ões"} (${brl(sum(lista.map((i) => i.valor)))})` : "";
   // Projeção do mês pelo ritmo atual (run rate) — só quando o período é o mês corrente.
@@ -106,8 +134,8 @@ export default async function VisaoGeralPage({
 
   const cap = capacityAnalysis(data);
   const spendP = sum(noPeriodo(data.adSpend, (a) => a.date).map((a) => a.amount));
-  const cac = salesP.length > 0 && spendP > 0 ? spendP / salesP.length : null;
-  const leadsPorVenda = salesP.length > 0 ? leadsP.length / salesP.length : null;
+  const cac = vendasP > 0 && spendP > 0 ? spendP / vendasP : null;
+  const leadsPorVenda = vendasP > 0 ? leadsP.length / vendasP : null;
 
   const stages = funnelStages(leadsP);
 
@@ -187,13 +215,13 @@ export default async function VisaoGeralPage({
           label="Faturamento hoje"
           value={brl(revenueToday)}
           tone="good"
-          hint={`${num(salesToday.length)} venda${salesToday.length === 1 ? "" : "s"}${extraImersao(imersoesHoje)}`}
+          hint={`${textoVendas(vendasHoje, tmbHoje.length)}${extraImersao(imersoesHoje)}`}
         />
         <KpiCard
           label={`Faturamento ${sufixo}`}
           value={brl(revenueP)}
           tone="good"
-          hint={`${num(salesP.length)} venda${salesP.length === 1 ? "" : "s"}${extraImersao(imersoesP)}${
+          hint={`${textoVendas(vendasP, tmbP.length)}${extraImersao(imersoesP)}${
             ehMesAtual ? ` · projeção ${brl(projectedMonth)}` : ""
           }`}
         />
@@ -224,7 +252,7 @@ export default async function VisaoGeralPage({
         <KpiCard
           label={`Leads por venda ${sufixo}`}
           value={leadsPorVenda ? num(leadsPorVenda, 1) : "—"}
-          hint={`${num(leadsP.length)} leads · ${num(salesP.length)} vendas`}
+          hint={`${num(leadsP.length)} leads · ${num(vendasP)} vendas`}
         />
         <KpiCard
           label={`Custo por venda ${sufixo}`}
