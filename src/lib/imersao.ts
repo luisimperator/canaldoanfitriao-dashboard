@@ -1,8 +1,8 @@
 // Lançamento pago semanal: Imersão A5E (ingresso R$ 27).
 //
-// Turma = data do sábado do evento (AAAA-MM-DD). Evento sábado e domingo, 9h às
-// 16h em São Paulo, sem replay. Quem compra a partir de sábado 9h (início do
-// evento) já cai na turma do sábado seguinte.
+// Turma = data do sábado do evento (AAAA-MM-DD). Evento sábado 10h às 15h e
+// domingo 9h15 às 15h em São Paulo, sem replay. Quem compra a partir de sábado
+// 10h (início do evento) já cai na turma do sábado seguinte.
 //
 // Aqui fica a regra de turma, o processamento da venda (comprador + tags no
 // Mailchimp e no Unnichat) e o reembolso. Quem chama: o webhook da Eduzz e o
@@ -82,14 +82,17 @@ export function ehSabado(dia: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(dia) && diaDaSemana(dia) === 6;
 }
 
+/** Hora (em SP) do sábado a partir da qual a compra já vai para a turma seguinte. */
+export const HORA_CORTE_SABADO = 10;
+
 /**
  * Turma de quem compra no instante `quando`: o próximo sábado cujo início
- * (sábado 9h em SP) ainda não chegou. Comprou sábado 9h01 → sábado seguinte.
+ * (sábado 10h em SP) ainda não chegou. Comprou sábado 10h01 → sábado seguinte.
  */
 export function turmaParaCompra(quando: Date): string {
   const hoje = diaSP(quando);
   const sabado = somaDias(hoje, (6 - diaDaSemana(hoje) + 7) % 7);
-  return horaSP(sabado, 9).getTime() <= quando.getTime() ? somaDias(sabado, 7) : sabado;
+  return horaSP(sabado, HORA_CORTE_SABADO).getTime() <= quando.getTime() ? somaDias(sabado, 7) : sabado;
 }
 
 /** Garante a linha da turma (horários padrão vêm do trigger do banco). */

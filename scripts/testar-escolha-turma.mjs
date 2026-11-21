@@ -2,6 +2,7 @@
 // Rodar: node scripts/testar-escolha-turma.mjs   (Node 22.18+: importa o .ts direto, type stripping)
 import assert from "node:assert/strict";
 import { destaqueAntes, escolherTurmaImersao, escolherTurmaPorCodigo } from "../src/lib/imersao-escolha.ts";
+import { turmaParaCompra } from "../src/lib/imersao.ts";
 
 // Espelho das linhas de imersao_turmas em produção (21/11/2026).
 const CODIGO_28 = "9kONSWKrmvGQ";
@@ -50,5 +51,18 @@ caso("faixa 27/11 (sexta)", destaqueAntes(ini28, em("2026-11-27T22:00:00Z")), "C
 caso("faixa 28/11 00:10 SP", destaqueAntes(ini28, em("2026-11-28T03:10:00Z")), "Começamos às 10:00");
 caso("faixa 28/11 09:00 SP", destaqueAntes(ini28, em("2026-11-28T12:00:00Z")), "Começamos às 10:00");
 caso("faixa 2 semanas antes", destaqueAntes(ini28, em("2026-11-14T15:00:00Z")), "Começa sábado, 28/11");
+
+// Turma de quem compra (corte = sábado 10h SP = 13:00Z, início real do evento).
+for (const [iso, esperado] of [
+  ["2026-11-21T11:59:00Z", "2026-11-21"],
+  ["2026-11-21T12:30:00Z", "2026-11-21"], // 9h30 SP
+  ["2026-11-21T12:59:59Z", "2026-11-21"],
+  ["2026-11-21T13:00:00Z", "2026-11-28"], // 10h SP em ponto
+  ["2026-11-21T13:01:00Z", "2026-11-28"],
+  ["2026-11-20T23:00:00Z", "2026-11-21"], // sexta
+  ["2026-11-22T15:00:00Z", "2026-11-28"], // domingo
+]) {
+  caso(`turmaParaCompra ${iso}`, turmaParaCompra(em(iso)), esperado);
+}
 
 console.log(`\n${ok} casos ok`);

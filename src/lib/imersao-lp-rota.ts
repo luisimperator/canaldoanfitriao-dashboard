@@ -39,9 +39,9 @@ export async function servirLp(req: NextRequest, variante: Variante): Promise<Re
 
   let t: LpTurma = descreve(
     turmaData,
-    horaSP(turmaData, 9).toISOString(),
-    horaSP(turmaData, 16).toISOString(),
-    horaSP(somaDias(turmaData, 1), 9).toISOString()
+    horaSP(turmaData, 10).toISOString(),
+    horaSP(turmaData, 15).toISOString(),
+    horaSP(somaDias(turmaData, 1), 9, 15).toISOString()
   );
   if (supabase) {
     try {
