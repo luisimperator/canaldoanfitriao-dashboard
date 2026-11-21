@@ -120,6 +120,10 @@ interface Config {
   atendente_id: string | null;
   template_abertura_id: string | null;
   template_lembrete_id?: string | null;
+  /** Liberação do horário de quem não confirma a call (migração 0145; padrão ligado). */
+  liberar_sem_confirmacao?: boolean | null;
+  /** Template de utilidade do aviso de horário liberado ({{1}} nome, {{2}} quando, {{3}} vendedor). */
+  template_liberada_id?: string | null;
   tag_teo_id: string | null;
   followup_horas: number[] | null;
   followup_templates: string[] | null;
@@ -762,11 +766,45 @@ function avisoCallMarcada(call: { inicio: string; vendedor: string | null; meet_
     // Estudo do Diego (Fernando, 19/11: "vamos aplicar as sugestões"): oferecer
     // ligação no lugar do vídeo; um lead que pediu ligação comprou no mesmo dia.
     `VÍDEO OU LIGAÇÃO: se ela disser que prefere que o especialista ligue (ou que não pode por vídeo), confirme numa frase que ${call.vendedor ? primeiroNomeVendedor(call.vendedor) : "o especialista"} liga no WhatsApp dela no horário, anote na ficha "prefere ligação no WhatsApp" e chame avisar_vendedor com isso. Se preferir vídeo, confirme numa frase com o link.`,
-    "REMARCAR: se ela pedir pra mudar, ofereça os horários de hoje da lista (os mais próximos primeiro), depois os de amanhã. Se ela só puder depois de amanhã, use voltar_no_dia em vez de marcar com antecedência (a call antiga continua até ela escolher um horário novo).",
+    "REMARCAR: se ela pedir pra mudar, ofereça os horários de hoje da lista (os mais próximos primeiro), depois os de amanhã. Se ela só puder depois de amanhã, use voltar_no_dia em vez de marcar com antecedência (a call marcada é cancelada e o horário vai pra outra pessoa).",
+    "DESMARCAR: se ela disser que não vai poder (ou não quer mais) e não escolher outro horário de hoje ou amanhã nem um dia pra você voltar, chame desmarcar_call: o horário vai pra outra pessoa. Antes, ofereça uma vez os horários mais próximos de hoje.",
     call.meet_url
       ? `NÃO CONSEGUE ENTRAR: se perto do horário ele disser que não consegue entrar (link não abre, pede app, não acha a sala), responda na hora, curto: mande de novo ESTE link da call (${call.meet_url}) e o passo a passo. Celular: precisa do app Microsoft Teams (grátis; ${LOJAS_TEAMS}); depois de instalar, abre o link de novo e toca em "Entrar como convidado", digita o nome e entra. Computador: abre o link no Chrome ou no Edge e escolhe "Continuar neste navegador". Nunca mande outro link (Meet, outra sala), não diga que o especialista já está na sala e não remarque: o especialista foi avisado e entra por esse mesmo link.`
       : "",
   ].filter(Boolean).join(" ");
+}
+
+/**
+ * Call deste lead liberada nos últimos 3 dias por falta de confirmação
+ * (migração 0145): se ele voltar a escrever, o Téo remarca.
+ */
+async function callLiberadaDoLead(
+  supabase: SupabaseClient,
+  contactId: string
+): Promise<{ inicio: string; vendedor: string | null } | null> {
+  const { data } = await supabase
+    .from("teo_calls")
+    .select("inicio, vendedor")
+    .eq("contact_id", contactId)
+    .eq("liberada_motivo", "sem_confirmacao")
+    .gte("liberada_em", new Date(Date.now() - 3 * 86400_000).toISOString())
+    .order("liberada_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ? { inicio: String(data.inicio), vendedor: (data.vendedor as string | null) ?? null } : null;
+}
+
+function avisoCallLiberada(call: { inicio: string; vendedor: string | null }): string {
+  const quando = new Date(call.inicio).toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const com = call.vendedor ? ` com ${primeiroNomeVendedor(call.vendedor)}` : "";
+  return `CALL LIBERADA: este lead tinha call ${quando}${com}, mas não confirmou (nem na véspera nem no dia) e o horário foi liberado pra outra pessoa. Se ele escrever, sem bronca: diga numa frase que liberou porque não teve retorno e ofereça os horários mais próximos da lista pra marcar de novo${com ? `, de preferência${com}` : ""}.`;
 }
 
 /** Aviso só deste lead (fica fora do bloco da Black, que vai em cache). */
@@ -1764,11 +1802,108 @@ async function combinarRetorno(
     .eq("contact_id", c.contact_id);
   c.call_retorno_em = em;
   await log(supabase, "volta combinada", { contact_id: c.contact_id, nome: c.nome, dia: alvo, pedido, motivo: args.motivo });
+  // Quem tinha call e só pode depois de amanhã: a call sai da agenda na hora e
+  // o horário vai pra outra pessoa (Fernando, 21/11: "libere espaço").
+  const liberadas = await liberarCallsDoLead(supabase, cfg, c.contact_id, "voltar_no_dia");
   const outro = alvo !== pedido ? ` (${diaFala(pedido)} não tem agenda; o primeiro dia com agenda depois é ${diaFala(alvo)})` : "";
   return (
     `Combinado: ${diaFala(alvo)}, de manhã, esta conversa volta pra você com os horários daquele dia${outro}. ` +
+    (liberadas ? "A call que ela tinha foi cancelada e o horário liberado (o cancelamento vai pro e-mail dela); diga isso numa frase. " : "") +
     `Diga a ela numa frase que você chama ${diaFala(alvo)} de manhã pra confirmar o horário. Se ela já disse um horário, diga que guardou a preferência e confirma no dia (sem garantir que estará livre). Não explique regra interna de agenda e não marque call pra esse dia.`
   );
+}
+
+type CallParaLiberar = {
+  id: string;
+  contact_id: string;
+  nome: string | null;
+  inicio: string;
+  vendedor: string | null;
+  evento_id: string | null;
+};
+type MotivoLiberacao = "sem_confirmacao" | "lead_desmarcou" | "voltar_no_dia";
+
+// Libera o horário de uma call (Fernando, 21/11: "tô cancelando aqui, se quiser
+// a gente remarca depois. E aí deixa em aberto para novas pessoas"): a call vira
+// cancelada (o horário volta na hora pra lista do Téo), o convite é cancelado
+// na agenda (a Graph avisa o lead e o vendedor por e-mail) e o vendedor recebe
+// uma nota. O aviso pro lead no WhatsApp fica com quem chama (na conversa, quem
+// fala é o Téo).
+async function liberarCall(
+  supabase: SupabaseClient,
+  cfg: Config,
+  k: CallParaLiberar,
+  motivo: MotivoLiberacao
+): Promise<void> {
+  const agoraIso = new Date().toISOString();
+  await supabase
+    .from("teo_calls")
+    .update({ status: "cancelada", liberada_em: agoraIso, liberada_motivo: motivo, liberar_em: null })
+    .eq("id", k.id);
+  if (k.evento_id) {
+    const g = await graph(supabase, cfg).catch(() => null);
+    if (g?.ok) {
+      await fetch(`${g.base}/${encodeURIComponent(k.evento_id)}/cancel`, {
+        method: "POST",
+        headers: g.auth,
+        body: JSON.stringify({
+          comment:
+            motivo === "sem_confirmacao"
+              ? "Como não tivemos sua confirmação, liberamos este horário. Se quiser remarcar, é só responder no WhatsApp."
+              : "Call desmarcada. Se quiser remarcar, é só responder no WhatsApp.",
+        }),
+      }).catch(() => null);
+    }
+  }
+  const nome = primeiroNome(k.nome);
+  const quando = `${diaFala(local(k.inicio).slice(0, 10))} às ${local(k.inicio).slice(11, 16)}`;
+  const nota =
+    motivo === "sem_confirmacao"
+      ? `🔓 Horário liberado: ${nome} não confirmou a call de ${quando} (nem na véspera nem hoje cedo), então o Téo cancelou e o horário voltou pra agenda. Se ${nome} voltar a escrever, o Téo remarca.`
+      : motivo === "voltar_no_dia"
+        ? `🔓 ${nome} não pode na call de ${quando}: o Téo combinou de voltar no dia que ${nome} pediu e liberou o horário.`
+        : `🔓 ${nome} desmarcou a call de ${quando}: o horário voltou pra agenda.`;
+  await anotar(supabase, k.contact_id, nota).catch(() => null);
+  if (motivo === "sem_confirmacao") {
+    // O acompanhamento normal volta, mas não logo em seguida do aviso.
+    await supabase.from("teo_conversas").update({ followup_em: agoraIso }).eq("contact_id", k.contact_id);
+  }
+  await log(supabase, `horário liberado (${motivo})`, {
+    contact_id: k.contact_id,
+    nome: k.nome,
+    vendedor: k.vendedor,
+    inicio: k.inicio,
+  });
+}
+
+// Libera as calls que o lead tem pela frente; devolve quantas.
+async function liberarCallsDoLead(
+  supabase: SupabaseClient,
+  cfg: Config,
+  contactId: string,
+  motivo: MotivoLiberacao
+): Promise<number> {
+  const { data } = await supabase
+    .from("teo_calls")
+    .select("id, contact_id, nome, inicio, vendedor, evento_id")
+    .eq("contact_id", contactId)
+    .neq("status", "cancelada")
+    .gte("inicio", new Date().toISOString());
+  for (const k of data ?? []) await liberarCall(supabase, cfg, k as CallParaLiberar, motivo);
+  return (data ?? []).length;
+}
+
+// desmarcar_call: o lead disse que não vai poder e não quis outro horário.
+async function desmarcarCallDoLead(
+  supabase: SupabaseClient,
+  c: Conversa,
+  cfg: Config,
+  args: { motivo: string }
+): Promise<string> {
+  const n = await liberarCallsDoLead(supabase, cfg, c.contact_id, "lead_desmarcou");
+  if (!n) return "Este lead não tem call marcada: não há o que desmarcar.";
+  await log(supabase, "call desmarcada pelo lead", { contact_id: c.contact_id, nome: c.nome, motivo: args.motivo });
+  return "Desmarcado: o horário voltou pra agenda e o cancelamento vai pro e-mail dela. Diga numa frase que tudo bem, que desmarcou, e que quando ela quiser é só chamar aqui que você vê um horário (de preferência no mesmo dia). Não insista agora.";
 }
 
 async function garantirTeo(supabase: SupabaseClient, c: Conversa, atendenteId: string): Promise<void> {
@@ -2363,6 +2498,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // num e-mail que o lead mandou na conversa (assim o Téo confirma sozinho).
     const alunoPorTag = lead.tags.some((t) => ALUNO_TAG.test(t.trim()));
     const callMarcada = await callMarcadaDoLead(supabase, c.contact_id).catch(() => null);
+    const callLiberada = callMarcada ? null : await callLiberadaDoLead(supabase, c.contact_id).catch(() => null);
     // Já comprou a Black? (e-mails do lead ou o telefone do WhatsApp)
     const jaComprouBlack = blackAtiva(cfg)
       ? await acharCompraDaBlack(supabase, emailsDaConversa(lead.email ?? null, msgs), c.telefone).catch(() => null)
@@ -2417,6 +2553,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       avisoDoLead:
         [
           callMarcada ? avisoCallMarcada(callMarcada) : null,
+          callLiberada ? avisoCallLiberada(callLiberada) : null,
           temMax ? AVISO_MAX : null,
           temMax && !callMarcada ? AVISO_PERGUNTE_MAX : null,
           jaComprouBlack
@@ -2453,6 +2590,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       })(),
       marcarCall: (args) => marcarCall(supabase, c, cfg, especialista, args),
       voltarNoDia: (args) => combinarRetorno(supabase, c, cfg, args),
+      desmarcarCall: (args) => desmarcarCallDoLead(supabase, c, cfg, args),
       // Fernando, 18/11: o Téo não corrige o vendedor na frente do lead; o
       // recado vai numa nota da conversa.
       avisarVendedor: async (recado) => {
@@ -2644,8 +2782,11 @@ async function avisarDaCall(
 }
 
 // Antes de cada call:
-// * véspera, das 18h às 22h30: "amanhã às 15h com o Flávio, tá de pé?" (se a
+// * véspera, das 18h às 22h30: "amanhã às 15h com o Flávio, me confirma?" (se a
 //   pessoa responder, a janela de 24h reabre pro lembrete do dia);
+// * no dia, às 8h: quem não escreveu nada nas 24h antes da call recebe o pedido
+//   de confirmação com prazo (2h antes da call, no mínimo 1h depois da
+//   mensagem); sem resposta até o prazo, o horário é liberado (migração 0145);
 // * ~90 min antes: lembrete com o link;
 // * 10 min antes: a conversa passa pro vendedor no Unnichat, com a ficha;
 // * 3 min depois do horário: "Flávio já está na sala te esperando" (sem artigo: serve pra vendedora), com o
@@ -2657,7 +2798,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
   const agora = Date.now();
   const { data: calls } = await supabase
     .from("teo_calls")
-    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status, evento_id, reuniao_id, link_enviado_em, confirmacao_em, alerta_silencio_em")
+    .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status, evento_id, reuniao_id, link_enviado_em, confirmacao_em, alerta_silencio_em, liberar_em, liberada_em")
     .in("status", ["marcada", "convite_enviado"])
     .gte("inicio", new Date(agora - 2 * 3600_000).toISOString());
   for (const k of calls ?? []) {
@@ -2755,8 +2896,8 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
               cfg,
               conv.telefone,
               await janela(),
-              `Oi, ${nome}! Amanhã (${dia}) às ${horaFala} é o seu papo de 20 min com ${vend}. Tá de pé?`,
-              [nome, vend, `amanhã (${dia}) às ${horaFala}`]
+              `Oi, ${nome}! Amanhã (${dia}) às ${horaFala} é o seu papo de 20 min com ${vend}. Me confirma por aqui? Um "sim" já basta, e eu deixo o horário reservado pra você.`,
+              [nome, vend, `amanhã (${dia}) às ${horaFala}. Me responde com um sim que eu deixo o horário reservado pra você`]
             );
         await supabase.from("teo_calls").update({ vespera_em: new Date().toISOString() }).eq("id", k.id);
         await log(supabase, `véspera ${r}`, { contact_id: k.contact_id, nome: k.nome, hora });
@@ -2764,35 +2905,110 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
       }
       // Regra das 24h (estudo do Diego; Fernando, 19/11: "vamos aplicar as
       // sugestões"): lead que não mandou nada nas 24h antes da call quase
-      // sempre falta (Téo: 3 de 4; Diego: 4 de 5). No dia da call, de 5h a
-      // 1h30 antes, ele recebe uma pergunta que pede resposta. 1h antes, se
-      // seguir calado, o vendedor recebe uma nota pra ligar.
+      // sempre falta (Téo: 3 de 4; Diego: 4 de 5). 1h antes, se seguir calado,
+      // o vendedor recebe uma nota pra ligar.
       const calado = async () => {
         const doLead = (await msgs()).filter((m) => m.senderBy === "contact");
         const ult = doLead[doLead.length - 1];
         return !ult || agora - new Date(ult.date).getTime() >= 24 * 3600_000;
       };
+      // Escreveu alguma coisa nas 24h antes da call (respondeu a véspera, a
+      // confirmação do dia, ou marcou ontem/hoje).
+      const respondeu = async () =>
+        (await msgs()).some((m) => m.senderBy === "contact" && new Date(m.date).getTime() >= t - 24 * 3600_000);
+      const liberar = cfg.liberar_sem_confirmacao !== false;
+      // Confirmação do dia (Fernando, 21/11: "confirmação na véspera e no dia;
+      // as pessoas que não responderem, eu libero o horário"): às 8h do dia da
+      // call, quem não escreveu nada nas 24h antes dela recebe o pedido de
+      // confirmação com prazo: 2h antes da call, e no mínimo 1h depois da
+      // mensagem (call das 10h: mensagem às 8h, prazo às 9h; das 14h: prazo às
+      // 12h). Sem resposta até o prazo, o horário é liberado (abaixo).
       if (
         !k.confirmacao_em &&
         conv?.telefone &&
         diaCall === diaSP(agora) &&
-        agora >= t - 5 * 3600_000 &&
-        agora < t - 90 * 60_000 &&
+        agora <= t - 90 * 60_000 &&
         podeChamar()
       ) {
-        const r = (await calado())
-          ? await avisarDaCall(
+        const QUINZE = 15 * 60_000;
+        const prazo = Math.min(
+          t - 30 * 60_000,
+          Math.round(Math.max(t - 2 * 3600_000, agora + 3600_000) / QUINZE) * QUINZE
+        );
+        const ph = local(new Date(prazo).toISOString()).slice(11, 16);
+        const prazoFala = ph.endsWith(":00") ? `${Number(ph.slice(0, 2))}h` : ph.replace(":", "h");
+        const saudacao = horaSP() < 12 ? "Bom dia" : "Oi";
+        const r = (await respondeu())
+          ? "ativo"
+          : await avisarDaCall(
               supabase,
               cfg,
               conv.telefone,
               await janela(),
-              `Oi, ${nome}! Hoje às ${horaFala} é o seu papo de 20 min com ${vend}. Prefere por vídeo ou que ${vend} te ligue no WhatsApp?`,
-              [nome, vend, `hoje às ${horaFala}`]
-            )
-          : "ativo";
-        await supabase.from("teo_calls").update({ confirmacao_em: new Date().toISOString() }).eq("id", k.id);
-        await log(supabase, `confirmação do dia ${r}`, { contact_id: k.contact_id, nome: k.nome, hora });
+              liberar
+                ? `${saudacao}, ${nome}! Hoje às ${horaFala} é o seu papo de 20 min com ${vend}. Me responde com um "sim" até as ${prazoFala}? Pode ser por vídeo ou, se preferir, ${vend} te liga no WhatsApp. Se eu não tiver sua confirmação até lá, libero o horário pra outra pessoa e a gente remarca quando for melhor pra você.`
+                : `${saudacao}, ${nome}! Hoje às ${horaFala} é o seu papo de 20 min com ${vend}. Prefere por vídeo ou que ${vend} te ligue no WhatsApp?`,
+              [
+                nome,
+                vend,
+                liberar
+                  ? `hoje às ${horaFala}. Me responde com um sim até as ${prazoFala}? Sem confirmação, eu libero o horário pra outra pessoa`
+                  : `hoje às ${horaFala}`,
+              ]
+            );
+        const avisou = r === "texto" || r === "template";
+        await supabase
+          .from("teo_calls")
+          .update({
+            confirmacao_em: new Date().toISOString(),
+            ...(liberar && avisou ? { liberar_em: new Date(prazo).toISOString() } : {}),
+          })
+          .eq("id", k.id);
+        await log(supabase, `confirmação do dia ${r}`, {
+          contact_id: k.contact_id,
+          nome: k.nome,
+          hora,
+          ...(liberar && avisou ? { prazo: ph } : {}),
+        });
         if (r !== "ativo") feitos.push(`confirmação ${k.nome}`);
+        if (liberar && avisou) k.liberar_em = new Date(prazo).toISOString();
+      }
+      // Prazo da confirmação passou sem resposta: libera o horário. Se o
+      // vendedor falou com o lead depois do pedido de confirmação, ele está
+      // cuidando (pode ter ligado e confirmado): fica com ele, e o alerta de
+      // 1h antes avisa se o lead seguir calado.
+      if (k.liberar_em && !k.liberada_em && agora >= new Date(k.liberar_em).getTime() && agora < t) {
+        const desde = new Date(k.confirmacao_em ?? k.liberar_em).getTime() - 60_000;
+        const vendedorCuida = (await msgs()).some((m) => ehDoVendedor(m) && new Date(m.date).getTime() >= desde);
+        const ok = !liberar || (await respondeu()) || vendedorCuida;
+        if (ok) {
+          await supabase.from("teo_calls").update({ liberar_em: null }).eq("id", k.id);
+          await log(supabase, liberar && !vendedorCuida ? "confirmou a call" : "liberação não feita (vendedor cuidando ou desligada)", {
+            contact_id: k.contact_id,
+            nome: k.nome,
+            hora,
+          });
+        } else {
+          await liberarCall(supabase, cfg, k as CallParaLiberar, "sem_confirmacao");
+          const textoLiberada = `Oi, ${nome}! Como não tive sua confirmação, liberei o horário de hoje às ${horaFala} com ${vend} pra outra pessoa. Se ainda quiser conversar com ${vend}, é só me chamar aqui que eu vejo um horário novo pra você 💛`;
+          let aviso = "sem aviso (só o e-mail do cancelamento)";
+          if (conv?.telefone && podeChamar()) {
+            if (await janela()) {
+              await enviarTexto(supabase, conv.telefone, textoLiberada);
+              aviso = "texto";
+            } else if (cfg.template_liberada_id) {
+              const rt = await unnichat(supabase, "POST", "/meta/templates", {
+                phone: conv.telefone,
+                templateId: cfg.template_liberada_id,
+                bodyParameters: [nome, `hoje às ${horaFala}`, vend].map((text) => ({ type: "text", text })),
+              });
+              aviso = rt.status >= 200 && rt.status < 300 ? "template" : `template falhou (${rt.status})`;
+            }
+          }
+          await log(supabase, "aviso de horário liberado", { contact_id: k.contact_id, nome: k.nome, hora, aviso });
+          feitos.push(`liberou ${k.nome}`);
+          continue;
+        }
       }
       if (!k.alerta_silencio_em && agora >= t - 60 * 60_000 && agora < t - 15 * 60_000) {
         const quieto = await calado();

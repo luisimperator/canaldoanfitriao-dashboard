@@ -616,6 +616,18 @@ const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "desmarcar_call",
+    description:
+      "Desmarca a call que o lead tem marcada e libera o horário pra outra pessoa (o cancelamento vai pro e-mail dele). Use só quando ele disser que não vai poder (ou não quer mais) e não escolher outro horário de hoje ou amanhã nem um dia pra você voltar: marcar_call e voltar_no_dia já substituem a call antiga.",
+    input_schema: {
+      type: "object",
+      properties: {
+        motivo: { type: "string", description: "Em poucas palavras, o que ele disse (ex.: 'surgiu um compromisso, depois vê')." },
+      },
+      required: ["motivo"],
+    },
+  },
+  {
     name: "passar_para_humano",
     description:
       "Passa a conversa pro time humano (o Téo para de responder). Use quando o lead quiser call mas nenhum horário servir, pedir preço/condição, quiser comprar, for aluno com dúvida de suporte, reclamar, pedir uma pessoa, ou não tiver plano nenhum (airbnb_do_zero).",
@@ -773,6 +785,8 @@ export async function rodarTeo(opts: {
   marcarCall: (args: { horario: string; email: string; resumo: string; nome?: string }) => Promise<string>;
   /** combina de voltar num dia depois de amanhã (call no próprio dia); devolve o que dizer ao Téo */
   voltarNoDia?: (args: { dia: string; motivo: string }) => Promise<string>;
+  /** desmarca a call do lead e libera o horário; devolve o que dizer ao Téo */
+  desmarcarCall?: (args: { motivo: string }) => Promise<string>;
   /** pede um cupom "à equipe" (só na venda por aqui); devolve o que dizer ao Téo */
   pedirCupom?: (args: { codigo: string; motivo: string }) => Promise<string>;
   /** recado interno pro especialista (nota na conversa; o lead não vê) */
@@ -895,6 +909,11 @@ export async function rodarTeo(opts: {
           const out = opts.voltarNoDia
             ? await opts.voltarNoDia({ dia: input.dia ?? "", motivo: input.motivo ?? "" })
             : "Não deu pra combinar a volta: pergunte dia e período e chame passar_para_humano (motivo call).";
+          results.push({ type: "tool_result", tool_use_id: b.id, content: out });
+        } else if (b.name === "desmarcar_call") {
+          const out = opts.desmarcarCall
+            ? await opts.desmarcarCall({ motivo: input.motivo ?? "" })
+            : "Não deu pra desmarcar por aqui: diga que avisa o especialista e chame avisar_vendedor com o pedido.";
           results.push({ type: "tool_result", tool_use_id: b.id, content: out });
         } else if (b.name === "pedir_cupom") {
           const out = opts.pedirCupom
