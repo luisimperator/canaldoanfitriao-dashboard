@@ -596,6 +596,7 @@ export function MqlHistoryChart({
   janela,
   onJanela,
   rotulo = "MQL",
+  rotuloPlural,
   controles,
 }: {
   porDia: Record<string, number>;
@@ -606,6 +607,8 @@ export function MqlHistoryChart({
   onJanela: (j: JanelaMql) => void;
   /** o que as barras contam ("MQL", "lead"): texto do resumo e do tooltip */
   rotulo?: string;
+  /** plural do rótulo quando não é só pôr "s" (ex.: "mensagens") */
+  rotuloPlural?: string;
   /** controles extras na linha de cima (ex.: MQLs ↔ Leads, filtro de tags) */
   controles?: ReactNode;
 }) {
@@ -685,12 +688,13 @@ export function MqlHistoryChart({
         )}
       </div>
       <p className="text-xs text-slate-500 dark:text-zinc-400 mb-3">
-        {total.toLocaleString("pt-BR")} {rotulo}
-        {total === 1 || rotulo === "MQL" ? "" : "s"} no período
+        {total.toLocaleString("pt-BR")}{" "}
+        {rotuloPlural ? (total === 1 ? rotulo : rotuloPlural) : `${rotulo}${total === 1 || rotulo === "MQL" ? "" : "s"}`} no
+        período
         {fechados.length > 0 && (
           <>
             {" "}
-            · média {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} {rotulo}/{cfg.unidade}
+            · média {media.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} {rotuloPlural ?? rotulo}/{cfg.unidade}
           </>
         )}
         {verFat && (
