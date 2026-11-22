@@ -9,7 +9,59 @@ export const RV_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 
 export type Passo = { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string };
   // Miniatura de mapa com a rota do deslocamento (imagem OSRM + OSM); o clique abre `href` (Google Maps).
-  rota?: { src: string; alt: string; href: string } };
+  rota?: { src: string; alt: string; href: string };
+  // Destino a que se chega de carro: mostra os botõezinhos Google Maps, Waze e Uber. Sem endereço, não põe.
+  destino?: Destino;
+  // Trecho que CHEGA neste passo: cardzinho de deslocamento desenhado antes dele na linha do tempo.
+  desloc?: Desloc };
+export type Destino = { endereco: string; lat?: number; lng?: number };
+// tempo: estimado por OSRM (dirigindo), arredondado e com "~"; voo com o horário da reserva. Sem tempo = "tempo a definir".
+// voo: código ICAO do voo (AZU+número Azul, GLO Gol, TAM LATAM) pro botão "Status do voo" no FlightAware.
+export type Desloc = { modo?: "carro" | "aviao"; tempo?: string; trajeto: string; voo?: string };
+
+export function rvVooLink(voo: string): string {
+  return `https://www.flightaware.com/live/flight/${encodeURIComponent(voo.replace(/\s+/g, "").toUpperCase())}`;
+}
+
+export function rvNavLinks(d: Destino): { google: string; waze: string; uber: string } {
+  const temPonto = d.lat !== undefined && d.lng !== undefined;
+  const end = encodeURIComponent(d.endereco);
+  return {
+    google: `https://www.google.com/maps/dir/?api=1&destination=${end}`,
+    waze: temPonto ? `https://waze.com/ul?ll=${d.lat},${d.lng}&navigate=yes` : `https://waze.com/ul?q=${end}&navigate=yes`,
+    uber: `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[formatted_address]=${end}` +
+      (temPonto ? `&dropoff[latitude]=${d.lat}&dropoff[longitude]=${d.lng}` : ""),
+  };
+}
+
+export function rvNavHtml(d?: Destino): string {
+  if (!d || !d.endereco) return "";
+  const l = rvNavLinks(d);
+  const a = (href: string, txt: string) => `<a href="${esc(href)}" target="_blank" rel="noopener">${txt}</a>`;
+  return `<span class="nav" aria-label="Como chegar">${a(l.google, "Google Maps")}${a(l.waze, "Waze")}${a(l.uber, "Uber")}</span>`;
+}
+
+export function rvDeslocHtml(d?: Desloc): string {
+  if (!d) return "";
+  const ic = d.modo === "aviao" ? "✈️" : "🚗";
+  const voo = d.modo === "aviao" && d.voo ? `<a class="voo" href="${esc(rvVooLink(d.voo))}" target="_blank" rel="noopener">Status do voo</a>` : "";
+  return `<li class="desloc"><span></span><span></span><span class="dl"><i>${ic}</i>${esc(d.tempo ?? "tempo a definir")} · ${esc(d.trajeto)}${voo}</span></li>`;
+}
+
+// CSS dos botõezinhos e do cardzinho de deslocamento (também usado pela página do Antonio).
+export const RV_NAV_CSS = `
+.tl .c .nav{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:5px;margin-top:7px}
+.tl .c.tem-foto:has(>.nav){flex-wrap:wrap}
+.tl .c.tem-foto>.nav{flex:0 0 100%;margin-top:0}
+.tl .c .nav a{font-size:10.5px;font-weight:600;line-height:1;letter-spacing:.01em;color:#8f8893;text-decoration:none;padding:4px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.02);transition:color .2s,border-color .2s}
+.tl .c .nav a:hover{color:#e9e4ea;border-color:rgba(255,255,255,.25)}
+.tl li.desloc{margin:-3px 0}
+.tl li.desloc .dl{margin-left:10px;justify-self:start;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#8f8893;padding:3px 10px;border-radius:999px;border:1px dashed rgba(255,255,255,.13);background:var(--noite)}
+.tl li.desloc .dl i{font-style:normal;font-size:12px}
+.tl li.desloc .dl a.voo{margin-left:4px;font-size:10.5px;font-weight:600;line-height:1;color:#8f8893;text-decoration:none;padding:3px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.09);transition:color .2s,border-color .2s}
+.tl li.desloc .dl a.voo:hover{color:#e9e4ea;border-color:rgba(255,255,255,.25)}
+@media (max-width:760px){.tl li.desloc .dl{margin-left:8px;font-size:11.5px;padding:3px 9px}.tl .c .nav a{font-size:10px;padding:4px 6px}}
+`;
 export type Foto = { src: string; alt: string };
 export type Casa = { id: string; rotulo: string; nome: string; endereco: string; endSub: string; link?: string; fotos: Foto[]; resumo: string };
 export type Mapa = {
@@ -173,6 +225,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
 .tl .c a.mini-rota .mini{width:96px;height:72px}
 .obs{margin:14px 0 0 140px;font-size:13px;color:#8f8893}
 
+${RV_NAV_CSS}
 /* casas */
 .casa-topo{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
 .chip-link{flex:none;font-size:13px;font-weight:700;text-decoration:none;padding:9px 15px;border-radius:999px;background:#fff;color:var(--noite);transition:transform .2s}
@@ -282,7 +335,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
       <p>${esc(o.agendaNota)}</p>
     </div>
     <ol class="tl">
-      ${o.agenda.map((a) => `<li${a.destaque ? ' class="on"' : ""}><span class="h">${esc(a.hora)}</span><span class="ic">${a.icone}</span>${a.rota ? `<div class="c tem-foto"><div><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span><a class="ver-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener">Ver rota no mapa ↗</a></div><a class="mini-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener" aria-label="Abrir rota no Google Maps"><img class="mini" src="${a.rota.src}" alt="${esc(a.rota.alt)}" loading="lazy" width="96" height="72"></a></div>` : a.foto ? `<div class="c tem-foto"><div><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div><img class="mini" src="${a.foto.src}" alt="${esc(a.foto.alt)}" loading="lazy" width="72" height="72"></div>` : `<div class="c"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div>`}</li>`).join("\n      ")}
+      ${o.agenda.map((a) => `${rvDeslocHtml(a.desloc)}<li${a.destaque ? ' class="on"' : ""}><span class="h">${esc(a.hora)}</span><span class="ic">${a.icone}</span>${a.rota ? `<div class="c tem-foto"><div><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span><a class="ver-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener">Ver rota no mapa ↗</a></div><a class="mini-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener" aria-label="Abrir rota no Google Maps"><img class="mini" src="${a.rota.src}" alt="${esc(a.rota.alt)}" loading="lazy" width="96" height="72"></a>${rvNavHtml(a.destino)}</div>` : a.foto ? `<div class="c tem-foto"><div><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div><img class="mini" src="${a.foto.src}" alt="${esc(a.foto.alt)}" loading="lazy" width="72" height="72">${rvNavHtml(a.destino)}</div>` : `<div class="c"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span>${rvNavHtml(a.destino)}</div>`}</li>`).join("\n      ")}
     </ol>
   </section>
 
