@@ -2,7 +2,8 @@
 // link.canaldoanfitriao.com.br/internos/rv-<convidado> (mesmo visual da
 // /internos/rv-antonio). Cada convidado tem um arquivo src/lib/rv-<nome>-lp.ts
 // com o conteúdo (OrdemDoDia) e uma rota em src/app/internos/rv-<nome>/route.ts.
-// Sem faturamento. Endereço em São Paulo só os dois fixos abaixo (HD e Rômulo). Uma semana depois da gravação
+// Sem faturamento. A página vai pro convidado: o endereço do Rômulo NUNCA aparece (nem texto, nem botão,
+// nem coordenada); do trecho HD → Rômulo fica só o tempo. Uma semana depois da gravação
 // a rota redireciona pro YouTube do Canal (expira).
 
 export const RV_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
@@ -10,16 +11,18 @@ export const RV_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 export type Passo = { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string };
   // Miniatura de mapa com a rota do deslocamento (imagem OSRM + OSM); o clique abre `href` (Google Maps).
   rota?: { src: string; alt: string; href: string };
-  // Destino a que se chega de carro: mostra os botõezinhos Google Maps, Waze e Uber. Sem endereço, não põe.
+  // Destino a que se chega de carro: mostra os botõezinhos Google Maps, Waze e Uber. Sem endereço nem
+  // coordenada, não põe. Nunca usar pra casa do Rômulo nem pra "Saída de volta".
   destino?: Destino;
   // Trecho que CHEGA neste passo: cardzinho de deslocamento desenhado antes dele na linha do tempo.
   desloc?: Desloc };
-export type Destino = { endereco: string; lat?: number; lng?: number };
+// Sem endereço, a coordenada (lat,lng do mapinha) monta os links; nome = rótulo pro Uber.
+export type Destino = { endereco?: string; nome?: string; lat?: number; lng?: number };
 
-// Pontos fixos de saída de toda ordem do dia (São Paulo). Coordenadas do OSM (Nominatim).
-// HD → Rômulo por OSRM: 15 km, 22,3 min sem trânsito. A estrada até o destino sai da casa do Rômulo.
+// Ponto fixo de saída de toda ordem do dia (São Paulo). Coordenadas do OSM (Nominatim).
+// HD → Rômulo por OSRM: 22,3 min sem trânsito (só o tempo; o endereço do Rômulo não entra no código).
+// A estrada até o destino sai da casa do Rômulo.
 export const RV_END_HD: Destino = { endereco: "Av. das Nações Unidas, 14401, Torre Tarumã, cj. 2804, São Paulo - SP", lat: -23.6257074, lng: -46.7056935 };
-export const RV_END_ROMULO: Destino = { endereco: "Rua Martim Burchard, 187, Brás, São Paulo - SP", lat: -23.5456485, lng: -46.6181279 };
 export const RV_DESLOC_HD_ROMULO: Desloc = { carro: { osrm: 22.3, via: "urbano" }, trajeto: "Heavy Drops → Rômulo" };
 
 // ── Tempo de carro: FUNÇÃO ÚNICA de todas as ordens do dia (regra do Fernando, 21/11) ──
@@ -80,17 +83,19 @@ export function rvVooLink(voo: string): string {
 
 export function rvNavLinks(d: Destino): { google: string; waze: string; uber: string } {
   const temPonto = d.lat !== undefined && d.lng !== undefined;
-  const end = encodeURIComponent(d.endereco);
+  const ponto = `${d.lat},${d.lng}`;
+  const alvo = encodeURIComponent(d.endereco ?? ponto);
+  const rotulo = encodeURIComponent(d.endereco ?? d.nome ?? ponto);
   return {
-    google: `https://www.google.com/maps/dir/?api=1&destination=${end}`,
-    waze: temPonto ? `https://waze.com/ul?ll=${d.lat},${d.lng}&navigate=yes` : `https://waze.com/ul?q=${end}&navigate=yes`,
-    uber: `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[formatted_address]=${end}` +
+    google: `https://www.google.com/maps/dir/?api=1&destination=${alvo}`,
+    waze: temPonto ? `https://waze.com/ul?ll=${ponto}&navigate=yes` : `https://waze.com/ul?q=${alvo}&navigate=yes`,
+    uber: `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[formatted_address]=${rotulo}` +
       (temPonto ? `&dropoff[latitude]=${d.lat}&dropoff[longitude]=${d.lng}` : ""),
   };
 }
 
 export function rvNavHtml(d?: Destino): string {
-  if (!d || !d.endereco) return "";
+  if (!d || (!d.endereco && (d.lat === undefined || d.lng === undefined))) return "";
   const l = rvNavLinks(d);
   const a = (href: string, txt: string) => `<a href="${esc(href)}" target="_blank" rel="noopener">${txt}</a>`;
   return `<span class="nav" aria-label="Como chegar">${a(l.google, "Google Maps")}${a(l.waze, "Waze")}${a(l.uber, "Uber")}</span>`;

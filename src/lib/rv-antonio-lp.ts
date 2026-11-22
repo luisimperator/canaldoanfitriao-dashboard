@@ -10,7 +10,7 @@
 export const RV_ANTONIO_EXPIRA = Date.parse("2026-12-04T00:00:00-03:00");
 export const RV_ANTONIO_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 
-import { rvDeslocHtml, rvNavHtml, RV_NAV_CSS, RV_DESLOC_HD_ROMULO, RV_END_ROMULO, rvFmtDur, rvTempoCarro, rvHoraMais, rvSomaMin, type Desloc, type Destino } from "@/lib/rv-ordem-lp";
+import { rvDeslocHtml, rvNavHtml, RV_NAV_CSS, RV_DESLOC_HD_ROMULO, rvFmtDur, rvTempoCarro, rvHoraMais, rvSomaMin, type Desloc, type Destino } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-antonio";
 
@@ -19,9 +19,11 @@ const IMG = "/lp/rv-antonio";
 // o clique abre a rota no Google Maps.
 const RESTAURANTE = "Família Restaurante, Av. Dr. Altino Arantes, 58, São Sebastião - SP";
 const CASA_ANTONIO = "-23.77396,-45.40403"; // ponto aproximado do Airbnb (pino 1 do mapa.webp)
-// Destinos de carro (botões Google Maps/Waze/Uber; casa do Antonio sem endereço = sem botão).
+// Destinos de carro (botões Google Maps/Waze/Uber).
 // Tempos de deslocamento: minutos do OSRM (trânsito livre) convertidos pela regra única do template (rvTempoCarro).
 const D_RESTAURANTE = { endereco: RESTAURANTE, lat: -23.8023082, lng: -45.3984836 };
+// Casa da piscina sem endereço: botões pela coordenada do mapinha.
+const D_PISCINA: Destino = { nome: "Casa da piscina, São Sebastião - SP", lat: -23.77396, lng: -45.40403 };
 const D_VISTA_MAR = { endereco: "Av. Dr. Manoel Hipólito do Rego, 399, Praia Deserta, São Sebastião - SP", lat: -23.7830304, lng: -45.398126 };
 const rotaGoogle = (de: string, ate: string) =>
   `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(de)}&destination=${encodeURIComponent(ate)}&travelmode=driving`;
@@ -39,15 +41,15 @@ const H_VOLTA = "17h30";
 
 const AGENDA: { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string }; rota?: { src: string; alt: string; href: string }; destino?: Destino; desloc?: Desloc }[] = [
   { hora: H_SAIDA, titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
-  { hora: H_ENCONTRO, titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO, destino: RV_END_ROMULO },
+  { hora: H_ENCONTRO, titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO },
   { hora: H_ESTRADA, titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e Tamoios, com uma parada no caminho.", icone: "🛣️" },
-  { hora: rvHoraMais(H_ESTRADA, T_ESTRADA), titulo: "Chegada e almoço no Família Restaurante", texto: "Av. Dr. Altino Arantes, 58, na Rua da Praia, centro histórico de São Sebastião.", icone: "🍽️", rota: { src: `${IMG}/antonio-rota-almoco.webp`, alt: "Rota de São Paulo até o Família Restaurante, em São Sebastião", href: rotaGoogle("Brás, São Paulo - SP", RESTAURANTE) }, desloc: T_ESTRADA, destino: D_RESTAURANTE },
-  { hora: "13h30", titulo: "Chegada na casa", texto: "Montagem de câmeras e luz, e um café com o Antonio.", icone: "🏡", rota: { src: `${IMG}/antonio-rota-casa.webp`, alt: "Rota do Família Restaurante até a casa do Antonio", href: rotaGoogle(RESTAURANTE, CASA_ANTONIO) }, desloc: T_CASA },
-  { hora: "14h00", titulo: "Gravação 1 · Casa da piscina", texto: "O Rômulo conduz a conversa com o Antonio e a gente percorre a casa.", icone: "🎬", destaque: true, foto: { src: `${IMG}/antonio-1.webp`, alt: "Casa da piscina" } },
+  { hora: rvHoraMais(H_ESTRADA, T_ESTRADA), titulo: "Chegada e almoço no Família Restaurante", texto: "Av. Dr. Altino Arantes, 58, na Rua da Praia, centro histórico de São Sebastião.", icone: "🍽️", rota: { src: `${IMG}/antonio-rota-almoco.webp`, alt: "Rota de São Paulo até o Família Restaurante, em São Sebastião", href: rotaGoogle("São Paulo - SP", RESTAURANTE) }, desloc: T_ESTRADA, destino: D_RESTAURANTE },
+  { hora: "13h30", titulo: "Chegada na casa", texto: "Montagem de câmeras e luz, e um café com o Antonio.", icone: "🏡", rota: { src: `${IMG}/antonio-rota-casa.webp`, alt: "Rota do Família Restaurante até a casa do Antonio", href: rotaGoogle(RESTAURANTE, CASA_ANTONIO) }, desloc: T_CASA, destino: D_PISCINA },
+  { hora: "14h00", titulo: "Gravação 1 · Casa da piscina", texto: "O Rômulo conduz a conversa com o Antonio e a gente percorre a casa.", icone: "🎬", destaque: true, foto: { src: `${IMG}/antonio-1.webp`, alt: "Casa da piscina" }, destino: D_PISCINA },
   { hora: "16h15", titulo: "Rumo à Praia Deserta", texto: "De carro até a segunda casa.", icone: "🚗" },
   { hora: "16h25", titulo: "Gravação 2 · Casa vista mar", texto: "Gravação curta, aproveitando a luz do fim de tarde.", icone: "🎬", destaque: true, foto: { src: `${IMG}/praia-1.webp`, alt: "Casa vista mar na Praia Deserta" }, desloc: T_PRAIA, destino: D_VISTA_MAR },
   { hora: H_VOLTA, titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
-  { hora: rvHoraMais(H_VOLTA, T_VOLTA), titulo: "Chegada na casa do Rômulo", texto: "Fim do dia.", icone: "🌙", desloc: T_VOLTA, destino: RV_END_ROMULO },
+  { hora: rvHoraMais(H_VOLTA, T_VOLTA), titulo: "Chegada na casa do Rômulo", texto: "Fim do dia.", icone: "🌙", desloc: T_VOLTA },
 ];
 
 const CASAS = [
