@@ -1,5 +1,5 @@
 // Ordem do dia da gravação do Rômulo Visita com o Antonio Carlos (Praia &
-// Montanha, São Sebastião/SP), sexta 27/11/2026:
+// Montanha, São Sebastião/SP), quinta 17/12/2026:
 // link.canaldoanfitriao.com.br/internos/rv-antonio (páginas internas ficam em /internos/)
 //
 // Página pro convidado e pra equipe: linha do tempo do dia, as duas casas
@@ -7,7 +7,7 @@
 // Sem faturamento e sem endereço de São Paulo. Uma semana depois da gravação
 // a rota passa a redirecionar pro YouTube do Canal (RV_ANTONIO_EXPIRA).
 
-export const RV_ANTONIO_EXPIRA = Date.parse("2026-12-04T00:00:00-03:00");
+export const RV_ANTONIO_EXPIRA = Date.parse("2026-12-24T00:00:00-03:00");
 export const RV_ANTONIO_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 
 import { rvDeslocHtml, rvNavHtml, RV_NAV_CSS, RV_DESLOC_HD_ROMULO, rvFmtDur, rvTempoCarro, rvHoraMais, rvSomaMin, type Desloc, type Destino } from "@/lib/rv-ordem-lp";
@@ -124,10 +124,10 @@ export function rvAntonioHtml(): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rômulo Visita · Antonio Carlos · Sexta, 27/11</title>
-<meta name="description" content="Ordem do dia da gravação do Rômulo Visita com o Antonio Carlos, em São Sebastião, sexta 27/11.">
+<title>Rômulo Visita · Antonio Carlos · Quinta, 17/12</title>
+<meta name="description" content="Ordem do dia da gravação do Rômulo Visita com o Antonio Carlos, em São Sebastião, quinta 17/12.">
 <meta name="robots" content="noindex, nofollow">
-<meta property="og:title" content="Rômulo Visita · Antonio Carlos · Sexta, 27/11">
+<meta property="og:title" content="Rômulo Visita · Antonio Carlos · Quinta, 17/12">
 <meta property="og:description" content="A ordem do dia da gravação em São Sebastião.">
 <meta property="og:image" content="https://link.canaldoanfitriao.com.br${IMG}/antonio-1.webp">
 <meta name="theme-color" content="#0e0d10">
@@ -286,11 +286,11 @@ ${RV_NAV_CSS}
     <span class="pill">Ordem do dia</span>
   </div>
   <div class="wrap">
-    <p class="kicker rv" style="--d:.04s">Sexta, 27/11 · Praia &amp; Montanha</p>
+    <p class="kicker rv" style="--d:.04s">Quinta, 17/12 · Praia &amp; Montanha</p>
     <h1 class="rv" style="--d:.08s">Rômulo Visita <span class="serif grad-txt">Antonio Carlos</span></h1>
     <p class="lead rv" style="--d:.14s">Antonio, que alegria gravar com você! Aqui está o dia inteiro, da saída de São Paulo até a volta, com as duas casas que a gente vai visitar em São Sebastião.</p>
     <div class="quando rv" style="--d:.2s">
-      <div><small>Quando</small><b>Sexta, 27/11</b></div>
+      <div><small>Quando</small><b>Quinta, 17/12</b></div>
       <div><small>Gravação</small><b>14h00</b></div>
       <div><small>Onde</small><b>São Sebastião</b></div>
     </div>
@@ -304,7 +304,7 @@ ${RV_NAV_CSS}
         <p class="rot">O dia</p>
         <h2>Linha do <span class="serif grad-txt">tempo</span></h2>
       </div>
-      <p>Horários de estrada estimados pra uma sexta-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.</p>
+      <p>Horários de estrada estimados pra uma quinta-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.</p>
     </div>
     <ol class="tl">
       ${AGENDA.map((a) => `${rvDeslocHtml(a.desloc)}<li${a.destaque ? ' class="on"' : ""}><span class="h">${a.hora}</span><span class="ic">${a.icone}</span>${a.rota ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span><a class="ver-rota" href="${a.rota.href.replace(/&/g, "&amp;")}" target="_blank" rel="noopener">Ver rota no mapa ↗</a></div><a class="mini-rota" href="${a.rota.href.replace(/&/g, "&amp;")}" target="_blank" rel="noopener" aria-label="Abrir rota no Google Maps"><img class="mini" src="${a.rota.src}" alt="${a.rota.alt}" loading="lazy" width="96" height="72"></a>${rvNavHtml(a.destino)}</div>` : a.foto ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span></div><img class="mini" src="${a.foto.src}" alt="${a.foto.alt}" loading="lazy" width="72" height="72">${rvNavHtml(a.destino)}</div>` : `<div class="c"><b>${a.titulo}</b><span>${a.texto}</span>${rvNavHtml(a.destino)}</div>`}</li>`).join("\n      ")}
@@ -339,13 +339,13 @@ ${RV_NAV_CSS}
 
   <section class="fecho">
     <div>
-      <h3>Até sexta, <span class="serif grad-txt">Antonio!</span></h3>
+      <h3>Até quinta, <span class="serif grad-txt">Antonio!</span></h3>
       <p>Qualquer dúvida ou mudança, é só chamar no nosso grupo do WhatsApp. O Rômulo e o time estão animados pra conhecer a sua operação.</p>
     </div>
   </section>
 
   <footer class="rodape">
-    <span>Rômulo Visita · Antonio Carlos · Sexta, 27/11/2026 · São Sebastião/SP</span>
+    <span>Rômulo Visita · Antonio Carlos · Quinta, 17/12/2026 · São Sebastião/SP</span>
     <span>Canal do Anfitrião</span>
   </footer>
 </main>
