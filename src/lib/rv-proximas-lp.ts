@@ -18,7 +18,7 @@ export type Gravacao = {
 
 export const GRAVACOES: Gravacao[] = [
   { slug: "rv-taisa", data: "2026-11-23", hora: "14h00", nome: "Taisa Sanitá", cidade: "Campos do Jordão · SP", local: "Hotel Home Green Home", foto: "/lp/rv-taisa/topo.webp", fotoAlt: "Hotel Home Green Home no meio da mata, em Campos do Jordão" },
-  { slug: "rv-antonio", data: "2026-11-27", hora: "14h00", nome: "Antonio Carlos", cidade: "São Sebastião · SP", local: "Praia & Montanha · 2 casas", foto: "/lp/rv-antonio/praia-topo.webp", fotoAlt: "Casa vista mar na Praia Deserta, em São Sebastião" },
+  { slug: "rv-antonio", data: "2026-12-17", hora: "14h00", nome: "Antonio Carlos", cidade: "São Sebastião · SP", local: "Praia & Montanha · 2 casas", foto: "/lp/rv-antonio/praia-topo.webp", fotoAlt: "Casa vista mar na Praia Deserta, em São Sebastião" },
   { slug: "rv-priscila", data: "2026-12-02", hora: "13h30", nome: "Priscila Araujo", cidade: "Rio de Janeiro · RJ", local: "Vidigal · 3 casas", foto: "/lp/rv-priscila/topo.webp", fotoAlt: "Terraço com hidro e vista para o mar, no Vidigal" },
   { slug: "rv-tiago", data: "2026-12-07", hora: "13h00", nome: "Tiago Bueno Diniz", cidade: "Local a definir", local: "Host Gestão", foto: "/lp/rv-tiago/topo.webp", fotoAlt: "Escritório da Host Gestão" },
   { slug: "rv-pedro", data: "2026-12-09", hora: "14h00", nome: "Pedro Siqueira", cidade: "Poços de Caldas · MG", local: "Intelecto Stays", foto: "/lp/rv-pedro/topo.webp", fotoAlt: "Sala integrada do apartamento da Intelecto" },
