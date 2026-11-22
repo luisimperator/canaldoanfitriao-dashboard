@@ -2,7 +2,7 @@
 // link.canaldoanfitriao.com.br/internos/rv-<convidado> (mesmo visual da
 // /internos/rv-antonio). Cada convidado tem um arquivo src/lib/rv-<nome>-lp.ts
 // com o conteúdo (OrdemDoDia) e uma rota em src/app/internos/rv-<nome>/route.ts.
-// Sem faturamento e sem endereço de São Paulo. Uma semana depois da gravação
+// Sem faturamento. Endereço em São Paulo só os dois fixos abaixo (HD e Rômulo). Uma semana depois da gravação
 // a rota redireciona pro YouTube do Canal (expira).
 
 export const RV_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
@@ -15,6 +15,12 @@ export type Passo = { hora: string; titulo: string; texto: string; icone: string
   // Trecho que CHEGA neste passo: cardzinho de deslocamento desenhado antes dele na linha do tempo.
   desloc?: Desloc };
 export type Destino = { endereco: string; lat?: number; lng?: number };
+
+// Pontos fixos de saída de toda ordem do dia (São Paulo). Coordenadas do OSM (Nominatim).
+// HD → Rômulo por OSRM: 15 km, ~22 min sem trânsito. A estrada até o destino sai da casa do Rômulo.
+export const RV_END_HD: Destino = { endereco: "Av. das Nações Unidas, 14401, Torre Tarumã, cj. 2804, São Paulo - SP", lat: -23.6257074, lng: -46.7056935 };
+export const RV_END_ROMULO: Destino = { endereco: "Rua Martim Burchard, 187, Brás, São Paulo - SP", lat: -23.5456485, lng: -46.6181279 };
+export const RV_DESLOC_HD_ROMULO: Desloc = { tempo: "~20 min", trajeto: "Heavy Drops → Rômulo" };
 // tempo: estimado por OSRM (dirigindo), arredondado e com "~"; voo com o horário da reserva. Sem tempo = "tempo a definir".
 // voo: código ICAO do voo (AZU+número Azul, GLO Gol, TAM LATAM) pro botão "Status do voo" no FlightAware.
 export type Desloc = { modo?: "carro" | "aviao"; tempo?: string; trajeto: string; voo?: string };
