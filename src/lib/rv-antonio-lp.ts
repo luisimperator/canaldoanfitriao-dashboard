@@ -10,13 +10,14 @@
 export const RV_ANTONIO_EXPIRA = Date.parse("2026-12-24T00:00:00-03:00");
 export const RV_ANTONIO_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 
-import { rvDeslocHtml, rvNavHtml, RV_NAV_CSS, RV_DESLOC_HD_ROMULO, rvFmtDur, rvTempoCarro, rvHoraMais, rvSomaMin, type Desloc, type Destino } from "@/lib/rv-ordem-lp";
+import { rvPassoHtml, RV_NAV_CSS, RV_DESLOC_HD_ROMULO, rvFmtDur, rvTempoCarro, rvHoraMais, rvSomaMin, type Desloc, type Destino, type Passo } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-antonio";
 
 // ---------- conteúdo ----------
-// Rotas dos cards (miniaturas OSRM + OpenStreetMap em public/lp/rv-antonio/antonio-rota-*.webp);
-// o clique abre a rota no Google Maps.
+// Mapinhas de rota de cada trecho de carro (OSRM + OpenStreetMap em public/lp/rv-antonio/rota-*.webp);
+// o clique abre a rota no Google Maps. Trechos da/pra casa do Rômulo usam "São Paulo - SP" (centro), nunca o ponto real.
+// Nome de lugar no título abre a ficha do lugar no Google Maps (campo lugar).
 const RESTAURANTE = "Família Restaurante, Av. Dr. Altino Arantes, 58, São Sebastião - SP";
 const CASA_ANTONIO = "-23.77396,-45.40403"; // ponto aproximado do Airbnb (pino 1 do mapa.webp)
 // Destinos de carro (botões Google Maps/Waze/Uber).
@@ -25,28 +26,26 @@ const D_RESTAURANTE = { endereco: RESTAURANTE, lat: -23.8023082, lng: -45.398483
 // Casa da piscina sem endereço: botões pela coordenada do mapinha.
 const D_PISCINA: Destino = { nome: "Casa da piscina, São Sebastião - SP", lat: -23.77396, lng: -45.40403 };
 const D_VISTA_MAR = { endereco: "Av. Dr. Manoel Hipólito do Rego, 399, Praia Deserta, São Sebastião - SP", lat: -23.7830304, lng: -45.398126 };
-const rotaGoogle = (de: string, ate: string) =>
-  `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(de)}&destination=${encodeURIComponent(ate)}&travelmode=driving`;
 
 // Trechos de carro (minutos OSRM). O texto dos cards não cita tempo: o número só sai do cardzinho.
-const T_ESTRADA: Desloc = { carro: { osrm: 184.9, via: "estrada", picoSP: true }, trajeto: "Casa do Rômulo → São Sebastião" };
-const T_CASA: Desloc = { carro: { osrm: 6.2, via: "urbano" }, trajeto: "Família Restaurante → Casa da piscina" };
-const T_PRAIA: Desloc = { carro: { osrm: 2.1, via: "urbano" }, trajeto: "Casa da piscina → Casa vista mar" };
-const T_VOLTA: Desloc = { carro: { osrm: 171.3, via: "estrada" }, trajeto: "Casa vista mar → Casa do Rômulo" };
+const T_ESTRADA: Desloc = { carro: { osrm: 184.9, via: "estrada", picoSP: true }, trajeto: "Casa do Rômulo → São Sebastião", mapa: { src: `${IMG}/rota-estrada.webp`, alt: "Rota de São Paulo até o Família Restaurante, em São Sebastião", de: "São Paulo - SP", ate: RESTAURANTE } };
+const T_CASA: Desloc = { carro: { osrm: 6.2, via: "urbano" }, trajeto: "Família Restaurante → Casa da piscina", mapa: { src: `${IMG}/rota-casa.webp`, alt: "Rota do Família Restaurante até a casa da piscina", de: RESTAURANTE, ate: CASA_ANTONIO } };
+const T_PRAIA: Desloc = { carro: { osrm: 2.1, via: "urbano" }, trajeto: "Casa da piscina → Casa vista mar", mapa: { src: `${IMG}/rota-praia.webp`, alt: "Rota da casa da piscina até a casa vista mar, na Praia Deserta", de: CASA_ANTONIO, ate: D_VISTA_MAR.endereco } };
+const T_VOLTA: Desloc = { carro: { osrm: 171.3, via: "estrada" }, trajeto: "Casa vista mar → Casa do Rômulo", mapa: { src: `${IMG}/rota-volta.webp`, alt: "Rota de São Sebastião de volta pra São Paulo", de: D_VISTA_MAR.endereco, ate: "São Paulo - SP" } };
 // Linha do tempo: cada chegada = saída + tempo do trecho.
 const H_SAIDA = "07h30";
 const H_ENCONTRO = rvHoraMais(H_SAIDA, RV_DESLOC_HD_ROMULO, false);
 const H_ESTRADA = rvSomaMin(H_ENCONTRO, 15); // passar o equipamento pro carro do Rômulo
 const H_VOLTA = "17h30";
 
-const AGENDA: { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string }; rota?: { src: string; alt: string; href: string }; destino?: Destino; desloc?: Desloc }[] = [
-  { hora: H_SAIDA, titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
+const AGENDA: Passo[] = [
+  { hora: H_SAIDA, titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒", lugar: { nome: "Heavy Drops", busca: "Heavy Drops, Av. das Nações Unidas, 14401, Torre Tarumã, São Paulo - SP" } },
   { hora: H_ENCONTRO, titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO },
   { hora: H_ESTRADA, titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e Tamoios, com uma parada no caminho.", icone: "🛣️" },
-  { hora: rvHoraMais(H_ESTRADA, T_ESTRADA), titulo: "Chegada e almoço no Família Restaurante", texto: "Av. Dr. Altino Arantes, 58, na Rua da Praia, centro histórico de São Sebastião.", icone: "🍽️", rota: { src: `${IMG}/antonio-rota-almoco.webp`, alt: "Rota de São Paulo até o Família Restaurante, em São Sebastião", href: rotaGoogle("São Paulo - SP", RESTAURANTE) }, desloc: T_ESTRADA, destino: D_RESTAURANTE },
-  { hora: "13h30", titulo: "Chegada na casa", texto: "Montagem de câmeras e luz, e um café com o Antonio.", icone: "🏡", rota: { src: `${IMG}/antonio-rota-casa.webp`, alt: "Rota do Família Restaurante até a casa do Antonio", href: rotaGoogle(RESTAURANTE, CASA_ANTONIO) }, desloc: T_CASA, destino: D_PISCINA },
+  { hora: rvHoraMais(H_ESTRADA, T_ESTRADA), titulo: "Chegada e almoço no Família Restaurante", texto: "Av. Dr. Altino Arantes, 58, na Rua da Praia, centro histórico de São Sebastião.", icone: "🍽️", lugar: { nome: "Família Restaurante", busca: RESTAURANTE }, desloc: T_ESTRADA, destino: D_RESTAURANTE },
+  { hora: "13h30", titulo: "Chegada na casa", texto: "Montagem de câmeras e luz, e um café com o Antonio.", icone: "🏡", desloc: T_CASA, destino: D_PISCINA },
   { hora: "14h00", titulo: "Gravação 1 · Casa da piscina", texto: "O Rômulo conduz a conversa com o Antonio e a gente percorre a casa.", icone: "🎬", destaque: true, foto: { src: `${IMG}/antonio-1.webp`, alt: "Casa da piscina" }, destino: D_PISCINA },
-  { hora: "16h15", titulo: "Rumo à Praia Deserta", texto: "De carro até a segunda casa.", icone: "🚗" },
+  { hora: "16h15", titulo: "Rumo à Praia Deserta", texto: "De carro até a segunda casa.", icone: "🚗", lugar: { nome: "Praia Deserta", busca: "Praia Deserta, São Sebastião - SP" } },
   { hora: "16h25", titulo: "Gravação 2 · Casa vista mar", texto: "Gravação curta, aproveitando a luz do fim de tarde.", icone: "🎬", destaque: true, foto: { src: `${IMG}/praia-1.webp`, alt: "Casa vista mar na Praia Deserta" }, desloc: T_PRAIA, destino: D_VISTA_MAR },
   { hora: H_VOLTA, titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
   { hora: rvHoraMais(H_VOLTA, T_VOLTA), titulo: "Chegada na casa do Rômulo", texto: "Fim do dia.", icone: "🌙", desloc: T_VOLTA },
@@ -307,7 +306,7 @@ ${RV_NAV_CSS}
       <p>Horários de estrada estimados pra uma quinta-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.</p>
     </div>
     <ol class="tl">
-      ${AGENDA.map((a) => `${rvDeslocHtml(a.desloc)}<li${a.destaque ? ' class="on"' : ""}><span class="h">${a.hora}</span><span class="ic">${a.icone}</span>${a.rota ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span><a class="ver-rota" href="${a.rota.href.replace(/&/g, "&amp;")}" target="_blank" rel="noopener">Ver rota no mapa ↗</a></div><a class="mini-rota" href="${a.rota.href.replace(/&/g, "&amp;")}" target="_blank" rel="noopener" aria-label="Abrir rota no Google Maps"><img class="mini" src="${a.rota.src}" alt="${a.rota.alt}" loading="lazy" width="96" height="72"></a>${rvNavHtml(a.destino)}</div>` : a.foto ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span></div><img class="mini" src="${a.foto.src}" alt="${a.foto.alt}" loading="lazy" width="72" height="72">${rvNavHtml(a.destino)}</div>` : `<div class="c"><b>${a.titulo}</b><span>${a.texto}</span>${rvNavHtml(a.destino)}</div>`}</li>`).join("\n      ")}
+      ${AGENDA.map(rvPassoHtml).join("\n      ")}
     </ol>
   </section>
 

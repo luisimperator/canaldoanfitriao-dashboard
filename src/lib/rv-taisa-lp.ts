@@ -11,8 +11,8 @@ const HGH = { endereco: "Home Green Home, R. Adolfo Torresim, 800 - Vila Inglesa
 const ANUNCIO = "https://www.airbnb.com.br/rooms/1161137307265883513";
 
 // Trechos de carro (minutos OSRM). O texto dos cards não cita tempo: o número só sai do cardzinho.
-const T_ESTRADA: Desloc = { carro: { osrm: 167.7, via: "estrada", picoSP: true }, trajeto: "Casa do Rômulo → Campos do Jordão" };
-const T_VOLTA: Desloc = { carro: { osrm: 166.9, via: "estrada" }, trajeto: "Home Green Home → Casa do Rômulo" };
+const T_ESTRADA: Desloc = { carro: { osrm: 167.7, via: "estrada", picoSP: true }, trajeto: "Casa do Rômulo → Campos do Jordão", mapa: { src: `${IMG}/rota-estrada.webp`, alt: "Rota de São Paulo até Campos do Jordão", de: "São Paulo - SP", ate: "Campos do Jordão - SP" } };
+const T_VOLTA: Desloc = { carro: { osrm: 166.9, via: "estrada" }, trajeto: "Home Green Home → Casa do Rômulo", mapa: { src: `${IMG}/rota-volta.webp`, alt: "Rota de Campos do Jordão de volta pra São Paulo", de: HGH.endereco, ate: "São Paulo - SP" } };
 // Linha do tempo: cada chegada = saída + tempo do trecho.
 const H_SAIDA = "08h00";
 const H_ENCONTRO = rvHoraMais(H_SAIDA, RV_DESLOC_HD_ROMULO, false);
@@ -31,12 +31,12 @@ export const RV_TAISA: OrdemDoDia = {
   quando: [["Quando", "Segunda, 23/11"], ["Gravação", "14h00"], ["Onde", "Campos do Jordão"]],
   agendaNota: "Horários de estrada estimados pra uma segunda-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.",
   agenda: [
-    { hora: H_SAIDA, titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
+    { hora: H_SAIDA, titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒", lugar: { nome: "Heavy Drops", busca: "Heavy Drops, Av. das Nações Unidas, 14401, Torre Tarumã, São Paulo - SP" } },
     { hora: H_ENCONTRO, titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO },
     { hora: H_ESTRADA, titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e a subida da serra, com uma parada no caminho.", icone: "🛣️" },
     { hora: rvHoraMais(H_ESTRADA, T_ESTRADA), titulo: "Chegada e almoço em Campos do Jordão", texto: "Tempo pra comer antes de começar.", icone: "🍽️", desloc: T_ESTRADA },
     { hora: "13h30", titulo: "Chegada no hotel", texto: "O flat fica pronto depois do check-out das 12h. Montagem de câmeras e luz, e um café com a Taisa.", icone: "🏨", desloc: { trajeto: "Almoço → Home Green Home" }, destino: HGH },
-    { hora: "14h00", titulo: "Gravação · Flat no Home Green Home", texto: "O Rômulo conduz a conversa com a Taisa e a gente percorre o flat e o hotel.", icone: "🎬", destaque: true, foto: { src: `${IMG}/taisa-capa.webp`, alt: "Hotel Home Green Home" }, destino: HGH },
+    { hora: "14h00", titulo: "Gravação · Flat no Home Green Home", texto: "O Rômulo conduz a conversa com a Taisa e a gente percorre o flat e o hotel.", icone: "🎬", destaque: true, foto: { src: `${IMG}/taisa-capa.webp`, alt: "Hotel Home Green Home" }, destino: HGH, lugar: { nome: "Home Green Home", busca: HGH.endereco } },
     { hora: H_VOLTA, titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
     { hora: rvHoraMais(H_VOLTA, T_VOLTA), titulo: "Chegada na casa do Rômulo", texto: "Fim do dia.", icone: "🌙", desloc: T_VOLTA },
   ],

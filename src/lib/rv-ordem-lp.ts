@@ -15,7 +15,25 @@ export type Passo = { hora: string; titulo: string; texto: string; icone: string
   // coordenada, não põe. Nunca usar pra casa do Rômulo nem pra "Saída de volta".
   destino?: Destino;
   // Trecho que CHEGA neste passo: cardzinho de deslocamento desenhado antes dele na linha do tempo.
-  desloc?: Desloc };
+  desloc?: Desloc;
+  // Lugar com nome próprio citado no título (restaurante, aeroporto, hotel): o nome vira link discreto pra
+  // ficha do lugar no Google Maps (fotos/avaliações), não pra rota. A rota fica nos botõezinhos.
+  lugar?: Lugar };
+// nome = trecho exato do título que vira link; busca = nome + endereço; placeId opcional (query_place_id).
+export type Lugar = { nome: string; busca: string; placeId?: string };
+export function rvLugarLink(l: Lugar): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.busca)}` +
+    (l.placeId ? `&query_place_id=${encodeURIComponent(l.placeId)}` : "");
+}
+// Título do card com o nome do lugar linkado (se o nome não estiver no título, sai sem link).
+export function rvTituloHtml(titulo: string, lugar?: Lugar): string {
+  const t = esc(titulo);
+  if (!lugar) return t;
+  const n = esc(lugar.nome);
+  const i = t.indexOf(n);
+  if (i < 0) return t;
+  return `${t.slice(0, i)}<a class="lugar" href="${esc(rvLugarLink(lugar))}" target="_blank" rel="noopener">${n}</a>${t.slice(i + n.length)}`;
+}
 // Sem endereço, a coordenada (lat,lng do mapinha) monta os links; nome = rótulo pro Uber.
 export type Destino = { endereco?: string; nome?: string; lat?: number; lng?: number };
 
@@ -75,7 +93,14 @@ export function rvHoraMais(saida: string, d: Desloc, aprox = true): string {
 // carro: trecho de carro (tempo calculado por rvTempoCarro). tempo: só pra avião (horário da reserva).
 // minutos: duração do voo, pra conta da linha do tempo. Sem carro nem tempo = "tempo a definir".
 // voo: código ICAO do voo (AZU+número Azul, GLO Gol, TAM LATAM) pro botão "Status do voo" no FlightAware.
-export type Desloc = { modo?: "carro" | "aviao"; carro?: Carro; tempo?: string; minutos?: number; trajeto: string; voo?: string };
+// mapa: mapinha da rota do trecho (imagem OSRM + OSM em public/lp/rv-<nome>/rota-*.webp); clique abre a rota
+// no Google Maps (de → ate). PRIVACIDADE: trecho que sai ou chega na casa do Rômulo usa "São Paulo - SP"
+// (imagem parte/chega no centro, Praça da Sé), nunca o ponto real; HD → Rômulo fica sem mapinha. Avião, sem mapinha.
+export type Desloc = { modo?: "carro" | "aviao"; carro?: Carro; tempo?: string; minutos?: number; trajeto: string; voo?: string;
+  mapa?: { src: string; alt: string; de: string; ate: string } };
+export function rvRotaLink(de: string, ate: string): string {
+  return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(de)}&destination=${encodeURIComponent(ate)}&travelmode=driving`;
+}
 
 export function rvVooLink(voo: string): string {
   return `https://www.flightaware.com/live/flight/${encodeURIComponent(voo.replace(/\s+/g, "").toUpperCase())}`;
@@ -105,7 +130,21 @@ export function rvDeslocHtml(d?: Desloc): string {
   if (!d) return "";
   const ic = d.modo === "aviao" ? "✈️" : "🚗";
   const voo = d.modo === "aviao" && d.voo ? `<a class="voo" href="${esc(rvVooLink(d.voo))}" target="_blank" rel="noopener">Status do voo</a>` : "";
-  return `<li class="desloc"><span></span><span></span><span class="dl"><i>${ic}</i>${esc(rvDeslocTempo(d))} · ${esc(d.trajeto)}${voo}</span></li>`;
+  const chip = `<span class="dl"><i>${ic}</i>${esc(rvDeslocTempo(d))} · ${esc(d.trajeto)}${voo}</span>`;
+  if (!d.mapa || d.modo === "aviao") return `<li class="desloc"><span></span><span></span>${chip}</li>`;
+  const href = esc(rvRotaLink(d.mapa.de, d.mapa.ate));
+  return `<li class="desloc tem-mapa"><span></span><span></span><span class="dlw"><a class="dl-mapa" href="${href}" target="_blank" rel="noopener" aria-label="Abrir a rota no Google Maps"><img src="${d.mapa.src}" alt="${esc(d.mapa.alt)}" loading="lazy" width="96" height="72"></a>${chip}</span></li>`;
+}
+
+// Um passo da linha do tempo (cardzinho de deslocamento antes, se houver). Usado por todas as páginas.
+export function rvPassoHtml(a: Passo): string {
+  const tit = `<b>${rvTituloHtml(a.titulo, a.lugar)}</b><span>${esc(a.texto)}</span>`;
+  const card = a.rota
+    ? `<div class="c tem-foto"><div>${tit}<a class="ver-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener">Ver rota no mapa ↗</a></div><a class="mini-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener" aria-label="Abrir rota no Google Maps"><img class="mini" src="${a.rota.src}" alt="${esc(a.rota.alt)}" loading="lazy" width="96" height="72"></a>${rvNavHtml(a.destino)}</div>`
+    : a.foto
+      ? `<div class="c tem-foto"><div>${tit}</div><img class="mini" src="${a.foto.src}" alt="${esc(a.foto.alt)}" loading="lazy" width="72" height="72">${rvNavHtml(a.destino)}</div>`
+      : `<div class="c">${tit}${rvNavHtml(a.destino)}</div>`;
+  return `${rvDeslocHtml(a.desloc)}<li${a.destaque ? ' class="on"' : ""}><span class="h">${esc(a.hora)}</span><span class="ic">${a.icone}</span>${card}</li>`;
 }
 
 // CSS dos botõezinhos e do cardzinho de deslocamento (também usado pela página do Antonio).
@@ -120,6 +159,15 @@ export const RV_NAV_CSS = `
 .tl li.desloc .dl i{font-style:normal;font-size:12px}
 .tl li.desloc .dl a.voo{margin-left:4px;font-size:10.5px;font-weight:600;line-height:1;color:#8f8893;text-decoration:none;padding:3px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.09);transition:color .2s,border-color .2s}
 .tl li.desloc .dl a.voo:hover{color:#e9e4ea;border-color:rgba(255,255,255,.25)}
+.tl .c b a.lugar{color:inherit;text-decoration:underline;text-decoration-color:rgba(255,255,255,.28);text-decoration-thickness:1px;text-underline-offset:3px;transition:text-decoration-color .2s}
+.tl .c b a.lugar:hover{text-decoration-color:rgba(255,180,162,.9)}
+.tl li.desloc.tem-mapa{margin:2px 0}
+.tl li.desloc .dlw{margin-left:10px;display:flex;align-items:center;gap:8px;min-width:0}
+.tl li.desloc .dlw .dl{margin-left:0;min-width:0;border-radius:14px}
+.tl li.desloc a.dl-mapa{flex:none;display:block;line-height:0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 20px -10px rgba(0,0,0,.8);transition:transform .2s}
+.tl li.desloc a.dl-mapa:hover{transform:translateY(-1px)}
+.tl li.desloc a.dl-mapa img{width:96px;height:72px;object-fit:cover}
+@media (max-width:760px){.tl li.desloc .dlw{margin-left:8px;gap:7px}.tl li.desloc a.dl-mapa{border-radius:11px}.tl li.desloc a.dl-mapa img{width:84px;height:64px}}
 @media (max-width:760px){.tl li.desloc .dl{margin-left:8px;font-size:11.5px;padding:3px 9px}.tl .c .nav a{font-size:10px;padding:4px 6px}}
 `;
 export type Foto = { src: string; alt: string };
@@ -395,7 +443,7 @@ ${RV_NAV_CSS}
       <p>${esc(o.agendaNota)}</p>
     </div>
     <ol class="tl">
-      ${o.agenda.map((a) => `${rvDeslocHtml(a.desloc)}<li${a.destaque ? ' class="on"' : ""}><span class="h">${esc(a.hora)}</span><span class="ic">${a.icone}</span>${a.rota ? `<div class="c tem-foto"><div><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span><a class="ver-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener">Ver rota no mapa ↗</a></div><a class="mini-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener" aria-label="Abrir rota no Google Maps"><img class="mini" src="${a.rota.src}" alt="${esc(a.rota.alt)}" loading="lazy" width="96" height="72"></a>${rvNavHtml(a.destino)}</div>` : a.foto ? `<div class="c tem-foto"><div><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div><img class="mini" src="${a.foto.src}" alt="${esc(a.foto.alt)}" loading="lazy" width="72" height="72">${rvNavHtml(a.destino)}</div>` : `<div class="c"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span>${rvNavHtml(a.destino)}</div>`}</li>`).join("\n      ")}
+      ${o.agenda.map(rvPassoHtml).join("\n      ")}
     </ol>
   </section>
 
