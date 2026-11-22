@@ -4,7 +4,7 @@
 // O local ainda está em definição (escritório em Alphaville, casa em Ubatuba ou
 // studios em São Paulo), então os horários de deslocamento ficam em aberto.
 
-import type { OrdemDoDia } from "@/lib/rv-ordem-lp";
+import { RV_DESLOC_HD_ROMULO, RV_END_ROMULO, type OrdemDoDia } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-tiago";
 
@@ -21,8 +21,8 @@ export const RV_TIAGO: OrdemDoDia = {
   agendaNota: "O local da gravação ainda está em definição. Assim que fechar, a gente atualiza os horários de saída e chegada.",
   agenda: [
     { hora: "A definir", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio. O horário depende do local.", icone: "🎒" },
-    { hora: "A definir", titulo: "Encontro com o Rômulo", texto: "O time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: { trajeto: "Heavy Drops → Rômulo" } },
-    { hora: "A definir", titulo: "Chegada no local", texto: "Montagem de câmeras e luz, e um café com o Tiago e o sócio.", icone: "📍", desloc: { trajeto: "Rômulo → local da gravação" } },
+    { hora: "A definir", titulo: "Encontro com o Rômulo", texto: "O time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO, destino: RV_END_ROMULO },
+    { hora: "A definir", titulo: "Chegada no local", texto: "Montagem de câmeras e luz, e um café com o Tiago e o sócio.", icone: "📍", desloc: { trajeto: "Casa do Rômulo → local da gravação" } },
     { hora: "13h00", titulo: "Gravação · Host Gestão", texto: "O Rômulo conduz a conversa com o Tiago e o sócio. Cerca de 3h.", icone: "🎬", destaque: true, foto: { src: `${IMG}/escritorio-1.webp`, alt: "Escritório da Host Gestão" } },
     { hora: "16h00", titulo: "Fim da gravação", texto: "Equipamento guardado e volta.", icone: "👋" },
   ],

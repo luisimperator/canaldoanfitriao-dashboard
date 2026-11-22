@@ -10,7 +10,7 @@
 export const RV_ANTONIO_EXPIRA = Date.parse("2026-12-04T00:00:00-03:00");
 export const RV_ANTONIO_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 
-import { rvDeslocHtml, rvNavHtml, RV_NAV_CSS, type Desloc, type Destino } from "@/lib/rv-ordem-lp";
+import { rvDeslocHtml, rvNavHtml, RV_NAV_CSS, RV_DESLOC_HD_ROMULO, RV_END_ROMULO, type Desloc, type Destino } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-antonio";
 
@@ -28,9 +28,9 @@ const rotaGoogle = (de: string, ate: string) =>
 
 const AGENDA: { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string }; rota?: { src: string; alt: string; href: string }; destino?: Destino; desloc?: Desloc }[] = [
   { hora: "07h30", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
-  { hora: "08h15", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo.", icone: "🤝", desloc: { trajeto: "Heavy Drops → Rômulo" } },
+  { hora: "08h15", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO, destino: RV_END_ROMULO },
   { hora: "08h30", titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e Tamoios, com uma parada rápida no caminho.", icone: "🛣️" },
-  { hora: "~12h00", titulo: "Chegada em São Sebastião", texto: "Cerca de 3h30 de estrada numa sexta de manhã.", icone: "🌊", desloc: { tempo: "~3h", trajeto: "São Paulo → São Sebastião" } },
+  { hora: "~12h00", titulo: "Chegada em São Sebastião", texto: "Cerca de 3h30 de estrada numa sexta de manhã, contando a parada.", icone: "🌊", desloc: { tempo: "~3h30", trajeto: "Casa do Rômulo → São Sebastião" } },
   { hora: "12h15", titulo: "Almoço no Família Restaurante", texto: "Av. Dr. Altino Arantes, 58, na Rua da Praia, centro histórico de São Sebastião.", icone: "🍽️", rota: { src: `${IMG}/antonio-rota-almoco.webp`, alt: "Rota de São Paulo até o Família Restaurante, em São Sebastião", href: rotaGoogle("Brás, São Paulo - SP", RESTAURANTE) }, destino: D_RESTAURANTE },
   { hora: "13h30", titulo: "Chegada na casa", texto: "Montagem de câmeras e luz, e um café com o Antonio.", icone: "🏡", rota: { src: `${IMG}/antonio-rota-casa.webp`, alt: "Rota do Família Restaurante até a casa do Antonio", href: rotaGoogle(RESTAURANTE, CASA_ANTONIO) }, desloc: { tempo: "~6 min", trajeto: "Família Restaurante → Casa da piscina" } },
   { hora: "14h00", titulo: "Gravação 1 · Casa da piscina", texto: "O Rômulo conduz a conversa com o Antonio e a gente percorre a casa.", icone: "🎬", destaque: true, foto: { src: `${IMG}/antonio-1.webp`, alt: "Casa da piscina" } },

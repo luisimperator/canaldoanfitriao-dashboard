@@ -4,7 +4,7 @@
 // Gravação na sede (agenda Gravações). Apartamento a visitar ainda a confirmar.
 // Tempos de estrada estimados.
 
-import type { OrdemDoDia } from "@/lib/rv-ordem-lp";
+import { RV_DESLOC_HD_ROMULO, RV_END_ROMULO, type OrdemDoDia } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-pedro";
 // Destino de carro (botões Google Maps/Waze/Uber); tempos de deslocamento por OSRM, sem trânsito.
@@ -23,9 +23,9 @@ export const RV_PEDRO: OrdemDoDia = {
   agendaNota: "Horários de estrada estimados pra uma quarta-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.",
   agenda: [
     { hora: "07h30", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
-    { hora: "08h15", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: { trajeto: "Heavy Drops → Rômulo" } },
+    { hora: "08h15", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO, destino: RV_END_ROMULO },
     { hora: "08h30", titulo: "Pé na estrada", texto: "Bandeirantes e as rodovias do interior até o sul de Minas, com uma parada rápida.", icone: "🛣️" },
-    { hora: "~12h15", titulo: "Chegada em Poços de Caldas", texto: "Cerca de 3h45 de estrada, contando a parada.", icone: "⛰️", desloc: { tempo: "~3h30", trajeto: "São Paulo → Poços de Caldas" } },
+    { hora: "~12h15", titulo: "Chegada em Poços de Caldas", texto: "Cerca de 3h45 de estrada, contando a parada.", icone: "⛰️", desloc: { tempo: "~3h45", trajeto: "Casa do Rômulo → Poços de Caldas" } },
     { hora: "12h30", titulo: "Almoço com calma", texto: "Tempo pra comer bem antes de começar.", icone: "🍽️" },
     { hora: "13h30", titulo: "Chegada na sede", texto: "Montagem de câmeras e luz, e um café com o Pedro.", icone: "🏢", desloc: { trajeto: "Almoço → Sede" }, destino: SEDE },
     { hora: "14h00", titulo: "Gravação · Intelecto Stays", texto: "O Rômulo conduz a conversa com o Pedro sobre a operação, a equipe e os imóveis.", icone: "🎬", destaque: true, foto: { src: `${IMG}/ap401-1.webp`, alt: "Apartamento da Intelecto Stays" } },
