@@ -4,11 +4,20 @@
 // Gravação na sede (agenda Gravações). Apartamento a visitar ainda a confirmar.
 // Tempos de estrada estimados.
 
-import { RV_DESLOC_HD_ROMULO, RV_END_ROMULO, type OrdemDoDia } from "@/lib/rv-ordem-lp";
+import { RV_DESLOC_HD_ROMULO, RV_END_ROMULO, rvHoraMais, rvSomaMin, type Desloc, type OrdemDoDia } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-pedro";
-// Destino de carro (botões Google Maps/Waze/Uber); tempos de deslocamento por OSRM, sem trânsito.
+// Destino de carro (botões Google Maps/Waze/Uber). Tempos: minutos do OSRM pela regra única do template (rvTempoCarro).
 const SEDE = { endereco: "Rua Sapucaí, 185 - São Benedito, Poços de Caldas - MG", lat: -21.791864, lng: -46.5600206 };
+
+// Trechos de carro (minutos OSRM). O texto dos cards não cita tempo: o número só sai do cardzinho.
+const T_ESTRADA: Desloc = { carro: { osrm: 203.1, via: "estrada", picoSP: true }, trajeto: "Casa do Rômulo → Poços de Caldas" };
+const T_VOLTA: Desloc = { carro: { osrm: 206.7, via: "estrada" }, trajeto: "Sede → Casa do Rômulo" };
+// Linha do tempo: cada chegada = saída + tempo do trecho.
+const H_SAIDA = "07h30";
+const H_ENCONTRO = rvHoraMais(H_SAIDA, RV_DESLOC_HD_ROMULO, false);
+const H_ESTRADA = rvSomaMin(H_ENCONTRO, 15); // passar o equipamento pro carro do Rômulo
+const H_VOLTA = "17h00";
 
 export const RV_PEDRO: OrdemDoDia = {
   expira: Date.parse("2026-12-16T00:00:00-03:00"),
@@ -22,15 +31,14 @@ export const RV_PEDRO: OrdemDoDia = {
   quando: [["Quando", "Quarta, 09/12"], ["Gravação", "14h00"], ["Onde", "Poços de Caldas"]],
   agendaNota: "Horários de estrada estimados pra uma quarta-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.",
   agenda: [
-    { hora: "07h30", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
-    { hora: "08h15", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO, destino: RV_END_ROMULO },
-    { hora: "08h30", titulo: "Pé na estrada", texto: "Bandeirantes e as rodovias do interior até o sul de Minas, com uma parada rápida.", icone: "🛣️" },
-    { hora: "~12h15", titulo: "Chegada em Poços de Caldas", texto: "Cerca de 3h45 de estrada, contando a parada.", icone: "⛰️", desloc: { tempo: "~3h45", trajeto: "Casa do Rômulo → Poços de Caldas" } },
-    { hora: "12h30", titulo: "Almoço com calma", texto: "Tempo pra comer bem antes de começar.", icone: "🍽️" },
+    { hora: H_SAIDA, titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
+    { hora: H_ENCONTRO, titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO, destino: RV_END_ROMULO },
+    { hora: H_ESTRADA, titulo: "Pé na estrada", texto: "Bandeirantes e as rodovias do interior até o sul de Minas, com uma parada no caminho.", icone: "🛣️" },
+    { hora: rvHoraMais(H_ESTRADA, T_ESTRADA), titulo: "Chegada e almoço em Poços de Caldas", texto: "Tempo pra comer antes de começar.", icone: "🍽️", desloc: T_ESTRADA },
     { hora: "13h30", titulo: "Chegada na sede", texto: "Montagem de câmeras e luz, e um café com o Pedro.", icone: "🏢", desloc: { trajeto: "Almoço → Sede" }, destino: SEDE },
     { hora: "14h00", titulo: "Gravação · Intelecto Stays", texto: "O Rômulo conduz a conversa com o Pedro sobre a operação, a equipe e os imóveis.", icone: "🎬", destaque: true, foto: { src: `${IMG}/ap401-1.webp`, alt: "Apartamento da Intelecto Stays" } },
-    { hora: "17h00", titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
-    { hora: "~21h00", titulo: "Chegada em São Paulo", texto: "Fim do dia.", icone: "🌙", desloc: { tempo: "~3h30", trajeto: "Poços de Caldas → São Paulo" } },
+    { hora: H_VOLTA, titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
+    { hora: rvHoraMais(H_VOLTA, T_VOLTA), titulo: "Chegada na casa do Rômulo", texto: "Fim do dia.", icone: "🌙", desloc: T_VOLTA, destino: RV_END_ROMULO },
   ],
   casas: [
     {

@@ -17,13 +17,62 @@ export type Passo = { hora: string; titulo: string; texto: string; icone: string
 export type Destino = { endereco: string; lat?: number; lng?: number };
 
 // Pontos fixos de saída de toda ordem do dia (São Paulo). Coordenadas do OSM (Nominatim).
-// HD → Rômulo por OSRM: 15 km, ~22 min sem trânsito. A estrada até o destino sai da casa do Rômulo.
+// HD → Rômulo por OSRM: 15 km, 22,3 min sem trânsito. A estrada até o destino sai da casa do Rômulo.
 export const RV_END_HD: Destino = { endereco: "Av. das Nações Unidas, 14401, Torre Tarumã, cj. 2804, São Paulo - SP", lat: -23.6257074, lng: -46.7056935 };
 export const RV_END_ROMULO: Destino = { endereco: "Rua Martim Burchard, 187, Brás, São Paulo - SP", lat: -23.5456485, lng: -46.6181279 };
-export const RV_DESLOC_HD_ROMULO: Desloc = { tempo: "~20 min", trajeto: "Heavy Drops → Rômulo" };
-// tempo: estimado por OSRM (dirigindo), arredondado e com "~"; voo com o horário da reserva. Sem tempo = "tempo a definir".
+export const RV_DESLOC_HD_ROMULO: Desloc = { carro: { osrm: 22.3, via: "urbano" }, trajeto: "Heavy Drops → Rômulo" };
+
+// ── Tempo de carro: FUNÇÃO ÚNICA de todas as ordens do dia (regra do Fernando, 21/11) ──
+// O tempo de deslocamento só aparece no cardzinho e sai daqui; o texto dos cards NÃO escreve tempo à mão.
+// Base: minutos do OSRM (trânsito livre). Só tempo de direção com trânsito, sem buffer de carregar/estacionar:
+//   urbano = OSRM × 1,3; estrada = OSRM × 1,15 (+15 min se for saída/chegada de SP em dia útil de manhã
+//   ou fim de tarde: picoSP); acima de 2h30 de carro, +30 min de parada (aparece no cardzinho);
+//   arredondado PRA CIMA em múltiplos de 5 min (abaixo de 1h) ou de 15 min (1h ou mais).
+export type Carro = { osrm: number; via: "urbano" | "estrada"; picoSP?: boolean };
+export const RV_PARADA_MIN = 30;
+export function rvTempoCarro(c: Carro): { min: number; parada: boolean } {
+  let m = c.osrm * (c.via === "urbano" ? 1.3 : 1.15);
+  if (c.via === "estrada" && c.picoSP) m += 15;
+  const parada = m > 150;
+  if (parada) m += RV_PARADA_MIN;
+  const passo = m < 60 ? 5 : 15;
+  return { min: Math.ceil(m / passo - 1e-9) * passo, parada };
+}
+export function rvFmtDur(min: number): string {
+  if (min < 60) return `~${min} min`;
+  const h = Math.floor(min / 60), r = min % 60;
+  return r ? `~${h}h${String(r).padStart(2, "0")}` : `~${h}h`;
+}
+// Minutos do trecho (carro pela regra acima; avião/manual pelo campo minutos). undefined = a definir.
+export function rvDeslocMin(d: Desloc): number | undefined {
+  return d.carro ? rvTempoCarro(d.carro).min : d.minutos;
+}
+// Texto do cardzinho: "~3h45 · inclui parada de 30 min", "~30 min" ou "tempo a definir".
+export function rvDeslocTempo(d: Desloc): string {
+  if (d.carro) {
+    const t = rvTempoCarro(d.carro);
+    return rvFmtDur(t.min) + (t.parada ? ` · inclui parada de ${RV_PARADA_MIN} min` : "");
+  }
+  return d.tempo ?? "tempo a definir";
+}
+// Horário da linha do tempo = horário + minutos, no formato "12h45" (com "~" se pedir).
+export function rvSomaMin(hora: string, min: number, aprox = false): string {
+  const mm = /(\d{1,2})h(\d{2})/.exec(hora);
+  if (!mm) throw new Error(`rvSomaMin: horário inválido (${hora})`);
+  const t = Number(mm[1]) * 60 + Number(mm[2]) + min;
+  return `${aprox ? "~" : ""}${String(Math.floor(t / 60) % 24).padStart(2, "0")}h${String(t % 60).padStart(2, "0")}`;
+}
+// Chegada = saída + tempo do trecho (mesmo número do cardzinho). Use isto em vez de escrever a hora à mão.
+export function rvHoraMais(saida: string, d: Desloc, aprox = true): string {
+  const soma = rvDeslocMin(d);
+  if (soma === undefined) throw new Error(`rvHoraMais: trecho sem tempo (${d.trajeto})`);
+  return rvSomaMin(saida, soma, aprox);
+}
+
+// carro: trecho de carro (tempo calculado por rvTempoCarro). tempo: só pra avião (horário da reserva).
+// minutos: duração do voo, pra conta da linha do tempo. Sem carro nem tempo = "tempo a definir".
 // voo: código ICAO do voo (AZU+número Azul, GLO Gol, TAM LATAM) pro botão "Status do voo" no FlightAware.
-export type Desloc = { modo?: "carro" | "aviao"; tempo?: string; trajeto: string; voo?: string };
+export type Desloc = { modo?: "carro" | "aviao"; carro?: Carro; tempo?: string; minutos?: number; trajeto: string; voo?: string };
 
 export function rvVooLink(voo: string): string {
   return `https://www.flightaware.com/live/flight/${encodeURIComponent(voo.replace(/\s+/g, "").toUpperCase())}`;
@@ -51,7 +100,7 @@ export function rvDeslocHtml(d?: Desloc): string {
   if (!d) return "";
   const ic = d.modo === "aviao" ? "✈️" : "🚗";
   const voo = d.modo === "aviao" && d.voo ? `<a class="voo" href="${esc(rvVooLink(d.voo))}" target="_blank" rel="noopener">Status do voo</a>` : "";
-  return `<li class="desloc"><span></span><span></span><span class="dl"><i>${ic}</i>${esc(d.tempo ?? "tempo a definir")} · ${esc(d.trajeto)}${voo}</span></li>`;
+  return `<li class="desloc"><span></span><span></span><span class="dl"><i>${ic}</i>${esc(rvDeslocTempo(d))} · ${esc(d.trajeto)}${voo}</span></li>`;
 }
 
 // CSS dos botõezinhos e do cardzinho de deslocamento (também usado pela página do Antonio).
@@ -71,7 +120,7 @@ export const RV_NAV_CSS = `
 export type Foto = { src: string; alt: string };
 export type Casa = { id: string; rotulo: string; nome: string; endereco: string; endSub: string; link?: string; fotos: Foto[]; resumo: string };
 export type Mapa = {
-  img: string; alt: string; rotulo: string; titulo: string; tituloSerif: string; texto: string; tempo: string; tempoSub: string;
+  img: string; alt: string; rotulo: string; titulo: string; tituloSerif: string; texto: string; carro: Carro; tempoSub: string;
   pinos: { x: number; y: number; nome: string }[];
 };
 export type OrdemDoDia = {
@@ -134,7 +183,7 @@ function mapa(m: Mapa): string {
         <p class="rot">${esc(m.rotulo)}</p>
         <h2>${esc(m.titulo)} <span class="serif grad-txt">${esc(m.tituloSerif)}</span></h2>
         <p>${esc(m.texto)}</p>
-        <div class="tempo"><b>${esc(m.tempo)}</b><span>${esc(m.tempoSub)}</span></div>
+        <div class="tempo"><b>${esc(rvFmtDur(rvTempoCarro(m.carro).min))}</b><span>${esc(m.tempoSub)}</span></div>
       </div>
       <div class="mapa">
         <img src="${m.img}" alt="${esc(m.alt)}" loading="lazy" width="1200" height="1200">
@@ -143,7 +192,7 @@ function mapa(m: Mapa): string {
           <path class="rota" vector-effect="non-scaling-stroke" d="${d}"/>
         </svg>
         ${m.pinos.map((p, i) => `<div class="pino p${i + 1}" style="left:${p.x}%;top:${p.y + 1.6}%"><span class="et"><i>${i + 1}</i>${esc(p.nome)}</span><span class="pt"></span></div>`).join("\n        ")}
-        <span class="min" style="left:${meio.x}%;top:${meio.y}%">🚗 ${esc(m.tempo)}</span>
+        <span class="min" style="left:${meio.x}%;top:${meio.y}%">🚗 ${esc(rvFmtDur(rvTempoCarro(m.carro).min))}</span>
         <span class="credito">© OpenStreetMap</span>
       </div>
     </div>

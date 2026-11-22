@@ -3,12 +3,21 @@
 // link.canaldoanfitriao.com.br/internos/rv-taisa (template em src/lib/rv-ordem-lp.ts).
 // Fotos do anúncio do Airbnb em public/lp/rv-taisa/. Tempos de estrada estimados.
 
-import { RV_DESLOC_HD_ROMULO, RV_END_ROMULO, type OrdemDoDia } from "@/lib/rv-ordem-lp";
+import { RV_DESLOC_HD_ROMULO, RV_END_ROMULO, rvHoraMais, rvSomaMin, type Desloc, type OrdemDoDia } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-taisa";
-// Destino de carro (botões Google Maps/Waze/Uber); tempos de deslocamento por OSRM, sem trânsito.
+// Destino de carro (botões Google Maps/Waze/Uber). Tempos: minutos do OSRM pela regra única do template (rvTempoCarro).
 const HGH = { endereco: "Home Green Home, R. Adolfo Torresim, 800 - Vila Inglesa, Campos do Jordão - SP", lat: -22.748697, lng: -45.5566314 };
 const ANUNCIO = "https://www.airbnb.com.br/rooms/1161137307265883513";
+
+// Trechos de carro (minutos OSRM). O texto dos cards não cita tempo: o número só sai do cardzinho.
+const T_ESTRADA: Desloc = { carro: { osrm: 167.7, via: "estrada", picoSP: true }, trajeto: "Casa do Rômulo → Campos do Jordão" };
+const T_VOLTA: Desloc = { carro: { osrm: 166.9, via: "estrada" }, trajeto: "Home Green Home → Casa do Rômulo" };
+// Linha do tempo: cada chegada = saída + tempo do trecho.
+const H_SAIDA = "08h00";
+const H_ENCONTRO = rvHoraMais(H_SAIDA, RV_DESLOC_HD_ROMULO, false);
+const H_ESTRADA = rvSomaMin(H_ENCONTRO, 15); // passar o equipamento pro carro do Rômulo
+const H_VOLTA = "17h00";
 
 export const RV_TAISA: OrdemDoDia = {
   expira: Date.parse("2026-11-30T00:00:00-03:00"),
@@ -22,15 +31,14 @@ export const RV_TAISA: OrdemDoDia = {
   quando: [["Quando", "Segunda, 23/11"], ["Gravação", "14h00"], ["Onde", "Campos do Jordão"]],
   agendaNota: "Horários de estrada estimados pra uma segunda-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.",
   agenda: [
-    { hora: "08h00", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
-    { hora: "08h45", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO, destino: RV_END_ROMULO },
-    { hora: "09h00", titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e a subida da serra, com uma parada rápida no caminho.", icone: "🛣️" },
-    { hora: "~12h00", titulo: "Chegada em Campos do Jordão", texto: "Cerca de 3h de estrada numa segunda de manhã, contando a parada.", icone: "🏔️", desloc: { tempo: "~3h", trajeto: "Casa do Rômulo → Campos do Jordão" } },
-    { hora: "12h15", titulo: "Almoço com calma", texto: "Tempo pra comer bem antes de começar.", icone: "🍽️" },
+    { hora: H_SAIDA, titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
+    { hora: H_ENCONTRO, titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO, destino: RV_END_ROMULO },
+    { hora: H_ESTRADA, titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e a subida da serra, com uma parada no caminho.", icone: "🛣️" },
+    { hora: rvHoraMais(H_ESTRADA, T_ESTRADA), titulo: "Chegada e almoço em Campos do Jordão", texto: "Tempo pra comer antes de começar.", icone: "🍽️", desloc: T_ESTRADA },
     { hora: "13h30", titulo: "Chegada no hotel", texto: "O flat fica pronto depois do check-out das 12h. Montagem de câmeras e luz, e um café com a Taisa.", icone: "🏨", desloc: { trajeto: "Almoço → Home Green Home" }, destino: HGH },
     { hora: "14h00", titulo: "Gravação · Flat no Home Green Home", texto: "O Rômulo conduz a conversa com a Taisa e a gente percorre o flat e o hotel.", icone: "🎬", destaque: true, foto: { src: `${IMG}/taisa-capa.webp`, alt: "Hotel Home Green Home" } },
-    { hora: "17h00", titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
-    { hora: "~20h30", titulo: "Chegada em São Paulo", texto: "Fim do dia.", icone: "🌙", desloc: { tempo: "~2h45", trajeto: "Campos do Jordão → São Paulo" } },
+    { hora: H_VOLTA, titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
+    { hora: rvHoraMais(H_VOLTA, T_VOLTA), titulo: "Chegada na casa do Rômulo", texto: "Fim do dia.", icone: "🌙", desloc: T_VOLTA, destino: RV_END_ROMULO },
   ],
   casas: [
     {
