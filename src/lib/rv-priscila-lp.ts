@@ -1,7 +1,7 @@
 // Ordem do dia do Rômulo Visita com a Priscila Araujo (#RV027), quarta 02/12/2026,
 // nas casas dela no Vidigal (Rio de Janeiro), bate-volta de avião:
 // link.canaldoanfitriao.com.br/internos/rv-priscila (template em src/lib/rv-ordem-lp.ts).
-// Voos da reserva Azul TIE26F. Horário da gravação ainda a combinar com a Priscila.
+// Voos da reserva Azul TIE26F. Gravação às 13h30.
 
 import type { OrdemDoDia } from "@/lib/rv-ordem-lp";
 
@@ -18,15 +18,16 @@ export const RV_PRISCILA: OrdemDoDia = {
   nome: "Priscila Araujo",
   lead: "Priscila, que alegria gravar com você! Aqui está o dia inteiro, do voo de ida até a volta pra São Paulo, com as casas do Vidigal.",
   quando: [["Quando", "Quarta, 02/12"], ["Voo de ida", "08h30"], ["Onde", "Vidigal · RJ"]],
-  agendaNota: "Voos confirmados na Azul. Os deslocamentos por terra são estimados, e o horário da gravação a gente fecha com você pelo grupo.",
+  agendaNota: "Voos confirmados na Azul e gravação às 13h30. Os deslocamentos por terra são estimados.",
   agenda: [
     { hora: "06h30", titulo: "Encontro em Congonhas", texto: "A equipe e o Rômulo se encontram no aeroporto, com câmeras, luz e áudio.", icone: "🎒" },
     { hora: "08h30", titulo: "Voo pro Rio", texto: "Azul 4231, de Congonhas pro Santos Dumont.", icone: "✈️" },
-    { hora: "09h30", titulo: "Pouso no Santos Dumont", texto: "Desembarque e carro até o Vidigal.", icone: "🛬" },
-    { hora: "~10h15", titulo: "Chegada no Vidigal", texto: "Uns 30 a 40 minutos do aeroporto, conforme o trânsito. Montagem de câmeras e luz.", icone: "🏡" },
-    { hora: "A definir", titulo: "Gravação · Casas do Vidigal", texto: "O Rômulo conduz a conversa com a Priscila e a gente percorre as casas. Cerca de 3h, horário exato a combinar.", icone: "🎬", destaque: true, foto: { src: `${IMG}/vista-1.webp`, alt: "Terraço da casa com vista mar" } },
-    { hora: "A definir", titulo: "Almoço", texto: "Encaixado antes ou depois da gravação, conforme o horário fechado.", icone: "🍽️" },
-    { hora: "~19h45", titulo: "Saída pro Santos Dumont", texto: "Com folga pro embarque do voo de volta.", icone: "🚗" },
+    { hora: "09h30", titulo: "Pouso no Santos Dumont", texto: "Desembarque, retirada do equipamento e carro.", icone: "🛬" },
+    { hora: "~10h15", titulo: "Chegada e descarga", texto: "Deslocamento estimado de 30 a 40 minutos, conforme o trânsito. Descarregamos o equipamento.", icone: "📦" },
+    { hora: "~11h30", titulo: "Almoço no Filé do Lira", texto: "Av. Ataulfo de Paiva, 658, loja B, Leblon.", icone: "🍽️" },
+    { hora: "13h00", titulo: "Saída pro Vidigal", texto: "Uns 15 a 20 minutos do Leblon (estimado).", icone: "🚗" },
+    { hora: "13h30", titulo: "Gravação com a Priscila", texto: "O Rômulo conduz a conversa com a Priscila e a gente percorre as casas do terreno.", icone: "🎬", destaque: true, foto: { src: `${IMG}/vista-1.webp`, alt: "Terraço da casa com vista mar" } },
+    { hora: "~19h45", titulo: "Saída pro Santos Dumont", texto: "Deslocamento estimado de 40 minutos, com folga pro embarque.", icone: "🚗" },
     { hora: "21h00", titulo: "Voo de volta", texto: "Azul 6403, do Santos Dumont pra Congonhas.", icone: "✈️" },
     { hora: "22h10", titulo: "Pouso em Congonhas", texto: "Fim do dia.", icone: "🌙" },
   ],
