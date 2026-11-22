@@ -6,6 +6,8 @@
 import type { OrdemDoDia } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-taisa";
+// Destino de carro (botões Google Maps/Waze/Uber); tempos de deslocamento por OSRM, sem trânsito.
+const HGH = { endereco: "Home Green Home, R. Adolfo Torresim, 800 - Vila Inglesa, Campos do Jordão - SP", lat: -22.748697, lng: -45.5566314 };
 const ANUNCIO = "https://www.airbnb.com.br/rooms/1161137307265883513";
 
 export const RV_TAISA: OrdemDoDia = {
@@ -21,14 +23,14 @@ export const RV_TAISA: OrdemDoDia = {
   agendaNota: "Horários de estrada estimados pra uma segunda-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.",
   agenda: [
     { hora: "08h00", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
-    { hora: "08h45", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝" },
+    { hora: "08h45", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: { trajeto: "Heavy Drops → Rômulo" } },
     { hora: "09h00", titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e a subida da serra, com uma parada rápida no caminho.", icone: "🛣️" },
-    { hora: "~12h00", titulo: "Chegada em Campos do Jordão", texto: "Cerca de 3h de estrada numa segunda de manhã.", icone: "🏔️" },
+    { hora: "~12h00", titulo: "Chegada em Campos do Jordão", texto: "Cerca de 3h de estrada numa segunda de manhã.", icone: "🏔️", desloc: { tempo: "~2h45", trajeto: "São Paulo → Campos do Jordão" } },
     { hora: "12h15", titulo: "Almoço com calma", texto: "Tempo pra comer bem antes de começar.", icone: "🍽️" },
-    { hora: "13h30", titulo: "Chegada no hotel", texto: "O flat fica pronto depois do check-out das 12h. Montagem de câmeras e luz, e um café com a Taisa.", icone: "🏨" },
+    { hora: "13h30", titulo: "Chegada no hotel", texto: "O flat fica pronto depois do check-out das 12h. Montagem de câmeras e luz, e um café com a Taisa.", icone: "🏨", desloc: { trajeto: "Almoço → Home Green Home" }, destino: HGH },
     { hora: "14h00", titulo: "Gravação · Flat no Home Green Home", texto: "O Rômulo conduz a conversa com a Taisa e a gente percorre o flat e o hotel.", icone: "🎬", destaque: true, foto: { src: `${IMG}/taisa-capa.webp`, alt: "Hotel Home Green Home" } },
     { hora: "17h00", titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
-    { hora: "~20h30", titulo: "Chegada em São Paulo", texto: "Fim do dia.", icone: "🌙" },
+    { hora: "~20h30", titulo: "Chegada em São Paulo", texto: "Fim do dia.", icone: "🌙", desloc: { tempo: "~2h45", trajeto: "Campos do Jordão → São Paulo" } },
   ],
   casas: [
     {
