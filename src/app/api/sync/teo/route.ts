@@ -804,7 +804,7 @@ function avisoCallLiberada(call: { inicio: string; vendedor: string | null }): s
     minute: "2-digit",
   });
   const com = call.vendedor ? ` com ${primeiroNomeVendedor(call.vendedor)}` : "";
-  return `CALL LIBERADA: este lead tinha call ${quando}${com}, mas não confirmou (nem na véspera nem no dia) e o horário foi liberado pra outra pessoa. Se ele escrever, sem bronca: diga numa frase que liberou porque não teve retorno e ofereça os horários mais próximos da lista pra marcar de novo${com ? `, de preferência${com}` : ""}.`;
+  return `CALL LIBERADA: este lead tinha call ${quando}${com}, mas não confirmou (nem na véspera nem no dia) e o horário foi pra próxima pessoa da fila. Se ele escrever, sem bronca: diga numa frase que o horário foi pra outra pessoa porque não teve retorno, que a agenda dos especialistas está disputada, e ofereça os horários mais próximos da lista como um encaixe que você conseguiu${com ? `, de preferência${com}` : ""}.`;
 }
 
 /** Aviso só deste lead (fica fora do bloco da Black, que vai em cache). */
@@ -2786,7 +2786,10 @@ async function avisarDaCall(
 //   pessoa responder, a janela de 24h reabre pro lembrete do dia);
 // * no dia, às 8h: quem não escreveu nada nas 24h antes da call recebe o pedido
 //   de confirmação com prazo (2h antes da call, no mínimo 1h depois da
-//   mensagem); sem resposta até o prazo, o horário é liberado (migração 0145);
+//   mensagem); sem resposta até o prazo, o horário é liberado (migração 0145).
+//   Os pedidos usam escassez e perda (Fernando, 22/11: "tem muita gente
+//   querendo esse horário; se não confirmar, você perde a vez com o
+//   especialista; não estamos à disposição sempre");
 // * ~90 min antes: lembrete com o link;
 // * 10 min antes: a conversa passa pro vendedor no Unnichat, com a ficha;
 // * 3 min depois do horário: "Flávio já está na sala te esperando" (sem artigo: serve pra vendedora), com o
@@ -2896,8 +2899,8 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
               cfg,
               conv.telefone,
               await janela(),
-              `Oi, ${nome}! Amanhã (${dia}) às ${horaFala} é o seu papo de 20 min com ${vend}. Me confirma por aqui? Um "sim" já basta, e eu deixo o horário reservado pra você.`,
-              [nome, vend, `amanhã (${dia}) às ${horaFala}. Me responde com um sim que eu deixo o horário reservado pra você`]
+              `Oi, ${nome}! Amanhã (${dia}) às ${horaFala} é o seu papo de 20 min com ${vend}. A agenda dos especialistas está disputada e tem gente querendo esse horário, então me confirma por aqui? Um "sim" já basta, e eu seguro ele pra você.`,
+              [nome, vend, `amanhã (${dia}) às ${horaFala}. Tem gente querendo esse horário: me responde com um sim pra eu segurar ele pra você`]
             );
         await supabase.from("teo_calls").update({ vespera_em: new Date().toISOString() }).eq("id", k.id);
         await log(supabase, `véspera ${r}`, { contact_id: k.contact_id, nome: k.nome, hora });
@@ -2946,13 +2949,13 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
               conv.telefone,
               await janela(),
               liberar
-                ? `${saudacao}, ${nome}! Hoje às ${horaFala} é o seu papo de 20 min com ${vend}. Me responde com um "sim" até as ${prazoFala}? Pode ser por vídeo ou, se preferir, ${vend} te liga no WhatsApp. Se eu não tiver sua confirmação até lá, libero o horário pra outra pessoa e a gente remarca quando for melhor pra você.`
+                ? `${saudacao}, ${nome}! Hoje às ${horaFala} é o seu papo de 20 min com ${vend}. Tem outras pessoas esperando vaga nesse horário, então preciso da sua confirmação: me responde com um "sim" até as ${prazoFala}? Pode ser por vídeo ou, se preferir, ${vend} te liga no WhatsApp. Sem confirmação até lá, infelizmente o horário vai pra próxima pessoa da fila e você perde a vez com o especialista.`
                 : `${saudacao}, ${nome}! Hoje às ${horaFala} é o seu papo de 20 min com ${vend}. Prefere por vídeo ou que ${vend} te ligue no WhatsApp?`,
               [
                 nome,
                 vend,
                 liberar
-                  ? `hoje às ${horaFala}. Me responde com um sim até as ${prazoFala}? Sem confirmação, eu libero o horário pra outra pessoa`
+                  ? `hoje às ${horaFala}. Tem outras pessoas esperando esse horário: me responde com um sim até as ${prazoFala}, senão ele vai pra próxima pessoa da fila`
                   : `hoje às ${horaFala}`,
               ]
             );
@@ -2990,7 +2993,7 @@ async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<st
           });
         } else {
           await liberarCall(supabase, cfg, k as CallParaLiberar, "sem_confirmacao");
-          const textoLiberada = `Oi, ${nome}! Como não tive sua confirmação, liberei o horário de hoje às ${horaFala} com ${vend} pra outra pessoa. Se ainda quiser conversar com ${vend}, é só me chamar aqui que eu vejo um horário novo pra você 💛`;
+          const textoLiberada = `Oi, ${nome}! Como não tive sua confirmação, seu horário de hoje às ${horaFala} com ${vend} foi pra próxima pessoa da fila. A agenda dos especialistas está bem disputada, mas se ainda quiser conversar, me chama aqui que eu vejo se consigo um encaixe pra você.`;
           let aviso = "sem aviso (só o e-mail do cancelamento)";
           if (conv?.telefone && podeChamar()) {
             if (await janela()) {
