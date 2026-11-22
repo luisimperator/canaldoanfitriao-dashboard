@@ -3,7 +3,7 @@
 // link.canaldoanfitriao.com.br/internos/rv-priscila (template em src/lib/rv-ordem-lp.ts).
 // Voos da reserva Azul TIE26F. Gravação às 13h30.
 
-import { rvHoraMais, type Desloc, type OrdemDoDia } from "@/lib/rv-ordem-lp";
+import { rvHoraMais, type Desloc, type Lugar, type OrdemDoDia } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-priscila";
 // Mapinhas de rota de cada trecho de carro (OSRM + OpenStreetMap em public/lp/rv-priscila/rota-*.webp);
@@ -15,8 +15,10 @@ const VIDIGAL = "Av. Presidente João Goulart, 906, Vidigal, Rio de Janeiro - RJ
 // o texto dos cards não cita tempo, o número só sai do cardzinho.
 const D_SDU = { endereco: SDU, lat: -22.9104541, lng: -43.1641922 };
 const D_FILE = { endereco: FILE_DO_LIRA, lat: -22.9851379, lng: -43.2259284 };
+// Filé do Lira: seg-sáb 11h-0h (Fernando, 22/11). Refeição lá nunca antes das 11h (regra do template).
+const L_FILE: Lugar & { horario: NonNullable<Lugar["horario"]> } = { nome: "Filé do Lira", busca: FILE_DO_LIRA, horario: { abre: "11h00", fecha: "00h00", dias: "seg-sáb", fonte: "Fernando, 22/11" } };
 const D_VIDIGAL = { endereco: VIDIGAL, lat: -22.9964932, lng: -43.2404694 };
-// Saída do Santos Dumont depois do desembarque e da retirada do equipamento e do carro; o almoço é a chegada no Filé do Lira.
+// Saída do Santos Dumont depois do desembarque e da retirada do equipamento e do carro; chega no Leblon antes do Filé do Lira abrir (tempo livre até 11h).
 const SAIDA_SDU = "10h00";
 const fotos = (pre: string, alts: string[]) => alts.map((alt, i) => ({ src: `${IMG}/${pre}-${i + 1}.webp`, alt }));
 
@@ -40,7 +42,8 @@ export const RV_PRISCILA: OrdemDoDia = {
     { hora: "06h30", titulo: "Encontro em Congonhas", texto: "A equipe e o Rômulo se encontram no aeroporto, com câmeras, luz e áudio.", icone: "🎒", destino: { endereco: "Aeroporto de Congonhas, São Paulo - SP", lat: -23.6274146, lng: -46.655561 }, lugar: { nome: "Congonhas", busca: "Aeroporto de Congonhas, São Paulo - SP" } },
     { hora: "08h30", titulo: "Voo pro Rio", texto: "Azul 4231, de Congonhas pro Santos Dumont.", icone: "✈️" },
     { hora: "09h30", titulo: "Pouso no Santos Dumont", texto: "Desembarque, retirada do equipamento e carro. Às 10h saímos direto pro Leblon.", icone: "🛬", lugar: { nome: "Santos Dumont", busca: SDU }, desloc: { modo: "aviao", tempo: "1h", minutos: 60, trajeto: "CGH → SDU", voo: "AZU4231" } },
-    { hora: rvHoraMais(SAIDA_SDU, T_SDU_FILE), titulo: "Almoço no Filé do Lira", texto: "Av. Ataulfo de Paiva, 658, loja B, Leblon. Almoço com calma até a saída das 13h.", icone: "🍽️", lugar: { nome: "Filé do Lira", busca: FILE_DO_LIRA }, desloc: T_SDU_FILE, destino: D_FILE },
+    { hora: rvHoraMais(SAIDA_SDU, T_SDU_FILE), titulo: "Tempo livre no Leblon / café", texto: "Chegada no Leblon. Tempo pra um café até o Filé do Lira abrir, às 11h.", icone: "☕", desloc: T_SDU_FILE, destino: D_FILE },
+    { hora: L_FILE.horario.abre, titulo: "Almoço no Filé do Lira (abre às 11h)", texto: "Av. Ataulfo de Paiva, 658, loja B, Leblon. Almoço com calma até a saída das 13h.", icone: "🍽️", lugar: L_FILE, refeicao: true },
     { hora: "13h00", titulo: "Saída pro Vidigal", texto: "Do Leblon de volta pras casas.", icone: "🚗" },
     { hora: "13h30", titulo: "Gravação com a Priscila", texto: "O Rômulo conduz a conversa com a Priscila e a gente percorre as casas do terreno.", icone: "🎬", destaque: true, foto: { src: `${IMG}/vista-1.webp`, alt: "Terraço da casa com vista mar" }, desloc: T_FILE_VIDIGAL, destino: D_VIDIGAL },
     { hora: "~19h45", titulo: "Saída pro Santos Dumont", texto: "Com folga pro embarque.", icone: "🚗", lugar: { nome: "Santos Dumont", busca: SDU } },
