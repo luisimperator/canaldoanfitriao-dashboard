@@ -11,8 +11,8 @@ const IMG = "/lp/rv-pedro";
 const SEDE = { endereco: "Rua Sapucaí, 185 - São Benedito, Poços de Caldas - MG", lat: -21.791864, lng: -46.5600206 };
 
 // Trechos de carro (minutos OSRM). O texto dos cards não cita tempo: o número só sai do cardzinho.
-const T_ESTRADA: Desloc = { carro: { osrm: 203.1, via: "estrada", picoSP: true }, trajeto: "Casa do Rômulo → Poços de Caldas" };
-const T_VOLTA: Desloc = { carro: { osrm: 206.7, via: "estrada" }, trajeto: "Sede → Casa do Rômulo" };
+const T_ESTRADA: Desloc = { carro: { osrm: 203.1, via: "estrada", picoSP: true }, trajeto: "Casa do Rômulo → Poços de Caldas", mapa: { src: `${IMG}/rota-estrada.webp`, alt: "Rota de São Paulo até Poços de Caldas", de: "São Paulo - SP", ate: "Poços de Caldas - MG" } };
+const T_VOLTA: Desloc = { carro: { osrm: 206.7, via: "estrada" }, trajeto: "Sede → Casa do Rômulo", mapa: { src: `${IMG}/rota-volta.webp`, alt: "Rota de Poços de Caldas de volta pra São Paulo", de: SEDE.endereco, ate: "São Paulo - SP" } };
 // Linha do tempo: cada chegada = saída + tempo do trecho.
 const H_SAIDA = "07h30";
 const H_ENCONTRO = rvHoraMais(H_SAIDA, RV_DESLOC_HD_ROMULO, false);
@@ -31,12 +31,12 @@ export const RV_PEDRO: OrdemDoDia = {
   quando: [["Quando", "Quarta, 09/12"], ["Gravação", "14h00"], ["Onde", "Poços de Caldas"]],
   agendaNota: "Horários de estrada estimados pra uma quarta-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.",
   agenda: [
-    { hora: H_SAIDA, titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
+    { hora: H_SAIDA, titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒", lugar: { nome: "Heavy Drops", busca: "Heavy Drops, Av. das Nações Unidas, 14401, Torre Tarumã, São Paulo - SP" } },
     { hora: H_ENCONTRO, titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO },
     { hora: H_ESTRADA, titulo: "Pé na estrada", texto: "Bandeirantes e as rodovias do interior até o sul de Minas, com uma parada no caminho.", icone: "🛣️" },
     { hora: rvHoraMais(H_ESTRADA, T_ESTRADA), titulo: "Chegada e almoço em Poços de Caldas", texto: "Tempo pra comer antes de começar.", icone: "🍽️", desloc: T_ESTRADA },
     { hora: "13h30", titulo: "Chegada na sede", texto: "Montagem de câmeras e luz, e um café com o Pedro.", icone: "🏢", desloc: { trajeto: "Almoço → Sede" }, destino: SEDE },
-    { hora: "14h00", titulo: "Gravação · Intelecto Stays", texto: "O Rômulo conduz a conversa com o Pedro sobre a operação, a equipe e os imóveis.", icone: "🎬", destaque: true, foto: { src: `${IMG}/ap401-1.webp`, alt: "Apartamento da Intelecto Stays" }, destino: SEDE },
+    { hora: "14h00", titulo: "Gravação · Intelecto Stays", texto: "O Rômulo conduz a conversa com o Pedro sobre a operação, a equipe e os imóveis.", icone: "🎬", destaque: true, foto: { src: `${IMG}/ap401-1.webp`, alt: "Apartamento da Intelecto Stays" }, destino: SEDE, lugar: { nome: "Intelecto Stays", busca: "Intelecto Stays, " + SEDE.endereco } },
     { hora: H_VOLTA, titulo: "Saída de volta", texto: "Equipamento guardado e estrada de volta pra São Paulo.", icone: "👋" },
     { hora: rvHoraMais(H_VOLTA, T_VOLTA), titulo: "Chegada na casa do Rômulo", texto: "Fim do dia.", icone: "🌙", desloc: T_VOLTA },
   ],

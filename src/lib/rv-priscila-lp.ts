@@ -6,8 +6,8 @@
 import type { Desloc, OrdemDoDia } from "@/lib/rv-ordem-lp";
 
 const IMG = "/lp/rv-priscila";
-// Rotas dos cards (miniaturas OSRM + OpenStreetMap em public/lp/rv-priscila/priscila-rota-*.webp);
-// o clique abre a rota no Google Maps.
+// Mapinhas de rota de cada trecho de carro (OSRM + OpenStreetMap em public/lp/rv-priscila/rota-*.webp);
+// o clique abre a rota no Google Maps. Nome de lugar no título abre a ficha do lugar (campo lugar).
 const SDU = "Aeroporto Santos Dumont, Rio de Janeiro - RJ";
 const FILE_DO_LIRA = "Filé do Lira, Av. Ataulfo de Paiva, 658, Leblon, Rio de Janeiro - RJ";
 const VIDIGAL = "Av. Presidente João Goulart, 906, Vidigal, Rio de Janeiro - RJ";
@@ -16,14 +16,12 @@ const VIDIGAL = "Av. Presidente João Goulart, 906, Vidigal, Rio de Janeiro - RJ
 const D_SDU = { endereco: SDU, lat: -22.9104541, lng: -43.1641922 };
 const D_FILE = { endereco: FILE_DO_LIRA, lat: -22.9851379, lng: -43.2259284 };
 const D_VIDIGAL = { endereco: VIDIGAL, lat: -22.9964932, lng: -43.2404694 };
-const rotaGoogle = (de: string, ate: string) =>
-  `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(de)}&destination=${encodeURIComponent(ate)}&travelmode=driving`;
 const fotos = (pre: string, alts: string[]) => alts.map((alt, i) => ({ src: `${IMG}/${pre}-${i + 1}.webp`, alt }));
 
-const T_SDU_VIDIGAL: Desloc = { carro: { osrm: 19.7, via: "urbano" }, trajeto: "Santos Dumont → Vidigal" };
-const T_VIDIGAL_FILE: Desloc = { carro: { osrm: 5.0, via: "urbano" }, trajeto: "Vidigal → Filé do Lira" };
-const T_FILE_VIDIGAL: Desloc = { carro: { osrm: 5.2, via: "urbano" }, trajeto: "Filé do Lira → Vidigal" };
-const T_VIDIGAL_SDU: Desloc = { carro: { osrm: 20.7, via: "urbano" }, trajeto: "Vidigal → Santos Dumont" };
+const T_SDU_VIDIGAL: Desloc = { carro: { osrm: 19.7, via: "urbano" }, trajeto: "Santos Dumont → Vidigal", mapa: { src: `${IMG}/rota-sdu-vidigal.webp`, alt: "Rota do aeroporto Santos Dumont até as casas do Vidigal", de: SDU, ate: VIDIGAL } };
+const T_VIDIGAL_FILE: Desloc = { carro: { osrm: 5.0, via: "urbano" }, trajeto: "Vidigal → Filé do Lira", mapa: { src: `${IMG}/rota-vidigal-file.webp`, alt: "Rota das casas do Vidigal até o Filé do Lira, no Leblon", de: VIDIGAL, ate: FILE_DO_LIRA } };
+const T_FILE_VIDIGAL: Desloc = { carro: { osrm: 5.2, via: "urbano" }, trajeto: "Filé do Lira → Vidigal", mapa: { src: `${IMG}/rota-file-vidigal.webp`, alt: "Rota do Filé do Lira de volta pras casas do Vidigal", de: FILE_DO_LIRA, ate: VIDIGAL } };
+const T_VIDIGAL_SDU: Desloc = { carro: { osrm: 20.7, via: "urbano" }, trajeto: "Vidigal → Santos Dumont", mapa: { src: `${IMG}/rota-vidigal-sdu.webp`, alt: "Rota das casas do Vidigal até o aeroporto Santos Dumont", de: VIDIGAL, ate: SDU } };
 
 export const RV_PRISCILA: OrdemDoDia = {
   expira: Date.parse("2026-12-09T00:00:00-03:00"),
@@ -37,16 +35,16 @@ export const RV_PRISCILA: OrdemDoDia = {
   quando: [["Quando", "Quarta, 02/12"], ["Voo de ida", "08h30"], ["Onde", "Vidigal · RJ"]],
   agendaNota: "Voos confirmados na Azul e gravação às 13h30. Os deslocamentos por terra são estimados.",
   agenda: [
-    { hora: "06h30", titulo: "Encontro em Congonhas", texto: "A equipe e o Rômulo se encontram no aeroporto, com câmeras, luz e áudio.", icone: "🎒", destino: { endereco: "Aeroporto de Congonhas, São Paulo - SP", lat: -23.6274146, lng: -46.655561 } },
+    { hora: "06h30", titulo: "Encontro em Congonhas", texto: "A equipe e o Rômulo se encontram no aeroporto, com câmeras, luz e áudio.", icone: "🎒", destino: { endereco: "Aeroporto de Congonhas, São Paulo - SP", lat: -23.6274146, lng: -46.655561 }, lugar: { nome: "Congonhas", busca: "Aeroporto de Congonhas, São Paulo - SP" } },
     { hora: "08h30", titulo: "Voo pro Rio", texto: "Azul 4231, de Congonhas pro Santos Dumont.", icone: "✈️" },
-    { hora: "09h30", titulo: "Pouso no Santos Dumont", texto: "Desembarque, retirada do equipamento e carro.", icone: "🛬", desloc: { modo: "aviao", tempo: "1h", minutos: 60, trajeto: "CGH → SDU", voo: "AZU4231" } },
+    { hora: "09h30", titulo: "Pouso no Santos Dumont", texto: "Desembarque, retirada do equipamento e carro.", icone: "🛬", lugar: { nome: "Santos Dumont", busca: SDU }, desloc: { modo: "aviao", tempo: "1h", minutos: 60, trajeto: "CGH → SDU", voo: "AZU4231" } },
     { hora: "~10h15", titulo: "Chegada e descarga", texto: "Descarregamos o equipamento nas casas.", icone: "📦", desloc: T_SDU_VIDIGAL, destino: D_VIDIGAL },
-    { hora: "~11h30", titulo: "Almoço no Filé do Lira", texto: "Av. Ataulfo de Paiva, 658, loja B, Leblon.", icone: "🍽️", rota: { src: `${IMG}/priscila-rota-almoco.webp`, alt: "Rota do aeroporto Santos Dumont até o Filé do Lira, no Leblon", href: rotaGoogle(SDU, FILE_DO_LIRA) }, desloc: T_VIDIGAL_FILE, destino: D_FILE },
-    { hora: "13h00", titulo: "Saída pro Vidigal", texto: "Do Leblon de volta pras casas.", icone: "🚗", rota: { src: `${IMG}/priscila-rota-vidigal.webp`, alt: "Rota do Filé do Lira até as casas da Priscila no Vidigal", href: rotaGoogle(FILE_DO_LIRA, VIDIGAL) } },
+    { hora: "~11h30", titulo: "Almoço no Filé do Lira", texto: "Av. Ataulfo de Paiva, 658, loja B, Leblon.", icone: "🍽️", lugar: { nome: "Filé do Lira", busca: FILE_DO_LIRA }, desloc: T_VIDIGAL_FILE, destino: D_FILE },
+    { hora: "13h00", titulo: "Saída pro Vidigal", texto: "Do Leblon de volta pras casas.", icone: "🚗" },
     { hora: "13h30", titulo: "Gravação com a Priscila", texto: "O Rômulo conduz a conversa com a Priscila e a gente percorre as casas do terreno.", icone: "🎬", destaque: true, foto: { src: `${IMG}/vista-1.webp`, alt: "Terraço da casa com vista mar" }, desloc: T_FILE_VIDIGAL, destino: D_VIDIGAL },
-    { hora: "~19h45", titulo: "Saída pro Santos Dumont", texto: "Com folga pro embarque.", icone: "🚗" },
+    { hora: "~19h45", titulo: "Saída pro Santos Dumont", texto: "Com folga pro embarque.", icone: "🚗", lugar: { nome: "Santos Dumont", busca: SDU } },
     { hora: "21h00", titulo: "Voo de volta", texto: "Azul 6403, do Santos Dumont pra Congonhas.", icone: "✈️", desloc: T_VIDIGAL_SDU, destino: D_SDU },
-    { hora: "22h10", titulo: "Pouso em Congonhas", texto: "Fim do dia.", icone: "🌙", desloc: { modo: "aviao", tempo: "1h10", minutos: 70, trajeto: "SDU → CGH", voo: "AZU6403" } },
+    { hora: "22h10", titulo: "Pouso em Congonhas", texto: "Fim do dia.", icone: "🌙", lugar: { nome: "Congonhas", busca: "Aeroporto de Congonhas, São Paulo - SP" }, desloc: { modo: "aviao", tempo: "1h10", minutos: 70, trajeto: "SDU → CGH", voo: "AZU6403" } },
   ],
   casas: [
     {

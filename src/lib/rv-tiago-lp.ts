@@ -20,7 +20,7 @@ export const RV_TIAGO: OrdemDoDia = {
   quando: [["Quando", "Segunda, 07/12"], ["Gravação", "13h00"], ["Onde", "A definir"]],
   agendaNota: "O local da gravação ainda está em definição. Assim que fechar, a gente atualiza os horários de saída e chegada.",
   agenda: [
-    { hora: "A definir", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio. O horário depende do local.", icone: "🎒" },
+    { hora: "A definir", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio. O horário depende do local.", icone: "🎒", lugar: { nome: "Heavy Drops", busca: "Heavy Drops, Av. das Nações Unidas, 14401, Torre Tarumã, São Paulo - SP" } },
     { hora: "A definir", titulo: "Encontro com o Rômulo", texto: "O time se junta ao Rômulo e segue no carro dele.", icone: "🤝", desloc: RV_DESLOC_HD_ROMULO },
     { hora: "A definir", titulo: "Chegada no local", texto: "Montagem de câmeras e luz, e um café com o Tiago e o sócio.", icone: "📍", desloc: { trajeto: "Casa do Rômulo → local da gravação" } },
     { hora: "13h00", titulo: "Gravação · Host Gestão", texto: "O Rômulo conduz a conversa com o Tiago e o sócio. Cerca de 3h.", icone: "🎬", destaque: true, foto: { src: `${IMG}/escritorio-1.webp`, alt: "Escritório da Host Gestão" } },
