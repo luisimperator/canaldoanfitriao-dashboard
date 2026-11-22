@@ -268,7 +268,7 @@ ${RV_NAV_CSS}
 </head>
 <body>
 <header class="hero">
-  <picture><img src="${IMG}/praia-topo.webp" alt="Vista para o mar e Ilhabela da casa da Praia Deserta" width="1440" height="1078" fetchpriority="high"></picture>
+  <picture><img src="${IMG}/praia-topo.webp" alt="Vista para o mar e Ilhabela da casa da Praia Deserta" width="1440" height="1080" fetchpriority="high"></picture>
   <div class="topo">
     <div class="marca"><img src="/marca/cda-icone.png" alt="" width="34" height="34">Canal do Anfitrião</div>
     <span class="pill">Ordem do dia</span>
