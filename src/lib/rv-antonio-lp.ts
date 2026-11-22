@@ -13,12 +13,12 @@ export const RV_ANTONIO_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 const IMG = "/lp/rv-antonio";
 
 // ---------- conteúdo ----------
-const AGENDA: { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string } }[] = [
+const AGENDA: { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string }; link?: { href: string; label: string } }[] = [
   { hora: "07h30", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
   { hora: "08h15", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo.", icone: "🤝" },
   { hora: "08h30", titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e Tamoios, com uma parada rápida no caminho.", icone: "🛣️" },
   { hora: "~12h00", titulo: "Chegada em São Sebastião", texto: "Cerca de 3h30 de estrada numa sexta de manhã.", icone: "🌊" },
-  { hora: "12h15", titulo: "Almoço com calma", texto: "Tempo pra comer bem antes de começar.", icone: "🍽️" },
+  { hora: "12h15", titulo: "Almoço no Família Restaurante", texto: "Av. Dr. Altino Arantes, 58, na Rua da Praia, centro histórico de São Sebastião.", icone: "🍽️", link: { href: "https://www.google.com/maps/search/?api=1&query=Fam%C3%ADlia%20Restaurante%2C%20Av.%20Dr.%20Altino%20Arantes%2C%2058%2C%20S%C3%A3o%20Sebasti%C3%A3o%20-%20SP", label: "Ver no mapa ↗" } },
   { hora: "13h30", titulo: "Chegada na casa", texto: "Montagem de câmeras e luz, e um café com o Antonio.", icone: "🏡" },
   { hora: "14h00", titulo: "Gravação 1 · Casa da piscina", texto: "O Rômulo conduz a conversa com o Antonio e a gente percorre a casa.", icone: "🎬", destaque: true, foto: { src: `${IMG}/antonio-1.webp`, alt: "Casa da piscina" } },
   { hora: "16h15", titulo: "Rumo à Praia Deserta", texto: "Uns 5 minutos de carro até a segunda casa.", icone: "🚗" },
@@ -161,6 +161,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
 .tl .c{margin-left:10px;padding:12px 16px;border-radius:16px;background:var(--noite2);border:1px solid var(--linha)}
 .tl .c b{display:block;font-size:16px;letter-spacing:-.01em}
 .tl .c span{display:block;font-size:14px;color:var(--cinza);line-height:1.45}
+.tl .c a.mapa{display:inline-block;margin-top:6px;font-size:13px;font-weight:700;color:#ffb4a2;text-decoration:none}
 .tl li.on .ic{background:var(--grad);border-color:transparent;box-shadow:0 10px 26px -10px rgba(230,30,77,.9)}
 .tl li.on .c{background:linear-gradient(100deg,rgba(255,138,101,.16),rgba(189,30,89,.1));border-color:rgba(255,56,92,.4)}
 .tl li.on .h{color:#ffb4a2}
@@ -277,7 +278,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
       <p>Horários de estrada estimados pra uma sexta-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.</p>
     </div>
     <ol class="tl">
-      ${AGENDA.map((a) => `<li${a.destaque ? ' class="on"' : ""}><span class="h">${a.hora}</span><span class="ic">${a.icone}</span>${a.foto ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span></div><img class="mini" src="${a.foto.src}" alt="${a.foto.alt}" loading="lazy" width="72" height="72"></div>` : `<div class="c"><b>${a.titulo}</b><span>${a.texto}</span></div>`}</li>`).join("\n      ")}
+      ${AGENDA.map((a) => `<li${a.destaque ? ' class="on"' : ""}><span class="h">${a.hora}</span><span class="ic">${a.icone}</span>${a.foto ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span></div><img class="mini" src="${a.foto.src}" alt="${a.foto.alt}" loading="lazy" width="72" height="72"></div>` : `<div class="c"><b>${a.titulo}</b><span>${a.texto}</span>${a.link ? `<a class="mapa" href="${a.link.href.replace(/&/g, "&amp;")}" target="_blank" rel="noopener">${a.link.label}</a>` : ""}</div>`}</li>`).join("\n      ")}
     </ol>
   </section>
 
