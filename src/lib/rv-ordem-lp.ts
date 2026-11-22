@@ -18,9 +18,29 @@ export type Passo = { hora: string; titulo: string; texto: string; icone: string
   desloc?: Desloc;
   // Lugar com nome próprio citado no título (restaurante, aeroporto, hotel): o nome vira link discreto pra
   // ficha do lugar no Google Maps (fotos/avaliações), não pra rota. A rota fica nos botõezinhos.
-  lugar?: Lugar };
+  lugar?: Lugar;
+  // Passo de refeição (almoço, jantar, café) no `lugar`: se o lugar tem `horario`, a hora do passo nunca pode
+  // ser antes da abertura (rvOrdemHtml para com erro). Chegou antes? Põe um passo de tempo livre até abrir.
+  refeicao?: boolean };
 // nome = trecho exato do título que vira link; busca = nome + endereço; placeId opcional (query_place_id).
-export type Lugar = { nome: string; busca: string; placeId?: string };
+// horario: funcionamento do lugar (restaurante etc.), guardado junto dele. abre/fecha "11h00"; dias = texto
+// ("seg-sáb"); fonte = de onde veio. Regra: refeição marcada nesse lugar só a partir de `abre`.
+export type Lugar = { nome: string; busca: string; placeId?: string;
+  horario?: { abre: string; fecha?: string; dias?: string; fonte?: string } };
+const rvMinDoDia = (hora: string): number | undefined => {
+  const m = /(\d{1,2})h(\d{2})?/.exec(hora);
+  return m ? Number(m[1]) * 60 + Number(m[2] ?? 0) : undefined;
+};
+// Confere a regra da abertura em todos os passos de refeição. Lança erro com o passo culpado.
+export function rvConfereAbertura(agenda: Passo[]): void {
+  for (const a of agenda) {
+    const abre = a.refeicao ? a.lugar?.horario?.abre : undefined;
+    if (!abre) continue;
+    const h = rvMinDoDia(a.hora), ab = rvMinDoDia(abre);
+    if (h !== undefined && ab !== undefined && h < ab)
+      throw new Error(`rvConfereAbertura: "${a.titulo}" às ${a.hora}, mas ${a.lugar!.nome} só abre às ${abre}`);
+  }
+}
 export function rvLugarLink(l: Lugar): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.busca)}` +
     (l.placeId ? `&query_place_id=${encodeURIComponent(l.placeId)}` : "");
@@ -253,6 +273,7 @@ function mapa(m: Mapa): string {
 }
 
 export function rvOrdemHtml(o: OrdemDoDia): string {
+  rvConfereAbertura(o.agenda);
   const casasHtml = o.casas.map((c, i) => casa(c, i + 1));
   const corpo = o.mapa && casasHtml.length >= 2 ? [casasHtml[0], mapa(o.mapa), ...casasHtml.slice(1)] : casasHtml;
   return `<!doctype html>
