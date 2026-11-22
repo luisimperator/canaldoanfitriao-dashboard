@@ -13,13 +13,20 @@ export const RV_ANTONIO_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 const IMG = "/lp/rv-antonio";
 
 // ---------- conteúdo ----------
-const AGENDA: { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string }; link?: { href: string; label: string } }[] = [
+// Rotas dos cards (miniaturas OSRM + OpenStreetMap em public/lp/rv-antonio/antonio-rota-*.webp);
+// o clique abre a rota no Google Maps.
+const RESTAURANTE = "Família Restaurante, Av. Dr. Altino Arantes, 58, São Sebastião - SP";
+const CASA_ANTONIO = "-23.77396,-45.40403"; // ponto aproximado do Airbnb (pino 1 do mapa.webp)
+const rotaGoogle = (de: string, ate: string) =>
+  `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(de)}&destination=${encodeURIComponent(ate)}&travelmode=driving`;
+
+const AGENDA: { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string }; rota?: { src: string; alt: string; href: string } }[] = [
   { hora: "07h30", titulo: "Saída da Heavy Drops", texto: "A equipe sai de São Paulo com câmeras, luz e áudio.", icone: "🎒" },
   { hora: "08h15", titulo: "Encontro com o Rômulo", texto: "Ainda em São Paulo, o time se junta ao Rômulo.", icone: "🤝" },
   { hora: "08h30", titulo: "Pé na estrada", texto: "Ayrton Senna, Carvalho Pinto e Tamoios, com uma parada rápida no caminho.", icone: "🛣️" },
   { hora: "~12h00", titulo: "Chegada em São Sebastião", texto: "Cerca de 3h30 de estrada numa sexta de manhã.", icone: "🌊" },
-  { hora: "12h15", titulo: "Almoço no Família Restaurante", texto: "Av. Dr. Altino Arantes, 58, na Rua da Praia, centro histórico de São Sebastião.", icone: "🍽️", link: { href: "https://www.google.com/maps/search/?api=1&query=Fam%C3%ADlia%20Restaurante%2C%20Av.%20Dr.%20Altino%20Arantes%2C%2058%2C%20S%C3%A3o%20Sebasti%C3%A3o%20-%20SP", label: "Ver no mapa ↗" } },
-  { hora: "13h30", titulo: "Chegada na casa", texto: "Montagem de câmeras e luz, e um café com o Antonio.", icone: "🏡" },
+  { hora: "12h15", titulo: "Almoço no Família Restaurante", texto: "Av. Dr. Altino Arantes, 58, na Rua da Praia, centro histórico de São Sebastião.", icone: "🍽️", rota: { src: `${IMG}/antonio-rota-almoco.webp`, alt: "Rota de São Paulo até o Família Restaurante, em São Sebastião", href: rotaGoogle("Brás, São Paulo - SP", RESTAURANTE) } },
+  { hora: "13h30", titulo: "Chegada na casa", texto: "Montagem de câmeras e luz, e um café com o Antonio.", icone: "🏡", rota: { src: `${IMG}/antonio-rota-casa.webp`, alt: "Rota do Família Restaurante até a casa do Antonio", href: rotaGoogle(RESTAURANTE, CASA_ANTONIO) } },
   { hora: "14h00", titulo: "Gravação 1 · Casa da piscina", texto: "O Rômulo conduz a conversa com o Antonio e a gente percorre a casa.", icone: "🎬", destaque: true, foto: { src: `${IMG}/antonio-1.webp`, alt: "Casa da piscina" } },
   { hora: "16h15", titulo: "Rumo à Praia Deserta", texto: "Uns 5 minutos de carro até a segunda casa.", icone: "🚗" },
   { hora: "16h25", titulo: "Gravação 2 · Casa vista mar", texto: "Gravação curta, aproveitando a luz do fim de tarde.", icone: "🎬", destaque: true, foto: { src: `${IMG}/praia-1.webp`, alt: "Casa vista mar na Praia Deserta" } },
@@ -161,7 +168,9 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
 .tl .c{margin-left:10px;padding:12px 16px;border-radius:16px;background:var(--noite2);border:1px solid var(--linha)}
 .tl .c b{display:block;font-size:16px;letter-spacing:-.01em}
 .tl .c span{display:block;font-size:14px;color:var(--cinza);line-height:1.45}
-.tl .c a.mapa{display:inline-block;margin-top:6px;font-size:13px;font-weight:700;color:#ffb4a2;text-decoration:none}
+.tl .c a.ver-rota{display:inline-block;margin-top:6px;font-size:13px;font-weight:700;color:#ffb4a2;text-decoration:none}
+.tl .c a.mini-rota{flex:none;display:block;line-height:0}
+.tl .c a.mini-rota .mini{width:96px;height:72px}
 .tl li.on .ic{background:var(--grad);border-color:transparent;box-shadow:0 10px 26px -10px rgba(230,30,77,.9)}
 .tl li.on .c{background:linear-gradient(100deg,rgba(255,138,101,.16),rgba(189,30,89,.1));border-color:rgba(255,56,92,.4)}
 .tl li.on .h{color:#ffb4a2}
@@ -236,6 +245,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
   .tl .c{margin-left:8px;padding:10px 13px}
   .tl .c b{font-size:15px}
   .tl .c span{font-size:13px}
+  .tl .c a.mini-rota .mini{width:84px;height:64px;border-radius:11px}
   .tl .c .mini{width:64px;height:64px;border-radius:11px}
   .tl .c.tem-foto{gap:10px;padding-right:10px}
   .obs{margin-left:0}
@@ -278,7 +288,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
       <p>Horários de estrada estimados pra uma sexta-feira. Se o trânsito mudar alguma coisa, a gente avisa pelo grupo.</p>
     </div>
     <ol class="tl">
-      ${AGENDA.map((a) => `<li${a.destaque ? ' class="on"' : ""}><span class="h">${a.hora}</span><span class="ic">${a.icone}</span>${a.foto ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span></div><img class="mini" src="${a.foto.src}" alt="${a.foto.alt}" loading="lazy" width="72" height="72"></div>` : `<div class="c"><b>${a.titulo}</b><span>${a.texto}</span>${a.link ? `<a class="mapa" href="${a.link.href.replace(/&/g, "&amp;")}" target="_blank" rel="noopener">${a.link.label}</a>` : ""}</div>`}</li>`).join("\n      ")}
+      ${AGENDA.map((a) => `<li${a.destaque ? ' class="on"' : ""}><span class="h">${a.hora}</span><span class="ic">${a.icone}</span>${a.rota ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span><a class="ver-rota" href="${a.rota.href.replace(/&/g, "&amp;")}" target="_blank" rel="noopener">Ver rota no mapa ↗</a></div><a class="mini-rota" href="${a.rota.href.replace(/&/g, "&amp;")}" target="_blank" rel="noopener" aria-label="Abrir rota no Google Maps"><img class="mini" src="${a.rota.src}" alt="${a.rota.alt}" loading="lazy" width="96" height="72"></a></div>` : a.foto ? `<div class="c tem-foto"><div><b>${a.titulo}</b><span>${a.texto}</span></div><img class="mini" src="${a.foto.src}" alt="${a.foto.alt}" loading="lazy" width="72" height="72"></div>` : `<div class="c"><b>${a.titulo}</b><span>${a.texto}</span></div>`}</li>`).join("\n      ")}
     </ol>
   </section>
 

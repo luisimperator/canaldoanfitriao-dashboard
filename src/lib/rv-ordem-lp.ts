@@ -7,7 +7,9 @@
 
 export const RV_DEPOIS = "https://www.youtube.com/@canaldoanfitriao";
 
-export type Passo = { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string } };
+export type Passo = { hora: string; titulo: string; texto: string; icone: string; destaque?: boolean; foto?: { src: string; alt: string };
+  // Miniatura de mapa com a rota do deslocamento (imagem OSRM + OSM); o clique abre `href` (Google Maps).
+  rota?: { src: string; alt: string; href: string } };
 export type Foto = { src: string; alt: string };
 export type Casa = { id: string; rotulo: string; nome: string; endereco: string; endSub: string; link?: string; fotos: Foto[]; resumo: string };
 export type Mapa = {
@@ -166,6 +168,9 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
 .tl .c.tem-foto{display:flex;align-items:center;gap:12px}
 .tl .c.tem-foto>div{flex:1;min-width:0}
 .tl .c .mini{flex:none;width:72px;height:72px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 20px -10px rgba(0,0,0,.8)}
+.tl .c a.ver-rota{display:inline-block;margin-top:6px;font-size:13px;font-weight:700;color:#ffb4a2;text-decoration:none}
+.tl .c a.mini-rota{flex:none;display:block;line-height:0}
+.tl .c a.mini-rota .mini{width:96px;height:72px}
 .obs{margin:14px 0 0 140px;font-size:13px;color:#8f8893}
 
 /* casas */
@@ -236,6 +241,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
   .tl .c b{font-size:15px}
   .tl .c span{font-size:13px}
   .tl .c .mini{width:64px;height:64px;border-radius:11px}
+  .tl .c a.mini-rota .mini{width:84px;height:64px;border-radius:11px}
   .tl .c.tem-foto{gap:10px;padding-right:10px}
   .obs{margin-left:0}
   .grade{grid-template-columns:1fr 1fr;grid-template-rows:2fr 1fr 1fr;height:auto;aspect-ratio:3/4}
@@ -276,7 +282,7 @@ h1 .serif{font-size:1.1em;letter-spacing:-.01em}
       <p>${esc(o.agendaNota)}</p>
     </div>
     <ol class="tl">
-      ${o.agenda.map((a) => `<li${a.destaque ? ' class="on"' : ""}><span class="h">${esc(a.hora)}</span><span class="ic">${a.icone}</span>${a.foto ? `<div class="c tem-foto"><div><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div><img class="mini" src="${a.foto.src}" alt="${esc(a.foto.alt)}" loading="lazy" width="72" height="72"></div>` : `<div class="c"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div>`}</li>`).join("\n      ")}
+      ${o.agenda.map((a) => `<li${a.destaque ? ' class="on"' : ""}><span class="h">${esc(a.hora)}</span><span class="ic">${a.icone}</span>${a.rota ? `<div class="c tem-foto"><div><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span><a class="ver-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener">Ver rota no mapa ↗</a></div><a class="mini-rota" href="${esc(a.rota.href)}" target="_blank" rel="noopener" aria-label="Abrir rota no Google Maps"><img class="mini" src="${a.rota.src}" alt="${esc(a.rota.alt)}" loading="lazy" width="96" height="72"></a></div>` : a.foto ? `<div class="c tem-foto"><div><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div><img class="mini" src="${a.foto.src}" alt="${esc(a.foto.alt)}" loading="lazy" width="72" height="72"></div>` : `<div class="c"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div>`}</li>`).join("\n      ")}
     </ol>
   </section>
 
