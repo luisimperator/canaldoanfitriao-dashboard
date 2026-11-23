@@ -9,6 +9,11 @@ import { ALL_TAB_HREFS, canAccess, tabForPath } from "@/lib/access";
 // public/lp/): pública nos dois domínios.
 const LP_IMERSAO = "/imersao-chuva-de-reservas-airbnb";
 // /t/pv e /t/click: contador próprio da LP (sendBeacon), também público.
+// /internos/ com dado sensível: exige o login do painel (e a aba liberada).
+const INTERNOS_COM_LOGIN = ["/internos/assinaturas"];
+function ehInternoComLogin(p: string): boolean {
+  return INTERNOS_COM_LOGIN.some((x) => p === x || p.startsWith(x + "/"));
+}
 function ehLpPublica(p: string): boolean {
   return (
     p === LP_IMERSAO ||
@@ -16,8 +21,9 @@ function ehLpPublica(p: string): boolean {
     p.startsWith("/lp/") ||
     // LP da corrida (/corrida redireciona pra /corrida-anfitriao) e a marca que ela usa.
     p === "/corrida-anfitriao" || p === "/corrida" ||
-    // Páginas internas (ex.: ordem do dia do Rômulo Visita).
-    p.startsWith("/internos/") ||
+    // Páginas internas (ex.: ordem do dia do Rômulo Visita). A aba
+    // Assinaturas tem dado de aluno e fica atrás do login (ehInternoComLogin).
+    (p.startsWith("/internos/") && !ehInternoComLogin(p)) ||
     // LP do Max (análise grátis no WhatsApp) e o rosto dele.
     p === "/max" || p.startsWith("/max/") ||
     p.startsWith("/marca/") ||
@@ -41,6 +47,10 @@ export async function proxy(request: NextRequest) {
     }
     if (p === "/imersao" || p === "/vip" || p.startsWith("/i/") || ehLpPublica(p)) return NextResponse.next();
     if (p.startsWith("/r/")) return NextResponse.next();
+    // Interno com login: no subdomínio de links não tem sessão; manda pro painel.
+    if (ehInternoComLogin(p)) {
+      return NextResponse.redirect(`https://painel.canaldoanfitriao.com.br${p}${request.nextUrl.search}`);
+    }
     const u = request.nextUrl.clone();
     u.pathname = `/r${p}`; // /<slug> -> /r/<slug>
     return NextResponse.rewrite(u);
