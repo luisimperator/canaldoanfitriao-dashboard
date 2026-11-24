@@ -21,6 +21,8 @@ function ehLpPublica(p: string): boolean {
     p.startsWith("/lp/") ||
     // LP da corrida (/corrida redireciona pra /corrida-anfitriao) e a marca que ela usa.
     p === "/corrida-anfitriao" || p === "/corrida" ||
+    // LP do low ticket Airbnb do Zero.
+    p === "/airbnb-do-zero" ||
     // Páginas internas (ex.: ordem do dia do Rômulo Visita). A aba
     // Assinaturas tem dado de aluno e fica atrás do login (ehInternoComLogin).
     (p.startsWith("/internos/") && !ehInternoComLogin(p)) ||
