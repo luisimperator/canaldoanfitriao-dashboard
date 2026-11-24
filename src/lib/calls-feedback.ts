@@ -23,8 +23,18 @@ const FATOS_BLACK = [
   "Black Friday (combo vitalício), até o fim da campanha:",
   "- Aluno ou ex-aluno (inclui quem é/foi do Gigantes, fez imersão ou foi a Encontro): R$ 4.997 à vista ou 12x de R$ 499,70. Não aluno: R$ 8.997 ou 12x de R$ 899,71.",
   "- Inclui: Anfitrião 5 Estrelas, Gigantes, Sublocação, Booking, Decoração e Fotografia vitalícios; 4 anos das comunidades (Anfitrião 5 Estrelas e Gigantes) com o Max (assistente de IA) junto; 1 ingresso Standard do Encontro 2027 (pros 100 primeiros) — o 2º ingresso sai com 20% de desconto (Fernando, 18/11: é 1 ingresso, não 2).",
-  "- Garantia da Black: 7 dias. Dividir em 2 cartões: só na Black e na Renovação.",
+  "- Garantia da Black: 7 dias.",
   "- Pra aluno, a conta que vende: renovar o Anfitrião 5 Estrelas custa R$ 997/ano (4 anos = R$ 3.988); na Black o curso fica vitalício, com as duas comunidades por 4 anos, o Max e o ingresso.",
+].join("\n");
+
+// Formas de pagamento (Fernando e Gusta, 24/11, no grupo Feedbacks Calls, via
+// Foley): o feedback da call do Leandro marcou como condição errada o Flávio
+// oferecer dois cartões no Anfitrião 5 Estrelas ("não existe Pix + cartão nem
+// dois cartões"). Existe, em todos os produtos; o que se cobra é o uso.
+const FATOS_PAGAMENTO = [
+  "- Duas formas de pagamento (parte no Pix e parte no cartão) e dois cartões são possíveis em todos os produtos, inclusive no Anfitrião 5 Estrelas e no Gigantes. Nunca escreva que não existe nem trate como condição errada.",
+  "- Padrão na call: apresentar 12x no cartão ou Pix, com o preço à vista e o parcelado. Dois cartões ou duas formas entram só pra quebrar objeção quando a trava é o limite do cartão.",
+  "- No feedback: usou pra quebrar objeção de limite = acerto. Ofereceu de cara, sem objeção = ponto a ajustar (não é erro de condição).",
 ].join("\n");
 
 // Ingresso do Encontro: o 2º com 20% vale em qualquer compra de ingresso
@@ -80,6 +90,7 @@ export async function tabelaDePrecos(supabase: SupabaseClient): Promise<string> 
   return [
     `# Tabela de preços e condições\n${(cfg?.precos as string | null) ?? ""}`,
     blackAtiva ? `# Black\n${FATOS_BLACK}` : null,
+    `# Formas de pagamento\n${FATOS_PAGAMENTO}`,
     `# Encontro 2027 (ingresso)\n${FATOS_ENCONTRO}`,
     cupons ? `# Escada de desconto (cupons; um degrau por vez, só depois de tratar o "caro")\n${cupons}` : null,
   ]
