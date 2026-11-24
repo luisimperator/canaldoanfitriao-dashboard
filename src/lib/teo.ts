@@ -432,6 +432,127 @@ export function paraClaude(msgs: MsgUnnichat[], instrucaoFinal?: string): Anthro
   return turnos.map((t) => ({ role: t.role, content: conteudo(t.partes) }));
 }
 
+// ---------- revisão do acompanhamento com a janela de 24h fechada ----------
+
+// Com a janela fechada, o acompanhamento é um modelo aprovado, e ele saía sem
+// ninguém ler a conversa. A Thalita (convidada do Rômulo Visita) ouviu do Téo
+// "não vou mais te incomodar com oferta", a ficha dizia "não mandar mais nada
+// comercial" e ela recebeu três modelos (18, 20 e 24/11), o último perguntando
+// se tinha desistido do projeto de temporada (Fernando, 24/11: "achei essa
+// abordagem escrota"). Antes de cada modelo sair, o modelo de acompanhamento lê
+// a ficha e o fim da conversa e diz se cabe mandar.
+export interface RevisaoAcompanhamento {
+  decisao: "enviar" | "pular" | "encerrar";
+  motivo: string;
+  uso: UsoTeo;
+}
+
+const PROMPT_REVISAO = `Você revisa os acompanhamentos do Téo, o assistente do Canal do Anfitrião (cursos do Rômulo Villela pra anfitriões de Airbnb) que conversa com leads e alunos pelo WhatsApp. Quando alguém para de responder, o Téo manda mensagens prontas de acompanhamento pra retomar a conversa. Você recebe a ficha da pessoa, o fim da conversa e a mensagem pronta que está na vez, e decide se ela deve sair.
+
+Responda com UMA palavra na primeira linha e, na segunda, o motivo em até 15 palavras.
+
+ENCERRAR: não deve sair esta nem as próximas. Use quando houver sinal claro, que você consiga apontar na ficha ou na conversa, de que procurar a pessoa de novo é inconveniente:
+- ela disse que não tem interesse, recusou, pediu pra parar ou pra não ser chamada;
+- o Téo ou alguém do time disse que não ia mais procurar, oferecer ou incomodar, ou combinou que ela chama quando quiser;
+- a ficha diz pra não mandar, não oferecer ou não insistir;
+- ela já comprou o que estava sendo oferecido, ou já tem tudo, e não ficou pergunta dela sem resposta;
+- ela não é lead de venda: convidada ou parceira do canal, alguém do time, fornecedor, ou só veio resolver suporte;
+- ela reclamou, está insatisfeita ou a conversa terminou mal.
+
+PULAR: só esta mensagem não cabe, as próximas podem caber. Use quando o texto dela não combina com o que foi conversado (por exemplo, pergunta se a pessoa desistiu de um projeto que ela já toca, ou pede um horário que ela já deu) ou quando a pessoa avisou que volta numa data que ainda não chegou.
+
+ENVIAR: o caso comum. A pessoa estava no meio da conversa (qualificação, oferta de call, preço, dúvida) e simplesmente parou de responder. Sumir no meio da conversa não é recusa: o acompanhamento é parte normal da venda. Na dúvida entre ENVIAR e PULAR, ENVIAR.`;
+
+function linhaDaRevisao(m: MsgUnnichat): string | null {
+  const txt = textoDaMensagem(m);
+  if (!txt) return null;
+  const quem = m.type === "note" ? "NOTA INTERNA (a pessoa não vê)" : m.senderBy === "contact" ? "PESSOA" : "TÉO/TIME";
+  const dia = new Date(m.date).toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `[${dia}] ${quem}: ${txt.slice(0, 700)}`;
+}
+
+export async function revisarAcompanhamento(opts: {
+  nome: string | null;
+  ficha: string | null;
+  msgs: MsgUnnichat[];
+  /** etapa do acompanhamento que está na vez (1 = primeira) */
+  etapa: number;
+  total: number;
+  /** corpo do modelo aprovado que vai sair, se conhecido */
+  textoDoModelo: string | null;
+}): Promise<RevisaoAcompanhamento> {
+  const linhas = opts.msgs
+    .slice(-30)
+    .map(linhaDaRevisao)
+    .filter((l): l is string => Boolean(l));
+  const ultimaDaPessoa = [...opts.msgs].reverse().find((m) => m.senderBy === "contact");
+  const dias = ultimaDaPessoa ? Math.floor((Date.now() - new Date(ultimaDaPessoa.date).getTime()) / 86400_000) : null;
+  const pedido = [
+    `Pessoa: ${opts.nome?.trim() || "(sem nome)"}`,
+    `Ficha:\n${opts.ficha?.trim() || "(vazia)"}`,
+    `Fim da conversa (da mais antiga pra mais nova):\n${linhas.join("\n") || "(sem mensagens)"}`,
+    `Mensagem pronta que está na vez (acompanhamento ${opts.etapa} de ${opts.total}${
+      dias === null ? "; a pessoa nunca escreveu" : `; a última mensagem da pessoa foi há ${dias} dia(s)`
+    }):\n${opts.textoDoModelo ? `"${opts.textoDoModelo}"` : "(texto não cadastrado: é uma mensagem curta puxando a conversa de volta)"}`,
+  ].join("\n\n");
+
+  const client = new Anthropic();
+  const modelos = [...new Set([MODEL_ACOMPANHAMENTO, MODEL, FALLBACK_MODEL])];
+  let resp: Anthropic.Message | null = null;
+  let usado = modelos[0];
+  for (const modelo of modelos) {
+    try {
+      resp = await client.messages.create({
+        model: modelo,
+        max_tokens: 2048,
+        system: PROMPT_REVISAO,
+        messages: [{ role: "user", content: pedido }],
+        thinking: { type: "adaptive" },
+        output_config: { effort: "low" },
+      });
+      usado = modelo;
+      break;
+    } catch (e) {
+      // Se um modelo sumir (404), cai pro próximo da lista.
+      if (e instanceof Anthropic.NotFoundError && modelo !== modelos[modelos.length - 1]) continue;
+      throw e;
+    }
+  }
+  if (!resp) throw new Error("revisão do acompanhamento: sem resposta do modelo");
+  const texto = resp.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("\n")
+    .trim();
+  const achou = texto.match(/\b(ENCERRAR|PULAR|ENVIAR)\b/i);
+  if (!achou) throw new Error(`revisão do acompanhamento sem decisão: ${texto.slice(0, 120) || resp.stop_reason}`);
+  const palavra = achou[1].toUpperCase();
+  const motivo = texto
+    .slice((achou.index ?? 0) + achou[1].length)
+    .replace(/^[\s:.\-–—]+/, "")
+    .split("\n")[0]
+    .trim()
+    .slice(0, 200);
+  return {
+    decisao: palavra === "ENCERRAR" ? "encerrar" : palavra === "PULAR" ? "pular" : "enviar",
+    motivo,
+    uso: {
+      modelo: usado,
+      chamadas: 1,
+      entrada: resp.usage.input_tokens,
+      cache_lido: resp.usage.cache_read_input_tokens ?? 0,
+      cache_gravado: resp.usage.cache_creation_input_tokens ?? 0,
+      saida: resp.usage.output_tokens,
+    },
+  };
+}
+
 // Se a API recusar uma imagem (arquivo corrompido, formato estranho), a
 // conversa não pode travar: tira as imagens e tenta de novo só com a leitura.
 function semImagens(messages: Anthropic.MessageParam[]): Anthropic.MessageParam[] | null {

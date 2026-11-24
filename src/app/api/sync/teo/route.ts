@@ -10,10 +10,12 @@ import {
   historico,
   ouvirAudios,
   verImagens,
+  revisarAcompanhamento,
   rodarTeo,
   unnichat,
   type LeadTeo,
   type MsgUnnichat,
+  type RevisaoAcompanhamento,
 } from "@/lib/teo";
 
 // Téo, versão 1: roda a cada minuto (cron da Vercel). Para cada conversa
@@ -127,6 +129,8 @@ interface Config {
   tag_teo_id: string | null;
   followup_horas: number[] | null;
   followup_templates: string[] | null;
+  /** Corpo de cada modelo de acompanhamento, na mesma ordem ({{1}} = primeiro nome), pra revisão ler (migration 0147). */
+  followup_textos?: string[] | null;
   teams_tenant_id: string | null;
   teams_client_id: string | null;
   teams_organizador: string | null;
@@ -2004,7 +2008,8 @@ async function acompanhar(
   cfg: Config,
   telefone: string,
   ultima: MsgUnnichat | undefined,
-  janelaAberta: boolean
+  janelaAberta: boolean,
+  msgs: MsgUnnichat[]
 ): Promise<{ status: string; retomar?: string }> {
   const agora = Date.now();
   const ocioso = ultima ? agora - new Date(ultima.date).getTime() : Infinity;
@@ -2150,7 +2155,7 @@ async function acompanhar(
         `Este é o acompanhamento ${etapa + 1} de ${horas.length}. Mande UMA mensagem curta retomando de onde a conversa parou: ` +
         `se você tinha oferecido horários de call, ofereça de novo (pode trocar por outros da lista "Horários livres"), a não ser que você esteja na venda direta (aí retome a venda, não a call, pelo roteiro por permissão: se ela ainda não pediu o preço, não mande preço; retome com um \"quer saber mais?\" ou um \"faz sentido pra você?\" ligado ao que ela contou); ` +
         `se tinha feito uma pergunta, retome por outro ângulo. Nada de cobrar, de "passando pra saber" nem de repetir a mensagem anterior. ` +
-        `Se a pessoa disse claramente que não tem interesse ou pediu pra não ser chamada, responda só [ENCERRAR] (a conversa fecha e não sai mais nenhum acompanhamento). ` +
+        `Responda só [ENCERRAR] (a conversa fecha e não sai mais nenhum acompanhamento; se ela escrever de novo, você responde normalmente) quando procurar de novo for inconveniente: a pessoa disse claramente que não tem interesse, recusou ou pediu pra não ser chamada; você ou alguém do time disse que não ia mais procurar, oferecer ou incomodar, ou combinou que ela chama quando quiser; a ficha diz pra não mandar, não oferecer ou não insistir; ela já tem tudo o que você teria pra oferecer; ou ela não é lead de venda (convidada ou parceira do canal, alguém do time, só suporte). ` +
         `Se só não fizer sentido escrever agora (por exemplo, até aqui só chegou resposta automática do WhatsApp dela), responda só [SEM_RESPOSTA] e esta etapa é pulada.]`,
     };
   }
@@ -2163,6 +2168,55 @@ async function acompanhar(
       .update({ followup_etapa: etapa + 1, followup_em: new Date().toISOString() })
       .eq("contact_id", c.contact_id);
     return { status: `acompanhamento ${etapa + 1} sem template` };
+  }
+  // Antes de o modelo sair, alguém lê a ficha e o fim da conversa: ele saía às
+  // cegas, inclusive pra quem o Téo tinha dito que não ia mais procurar
+  // (Thalita, 18, 20 e 24/11; ver revisarAcompanhamento).
+  let revisao: RevisaoAcompanhamento;
+  try {
+    revisao = await revisarAcompanhamento({
+      nome: primeiroNome(c.nome),
+      ficha: c.ficha,
+      msgs,
+      etapa: etapa + 1,
+      total: horas.length,
+      textoDoModelo: (cfg.followup_textos ?? [])[etapa]?.split("{{1}}").join(primeiroNome(c.nome)) ?? null,
+    });
+  } catch (e) {
+    // Sem revisão, o modelo não sai: tenta de novo em 30 min.
+    await adiar(supabase, c.contact_id, 30 * 60_000);
+    await log(supabase, "acompanhamento: revisão falhou", {
+      contact_id: c.contact_id,
+      nome: c.nome,
+      erro: (e instanceof Error ? e.message : String(e)).slice(0, 300),
+    });
+    return { status: "acompanhamento: revisão falhou" };
+  }
+  if (revisao.decisao !== "enviar") {
+    const encerrar = revisao.decisao === "encerrar";
+    await supabase
+      .from("teo_conversas")
+      .update(
+        encerrar
+          ? {
+              // sem_interesse: se a pessoa escrever de novo, o Téo responde.
+              estado: "encerrado",
+              motivo_humano: "sem_interesse",
+              proxima_checagem: new Date(agora + 2 * 3600_000).toISOString(),
+              atualizado_em: new Date().toISOString(),
+            }
+          : { followup_etapa: etapa + 1, followup_em: new Date().toISOString(), atualizado_em: new Date().toISOString() }
+      )
+      .eq("contact_id", c.contact_id);
+    const nota = `acompanhamento ${etapa + 1} ${encerrar ? "cancelado" : "pulado"} (revisão)`;
+    await log(supabase, nota, {
+      contact_id: c.contact_id,
+      nome: c.nome,
+      template: tpl,
+      motivo: revisao.motivo,
+      uso: revisao.uso,
+    });
+    return { status: nota };
   }
   const r = await unnichat(supabase, "POST", "/meta/templates", {
     phone: telefone,
@@ -2188,6 +2242,8 @@ async function acompanhar(
     nome: c.nome,
     template: tpl,
     status: r.status,
+    revisao: revisao.motivo,
+    uso: revisao.uso,
   });
   return { status: ok ? `acompanhamento ${etapa + 1} (template)` : "acompanhamento falhou" };
 }
@@ -2431,7 +2487,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
           }
         }
         // O lead parou de responder: é hora de acompanhar?
-        const a = await acompanhar(supabase, c, cfg, telefone, ultima, janelaAberta);
+        const a = await acompanhar(supabase, c, cfg, telefone, ultima, janelaAberta, msgs);
         if (!a.retomar) return a.status;
         retomar = a.retomar;
         acompanhamento = true;
