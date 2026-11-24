@@ -1,16 +1,16 @@
 // LP do low ticket "Airbnb do Zero": link.canaldoanfitriao.com.br/airbnb-do-zero
-// Página estática; foto e ícone em public/marca/. Bloco de prova (.pv) é SVG + CSS + JS aqui mesmo.
+// Página estática; fotos em public/lp/airbnb-do-zero/ e ícone em public/marca/. Bloco de prova (.pv) é SVG + CSS + JS aqui mesmo.
 
 // Link do botão de compra (Eduzz, R$ 197): ÚNICO lugar pra trocar.
 export const AIRBNB_DO_ZERO_CHECKOUT = "https://sun.eduzz.com/797ZPKY10E";
 
 export function airbnbDoZeroHtml(): string {
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Airbnb do Zero · Ganhe seus primeiros R$ 1.000 com o Airbnb · Canal do Anfitrião</title>
+<title>Airbnb do Zero · R$ 7.828 de faturamento em 30 dias no Airbnb · Canal do Anfitrião</title>
 <meta name="description" content="Prepare o imóvel, tire as fotos com o celular, defina o preço e publique seu primeiro anúncio no Airbnb. 3 aulas com o Rômulo Villela, 3h30, acesso imediato.">
 <meta property="og:title" content="Airbnb do Zero · Canal do Anfitrião">
 <meta property="og:description" content="O método do Rômulo Villela pra quem nunca anunciou no Airbnb. 3 aulas, 3h30, R$ 197.">
-<meta property="og:image" content="https://link.canaldoanfitriao.com.br/marca/a5e-hero.webp">
+<meta property="og:image" content="https://link.canaldoanfitriao.com.br/lp/airbnb-do-zero/og.jpg">
 <link rel="icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Raleway:wght@400;500;600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
@@ -54,8 +54,8 @@ section{position:relative;padding:clamp(64px,10vw,110px) 0;overflow-x:clip}
 .chips span{font-family:var(--label);font-weight:600;font-size:.85rem;letter-spacing:.06em;color:rgba(255,255,255,.75);padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04)}
 .chips b{color:var(--coral)}
 .retrato{position:relative;height:600px;border-radius:30px;overflow:hidden;background:#1a1a1a;border:1px solid rgba(255,255,255,.08);box-shadow:0 40px 90px rgba(0,0,0,.5)}
-.retrato .foto{position:absolute;inset:0;background:url("/marca/a5e-hero.webp") 76% 22%/auto 100% no-repeat}
-.retrato::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(20,20,20,.9) 100%)}
+.retrato .foto{position:absolute;inset:0;background:linear-gradient(180deg,rgba(28,28,28,.1),rgba(36,117,127,.35)),url("/lp/airbnb-do-zero/mar.webp") 30% 40%/cover no-repeat}.retrato .rom{position:absolute;left:50%;bottom:-6%;height:100%;width:auto;max-width:none;transform:translateX(-50%);filter:drop-shadow(0 18px 40px rgba(0,0,0,.45))}
+.retrato::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 58%,rgba(20,20,20,.92) 100%)}
 .retrato .nome{position:absolute;left:26px;bottom:24px;z-index:2}
 .retrato .nome b{display:block;font-family:var(--title);font-weight:700;font-size:1.6rem;line-height:1.1;color:#fff}
 .retrato .nome span{display:block;margin-top:6px;font-family:var(--label);font-weight:600;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.78);line-height:1.45}
@@ -104,7 +104,7 @@ section{position:relative;padding:clamp(64px,10vw,110px) 0;overflow-x:clip}
 @keyframes pvonda{to{transform:translateX(80px)}}
 @keyframes pvfaisca{0%{opacity:0;transform:rotate(var(--a)) translateY(-18px) scaleY(.3)}35%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(-74px) scaleY(1)}}
 .pv-dica{text-align:center;margin-top:12px;font-family:var(--label);font-weight:600;font-size:.9rem;color:rgba(255,255,255,.6)}.pv-dica .ms{display:none}
-@media(hover:hover) and (pointer:fine){.pv-dica .ms{display:inline}.pv-dica .tq{display:none}}
+@media(hover:hover) and (pointer:fine){.pv:not(.toque) .pv-dica .ms{display:inline}.pv:not(.toque) .pv-dica .tq{display:none}}
 .pv-lado{display:grid;gap:18px}
 .pv-hist{position:relative;display:grid;gap:10px}
 .pv-l{appearance:none;display:flex;gap:14px;align-items:flex-start;text-align:left;width:100%;font:inherit;color:#fff;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:18px 20px;cursor:pointer;transition:background .3s,border-color .3s,transform .4s var(--pop);-webkit-tap-highlight-color:transparent}
@@ -116,19 +116,28 @@ section{position:relative;padding:clamp(64px,10vw,110px) 0;overflow-x:clip}
 .pv-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .pv-c{background:#f6f6f6;color:var(--ink);border-radius:22px;padding:22px 20px;display:flex;flex-direction:column;transition:transform .45s var(--pop),box-shadow .45s}
 .pv-c .num{font-family:var(--title);font-weight:800;font-size:clamp(2.3rem,4.4vw,3.1rem);line-height:1;letter-spacing:-.03em;color:var(--teal);font-variant-numeric:tabular-nums}
-.pv-c.nota5 .num{color:var(--coral)}
 .pv-c .tx{font-weight:600;font-size:.98rem;line-height:1.3;margin:8px 0 16px;color:var(--ink-2)}
 .pv-c small{margin-top:12px;font-family:var(--label);font-weight:600;font-size:.86rem;color:#5d666f}
 .pv-nts{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:auto}
 .pv-nts i{aspect-ratio:1;border-radius:32%;background:#dcdfe1;transition:transform .4s var(--pop) calc(var(--k)*14ms),background .35s calc(var(--k)*14ms)}.pv-nts i.on{background:var(--teal)}
-.pv-est{width:100%;max-width:190px;height:auto;margin:auto 0;overflow:visible}.pv-est path{transform-box:fill-box}
-.pv-est .cheias path{transform-origin:50% 50%}
+.pv-est{display:block;width:100%;max-width:210px;height:auto;margin:0 0 0 -4px;overflow:visible}
+.pv-est .vazia{fill:#dfdfe2}.pv-est .cheia{fill:url(#pvouro);stroke:url(#pvouro);stroke-width:1.4;stroke-linejoin:round}.pv-est .luz{fill:#fff;opacity:.28}
+.pv-est .cheia,.pv-est .luz{transform-origin:12px 12px}
+.pv-est .rx{stroke:#ffb03a;stroke-width:1.5;stroke-linecap:round;opacity:0;transform-origin:12px 12px}
+.pv-c.ests .tx b{display:block;font-family:var(--title);font-weight:800;font-size:clamp(1.15rem,2.2vw,1.42rem);line-height:1.15;letter-spacing:-.02em;color:var(--coral);white-space:nowrap}
+.pv-c.ests .tx{margin-top:12px}
+.pv-hosp{display:block;width:100%;max-width:150px;height:auto;margin-top:auto}
+.pv-hosp .h{fill:#dcdfe1;transform-box:fill-box;transform-origin:50% 100%;transition:fill .35s,transform .45s var(--pop)}.pv-hosp .h.on{fill:var(--coral)}
 @media(hover:hover) and (pointer:fine){.pv-c:hover{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 22px 44px rgba(0,0,0,.4)}}
 .pv-c.vivo .pv-nts i.on{animation:pvpulo .55s var(--e) calc(var(--k)*22ms)}
-.pv-c.vivo .pv-est g path{animation:pvest .6s var(--e) calc(var(--k)*80ms)}
+.pv-c.vivo .pv-est .cheia,.pv-c.vivo .pv-est .luz{animation:pvacende .6s var(--pop) calc(var(--k)*110ms) both}
+.pv-c.vivo .pv-est .rx{animation:pvraio .6s ease-out calc(var(--k)*110ms + .12s)}
+.pv-c.vivo .pv-hosp .h.on{animation:pvest .55s var(--e) calc(var(--k)*110ms + .3s)}
 @keyframes pvpulo{40%{transform:scale(1.35);background:var(--coral)}}
-@keyframes pvest{40%{translate:0 -5px}}
-.pv-nota{max-width:860px;margin:20px auto 0;font-size:.92rem;color:#5d666f;text-align:center}
+@keyframes pvest{40%{translate:0 -4px}}
+@keyframes pvacende{0%{transform:scale(0) rotate(-70deg)}100%{transform:none}}
+@keyframes pvraio{0%{opacity:0;transform:scale(.5)}40%{opacity:1}100%{opacity:0;transform:scale(1.2)}}
+.pv-nota{max-width:860px;margin:20px auto 0;font-size:.92rem;color:rgba(255,255,255,.78);text-align:center}
 html.pvmv .pv-svg:not(.go) .pv-b .corpo{transform:scaleY(0)}
 html.pvmv .pv-svg .pv-b .corpo{transition:transform 1.1s var(--e),filter .35s}
 html.pvmv .pv-svg.go:not(.fim) .pv-b.out .corpo{transition:transform 1.5s var(--pop) 1.15s}
@@ -143,15 +152,22 @@ html.pvmv .pv-l,html.pvmv .pv-c{transition:opacity .7s var(--e),transform .7s va
 html.pvmv .pv-l:not(.go){opacity:0;transform:translateX(50px)}html.pvmv .pv-c:not(.go){opacity:0;transform:translateY(50px) scale(.94)}
 html.pvmv .pv-c:not(.go) .pv-nts i{background:#dcdfe1;transform:scale(.4)}
 html.pvmv .pv-c.go .pv-nts i{transition-delay:calc(.35s + var(--k)*48ms)}
-html.pvmv .pv-est .varre{transform-origin:0 0;transition:transform 1.8s var(--e) .4s}html.pvmv .pv-c:not(.go) .varre{transform:scaleX(0)}
+html.pvmv .pv-c:not(.go) .pv-est .cheia,html.pvmv .pv-c:not(.go) .pv-est .luz{transform:scale(0) rotate(-70deg)}
+html.pvmv .pv-c.go:not(.vivo) .pv-est .cheia,html.pvmv .pv-c.go:not(.vivo) .pv-est .luz{transition:transform .6s var(--pop) calc(.5s + var(--k)*.28s)}
+html.pvmv .pv-c.go:not(.vivo) .pv-est .rx{animation:pvraio .7s ease-out calc(.65s + var(--k)*.28s) 1 both}
+html.pvmv .pv-c:not(.go) .pv-hosp .h{fill:#dcdfe1;transform:scale(.6)}
+html.pvmv .pv-c.go .pv-hosp .h{transition-delay:calc(2s + var(--k)*.15s)}
 @media(max-width:860px){.pv{grid-template-columns:1fr;padding:18px;gap:20px;border-radius:28px}.pv-cards{gap:10px}.pv-c{padding:18px 16px}.pv-c .tx{font-size:.94rem}.pv.sel-set .pv-l.set,.pv.sel-out .pv-l.out{transform:none}}
 @media(max-width:350px){.pv-cards{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.pv *,.pv{animation:none!important;transition:none!important}}
-.bio{display:grid;grid-template-columns:300px 1fr;gap:44px;align-items:center}
-.bio .ft{height:340px;border-radius:26px;background:#1a1a1a url("/marca/a5e-hero.webp") 80% 20%/auto 115% no-repeat;box-shadow:var(--shadow)}
-.nums{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
-.nums div{background:var(--teal-wash);border-radius:16px;padding:12px 18px}
-.nums b{display:block;font-family:var(--title);font-weight:700;font-size:1.4rem;color:var(--teal);line-height:1.1}
+.bio{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:56px;align-items:center}
+.bio .ft{position:relative;height:580px;border-radius:30px;overflow:hidden;background:radial-gradient(70% 55% at 50% 38%,rgba(255,255,255,.28),transparent 70%),linear-gradient(155deg,#2a8995,#24757f 48%,#e23d59 135%);box-shadow:var(--shadow)}
+.bio .ft img{position:absolute;left:50%;bottom:0;height:94%;width:auto;max-width:none;transform:translateX(-50%)}
+.nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:28px}
+.nums div{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;box-shadow:var(--shadow);transition:transform .35s}
+@media(hover:hover){.nums div:hover{transform:translateY(-4px)}}
+.nums div:nth-child(even) b{color:var(--coral)}
+.nums b{display:block;font-family:var(--title);font-weight:800;font-size:clamp(1.45rem,2.7vw,2rem);white-space:nowrap;letter-spacing:-.02em;color:var(--teal);line-height:1.1}
 .nums span{font-family:var(--label);font-weight:600;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .oferta{max-width:620px;margin:0 auto;background:#fff;color:var(--ink);border-radius:30px;padding:44px 40px;text-align:center;box-shadow:0 40px 90px rgba(0,0,0,.5);position:relative}
 .oferta h3{font-size:1.5rem;margin-top:16px;color:var(--ink)}
@@ -166,29 +182,42 @@ html.pvmv .pv-est .varre{transform-origin:0 0;transition:transform 1.8s var(--e)
 .faq{max-width:820px;margin:0 auto;display:grid;gap:12px}
 .faq div{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 26px}
 .faq p{margin-top:8px;color:var(--ink-2)}
-.aviso{font-size:.9rem;color:rgba(255,255,255,.62);max-width:600px;margin-top:18px}
+.fundo{position:absolute;inset:0;background-size:cover;background-position:60% 50%;pointer-events:none}
+.fundo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(28,28,28,.96) 18%,rgba(28,28,28,.72) 60%,rgba(28,28,28,.55)),linear-gradient(180deg,transparent 70%,#1c1c1c)}
+.fundo.fraco::after{background:linear-gradient(90deg,rgba(28,28,28,.95),rgba(28,28,28,.78))}
+.fundo.forte::after{background:linear-gradient(180deg,rgba(20,24,26,.62),rgba(20,24,26,.82))}
+.hero h1 .gr{display:block;font-size:1.36em;line-height:1;white-space:nowrap;margin-bottom:.08em}
+.hero .lead b{color:#fff}
+.quadro .qf{width:100%;height:auto;border-radius:18px;margin-bottom:12px}
+.gal{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:210px;gap:14px}
+.gal figure{position:relative;border-radius:22px;overflow:hidden;background:#ddd}
+.gal img{width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.gal figcaption{position:absolute;left:12px;bottom:12px;background:rgba(28,28,28,.72);color:#fff;font-family:var(--label);font-weight:600;font-size:.82rem;padding:5px 12px;border-radius:999px}
+.gal .g1{grid-column:span 2;grid-row:span 2}.gal .g2{grid-column:span 2}
+@media(hover:hover){.gal figure:hover img{transform:scale(1.06)}}
+.aviso{font-size:.92rem;font-weight:500;color:rgba(255,255,255,.78);max-width:600px;margin-top:18px}
 footer{background:var(--dark-2);color:rgba(255,255,255,.55);font-size:.85rem;text-align:center;padding:34px 0}
 @media(max-width:860px){
 .hero{padding:96px 0 60px}.hero .grid,.duo{grid-template-columns:1fr;gap:34px}.palco{order:-1}.retrato{height:400px}
-.selo{right:14px;top:14px;padding:10px 14px}.selo b{font-size:1.3rem}
-.cards{grid-template-columns:1fr}.bio{grid-template-columns:1fr;gap:26px}.bio .ft{height:300px}
+.retrato .rom{left:62%}.selo{right:auto;left:14px;top:14px;padding:10px 14px}.selo b{font-size:1.3rem}
+.cards{grid-template-columns:1fr}.bio{grid-template-columns:minmax(0,1fr);gap:30px}.bio .ft{height:440px}.nums{grid-template-columns:repeat(2,minmax(0,1fr))}.gal{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:150px;gap:10px}.gal figure{border-radius:16px}.gal figcaption{left:8px;bottom:8px;font-size:.74rem;padding:4px 10px}
 .passo{grid-template-columns:1fr;gap:14px;padding:22px}.passo .n{width:54px;height:54px;font-size:1.5rem;border-radius:16px}
 .cta{width:100%}.oferta{padding:34px 22px}.garantia{grid-template-columns:1fr;text-align:center;justify-items:center;padding:28px 22px}
 .marca span{display:none}}
 </style></head><body>
-<section class="hero dark glow">
+<section class="hero dark glow"><div class="fundo" style="background-image:url(/lp/airbnb-do-zero/balneario.webp)"></div>
 <div class="topo"><div class="wrap"><a class="marca"><img src="/marca/cda-icone.png" alt=""><span>CANAL DO ANFITRIÃO</span></a><a class="mini" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar</a></div></div>
 <div class="wrap"><div class="grid">
 <div>
 <span class="pill coral">Airbnb do Zero · pra quem nunca anunciou</span>
-<h1>Ganhe seus primeiros <span class="c" style="white-space:nowrap">R$ 1.000</span> com o Airbnb</h1>
-<p class="lead">O método do Rômulo Villela pra quem está começando: prepare o imóvel, tire as fotos com o celular, defina o preço e publique seu primeiro anúncio do jeito certo.</p>
+<h1><span class="c gr">R$ 7.828</span> de faturamento em 30 dias no Airbnb</h1>
+<p class="lead"><b>Com um apartamento que começou do zero, sem nenhuma reserva.</b> O Rômulo Villela gravou o caminho pra você repetir no seu imóvel: a arrumação, as fotos com o celular, o preço e o anúncio publicado.</p>
 <a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar agora · R$ 197</a>
 <p class="nota">Acesso imediato · Garantia de 7 dias · Pagamento seguro pela Eduzz</p>
 <div class="chips"><span><b>✓</b> Do imóvel vazio ao anúncio no ar</span><span><b>✓</b> 3 aulas · 3h30</span><span><b>✓</b> Faça junto</span></div>
-<p class="aviso">Resultado varia conforme o imóvel, a cidade e a sua dedicação. Não é promessa de ganho.</p>
+<p class="aviso">R$ 7.828 é o faturamento bruto do primeiro mês cheio no ar de um imóvel administrado pelo Rômulo, somando as reservas do Airbnb e do Booking. O resultado varia conforme o imóvel, a cidade e a sua dedicação. Não é promessa de ganho.</p>
 </div>
-<div class="palco"><div style="position:relative"><div class="retrato"><div class="foto"></div><div class="nome"><b>Rômulo Villela</b><span>Anfitrião desde 2016<br><i>60+ imóveis</i> · Canal do Anfitrião</span></div></div>
+<div class="palco"><div style="position:relative"><div class="retrato"><div class="foto"></div><img class="rom" src="/lp/airbnb-do-zero/romulo.webp" width="900" height="1280" alt="Rômulo Villela sorrindo"><div class="nome"><b>Rômulo Villela</b><span>Anfitrião desde 2016<br><i>60+ imóveis</i> · Canal do Anfitrião</span></div></div>
 <div class="selo"><small>Curso completo</small><b>R$ 197</b></div></div></div>
 </div></div></section>
 
@@ -209,15 +238,20 @@ footer{background:var(--dark-2);color:rgba(255,255,255,.55);font-size:.85rem;tex
 <div class="passo"><div class="n">3</div><div><h3>O primeiro mês no ar: quanto rendeu <small style="font-weight:600;color:var(--muted)">· 42 min</small></h3><ul><li>O balanço real do 1º mês do anúncio</li><li>Os ajustes de preço e de estadia mínima</li></ul></div></div>
 </div></div></section>
 
-<section class="dark glow"><div class="wrap"><div class="duo">
+<section class="dark glow"><div class="fundo fraco" style="background-image:url(/lp/airbnb-do-zero/orla.webp)"></div><div class="wrap"><div class="duo">
 <div><span class="pill">Na prática</span><h2 style="margin:18px 0">Você não vai ver teoria. Vai ver <span class="c">um anúncio nascer</span>.</h2>
 <p class="lead">No curso, o Rômulo pega um apartamento de verdade, que nunca tinha sido anunciado, e mostra tudo: a arrumação, as fotos, a pesquisa de preço, o anúncio sendo criado e o balanço do primeiro mês no ar. Você acompanha e repete no seu imóvel.</p>
 <p style="margin-top:30px"><a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero meu primeiro anúncio no ar</a></p></div>
-<div class="quadro"><div><span>01</span>Imóvel arrumado</div><div><span>02</span>Fotos feitas no celular</div><div><span>03</span>Preço definido</div><div><span>04</span>Anúncio publicado</div><div><span>05</span>Balanço do 1º mês</div></div>
+<div class="quadro"><img class="qf" loading="lazy" src="/lp/airbnb-do-zero/romulo-arrumando.webp" width="1200" height="750" alt="Rômulo arrumando a sala do apartamento de Balneário Camboriú"><div><span>01</span>Imóvel arrumado</div><div><span>02</span>Fotos feitas no celular</div><div><span>03</span>Preço definido</div><div><span>04</span>Anúncio publicado</div><div><span>05</span>Balanço do 1º mês</div></div>
 </div></div></section>
 
-<section class="branco" id="resultado"><div class="wrap">
-<div class="cab centro"><span class="label">Resultado real</span><h2>Do zero a <span class="c" style="white-space:nowrap">R$ 7.828</span> de faturamento no Airbnb em menos de 2 meses</h2></div>
+<section class="branco" id="imovel"><div class="wrap">
+<div class="cab"><span class="label">O apartamento da aula</span><h2>O imóvel é este, em <span class="t">Balneário Camboriú</span>.</h2><p class="lead">É o apartamento que o Rômulo arruma, fotografa e anuncia no curso. O anúncio começou com fotos de celular e depois ganhou fotos profissionais como estas.</p></div>
+<div class="gal"><figure class="g1"><img loading="lazy" src="/lp/airbnb-do-zero/varanda.webp" width="1200" height="900" alt="A varanda, de frente pro mar"><figcaption>A varanda, de frente pro mar</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/sala.webp" width="900" height="675" alt="Sala"><figcaption>Sala</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/quarto.webp" width="900" height="675" alt="Quarto"><figcaption>Quarto</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/mesa.webp" width="900" height="675" alt="Mesa posta pra foto"><figcaption>Mesa posta pra foto</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/suite.webp" width="900" height="675" alt="Quarto com vista"><figcaption>Quarto com vista</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/copa.webp" width="900" height="675" alt="Copa e cozinha"><figcaption>Copa e cozinha</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/estar.webp" width="900" height="675" alt="Estar e varanda"><figcaption>Estar e varanda</figcaption></figure><figure class="g2"><img loading="lazy" src="/lp/airbnb-do-zero/orla.webp" width="1200" height="675" alt="Balneário Camboriú"><figcaption>Balneário Camboriú</figcaption></figure></div>
+</div></section>
+
+<section class="dark" id="resultado"><div class="fundo forte" style="background-image:url(/lp/airbnb-do-zero/balneario.webp)"></div><div class="wrap">
+<div class="cab centro"><span class="label">Resultado real</span><h2>A virada, <span class="c">mês a mês</span></h2></div>
 <div class="pv"><div class="pv-graf"><svg class="pv-svg" viewBox="0 0 400 424" role="group" aria-label="Gráfico de barras do faturamento bruto: R$ 2.498 em setembro, mês parcial, e R$ 7.828 em outubro">
 <defs><linearGradient id="pvceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#151d22"/><stop offset=".62" stop-color="#1c3339"/><stop offset="1" stop-color="#56323c"/></linearGradient>
 <linearGradient id="pvcor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0526c"/><stop offset="1" stop-color="#d1304c"/></linearGradient>
@@ -237,16 +271,17 @@ footer{background:var(--dark-2);color:rgba(255,255,255,.55);font-size:.85rem;tex
 <div class="pv-hist"><button type="button" class="pv-l set" data-m="set"><i></i><span><b>1º mês, parcial: R$ 2.498</b><small>A agenda abriu no meio do mês.</small></span></button><button type="button" class="pv-l out" data-m="out"><i></i><span><b>Mês seguinte: R$ 7.828</b><small>Faturamento bruto do primeiro mês cheio no ar.</small></span></button></div>
 <div class="pv-cards">
 <div class="pv-c noites"><b class="num" data-n="77" data-s="%">77%</b><span class="tx">de ocupação<br>no mês seguinte</span><div class="pv-nts" role="img" aria-label="24 de 31 noites reservadas"><i class="on" style="--k:0"></i><i class="on" style="--k:1"></i><i class="on" style="--k:2"></i><i class="on" style="--k:3"></i><i class="on" style="--k:4"></i><i class="on" style="--k:5"></i><i class="on" style="--k:6"></i><i class="on" style="--k:7"></i><i class="on" style="--k:8"></i><i class="on" style="--k:9"></i><i class="on" style="--k:10"></i><i class="on" style="--k:11"></i><i class="on" style="--k:12"></i><i class="on" style="--k:13"></i><i class="on" style="--k:14"></i><i class="on" style="--k:15"></i><i class="on" style="--k:16"></i><i class="on" style="--k:17"></i><i class="on" style="--k:18"></i><i class="on" style="--k:19"></i><i class="on" style="--k:20"></i><i class="on" style="--k:21"></i><i class="on" style="--k:22"></i><i class="on" style="--k:23"></i><i class="" style="--k:24"></i><i class="" style="--k:25"></i><i class="" style="--k:26"></i><i class="" style="--k:27"></i><i class="" style="--k:28"></i><i class="" style="--k:29"></i><i class="" style="--k:30"></i></div><small>24 de 31 noites reservadas</small></div>
-<div class="pv-c nota5"><b class="num" data-n="4.75" data-d="2">4,75</b><span class="tx">estrelas nas<br>primeiras reservas</span><svg class="pv-est" viewBox="0 0 128 24" aria-hidden="true"><defs><clipPath id="pvest"><rect class="varre" width="121.8" height="24"/></clipPath></defs><g><path style="--k:0" transform="translate(0 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#dfdfe2"/><path style="--k:1" transform="translate(26 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#dfdfe2"/><path style="--k:2" transform="translate(52 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#dfdfe2"/><path style="--k:3" transform="translate(78 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#dfdfe2"/><path style="--k:4" transform="translate(104 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#dfdfe2"/></g><g clip-path="url(#pvest)" class="cheias"><path style="--k:0" transform="translate(0 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#e23d59"/><path style="--k:1" transform="translate(26 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#e23d59"/><path style="--k:2" transform="translate(52 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#e23d59"/><path style="--k:3" transform="translate(78 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#e23d59"/><path style="--k:4" transform="translate(104 0)" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z" fill="#e23d59"/></g></svg><small>Nota dada pelos hóspedes</small></div>
+<div class="pv-c ests"><svg class="pv-est" viewBox="-3 -5 138 33" aria-hidden="true"><defs><linearGradient id="pvouro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc24d"/><stop offset=".55" stop-color="#f58a4b"/><stop offset="1" stop-color="#e23d59"/></linearGradient></defs><g transform="translate(0 0)" style="--k:0"><path class="vazia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><g class="rx"><path d="M12-1.5v-3.6" transform="rotate(0 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(45 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(90 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(135 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(180 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(225 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(270 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(315 12 12)"/></g><path class="cheia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><path class="luz" d="M12 1.8l3.1 6.5L12 12 8.9 8.3z"/></g><g transform="translate(27 0)" style="--k:1"><path class="vazia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><g class="rx"><path d="M12-1.5v-3.6" transform="rotate(0 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(45 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(90 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(135 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(180 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(225 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(270 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(315 12 12)"/></g><path class="cheia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><path class="luz" d="M12 1.8l3.1 6.5L12 12 8.9 8.3z"/></g><g transform="translate(54 0)" style="--k:2"><path class="vazia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><g class="rx"><path d="M12-1.5v-3.6" transform="rotate(0 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(45 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(90 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(135 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(180 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(225 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(270 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(315 12 12)"/></g><path class="cheia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><path class="luz" d="M12 1.8l3.1 6.5L12 12 8.9 8.3z"/></g><g transform="translate(81 0)" style="--k:3"><path class="vazia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><g class="rx"><path d="M12-1.5v-3.6" transform="rotate(0 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(45 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(90 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(135 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(180 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(225 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(270 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(315 12 12)"/></g><path class="cheia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><path class="luz" d="M12 1.8l3.1 6.5L12 12 8.9 8.3z"/></g><g transform="translate(108 0)" style="--k:4"><path class="vazia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><g class="rx"><path d="M12-1.5v-3.6" transform="rotate(0 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(45 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(90 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(135 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(180 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(225 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(270 12 12)"/><path d="M12-1.5v-3.6" transform="rotate(315 12 12)"/></g><path class="cheia" d="M12 1.8l3.1 6.5 7.1.9-5.2 4.9 1.3 7.1L12 17.8l-6.3 3.4L7 14.1 1.8 9.2l7.1-.9z"/><path class="luz" d="M12 1.8l3.1 6.5L12 12 8.9 8.3z"/></g></svg><span class="tx"><b>3 de cada 4</b> hóspedes deram 5 estrelas</span><svg class="pv-hosp" viewBox="0 0 148 34" aria-hidden="true"><g transform="translate(0 0)"><g class="h on" style="--k:0"><circle cx="17" cy="9" r="8"/><path d="M1 34c0-9 7-14.500 16-14.500s16 5.500 16 14.500z"/></g></g><g transform="translate(38 0)"><g class="h on" style="--k:1"><circle cx="17" cy="9" r="8"/><path d="M1 34c0-9 7-14.500 16-14.500s16 5.500 16 14.500z"/></g></g><g transform="translate(76 0)"><g class="h on" style="--k:2"><circle cx="17" cy="9" r="8"/><path d="M1 34c0-9 7-14.500 16-14.500s16 5.500 16 14.500z"/></g></g><g transform="translate(114 0)"><g class="h " style="--k:3"><circle cx="17" cy="9" r="8"/><path d="M1 34c0-9 7-14.500 16-14.500s16 5.500 16 14.500z"/></g></g></svg><small>nas primeiras avaliações</small></div>
 </div></div></div>
-<p class="pv-nota">Faturamento bruto de um imóvel real do Rômulo. O resultado varia conforme o imóvel.</p>
+<p class="pv-nota">Faturamento bruto de um imóvel real administrado pelo Rômulo, somando as reservas do Airbnb e do Booking. O resultado varia conforme o imóvel.</p>
 </div></section>
 
 <section><div class="wrap"><div class="bio">
-<div class="ft"></div>
-<div><span class="label">Quem vai te ensinar</span><h2 style="margin:14px 0 16px">Rômulo Villela</h2>
-<p class="lead">Anfitrião desde 2016, gestor de imóveis por temporada e criador do Canal do Anfitrião e do Anfitrião 5 Estrelas, a comunidade de anfitriões do canal.</p>
-<div class="nums"><div><b>60+</b><span>imóveis</span></div><div><b>200 mil</b><span>no Instagram</span></div><div><b>120 mil</b><span>no YouTube</span></div></div></div>
+<div class="ft"><img loading="lazy" src="/lp/airbnb-do-zero/romulo.webp" width="900" height="1280" alt="Rômulo Villela sorrindo"></div>
+<div><span class="label">Quem vai te ensinar</span><h2 style="margin:14px 0 18px">Rômulo Villela</h2>
+<p class="lead">Em 2016, o Rômulo colocou um quarto no Airbnb pra ajudar a pagar o aluguel. Hoje ele tem <b>mais de 60 imóveis sob gestão</b> e já passou de <b>11 mil locações</b>.</p>
+<p class="lead" style="margin-top:14px">É o criador do Canal do Anfitrião e do Anfitrião 5 Estrelas, a comunidade de anfitriões do canal, e palestrante em eventos oficiais do Airbnb.</p>
+<div class="nums"><div><b>10+</b><span>anos de Airbnb</span></div><div><b>60+</b><span>imóveis sob gestão</span></div><div><b>11 mil+</b><span>locações</span></div><div><b>2.000+</b><span>alunos nos cursos</span></div><div><b>200 mil+</b><span>no Instagram</span></div><div><b>120 mil+</b><span>no YouTube</span></div></div></div>
 </div></div></section>
 
 <section class="dark glow" id="oferta"><div class="wrap">
@@ -286,6 +321,9 @@ var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches
 function all(q){return [].slice.call(pv.querySelectorAll(q))}
 /* liga barra e linha da história: mouse, toque e teclado */
 var fixo='';
+/* dica: alguns celulares se anunciam como mouse */
+if(navigator.maxTouchPoints>0&&window.matchMedia&&matchMedia('(max-width: 860px)').matches)pv.classList.add('toque');
+pv.addEventListener('pointerdown',function(v){if(v.pointerType==='touch')pv.classList.add('toque')});
 function sel(m){pv.classList.toggle('sel-set',m==='set');pv.classList.toggle('sel-out',m==='out');all('[data-m]').forEach(function(e){e.setAttribute('aria-pressed',e.getAttribute('data-m')===m?'true':'false')})}
 all('.pv-b').forEach(function(g){g.setAttribute('aria-label',g.getAttribute('data-m')==='set'?'Setembro, mês parcial: R$ 2.498':'Outubro, mês seguinte: R$ 7.828')});
 all('[data-m]').forEach(function(e){var m=e.getAttribute('data-m');
