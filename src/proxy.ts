@@ -21,6 +21,8 @@ function ehLpPublica(p: string): boolean {
     p.startsWith("/lp/") ||
     // LP da corrida (/corrida redireciona pra /corrida-anfitriao) e a marca que ela usa.
     p === "/corrida-anfitriao" || p === "/corrida" ||
+    // LP do low ticket Airbnb do Zero.
+    p === "/airbnb-do-zero" ||
     // Páginas internas (ex.: ordem do dia do Rômulo Visita). A aba
     // Assinaturas tem dado de aluno e fica atrás do login (ehInternoComLogin).
     (p.startsWith("/internos/") && !ehInternoComLogin(p)) ||
@@ -33,6 +35,9 @@ function ehLpPublica(p: string): boolean {
   );
 }
 
+// Páginas públicas trazidas do Replit, só no subdomínio de links.
+const PAGINAS_REPLIT = ["curso-booking", "encontro-anfitrioes", "10mil-com-airbnb", "obrigado-10mil"];
+
 export async function proxy(request: NextRequest) {
   // Subdomínio dos links curtos (link.canaldoanfitriao.com.br): só rotas
   // públicas de link. Os links fixos da Imersão (/imersao, /i/<codigo>, /vip) passam direto;
@@ -44,6 +49,19 @@ export async function proxy(request: NextRequest) {
     const p = request.nextUrl.pathname;
     if (p === "/") {
       return NextResponse.redirect("https://canaldoanfitriao.com.br");
+    }
+    // Páginas públicas trazidas do Replit (build estático em public/<slug>/):
+    // /<slug> serve o index.html sem mudar a URL; /<slug>/* são os assets.
+    const replit = PAGINAS_REPLIT.find((s) => p === `/${s}` || p.startsWith(`/${s}/`));
+    if (replit) {
+      if (p !== `/${replit}`) return NextResponse.next();
+      const u = request.nextUrl.clone();
+      u.pathname = `/${replit}/index.html`;
+      return NextResponse.rewrite(u);
+    }
+    // Imersão Gigantes: a página do Replit só redirecionava pro site do A5E.
+    if (p === "/imersao-gigantes") {
+      return NextResponse.redirect(`https://anfitriao5estrelas.com.br/${request.nextUrl.search}`, 307);
     }
     if (p === "/imersao" || p === "/vip" || p.startsWith("/i/") || ehLpPublica(p)) return NextResponse.next();
     if (p.startsWith("/r/")) return NextResponse.next();
