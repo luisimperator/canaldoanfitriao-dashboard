@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Builds estáticos trazidos do Replit (JS minificado, não é código nosso).
+    "public/10mil-com-airbnb/**",
+    "public/curso-booking/**",
+    "public/encontro-anfitrioes/**",
+    "public/obrigado-10mil/**",
   ]),
 ]);
 
