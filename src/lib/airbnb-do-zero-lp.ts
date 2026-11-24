@@ -13,7 +13,7 @@ export function airbnbDoZeroHtml(): string {
 <meta property="og:image" content="https://link.canaldoanfitriao.com.br/lp/airbnb-do-zero/og.jpg">
 <link rel="icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Raleway:wght@400;500;600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800&family=Poppins:wght@500;600;700;800&family=Raleway:wght@400;500;600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f6f6f6;--ink:#333;--ink-2:#4a4a4a;--muted:#69727d;--line:#ececec;--line-2:#dadada;
 --coral:#e23d59;--coral-dark:#c92e49;--coral-wash:#fdeef1;--teal:#24757f;--teal-2:#2a8995;--teal-wash:#eaf5f6;
@@ -48,21 +48,41 @@ section{position:relative;padding:clamp(64px,10vw,110px) 0;overflow-x:clip}
 .marca img{width:34px;height:34px;border-radius:9px}
 .mini{font-family:var(--title);font-weight:600;font-size:.88rem;color:#fff;text-decoration:none;padding:9px 16px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22)}
 .hero{padding:120px 0 80px}
-.hero .grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:56px;align-items:center}
+.hero .grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);grid-template-areas:"a p" "b p";column-gap:56px}
+.h-a{grid-area:a;align-self:end}.h-b{grid-area:b}.h-p{grid-area:p;align-self:start;min-width:0}
 .hero h1{margin:22px 0 20px} .hero .lead{max-width:600px;margin-bottom:32px}
+.gan{--e:cubic-bezier(.2,.8,.2,1);background:#fff;color:#222;border-radius:28px;padding:30px 32px 24px;box-shadow:0 40px 90px rgba(0,0,0,.45);font-family:"Figtree",var(--title)}
+.gan-t{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.gan-t b{font-weight:700;font-size:1.35rem;letter-spacing:-.02em}
+.gan-t span{font-weight:600;font-size:.92rem;color:#222;border:1px solid #ddd;border-radius:999px;padding:7px 16px}
+.gan-n{font-weight:800;font-size:clamp(3rem,5.4vw,4.5rem);line-height:1;letter-spacing:-.045em;margin-top:20px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.gan-s{margin-top:10px;font-weight:500;font-size:1rem;line-height:1.4;color:#6a6a6a}
+.gan-g{position:relative;display:flex;justify-content:space-around;height:222px;margin:20px 0 0;border-bottom:1px solid #dcdcdc}
+.gan-g::before,.gan-g::after{content:"";position:absolute;left:0;right:0;border-top:1px dashed #ebebeb;pointer-events:none}.gan-g::before{bottom:33.3%}.gan-g::after{bottom:66.6%}
+.gan-c{appearance:none;background:none;border:0;padding:0;font:inherit;color:inherit;position:relative;z-index:1;flex:1 1 0;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gan-c em{font-style:normal;font-weight:700;font-size:1.02rem;letter-spacing:-.01em;margin-bottom:8px;padding:0 5px;background:#fff;white-space:nowrap;color:#6a6a6a}
+.gan-c i{display:block;width:min(84px,66%);border-radius:12px 12px 0 0;background:#ffc4cf;transform-origin:50% 100%;transition:background .25s}
+.gan-c.out i{background:#ff385c}.gan-c.out em{color:#222}
+.gan-c.ant i{background:#dcdcdc;border-radius:4px 4px 0 0}
+.gan-c.set:hover i,.gan-c.set[aria-pressed=true] i{background:#ff9db0}.gan-c.out:hover i{background:#e31c5f}
+.gan-c:focus-visible{outline:3px solid #222;outline-offset:3px;border-radius:12px}
+.gan-x{display:flex;justify-content:space-around;margin-top:10px}
+.gan-x span{flex:1 1 0;text-align:center;font-weight:600;font-size:.95rem;line-height:1.25;color:#222}.gan-x small{display:block;font-weight:500;font-size:.82rem;color:#6a6a6a}
+.gan-k{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+.gan-k div{border:1px solid #e6e6e6;border-radius:16px;padding:13px 16px}.gan-k b{display:block;font-weight:700;font-size:1.22rem;letter-spacing:-.02em;line-height:1.2}.gan-k small{font-weight:500;font-size:.86rem;color:#6a6a6a}
+.gan-f{margin-top:16px;font-weight:500;font-size:.78rem;line-height:1.4;color:#757575;text-align:center}
+.quem{display:flex;align-items:center;gap:18px;margin:24px 0 0 12px}
+.quem .av{position:relative;flex:none;width:64px;height:64px}.quem .av img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.quem .av::before{content:"";position:absolute;inset:-7px;border-radius:50%;border:2px dashed rgba(226,61,89,.8);animation:gira 26s linear infinite}
+.quem b{display:block;font-family:var(--title);font-weight:700;font-size:1.08rem;line-height:1.2;color:#fff}.quem span{display:block;margin-top:3px;font-family:var(--label);font-weight:600;font-size:.92rem;letter-spacing:.03em;color:rgba(255,255,255,.78)}
+@keyframes gira{to{transform:rotate(360deg)}}
+@keyframes gansobe{from{transform:scaleY(0)}}@keyframes ganaparece{from{opacity:0;transform:translateY(8px)}}
+.gan-c.ant i{animation:gansobe .4s var(--e) .1s backwards}.gan-c.set i{animation:gansobe 1s var(--e) .3s backwards}.gan-c.out i{animation:gansobe 1.5s var(--e) 1.3s backwards}
+.gan-c.set em{animation:ganaparece .5s var(--e) .9s backwards}.gan-c.out em{animation:ganaparece .5s var(--e) 2.3s backwards}
+@media(prefers-reduced-motion:reduce){.gan *,.quem .av::before{animation:none!important;transition:none!important}}
 .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .chips span{font-family:var(--label);font-weight:600;font-size:.85rem;letter-spacing:.06em;color:rgba(255,255,255,.75);padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04)}
 .chips b{color:var(--coral)}
-.retrato{position:relative;height:600px;border-radius:30px;overflow:hidden;background:#1a1a1a;border:1px solid rgba(255,255,255,.08);box-shadow:0 40px 90px rgba(0,0,0,.5)}
-.retrato .foto{position:absolute;inset:0;background:linear-gradient(180deg,rgba(28,28,28,.1),rgba(36,117,127,.35)),url("/lp/airbnb-do-zero/mar.webp") 30% 40%/cover no-repeat}.retrato .rom{position:absolute;left:50%;bottom:-6%;height:100%;width:auto;max-width:none;transform:translateX(-50%);filter:drop-shadow(0 18px 40px rgba(0,0,0,.45))}
-.retrato::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 58%,rgba(20,20,20,.92) 100%)}
-.retrato .nome{position:absolute;left:26px;bottom:24px;z-index:2}
-.retrato .nome b{display:block;font-family:var(--title);font-weight:700;font-size:1.6rem;line-height:1.1;color:#fff}
-.retrato .nome span{display:block;margin-top:6px;font-family:var(--label);font-weight:600;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.78);line-height:1.45}
-.retrato .nome i{font-style:normal;color:var(--coral)}
-.selo{position:absolute;right:-14px;top:34px;z-index:3;background:#fff;color:var(--ink);border-radius:20px;padding:14px 20px;box-shadow:0 20px 50px rgba(0,0,0,.4);text-align:center}
-.selo small{display:block;font-family:var(--label);font-weight:700;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
-.selo b{display:block;font-family:var(--title);font-weight:700;font-size:1.7rem;line-height:1.1;color:var(--coral)}
 .cab{max-width:760px;margin-bottom:44px} .cab h2{margin-top:14px} .cab .lead{margin-top:16px}
 .centro{text-align:center;margin-left:auto;margin-right:auto}
 .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
@@ -198,8 +218,10 @@ html.pvmv .pv-c.go .pv-hosp .h{transition-delay:calc(2s + var(--k)*.15s)}
 .aviso{font-size:.92rem;font-weight:500;color:rgba(255,255,255,.78);max-width:600px;margin-top:18px}
 footer{background:var(--dark-2);color:rgba(255,255,255,.55);font-size:.85rem;text-align:center;padding:34px 0}
 @media(max-width:860px){
-.hero{padding:96px 0 60px}.hero .grid,.duo{grid-template-columns:1fr;gap:34px}.palco{order:-1}.retrato{height:400px}
-.retrato .rom{left:62%}.selo{right:auto;left:14px;top:14px;padding:10px 14px}.selo b{font-size:1.3rem}
+.hero{padding:82px 0 60px}.duo{grid-template-columns:1fr;gap:34px}.hero .grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"a" "p" "b"}
+.hero h1{margin:16px 0 22px;font-size:clamp(1.9rem,8.4vw,3.4rem)}.h-p{margin-bottom:28px}.hero .pill{font-size:.74rem;letter-spacing:.1em;padding:6px 13px}
+.gan{padding:20px 18px 16px;border-radius:24px}.gan-t b{font-size:1.15rem}.gan-t span{font-size:.86rem;padding:5px 13px}.gan-n{font-size:3.1rem;margin-top:10px}.gan-s{font-size:.92rem;margin-top:6px}.gan-g{height:148px;margin-top:12px}.gan-c em{font-size:.95rem;margin-bottom:6px}.gan-x span{font-size:.9rem}.gan-x small{font-size:.78rem}.gan-k{margin-top:16px;gap:10px}.gan-k div{padding:7px 12px}.gan-k small{font-size:.78rem}.gan-k b{font-size:1.1rem}.gan-f{margin-top:10px;font-size:.74rem}
+.quem{margin-top:18px;gap:16px}.quem .av{width:52px;height:52px}.quem .av::before{inset:-6px}
 .cards{grid-template-columns:1fr}.bio{grid-template-columns:minmax(0,1fr);gap:30px}.bio .ft{height:440px}.nums{grid-template-columns:repeat(2,minmax(0,1fr))}.gal{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:150px;gap:10px}.gal figure{border-radius:16px}.gal figcaption{left:8px;bottom:8px;font-size:.74rem;padding:4px 10px}
 .passo{grid-template-columns:1fr;gap:14px;padding:22px}.passo .n{width:54px;height:54px;font-size:1.5rem;border-radius:16px}
 .cta{width:100%}.oferta{padding:34px 22px}.garantia{grid-template-columns:1fr;text-align:center;justify-items:center;padding:28px 22px}
@@ -208,17 +230,27 @@ footer{background:var(--dark-2);color:rgba(255,255,255,.55);font-size:.85rem;tex
 <section class="hero dark glow"><div class="fundo" style="background-image:url(/lp/airbnb-do-zero/balneario.webp)"></div>
 <div class="topo"><div class="wrap"><a class="marca"><img src="/marca/cda-icone.png" alt=""><span>CANAL DO ANFITRIÃO</span></a><a class="mini" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar</a></div></div>
 <div class="wrap"><div class="grid">
-<div>
+<div class="h-a">
 <span class="pill coral">Airbnb do Zero · pra quem nunca anunciou</span>
 <h1><span class="c gr">R$ 7.828</span> de faturamento em 30 dias no Airbnb</h1>
+</div>
+<div class="h-b">
 <p class="lead"><b>Com um apartamento que começou do zero, sem nenhuma reserva.</b> O Rômulo Villela gravou o caminho pra você repetir no seu imóvel: a arrumação, as fotos com o celular, o preço e o anúncio publicado.</p>
 <a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar agora · R$ 197</a>
 <p class="nota">Acesso imediato · Garantia de 7 dias · Pagamento seguro pela Eduzz</p>
 <div class="chips"><span><b>✓</b> Do imóvel vazio ao anúncio no ar</span><span><b>✓</b> 3 aulas · 3h30</span><span><b>✓</b> Faça junto</span></div>
 <p class="aviso">R$ 7.828 é o faturamento bruto do primeiro mês cheio no ar de um imóvel administrado pelo Rômulo, somando as reservas do Airbnb e do Booking. O resultado varia conforme o imóvel, a cidade e a sua dedicação. Não é promessa de ganho.</p>
 </div>
-<div class="palco"><div style="position:relative"><div class="retrato"><div class="foto"></div><img class="rom" src="/lp/airbnb-do-zero/romulo.webp" width="900" height="1280" alt="Rômulo Villela sorrindo"><div class="nome"><b>Rômulo Villela</b><span>Anfitrião desde 2016<br><i>60+ imóveis</i> · Canal do Anfitrião</span></div></div>
-<div class="selo"><small>Curso completo</small><b>R$ 197</b></div></div></div>
+<div class="h-p"><div class="gan" role="group" aria-label="Painel ilustrativo do faturamento bruto: R$ 2.498 em setembro, mês parcial, e R$ 7.828 em outubro">
+<div class="gan-t"><b>Ganhos</b><span class="gan-m">Outubro</span></div>
+<div class="gan-n">R$ 7.828</div>
+<p class="gan-s">Primeiro mês cheio no ar</p>
+<div class="gan-g"><button type="button" class="gan-c ant" data-v="0" data-m="Antes" data-s="Antes do anúncio, nenhuma reserva" aria-label="Antes do anúncio: R$ 0"><em>R$ 0</em><i style="height:4px"></i></button><button type="button" class="gan-c set" data-v="2498" data-m="Setembro" data-s="Mês parcial: a agenda abriu no meio do mês" aria-label="Setembro, mês parcial: R$ 2.498"><em>R$ 2.498</em><i style="height:27.48%"></i></button><button type="button" class="gan-c out" data-v="7828" data-m="Outubro" data-s="Primeiro mês cheio no ar" aria-label="Outubro, primeiro mês cheio no ar: R$ 7.828"><em>R$ 7.828</em><i style="height:86.11%"></i></button></div>
+<div class="gan-x" aria-hidden="true"><span>Antes<small>sem anúncio</small></span><span>Setembro<small>parcial</small></span><span>Outubro<small>mês cheio</small></span></div>
+<div class="gan-k"><div><b>24 de 31</b><small>noites em outubro</small></div><div><b>77%</b><small>ocupação em outubro</small></div></div>
+<p class="gan-f">Painel ilustrativo do Canal do Anfitrião, com o faturamento bruto real do imóvel da aula.</p>
+</div>
+<div class="quem"><span class="av"><img src="/lp/airbnb-do-zero/romulo-avatar.webp" width="192" height="192" alt=""></span><div><b>Rômulo Villela</b><span>anfitrião desde 2016</span></div></div></div>
 </div></div></section>
 
 <section><div class="wrap">
@@ -246,7 +278,7 @@ footer{background:var(--dark-2);color:rgba(255,255,255,.55);font-size:.85rem;tex
 </div></div></section>
 
 <section class="branco" id="imovel"><div class="wrap">
-<div class="cab"><span class="label">O apartamento da aula</span><h2>O imóvel é este, em <span class="t">Balneário Camboriú</span>.</h2><p class="lead">É o apartamento que o Rômulo arruma, fotografa e anuncia no curso. O anúncio começou com fotos de celular e depois ganhou fotos profissionais como estas.</p></div>
+<div class="cab"><span class="label">Rômulo Villela · o apartamento da aula</span><h2>Mostrei na prática, com este imóvel em <span class="t">Balneário Camboriú</span>.</h2><p class="lead">É o apartamento que eu arrumo, fotografo e anuncio no curso. O anúncio começou com fotos de celular e depois ganhou fotos profissionais como estas.</p></div>
 <div class="gal"><figure class="g1"><img loading="lazy" src="/lp/airbnb-do-zero/varanda.webp" width="1200" height="900" alt="A varanda, de frente pro mar"><figcaption>A varanda, de frente pro mar</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/sala.webp" width="900" height="675" alt="Sala"><figcaption>Sala</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/quarto.webp" width="900" height="675" alt="Quarto"><figcaption>Quarto</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/mesa.webp" width="900" height="675" alt="Mesa posta pra foto"><figcaption>Mesa posta pra foto</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/suite.webp" width="900" height="675" alt="Quarto com vista"><figcaption>Quarto com vista</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/copa.webp" width="900" height="675" alt="Copa e cozinha"><figcaption>Copa e cozinha</figcaption></figure><figure class=""><img loading="lazy" src="/lp/airbnb-do-zero/estar.webp" width="900" height="675" alt="Estar e varanda"><figcaption>Estar e varanda</figcaption></figure><figure class="g2"><img loading="lazy" src="/lp/airbnb-do-zero/orla.webp" width="1200" height="675" alt="Balneário Camboriú"><figcaption>Balneário Camboriú</figcaption></figure></div>
 </div></section>
 
@@ -343,6 +375,26 @@ var io=new IntersectionObserver(function(ent){ent.forEach(function(x){if(!x.isIn
 if(e.classList.contains('pv-svg')){conta(e.querySelector('.set .val'),2498,0,'R$ ','',1100,250);conta(e.querySelector('.out .val'),7828,0,'R$ ','',1900,1200);setTimeout(function(){e.classList.add('fim')},3400)}
 var n=e.classList.contains('pv-c')&&e.querySelector('.num');if(n)conta(n,+n.getAttribute('data-n'),+(n.getAttribute('data-d')||0),'',n.getAttribute('data-s')||'',1700,300)})},{threshold:.3});
 all('.pv-svg,.pv-l,.pv-c').forEach(function(e){io.observe(e)});
+})();
+</script>
+<script>
+/* painel de ganhos do topo: contador ao carregar e barras clicáveis */
+(function(){
+var g=document.querySelector('.gan');if(!g)return;
+var n=g.querySelector('.gan-n'),m=g.querySelector('.gan-m'),s=g.querySelector('.gan-s'),bs=[].slice.call(g.querySelectorAll('.gan-c')),out=g.querySelector('.out'),raf=0,timers=[];
+function fmt(v){return 'R$ '+String(Math.round(v)).replace(/\\B(?=(\\d{3})+$)/g,'.')}
+function rot(b){m.textContent=b.getAttribute('data-m');s.textContent=b.getAttribute('data-s')}
+function para(){cancelAnimationFrame(raf);timers.forEach(clearTimeout);timers=[]}
+function mostra(b){para();rot(b);n.textContent=fmt(+b.getAttribute('data-v'));bs.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')})}
+bs.forEach(function(b){b.addEventListener('click',function(){mostra(b)});
+b.addEventListener('pointerenter',function(e){if(e.pointerType==='mouse')mostra(b)});
+b.addEventListener('pointerleave',function(e){if(e.pointerType==='mouse')mostra(out)})});
+if(!window.matchMedia||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+function conta(de,ate,ms){var t0=performance.now();(function f(t){var p=Math.min(1,Math.max(0,(t-t0)/ms)),e=1-Math.pow(1-p,3);n.textContent=fmt(de+(ate-de)*e);if(p<1)raf=requestAnimationFrame(f)})(t0)}
+n.textContent=fmt(0);rot(g.querySelector('.set'));
+timers.push(setTimeout(function(){conta(0,2498,900)},300));
+timers.push(setTimeout(function(){cancelAnimationFrame(raf);rot(out);conta(2498,7828,1500)},1300));
+timers.push(setTimeout(function(){mostra(out)},3000));
 })();
 </script>
 </body></html>
