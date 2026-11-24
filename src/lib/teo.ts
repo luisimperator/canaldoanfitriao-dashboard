@@ -459,9 +459,9 @@ ENCERRAR: não deve sair esta nem as próximas. Use quando houver sinal claro, q
 - ela não é lead de venda: convidada ou parceira do canal, alguém do time, fornecedor, ou só veio resolver suporte;
 - ela reclamou, está insatisfeita ou a conversa terminou mal.
 
-PULAR: só esta mensagem não cabe, as próximas podem caber. Use quando o texto dela não combina com o que foi conversado (por exemplo, pergunta se a pessoa desistiu de um projeto que ela já toca, ou pede um horário que ela já deu) ou quando a pessoa avisou que volta numa data que ainda não chegou.
+PULAR: raro. Só esta mensagem não cabe, as próximas podem caber. Use apenas quando o texto ficaria errado ou constrangedor pra esta pessoa (pergunta se ela desistiu de um projeto que ela já toca, pede um horário que ela já deu) ou quando ela avisou que volta numa data que ainda não chegou. Mensagem genérica ("tá por aí?", "conseguiu ver minha mensagem?", "tem um horário melhor?") cabe em quase toda conversa que parou, inclusive quando a pessoa aceitou um presente ou recebeu um link e sumiu: não pule porque daria pra escrever uma melhor.
 
-ENVIAR: o caso comum. A pessoa estava no meio da conversa (qualificação, oferta de call, preço, dúvida) e simplesmente parou de responder. Sumir no meio da conversa não é recusa: o acompanhamento é parte normal da venda. Na dúvida entre ENVIAR e PULAR, ENVIAR.`;
+ENVIAR: o caso comum. A pessoa estava no meio da conversa (qualificação, oferta de call, presente, preço, dúvida) e simplesmente parou de responder. Sumir no meio da conversa não é recusa: o acompanhamento é parte normal da venda. Na dúvida entre ENVIAR e PULAR, ENVIAR.`;
 
 function linhaDaRevisao(m: MsgUnnichat): string | null {
   const txt = textoDaMensagem(m);
