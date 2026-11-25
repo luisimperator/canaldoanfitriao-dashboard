@@ -50,7 +50,8 @@ section{position:relative;padding:clamp(64px,10vw,110px) 0;overflow-x:clip}
 .hero{padding:120px 0 80px}
 .hero .grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);grid-template-areas:"a p" "b p";column-gap:56px}
 .h-a{grid-area:a;align-self:end}.h-b{grid-area:b}.h-p{grid-area:p;align-self:start;min-width:0}
-.hero h1{margin:22px 0 20px} .hero .lead{max-width:600px;margin-bottom:32px}
+.prom{font-family:var(--title);font-weight:700;font-size:clamp(1.9rem,2.5vw,2.15rem);line-height:1.18;letter-spacing:-.015em;color:#fff;text-wrap:balance}.prom span{color:#7fd3dc}
+.hero h1{margin:24px 0 20px;font-size:clamp(2.4rem,3.7vw,3.4rem)} .hero .lead{max-width:600px;margin-bottom:32px}
 .gan{--e:cubic-bezier(.2,.8,.2,1);background:#fff;color:#222;border-radius:28px;padding:30px 32px 24px;box-shadow:0 40px 90px rgba(0,0,0,.45);font-family:"Figtree",var(--title)}
 .gan-t{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .gan-t b{font-weight:700;font-size:1.35rem;letter-spacing:-.02em}
@@ -206,7 +207,7 @@ html.pvmv .pv-c.go .pv-hosp .h{transition-delay:calc(2s + var(--k)*.15s)}
 .fundo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(28,28,28,.96) 18%,rgba(28,28,28,.72) 60%,rgba(28,28,28,.55)),linear-gradient(180deg,transparent 70%,#1c1c1c)}
 .fundo.fraco::after{background:linear-gradient(90deg,rgba(28,28,28,.95),rgba(28,28,28,.78))}
 .fundo.forte::after{background:linear-gradient(180deg,rgba(20,24,26,.62),rgba(20,24,26,.82))}
-.hero h1 .gr{display:block;font-size:1.36em;line-height:1;white-space:nowrap;margin-bottom:.08em}
+.hero h1 .gr{display:block;font-size:1.76em;line-height:1;white-space:nowrap;margin-bottom:.08em}
 .hero .lead b{color:#fff}
 .quadro .qf{width:100%;height:auto;border-radius:18px;margin-bottom:12px}
 .gal{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:210px;gap:14px}
@@ -218,8 +219,8 @@ html.pvmv .pv-c.go .pv-hosp .h{transition-delay:calc(2s + var(--k)*.15s)}
 .aviso{font-size:.92rem;font-weight:500;color:rgba(255,255,255,.78);max-width:600px;margin-top:18px}
 footer{background:var(--dark-2);color:rgba(255,255,255,.55);font-size:.85rem;text-align:center;padding:34px 0}
 @media(max-width:860px){
-.hero{padding:82px 0 60px}.duo{grid-template-columns:1fr;gap:34px}.hero .grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"a" "p" "b"}
-.hero h1{margin:16px 0 22px;font-size:clamp(1.9rem,8.4vw,3.4rem)}.h-p{margin-bottom:28px}.hero .pill{font-size:.74rem;letter-spacing:.1em;padding:6px 13px}
+.hero{padding:74px 0 60px}.duo{grid-template-columns:1fr;gap:34px}.hero .grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"a" "p" "b"}
+.prom{font-size:clamp(1.25rem,6.2vw,2.3rem)}.hero h1{margin:12px 0 18px;font-size:clamp(1.6rem,7.4vw,3.2rem)}.hero h1 .gr{font-size:1.54em}.h-p{margin-bottom:28px}.hero .cta{padding-left:14px;padding-right:14px;font-size:clamp(.92rem,4.3vw,1.15rem)}
 .gan{padding:20px 18px 16px;border-radius:24px}.gan-t b{font-size:1.15rem}.gan-t span{font-size:.86rem;padding:5px 13px}.gan-n{font-size:3.1rem;margin-top:10px}.gan-s{font-size:.92rem;margin-top:6px}.gan-g{height:148px;margin-top:12px}.gan-c em{font-size:.95rem;margin-bottom:6px}.gan-x span{font-size:.9rem}.gan-x small{font-size:.78rem}.gan-k{margin-top:16px;gap:10px}.gan-k div{padding:7px 12px}.gan-k small{font-size:.78rem}.gan-k b{font-size:1.1rem}.gan-f{margin-top:10px;font-size:.74rem}
 .quem{margin-top:18px;gap:16px}.quem .av{width:52px;height:52px}.quem .av::before{inset:-6px}
 .cards{grid-template-columns:1fr}.bio{grid-template-columns:minmax(0,1fr);gap:30px}.bio .ft{height:440px}.nums{grid-template-columns:repeat(2,minmax(0,1fr))}.gal{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:150px;gap:10px}.gal figure{border-radius:16px}.gal figcaption{left:8px;bottom:8px;font-size:.74rem;padding:4px 10px}
@@ -231,12 +232,12 @@ footer{background:var(--dark-2);color:rgba(255,255,255,.55);font-size:.85rem;tex
 <div class="topo"><div class="wrap"><a class="marca"><img src="/marca/cda-icone.png" alt=""><span>CANAL DO ANFITRIÃO</span></a><a class="mini" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar</a></div></div>
 <div class="wrap"><div class="grid">
 <div class="h-a">
-<span class="pill coral">Airbnb do Zero · pra quem nunca anunciou</span>
-<h1><span class="c gr">R$ 7.828</span> de faturamento em 30 dias no Airbnb</h1>
+<p class="prom"><span>Curso:</span> monte seu primeiro anúncio no Airbnb, do zero</p>
+<h1><span class="c gr">R$ 7.828</span> de faturamento em 30&nbsp;dias no Airbnb</h1>
 </div>
 <div class="h-b">
-<p class="lead"><b>Com um apartamento que começou do zero, sem nenhuma reserva.</b> O Rômulo Villela gravou o caminho pra você repetir no seu imóvel: a arrumação, as fotos com o celular, o preço e o anúncio publicado.</p>
-<a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar agora · R$ 197</a>
+<p class="lead"><b>Passo a passo, tela por tela, pra você tirar seu primeiro anúncio do papel:</b> arrumar o imóvel, fazer as fotos com o celular, definir o preço e publicar. O mesmo caminho do apartamento que começou sem nenhuma reserva.</p>
+<a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero montar meu anúncio · R$ 197</a>
 <p class="nota">Acesso imediato · Garantia de 7 dias · Pagamento seguro pela Eduzz</p>
 <div class="chips"><span><b>✓</b> Do imóvel vazio ao anúncio no ar</span><span><b>✓</b> 3 aulas · 3h30</span><span><b>✓</b> Faça junto</span></div>
 <p class="aviso">R$ 7.828 é o faturamento bruto do primeiro mês cheio no ar de um imóvel administrado pelo Rômulo, somando as reservas do Airbnb e do Booking. O resultado varia conforme o imóvel, a cidade e a sua dedicação. Não é promessa de ganho.</p>
