@@ -1,6 +1,8 @@
 // LP do low ticket "Airbnb do Zero": link.canaldoanfitriao.com.br/airbnb-do-zero
 // Página estática; fotos em public/lp/airbnb-do-zero/ e ícone em public/marca/. Bloco de prova (.pv) é SVG + CSS + JS aqui mesmo.
 
+import { PIXEL_PADRAO } from "@/lib/imersao-lp";
+
 // Link do botão de compra (Eduzz, R$ 197): ÚNICO lugar pra trocar.
 export const AIRBNB_DO_ZERO_CHECKOUT = "https://sun.eduzz.com/797ZPKY10E";
 
@@ -314,7 +316,10 @@ html.mv .sp:not(.on) .sp-c{opacity:0}html.mv .sp:not(.on) .sp-b i{transform:scal
 html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 @media(max-width:760px){.sp{grid-template-columns:1fr;gap:12px}.sp-c{padding:20px 22px}.sp-c b{margin:4px 0 14px}.sp-c p{margin-top:13px}}
 @media(prefers-reduced-motion:reduce){.sp *{transition:none!important;animation:none!important}}
-</style></head><body>
+</style>
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init',"${PIXEL_PADRAO}");fbq('track','PageView');</script>
+<noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=${PIXEL_PADRAO}&ev=PageView&noscript=1"></noscript>
+</head><body>
 <script>if('IntersectionObserver' in window&&window.matchMedia&&matchMedia('(prefers-reduced-motion: no-preference)').matches)document.documentElement.classList.add('mv')</script>
 <section class="hero dark glow"><div class="fundo" style="background-image:url(/lp/airbnb-do-zero/balneario.webp)"></div>
 <div class="topo"><div class="wrap"><a class="marca"><img src="/marca/cda-icone.png" alt=""><span>CANAL DO ANFITRIÃO</span></a><a class="mini" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar</a></div></div>
@@ -543,6 +548,20 @@ var il=new IntersectionObserver(function(en){var n=0;en.forEach(function(x){if(!
 var e=document.querySelector('.sp');if(!e)return;
 if(!document.documentElement.classList.contains('mv')){e.classList.add('on');return}
 var io=new IntersectionObserver(function(x){if(x[0].isIntersecting){io.disconnect();e.classList.add('on')}},{threshold:.2});io.observe(e);
+})();
+</script>
+<script>
+/* rastreamento: os parâmetros do anúncio vão em todos os botões de compra; no clique, InitiateCheckout e só então o checkout */
+(function(){
+var q=[];try{new URLSearchParams(location.search).forEach(function(v,k){v=v.trim();if(v)q.push([k,v])})}catch(e){}
+var bt=[].slice.call(document.querySelectorAll('a[href^="${AIRBNB_DO_ZERO_CHECKOUT}"]'));
+bt.forEach(function(a){try{var u=new URL(a.href);q.forEach(function(p){if(!u.searchParams.has(p[0]))u.searchParams.set(p[0],p[1])});a.href=u.toString()}catch(e){}
+a.addEventListener('click',function(e){
+if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey)return;
+e.preventDefault();
+try{if(window.fbq)fbq('track','InitiateCheckout',{value:197,currency:'BRL',content_name:'Airbnb do Zero'})}catch(x){}
+setTimeout(function(){location.href=a.href},350);
+})});
 })();
 </script>
 </body></html>
