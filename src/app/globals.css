@@ -34,6 +34,9 @@
   --wa-atendimento: #f47230;
   --wa-utilidade: #00b894;
   --wa-autenticacao: #f2a600;
+  /* Tráfego da Meta: fatura (laranja) × faturamento do mês (azul). */
+  --trafego-fatura: #f47230;
+  --trafego-faturamento: #257de0;
   /* Mapa dos alunos (dia): papel claro, estados em teal, regiões em coral. */
   --mapa-fundo: #ffffff;
   --mapa-texto: #10232a;
@@ -76,6 +79,8 @@
   --wa-atendimento: #e76624;
   --wa-utilidade: #00a888;
   --wa-autenticacao: #d28e05;
+  --trafego-fatura: #e76624;
+  --trafego-faturamento: #338ced;
   /* Mapa dos alunos (noite): azul petróleo profundo, estados acesos em teal. */
   --mapa-fundo: #0b151c;
   --mapa-texto: #e8f1f3;
