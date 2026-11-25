@@ -8,6 +8,7 @@ import {
   anotar,
   enviarTexto,
   historico,
+  imersaoPendente,
   ouvirAudios,
   verImagens,
   revisarAcompanhamento,
@@ -2302,6 +2303,20 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     if (!fresca.ativo || !["novo", "em_conversa", "encerrado"].includes(fresca.estado)) return "mudou de estado";
     if (fresca.proxima_checagem && new Date(fresca.proxima_checagem).getTime() > Date.now()) return "já tratada";
     c = fresca;
+    // Comprador da Imersão: o Téo não conversa nem marca call até a turma
+    // acontecer (migração 0151). Depois, se ele escrever, a entrada reabre.
+    const turmaImersao = await imersaoPendente(supabase, c.telefone);
+    if (turmaImersao) {
+      if (c.estado !== "encerrado" || c.motivo_humano !== "imersao") {
+        await supabase
+          .from("teo_conversas")
+          .update({ estado: "encerrado", motivo_humano: "imersao", atualizado_em: new Date().toISOString() })
+          .eq("contact_id", c.contact_id);
+        await log(supabase, "comprador da Imersão: o Téo sai", { contact_id: c.contact_id, nome: c.nome, turma: turmaImersao });
+      }
+      await adiar(supabase, c.contact_id, 24 * 3600_000);
+      return "comprador da Imersão";
+    }
     const msgs: MsgUnnichat[] = await historico(supabase, c.contact_id);
     const reais = msgs.filter((m) => m.senderBy !== "platform");
     const ultima = reais[reais.length - 1];

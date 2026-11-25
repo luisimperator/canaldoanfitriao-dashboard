@@ -99,6 +99,16 @@ export async function unnichat(
   return data as { status: number; body: unknown; erro?: string };
 }
 
+// Comprador da Imersão (Fernando, 25/11: "Quem compra imersão tem que só fazer
+// a imersão, não tem que fazer call"): da compra até o domingo da turma, o Téo
+// não fala com ele (migração 0151). Devolve a data da turma, ou null.
+export async function imersaoPendente(supabase: SupabaseClient, telefone: string | null): Promise<string | null> {
+  if (!telefone) return null;
+  const { data, error } = await supabase.rpc("teo_imersao_pendente", { p_telefone: telefone });
+  if (error) return null;
+  return (data as string | null) ?? null;
+}
+
 export async function historico(supabase: SupabaseClient, contactId: string): Promise<MsgUnnichat[]> {
   const r = await unnichat(supabase, "GET", `/contact/${contactId}/messages`);
   if (r.status !== 200) throw new Error(`Unnichat messages: ${r.status} ${r.erro ?? ""}`);
