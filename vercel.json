@@ -6,6 +6,7 @@
     { "path": "/api/sync/calls", "schedule": "7,37 * * * *" },
     { "path": "/api/sync/call-feedbacks", "schedule": "*/5 * * * *" },
     { "path": "/api/sync/tmb-varredura", "schedule": "13 10 * * *" },
-    { "path": "/api/sync/imersao-tags", "schedule": "23 * * * *" }
+    { "path": "/api/sync/imersao-tags", "schedule": "23 * * * *" },
+    { "path": "/api/sync/alertas", "schedule": "17 * * * *" }
   ]
 }
