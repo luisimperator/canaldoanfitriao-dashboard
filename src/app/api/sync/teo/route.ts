@@ -2890,9 +2890,51 @@ async function avisarDaCall(
 //   link, a menos que o lead tenha escrito perto da hora.
 // Com a janela fechada, os avisos saem pelo template "lembrete_call". O
 // follow-up pós-call é do vendedor.
+// Call cancelada pelo banco, fora do Téo (comprador da Imersão, migração 0151):
+// o convite do Teams continua de pé, porque o http do Postgres não alcança a
+// Microsoft. O cancelamento do convite sai daqui; a Graph avisa o lead e o
+// vendedor por e-mail (migração 0152).
+async function cancelarConvitesPendentes(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
+  const { data } = await supabase
+    .from("teo_calls")
+    .select("id, contact_id, nome, evento_id")
+    .eq("status", "cancelada")
+    .eq("liberada_motivo", "imersao")
+    .is("convite_cancelado_em", null)
+    .not("evento_id", "is", null)
+    .gte("inicio", new Date().toISOString())
+    .limit(10);
+  if (!data?.length) return [];
+  const g = await graph(supabase, cfg).catch(() => null);
+  if (!g?.ok) return [];
+  const feitos: string[] = [];
+  for (const k of data) {
+    const r = await fetch(`${g.base}/${encodeURIComponent(k.evento_id as string)}/cancel`, {
+      method: "POST",
+      headers: g.auth,
+      body: JSON.stringify({
+        comment:
+          "Como você vai participar da Imersão deste fim de semana, cancelamos esta call: é melhor a gente conversar depois dela. Depois da Imersão a gente remarca pelo WhatsApp.",
+      }),
+    }).catch(() => null);
+    // Falha passageira (rede, 401/403/429, 5xx) tenta de novo na próxima
+    // rodada; o resto (202, ou 4xx de evento que já não existe) encerra.
+    const tentarDeNovo = !r || r.status >= 500 || [401, 403, 429].includes(r.status);
+    if (tentarDeNovo) {
+      await log(supabase, "convite do Teams não cancelado (tenta de novo)", { contact_id: k.contact_id, nome: k.nome, status: r?.status ?? null });
+      continue;
+    }
+    await supabase.from("teo_calls").update({ convite_cancelado_em: new Date().toISOString() }).eq("id", k.id);
+    await log(supabase, "convite do Teams cancelado (comprador da Imersão)", { contact_id: k.contact_id, nome: k.nome, status: r.status });
+    feitos.push(`convite cancelado: ${k.nome ?? k.id}`);
+  }
+  return feitos;
+}
+
 async function cuidarDasCalls(supabase: SupabaseClient, cfg: Config): Promise<string[]> {
   const feitos: string[] = [];
   const agora = Date.now();
+  feitos.push(...(await cancelarConvitesPendentes(supabase, cfg).catch(() => [] as string[])));
   const { data: calls } = await supabase
     .from("teo_calls")
     .select("id, contact_id, nome, inicio, vendedor, meet_url, lembrete_em, passou_vendedor_em, vespera_em, esperando_em, resumo, email, status, evento_id, reuniao_id, link_enviado_em, confirmacao_em, alerta_silencio_em, liberar_em, liberada_em")
