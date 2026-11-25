@@ -1059,8 +1059,8 @@ function proximoDiaComAgenda(cfg: Config): string | null {
 // atendem em paralelo (cada um no seu computador): o mesmo horário aceita uma
 // call por vendedor. Em cada horário vai o vendedor livre que ordemDoDia()
 // escolhe. Se alguém do time já conversou com o lead, só os horários dessa
-// pessoa. Num dia sem nenhum horário com 1h de folga, entram os encaixes
-// (30 min entre os inícios).
+// pessoa. Num dia sem nenhum horário com 1h de folga, entram os encaixes:
+// 40 min antes ou depois de uma call que o vendedor já tem.
 async function horariosLivres(
   supabase: SupabaseClient,
   cfg: Config,
@@ -1085,13 +1085,19 @@ async function horariosLivres(
       .gte("inicio", new Date(Date.now() - 12 * 3600_000).toISOString()),
     taxasDeFechamentoEmCall(supabase, time),
   ]);
-  // Entre o início de uma call e o da próxima do mesmo vendedor, no mínimo 1h
-  // (a call continua com 30 min no convite; a meia hora que sobra é folga).
-  // Dia lotado (nenhum horário com essa folga no dia): encaixa entre as calls,
-  // com 30 min de um início pro outro, a duração do convite (Fernando, 19/11:
-  // "Quando lota o dia, pode encaixar call entre as outras calls").
+  // Entre o início de uma call e o da próxima do mesmo vendedor, 1h (a call
+  // tem 30 min no convite; a meia hora que sobra é folga). Dia lotado (nenhum
+  // horário com essa folga no dia): encaixa colado, com 40 min de um início pro
+  // outro (Fernando, 19/11: "Quando lota o dia, pode encaixar call entre as
+  // outras calls"; 25/11: a call continua com 30 min, mas "o intervalo mínimo
+  // entre o início de uma call e o início da outra" é 40 min, "coladinho os 40
+  // minutos certinho só quando não tiver mais como espaçar"; até 24/11 o
+  // encaixe era de 30 min e as calls saíam emendadas).
   const INTERVALO_MS = 60 * 60_000;
-  const ENCAIXE_MS = 30 * 60_000;
+  const ENCAIXE_MS = 40 * 60_000;
+  // Cada horário da grade cobre meia hora de expediente: o encaixe só cai
+  // dentro desses blocos (nunca no almoço nem depois do último horário).
+  const BLOCO_MS = 30 * 60_000;
   if (contato && marcadas) {
     for (let i = marcadas.length - 1; i >= 0; i--) if (marcadas[i].contact_id === contato) marcadas.splice(i, 1);
   }
@@ -1114,9 +1120,9 @@ async function horariosLivres(
   for (const m of marcadas ?? []) {
     if (m.vendedor) carga.set(`${dia(m.inicio)}|${m.vendedor}`, (carga.get(`${dia(m.inicio)}|${m.vendedor}`) ?? 0) + 1);
   }
-  const livresCom = (folga: number) => {
+  const livresCom = (folga: number, candidatos: string[]) => {
     const res: { h: string; horario: string; vendedor: string }[] = [];
-    for (const h of todos) {
+    for (const h of candidatos) {
       const ts = new Date(h).getTime();
       const livres = vendedores.filter((v) => !ocupado(ts, v, folga));
       if (livres.length === 0) continue;
@@ -1125,11 +1131,28 @@ async function horariosLivres(
     }
     return res;
   };
-  const comFolga = livresCom(INTERVALO_MS);
+  const comFolga = livresCom(INTERVALO_MS, todos);
   const diasComHorario = new Set(comFolga.map((s) => dia(s.h)));
-  const encaixes = livresCom(ENCAIXE_MS).filter((s) => !diasComHorario.has(dia(s.h)));
+  // Encaixes: 40 min antes ou depois de cada call já marcada, dentro dos
+  // blocos da grade, com a mesma antecedência e o mesmo horizonte.
+  const grade = (cfg.horarios ?? []).filter((h) => typeof h === "string").map((h) => new Date(h).getTime());
+  const noExpediente = (ts: number) => grade.some((g) => ts >= g && ts < g + BLOCO_MS);
+  const colados = new Set<string>();
+  for (const m of marcadas ?? []) {
+    if (!m.vendedor) continue;
+    const t = new Date(m.inicio).getTime();
+    for (const ts of [t - ENCAIXE_MS, t + ENCAIXE_MS]) {
+      if (ts <= Date.now() + ANTECEDENCIA_MS || diaSP(ts) > limite || !noExpediente(ts)) continue;
+      colados.add(new Date(ts).toISOString());
+    }
+  }
+  const encaixes = livresCom(ENCAIXE_MS, [...todos, ...colados]).filter((s) => !diasComHorario.has(dia(s.h)));
+  // Um encaixe pode cair num horário da grade (40 min antes de uma call que já
+  // era encaixe): vale uma vez só.
+  const vistos = new Set<string>();
   return [...comFolga, ...encaixes]
     .sort((a, b) => new Date(a.h).getTime() - new Date(b.h).getTime())
+    .filter((s) => (vistos.has(s.horario) ? false : (vistos.add(s.horario), true)))
     .map(({ horario, vendedor }) => ({ horario, vendedor }));
 }
 
