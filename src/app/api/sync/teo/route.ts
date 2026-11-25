@@ -96,6 +96,10 @@ interface CupomPedido {
   pedido_em: string;
   /** A "equipe" respondeu: daqui em diante a condição está aprovada pra ela. */
   respondida_em?: string | null;
+  /** Condição oferecida por modelo ("me dá o seu ok que eu peço pro meu
+   * supervisor", Fernando, 25/11): o pedido só começa a contar quando o lead
+   * responde; aí o Téo diz que vai pedir e volta com ela em CUPOM_ESPERA_MS. */
+  esperar_ok?: boolean;
 }
 
 const CAMPOS_CONVERSA =
@@ -2359,7 +2363,26 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     const ocioso = ultima ? Date.now() - new Date(ultima.date).getTime() : Infinity;
     // Cupom pedido "à equipe" (pedir_cupom): até cupom_em o Téo está "vendo";
     // depois, a condição está aprovada e ele volta com ela quando fizer sentido.
-    const cupom = c.cupom_pendente ?? null;
+    let cupom = c.cupom_pendente ?? null;
+    // Condição oferecida por modelo (esperar_ok): o lead respondeu depois do
+    // modelo, então agora o Téo "pede pro supervisor" e volta em alguns minutos.
+    if (
+      cupom &&
+      !cupom.respondida_em &&
+      cupom.esperar_ok &&
+      ultimaDoLead &&
+      new Date(ultimaDoLead.date).getTime() > new Date(cupom.pedido_em).getTime()
+    ) {
+      const agoraIso = new Date().toISOString();
+      cupom = { ...cupom, esperar_ok: false, pedido_em: agoraIso };
+      c.cupom_pendente = cupom;
+      c.cupom_em = new Date(Date.now() + CUPOM_ESPERA_MS).toISOString();
+      await supabase
+        .from("teo_conversas")
+        .update({ cupom_pendente: cupom, cupom_em: c.cupom_em })
+        .eq("contact_id", c.contact_id);
+      await log(supabase, "cupom pedido (resposta ao modelo)", { contact_id: c.contact_id, nome: c.nome, cupom: cupom.codigo });
+    }
     const cupomEm = c.cupom_em ? new Date(c.cupom_em).getTime() : 0;
     const cupomEsperando = Boolean(cupom && !cupom.respondida_em) && Date.now() < cupomEm;
     const cupomChegou = Boolean(cupom && !cupom.respondida_em) && !cupomEsperando;
