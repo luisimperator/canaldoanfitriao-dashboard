@@ -441,7 +441,7 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 </div></div></section>
 
 <section class="dark glow"><div class="wrap centro" style="max-width:820px">
-<h2>Seu imóvel pode estar <span class="c">no ar</span> no mês que vem.</h2>
+<h2>Seu imóvel pode estar <span class="c">no ar</span> amanhã.</h2>
 <p class="lead" style="margin:18px 0 30px">Comece pelo começo, com quem faz isso todo dia.</p>
 <a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar agora · R$ 197</a>
 <p class="nota">Acesso imediato · Garantia de 7 dias</p>
