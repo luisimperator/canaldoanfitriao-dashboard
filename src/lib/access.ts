@@ -36,6 +36,7 @@ export const TABS: TabDef[] = [
   { href: "/financeiro", label: "Financeiro", icon: "$", section: "Financeiro" },
   { href: "/financeiro/extrato", label: "Extrato do banco", icon: "🏦", section: "Financeiro" },
   { href: "/financeiro/provisao", label: "Provisão de caixa", icon: "💧", section: "Financeiro" },
+  { href: "/custos/whatsapp", label: "Custo do WhatsApp", icon: "✉", section: "Financeiro" },
   { href: "/integracoes", label: "Integrações", icon: "⚙", section: "Configurações" },
 ];
 
