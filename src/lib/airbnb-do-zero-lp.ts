@@ -292,6 +292,28 @@ html.mv .passo:not(.aceso) .n{background:#dfe3e6;color:#98a1a8;box-shadow:none}
 html.mv .passo.aceso .n::after{animation:mvanel .9s ease-out var(--nd,0s) 1}
 html.mv .passo.mvi:not(.on) li{opacity:0}html.mv .passo.mvi.on li{animation:mvsobe .6s var(--mve) calc(var(--d,0s) + .35s) backwards}html.mv .passo.mvi.on li+li{animation-delay:calc(var(--d,0s) + .47s)}
 @media(prefers-reduced-motion:reduce){.hero .cta,.duo .cta,.mini,.chips *,.chips span,.quem .av img,.card,.card::before,.card .ic,.passo,.passo *,.passo li::before{transition:none!important;animation:none!important}.card:hover,.card.tq,.passo:hover,.passo.tq,.card .ic,.passo .n,.hero .cta:hover,.duo .cta:hover{transform:none!important}}
+/* o curso se paga */
+.sp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;max-width:960px;margin:0 auto}
+.sp-c{position:relative;background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px 26px 26px;box-shadow:var(--shadow)}
+.sp-c small{display:block;font-family:var(--label);font-weight:700;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.sp-c b{display:block;font-family:var(--title);font-weight:800;font-size:clamp(2.1rem,4vw,2.9rem);line-height:1.1;letter-spacing:-.03em;white-space:nowrap;color:var(--ink);margin:8px 0 18px}
+.sp-c.um b{color:var(--teal)}
+.sp-b{position:relative;display:block;height:12px;border-radius:99px;background:#e6e9ec}
+.sp-b i{position:absolute;left:0;top:0;bottom:0;width:var(--w);border-radius:99px;background:#8b949c;transform-origin:0 50%}
+.sp-c.um .sp-b i{background:var(--teal)}
+.sp-b::after{content:"";position:absolute;left:49.25%;top:-5px;bottom:-5px;width:2px;margin-left:-1px;background:var(--ink);border-radius:2px}
+.sp-c p{margin-top:16px;text-wrap:balance;font-weight:500;line-height:1.4;color:var(--ink-2)}
+.sp-c.dois{background:var(--coral);border-color:var(--coral);box-shadow:var(--shadow-coral)}
+.sp-c.dois small,.sp-c.dois b,.sp-c.dois p{color:#fff}.sp-c.dois p{font-weight:700}
+.sp-c.dois .sp-b{background:rgba(255,255,255,.3)}.sp-c.dois .sp-b i{background:#fff}
+.sp-ex{max-width:720px;margin:34px auto 0;text-align:center;font-family:var(--title);font-weight:600;font-size:clamp(1.15rem,2.6vw,1.5rem);line-height:1.35;color:var(--ink);text-wrap:balance}
+.sp-ct{margin-top:28px;text-align:center}
+.sp-nt{text-wrap:balance;max-width:640px;margin:18px auto 0;text-align:center;font-size:.9rem;color:var(--muted)}
+html.mv .sp .sp-b i{transition:transform 1s var(--mve) calc(var(--d,0s) + .35s)}
+html.mv .sp:not(.on) .sp-c{opacity:0}html.mv .sp:not(.on) .sp-b i{transform:scaleX(0)}
+html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
+@media(max-width:760px){.sp{grid-template-columns:1fr;gap:12px}.sp-c{padding:20px 22px}.sp-c b{margin:4px 0 14px}.sp-c p{margin-top:13px}}
+@media(prefers-reduced-motion:reduce){.sp *{transition:none!important;animation:none!important}}
 </style></head><body>
 <script>if('IntersectionObserver' in window&&window.matchMedia&&matchMedia('(prefers-reduced-motion: no-preference)').matches)document.documentElement.classList.add('mv')</script>
 <section class="hero dark glow"><div class="fundo" style="background-image:url(/lp/airbnb-do-zero/balneario.webp)"></div>
@@ -382,6 +404,18 @@ html.mv .passo.mvi:not(.on) li{opacity:0}html.mv .passo.mvi.on li{animation:mvso
 <p class="lead" style="margin-top:14px">É o criador do Canal do Anfitrião e do Anfitrião 5 Estrelas, a comunidade de anfitriões do canal, e palestrante em eventos oficiais do Airbnb.</p>
 <div class="nums"><div><b>10+</b><span>anos de Airbnb</span></div><div><b>60+</b><span>imóveis sob gestão</span></div><div><b>11 mil+</b><span>locações</span></div><div><b>2.000+</b><span>alunos nos cursos</span></div><div><b>200 mil+</b><span>no Instagram</span></div><div><b>120 mil+</b><span>no YouTube</span></div></div></div>
 </div></div></section>
+
+<section class="branco" id="se-paga"><div class="wrap">
+<div class="cab centro"><span class="label">A conta é simples</span><h2>O curso se paga na <span class="c">primeira ou segunda reserva</span>.</h2></div>
+<div class="sp">
+<div class="sp-c"><small>O curso</small><b>R$ 197</b><span class="sp-b" style="--w:49.25%" aria-hidden="true"><i></i></span><p>3 aulas, 3h30 no total.</p></div>
+<div class="sp-c um" style="--d:.15s"><small>1 diária</small><b>R$ 200</b><span class="sp-b" style="--w:50%" aria-hidden="true"><i></i></span><p>Descontadas as taxas, chega perto.</p></div>
+<div class="sp-c dois" style="--d:.3s"><small>2 diárias</small><b>R$ 400</b><span class="sp-b" style="--w:100%" aria-hidden="true"><i></i></span><p>Duas noites já pagam o curso.</p></div>
+</div>
+<p class="sp-ex">Exemplo: com diária de R$&nbsp;200, uma reserva de 2&nbsp;noites já paga o curso.</p>
+<p class="sp-ct"><a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar agora</a></p>
+<p class="sp-nt">Exemplo ilustrativo, antes das taxas da plataforma. O valor da diária e o número de reservas variam conforme o imóvel e a cidade. Não é promessa de ganho.</p>
+</div></section>
 
 <section class="dark glow" id="oferta"><div class="wrap">
 <div class="oferta"><span class="pill coral">Airbnb do Zero</span><h3>Curso completo, acesso imediato</h3>
@@ -501,6 +535,14 @@ var io=new IntersectionObserver(function(en){var n=0;en.forEach(function(x){if(!
 al.forEach(function(e){io.observe(e)});
 var il=new IntersectionObserver(function(en){var n=0;en.forEach(function(x){if(!x.isIntersecting)return;var e=x.target;il.unobserve(e);e.style.setProperty('--nd',(.45+n++*.3)+'s');e.classList.add('aceso')})},{threshold:.5,rootMargin:'0px 0px -12% 0px'});
 [].slice.call(ps.children).forEach(function(e){il.observe(e)});
+})();
+</script>
+<script>
+/* o curso se paga: cartões e barras entram ao rolar */
+(function(){
+var e=document.querySelector('.sp');if(!e)return;
+if(!document.documentElement.classList.contains('mv')){e.classList.add('on');return}
+var io=new IntersectionObserver(function(x){if(x[0].isIntersecting){io.disconnect();e.classList.add('on')}},{threshold:.2});io.observe(e);
 })();
 </script>
 </body></html>
