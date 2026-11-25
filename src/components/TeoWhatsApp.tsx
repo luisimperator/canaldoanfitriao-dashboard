@@ -114,6 +114,7 @@ function situacao(c: { estado: string | null; motivo_humano: string | null; blac
     if (c.motivo_humano === "sem_interesse") return "encerrada: sem interesse";
     return c.black_vendedor ? `com ${c.black_vendedor.split(" ")[0]}` : "com o time";
   }
+  if (c.motivo_humano === "imersao") return "fora do Téo: comprou a Imersão";
   if (c.estado === "em_conversa") return "Téo conversando";
   if (c.estado === "novo") return "Téo vai abrir";
   return c.estado ?? "";
@@ -187,6 +188,9 @@ function Bolha({ m, onImagem }: { m: Msg; onImagem: (u: string) => void }) {
           </a>
         )}
         {m.tx && <div className="whitespace-pre-wrap break-words">{m.tx}</div>}
+        {/* Mensagem com botão de link (cta-url): o lead vê o botão; a API da
+            Unnichat não devolve o endereço, então aqui só aparece o aviso. */}
+        {m.ty === "cta-url" && <div className="mt-1 rounded-md border border-current/20 px-2 py-1 text-center text-[12px] opacity-80">🔗 vai com botão de link</div>}
         {!m.tx && !m.u && !audio && <div className="italic opacity-60">({m.ty})</div>}
         <div className="mt-0.5 text-right text-[10px] opacity-60">{hora(m.d)}</div>
       </div>

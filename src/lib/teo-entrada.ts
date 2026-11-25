@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { historico } from "@/lib/teo";
+import { historico, imersaoPendente } from "@/lib/teo";
 
 // Modo Black: quem escreve pro WhatsApp do Canal entra no Téo. A automação
 // "Téo: entrada" do Unnichat chama o webhook com ?etapa=teo-entrada a cada
@@ -15,6 +15,9 @@ import { historico } from "@/lib/teo";
 //   quem está vendendo agora (Fernando, 14/11: "o Breno conversou com ele 2
 //   meses atrás, dane-se, agora a venda é do Téo").
 // - Conversa atribuída ao Diego: o Téo não entra.
+// - Comprador da Imersão, até o domingo da turma: o Téo não entra (Fernando,
+//   25/11: "Quem compra imersão tem que só fazer a imersão, não tem que fazer
+//   call"); se estava com o Téo, sai.
 const DONO_RECENTE_DIAS = 15;
 
 // O vendedor ainda está com o lead? Só se a passagem pro time é recente, ou se
@@ -83,6 +86,24 @@ export async function inscreverEntrada(
   if (await respostaAvisoAtraso(supabase, contato)) return { ok: true };
   const { data: cfg } = await supabase.from("teo_config").select("black_ate, ligado, vendedores").eq("id", 1).maybeSingle();
   if (!cfg?.ligado || !cfg.black_ate || new Date(cfg.black_ate).getTime() < Date.now()) return { ok: true };
+
+  const turmaImersao = await imersaoPendente(supabase, contato?.phoneNumber ?? null);
+  if (turmaImersao) {
+    const { data: saiu } = await supabase
+      .from("teo_conversas")
+      .update({ estado: "encerrado", motivo_humano: "imersao", proxima_checagem: null, atualizado_em: new Date().toISOString() })
+      .eq("contact_id", id)
+      .in("estado", ["novo", "em_conversa"])
+      .select("contact_id");
+    if (saiu?.length) {
+      await supabase.from("webhook_log").insert({
+        source: "teo",
+        note: "comprador da Imersão: o Téo sai",
+        body: { contact_id: id, nome: contato?.name ?? null, turma: turmaImersao },
+      });
+    }
+    return { ok: true };
+  }
 
   const { data: ja } = await supabase
     .from("teo_conversas")
