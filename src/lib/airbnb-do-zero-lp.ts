@@ -9,9 +9,9 @@ export const AIRBNB_DO_ZERO_CHECKOUT = "https://sun.eduzz.com/797ZPKY10E";
 export function airbnbDoZeroHtml(): string {
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Airbnb do Zero · R$ 7.828 de faturamento em 30 dias no Airbnb · Canal do Anfitrião</title>
-<meta name="description" content="Prepare o imóvel, tire as fotos com o celular, defina o preço e publique seu primeiro anúncio no Airbnb. 3 aulas com o Rômulo Villela, 3h30, acesso imediato.">
+<meta name="description" content="Prepare o imóvel, tire as fotos com o celular, defina o preço e publique seu primeiro anúncio no Airbnb. Com o Rômulo Villela, acesso imediato.">
 <meta property="og:title" content="Airbnb do Zero · Canal do Anfitrião">
-<meta property="og:description" content="O método do Rômulo Villela pra quem nunca anunciou no Airbnb. 3 aulas, 3h30, R$ 197.">
+<meta property="og:description" content="O método do Rômulo Villela pra quem nunca anunciou no Airbnb. R$ 197, acesso imediato.">
 <meta property="og:image" content="https://link.canaldoanfitriao.com.br/lp/airbnb-do-zero/og.jpg">
 <link rel="icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -332,7 +332,7 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 <p class="lead"><b>Passo a passo, tela por tela, pra você tirar seu primeiro anúncio do papel:</b> arrumar o imóvel, fazer as fotos com o celular, definir o preço e publicar. O mesmo caminho do apartamento que começou sem nenhuma reserva.</p>
 <a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero montar meu anúncio · R$ 197</a>
 <p class="nota">Acesso imediato · Garantia de 7 dias · Pagamento seguro pela Eduzz</p>
-<div class="chips"><span><b>✓</b> Do imóvel vazio ao anúncio no ar</span><span><b>✓</b> 3 aulas · 3h30</span><span><b>✓</b> Faça junto</span></div>
+<div class="chips"><span><b>✓</b> Do imóvel vazio ao anúncio no ar</span><span><b>✓</b> Tela por tela</span><span><b>✓</b> Faça junto</span></div>
 <p class="aviso">R$ 7.828 é o faturamento bruto total do primeiro mês cheio no ar de um imóvel administrado pelo Rômulo. O resultado varia conforme o imóvel, a cidade e a sua dedicação. Não é promessa de ganho.</p>
 </div>
 <div class="h-p"><div class="gan" role="group" aria-label="Painel ilustrativo do faturamento bruto: R$ 2.498 em setembro, mês parcial, e R$ 7.828 em outubro">
@@ -357,11 +357,11 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 </div></div></section>
 
 <section class="branco"><div class="wrap">
-<div class="cab"><span class="label">O que você vai aprender</span><h2>Do imóvel vazio ao <span class="t">primeiro mês no ar</span>, em 3 aulas.</h2><p class="lead" style="margin-top:12px">3h30 de aula, com os vídeos inteiros.</p></div>
+<div class="cab"><span class="label">O que você vai aprender</span><h2>Do imóvel vazio ao <span class="t">primeiro mês no ar</span>.</h2></div>
 <div class="passos">
-<div class="passo"><div class="n">1</div><div><h3>Preparando o imóvel pro Airbnb <small style="font-weight:600;color:var(--muted)">· 1h26</small></h3><ul><li>A vistoria e a arrumação do apartamento antes de anunciar</li><li>O que comprar e como tirar as fotos com o celular</li></ul></div></div>
-<div class="passo"><div class="n">2</div><div><h3>Montando o anúncio do zero | Quanto cobrar? <small style="font-weight:600;color:var(--muted)">· 1h22</small></h3><ul><li>A conta da diária e como olhar os anúncios concorrentes</li><li>O anúncio criado tela por tela: título, descrição, regras, check-in e preço</li></ul></div></div>
-<div class="passo"><div class="n">3</div><div><h3>O primeiro mês no ar: quanto rendeu <small style="font-weight:600;color:var(--muted)">· 42 min</small></h3><ul><li>O balanço real do 1º mês do anúncio</li><li>Os ajustes de preço e de estadia mínima</li></ul></div></div>
+<div class="passo"><div class="n"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.8V20L18.5 20V9.8M10 20v-5.5h4V20"/></svg></div><div><h3>Preparando o imóvel pro Airbnb</h3><ul><li>A vistoria e a arrumação do apartamento antes de anunciar</li><li>O que comprar e como tirar as fotos com o celular</li></ul></div></div>
+<div class="passo"><div class="n"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/></svg></div><div><h3>Montando o anúncio do zero | Quanto cobrar?</h3><ul><li>A conta da diária e como olhar os anúncios concorrentes</li><li>O anúncio criado tela por tela: título, descrição, regras, check-in e preço</li></ul></div></div>
+<div class="passo"><div class="n"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16L20 20M8.5 16v-4M13 16V9M17.5 16V6"/></svg></div><div><h3>O primeiro mês no ar: quanto rendeu</h3><ul><li>O balanço real do 1º mês do anúncio</li><li>Os ajustes de preço e de estadia mínima</li></ul></div></div>
 </div></div></section>
 
 <section class="dark glow"><div class="fundo fraco" style="background-image:url(/lp/airbnb-do-zero/orla.webp)"></div><div class="wrap"><div class="duo">
@@ -413,7 +413,7 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 <section class="branco" id="se-paga"><div class="wrap">
 <div class="cab centro"><span class="label">A conta é simples</span><h2>O curso se paga na <span class="c">primeira ou segunda reserva</span>.</h2></div>
 <div class="sp">
-<div class="sp-c"><small>O curso</small><b>R$ 197</b><span class="sp-b" style="--w:49.25%" aria-hidden="true"><i></i></span><p>3 aulas, 3h30 no total.</p></div>
+<div class="sp-c"><small>O curso</small><b>R$ 197</b><span class="sp-b" style="--w:49.25%" aria-hidden="true"><i></i></span><p>Acesso imediato.</p></div>
 <div class="sp-c um" style="--d:.15s"><small>1 diária</small><b>R$ 200</b><span class="sp-b" style="--w:50%" aria-hidden="true"><i></i></span><p>Descontadas as taxas, chega perto.</p></div>
 <div class="sp-c dois" style="--d:.3s"><small>2 diárias</small><b>R$ 400</b><span class="sp-b" style="--w:100%" aria-hidden="true"><i></i></span><p>Duas noites já pagam o curso.</p></div>
 </div>
@@ -425,7 +425,7 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 <section class="dark glow" id="oferta"><div class="wrap">
 <div class="oferta"><span class="pill coral">Airbnb do Zero</span><h3>Curso completo, acesso imediato</h3>
 <div class="preco">R$ 197</div><p style="color:var(--muted)">à vista, ou parcelado no cartão</p>
-<ul><li>3 aulas com os vídeos inteiros, 3h30 no total</li><li>Do imóvel vazio ao anúncio publicado e ao balanço do 1º mês</li><li>Assista quando e quantas vezes quiser</li><li>Garantia de 7 dias: não gostou, devolvemos seu dinheiro</li></ul>
+<ul><li>Do imóvel vazio ao anúncio publicado e ao balanço do 1º mês</li><li>Assista quando e quantas vezes quiser</li><li>Garantia de 7 dias: não gostou, devolvemos seu dinheiro</li></ul>
 <a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar agora</a>
 <p class="nota" style="color:var(--muted)">Pagamento seguro pela Eduzz · Pix ou cartão</p></div>
 </div></section>
@@ -439,7 +439,7 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 <div class="faq">
 <div><h3>Nunca usei o Airbnb como anfitrião. Vou conseguir acompanhar?</h3><p>Sim. O curso foi feito pra quem está começando do zero. O Rômulo mostra cada tela e você faz junto.</p></div>
 <div><h3>Preciso ter um imóvel próprio?</h3><p>Você precisa de um espaço pra anunciar: pode ser um apartamento, uma casa, um quarto. O curso ensina a preparar e anunciar esse espaço.</p></div>
-<div><h3>Em quanto tempo eu coloco meu anúncio no ar?</h3><p>Depende do seu ritmo e de como está o imóvel. São 3 aulas, 3h30 no total, pra você assistir e já ir fazendo.</p></div>
+<div><h3>Em quanto tempo eu coloco meu anúncio no ar?</h3><p>Depende do seu ritmo e de como está o imóvel. Você assiste e já vai fazendo.</p></div>
 <div><h3>Quanto eu vou ganhar?</h3><p>Depende do seu imóvel, da cidade e da sua dedicação. O curso ensina a estimar o potencial do seu imóvel antes de começar. Não prometemos resultado.</p></div>
 <div><h3>Como recebo o acesso?</h3><p>Assim que o pagamento é aprovado, você recebe o acesso por e-mail e assiste pela área de membros.</p></div>
 <div><h3>E se eu não gostar?</h3><p>Você tem 7 dias de garantia. É só pedir o reembolso dentro desse prazo.</p></div>
