@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { Card, KpiCard, PageHeader } from "@/components/ui";
+import { AlertasIntegracao } from "@/components/AlertasIntegracao";
 import { CiclosChart } from "@/components/TrafegoMeta";
 import {
   brl,
@@ -131,6 +132,8 @@ export default async function TrafegoMetaPage() {
         title="Tráfego da Meta"
         subtitle="Quanto gastamos de anúncio em cada ciclo de cobrança, quando cada fatura vence e quanto vendemos no mesmo mês."
       />
+
+      <AlertasIntegracao chaves={["meta_anuncios", "meta_faturas"]} />
 
       {divergencias.length > 0 && (
         <div className="mb-4 rounded-[16px] border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">

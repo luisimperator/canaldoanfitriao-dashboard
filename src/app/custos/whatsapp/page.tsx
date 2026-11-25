@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { Card, KpiCard, PageHeader } from "@/components/ui";
+import { AlertasIntegracao } from "@/components/AlertasIntegracao";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { GastoPorDiaChart } from "@/components/CustosWhatsApp";
 import {
@@ -107,6 +108,8 @@ export default async function CustoWhatsAppPage({
         title="Custo do WhatsApp"
         subtitle="Quanto a Meta cobra pelos envios da API oficial, por número, tipo de mensagem e modelo. Separado do tráfego."
       />
+
+      <AlertasIntegracao chaves={["whatsapp_custos"]} />
 
       <div className="mb-4 flex items-center justify-between gap-3">
         <span className="text-xs text-ink-2">Período</span>
