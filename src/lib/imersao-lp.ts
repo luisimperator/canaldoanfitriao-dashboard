@@ -14,8 +14,13 @@
 // prefers-reduced-motion.
 
 // ---------- preço (tem que bater com o produto na Eduzz) ----------
-const PRECO = { de: 97, por: 27 };
-const DESCONTO = Math.round((1 - PRECO.por / PRECO.de) * 100);
+const PRECOS = {
+  normal: { de: 97, por: 27 },
+  // Kit de adesivos: oferta akmedewy (R$ 97) + cupom próprio (ver /adesivos/comprar).
+  adesivos: { de: 97, por: 4.9 },
+};
+/** "27", "4,90": centavos só quando tem. */
+const reais = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2).replace(".", ","));
 const SUPORTE_WHATSAPP = { texto: "(11) 92507-2167", link: "https://wa.me/5511925072167" };
 // Pixel do Meta da conta do Canal do Anfitrião (IMERSAO_META_PIXEL_ID na Vercel sobrepõe).
 export const PIXEL_PADRAO = "809047156423185";
@@ -191,7 +196,20 @@ export interface LpTurma {
   salaAbre?: string;
 }
 
-export type Variante = "longa" | "curta";
+// "adesivos": a LP longa pra quem chega pelo QR do kit de adesivos (preço e
+// checkout próprios, faixa do presente e quem é o Rômulo logo no começo).
+export type Variante = "longa" | "curta" | "adesivos";
+
+const CSS_ADESIVOS = `.presente{background:#24757f;color:#fff;padding:14px 0;text-align:center}
+.presente b{display:block;font-size:16px;line-height:1.35}
+.presente span{display:block;font-size:14px;line-height:1.45;margin-top:3px;opacity:.92}
+.quem{display:flex;gap:18px;align-items:center;background:#1c1c1c;color:#fff;border-radius:24px;padding:20px 22px;margin:8px 0 36px;max-width:760px}
+.quem img{width:92px;height:112px;object-fit:cover;object-position:top;border-radius:16px;flex:none}
+.quem small{display:block;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.quem b{display:block;font-size:19px;line-height:1.25;margin:3px 0 5px}
+.quem p{margin:0;font-size:14px;line-height:1.5;opacity:.9}
+@media(max-width:480px){.quem{align-items:flex-start;padding:18px}.quem img{width:74px;height:94px}}
+`;
 
 const HORAS = {
   sabado: ["Manhã 10h–12h", "Almoço 12h–13h30", "Tarde 13h30–15h"],
@@ -199,7 +217,11 @@ const HORAS = {
 } as const;
 
 export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null, variante: Variante = "longa"): string {
-  const longa = variante === "longa";
+  const adesivos = variante === "adesivos";
+  const longa = variante === "longa" || adesivos;
+  const PRECO = adesivos ? PRECOS.adesivos : PRECOS.normal;
+  const DESCONTO = Math.round((1 - PRECO.por / PRECO.de) * 100);
+  const POR = reais(PRECO.por);
   const quando = `${esc(t.dias)}, sábado das ${esc(t.horario)} e domingo das ${esc(t.horarioDomingo)}`;
   const href = esc(comprarHref);
   const botao = (texto = "Garantir meu ingresso", extra = "") =>
@@ -265,12 +287,13 @@ export function lpHtml(t: LpTurma, comprarHref: string, pixelId: string | null, 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Imersão Chuva de Reservas no seu Airbnb</title>
-<meta name="description" content="Seu anúncio no topo do ranking do Airbnb em um fim de semana. ${quando}. De R$ ${PRECO.de} por R$ ${PRECO.por}.">
+<meta name="description" content="Seu anúncio no topo do ranking do Airbnb em um fim de semana. ${quando}. De R$ ${PRECO.de} por R$ ${POR}.">
 <meta property="og:title" content="Imersão Chuva de Reservas no seu Airbnb">
-<meta property="og:description" content="Seu anúncio no topo do ranking do Airbnb em um fim de semana. ${quando}. De R$ ${PRECO.de} por R$ ${PRECO.por}.">
+<meta property="og:description" content="Seu anúncio no topo do ranking do Airbnb em um fim de semana. ${quando}. De R$ ${PRECO.de} por R$ ${POR}.">
 <meta property="og:image" content="${A}/hero.webp">
 <meta name="theme-color" content="#0e0d10">
-<link rel="icon" href="/icon-192.png">
+${adesivos ? `<meta name="robots" content="noindex">
+` : ""}<link rel="icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -568,7 +591,7 @@ footer a{color:#ddd;text-decoration:none;margin-right:16px}
   .risca:after,.tl:after{transform:rotate(-8deg) scaleX(1)!important}
   .tl:after{transform:none!important}
 }
-</style>
+${adesivos ? CSS_ADESIVOS : ""}</style>
 ${pixel}
 </head>
 <body class="${longa ? "" : "curta-pag"}">
@@ -577,10 +600,12 @@ ${pixel}
 <div class="topo"><div class="wrap">
   <div class="t1">Turma de <b>${esc(t.sabadoCurto)} e ${esc(t.domingoCurto)}</b><br>começa em</div>
   ${contador("topo")}
-  <div class="chip">${precoDe} <b>R$ ${PRECO.por}</b> <a href="#ingresso">Garantir</a></div>
+  <div class="chip">${precoDe} <b>R$ ${POR}</b> <a href="#ingresso">Garantir</a></div>
 </div></div>
 
-<header class="hero">
+${adesivos ? `<div class="presente"><div class="wrap"><b>Presente pra quem comprou os adesivos do Canal do Anfitrião</b><span>Seu ingresso da Imersão sai de R$ ${PRECO.de} por R$ ${POR}. O desconto já está nos botões desta página.</span></div></div>
+
+` : ""}<header class="hero">
   <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="wrap grid">
     <div class="txt">
@@ -589,7 +614,7 @@ ${pixel}
       <h1 class="rv vis-palavras">${palavras("Seu anúncio no")} <span class="palavra serif grad-txt" style="--d:.36s">topo</span> ${palavras("do ranking do Airbnb", 0.42)} <span class="palavra serif" style="--d:.8s">em um fim de semana.</span></h1>
       <p class="sub rv" style="--d:.5s">Dois dias, sábado das ${esc(t.horario)} e domingo das ${esc(t.horarioDomingo)}, aprendendo o que o algoritmo do Airbnb quer ver e montando o anúncio que aparece nas buscas, cobra o preço certo e enche o calendário.</p>
       <div class="oferta rv" style="--d:.6s">
-        <div class="preco"><span class="de">de ${precoDe}</span><span class="por">por</span><span class="valor"><small>R$</small>${PRECO.por}</span></div>
+        <div class="preco"><span class="de">de ${precoDe}</span><span class="por">por</span><span class="valor"><small>R$</small>${POR}</span></div>
         <span class="tag-off">${DESCONTO}% OFF</span>
       </div>
       <div class="rv" style="--d:.7s">${botao("Garantir meu ingresso", "grande")}</div>
@@ -605,6 +630,7 @@ ${pixel}
       <div class="float f3"><img src="${A}/selo-preferido.webp" alt="Preferido dos hóspedes" width="454" height="170"></div>
     </div>
   </div>
+  ${adesivos ? `<div class="wrap"><div class="quem rv"><img src="${A}/romulo.webp" alt="Rômulo Villela" loading="lazy" width="606" height="804"><div><small>Quem dá a Imersão</small><b>Rômulo Villela, do Canal do Anfitrião</b><p>${BIO.resumo} ${BIO.destaques[3]}, já formou ${BIO.destaques[2].replace(" formados nos cursos online", "")} e é ${BIO.destaques[4].charAt(0).toLowerCase()}${BIO.destaques[4].slice(1)}.</p></div></div></div>` : ""}
   ${longa ? `<div class="ticker" aria-hidden="true"><div class="trilho">${[...TICKER, ...TICKER].map((x) => `<span>${x}</span>`).join("")}</div></div>` : ""}
 </header>
 
@@ -697,8 +723,8 @@ ${longa ? "" : `<section class="s curta"><div class="wrap">
       <li>Dá pra assistir no computador ou no celular (melhor no computador)</li>
     </ul>
     <div class="de">de ${precoDe} por</div>
-    <div class="valor"><small>R$</small>${PRECO.por}</div>
-    <span class="ec">Economia de R$ ${PRECO.de - PRECO.por} · ${DESCONTO}% OFF</span>
+    <div class="valor"><small>R$</small>${POR}</div>
+    <span class="ec">Economia de R$ ${reais(PRECO.de - PRECO.por)} · ${DESCONTO}% OFF</span>
     <div>${botao("Garantir meu ingresso", "grande")}</div>
     ${contador("caixa")}
     <div class="seguro">Pagamento seguro pela Eduzz · reembolso em até 7 dias</div>
@@ -733,7 +759,7 @@ ${longa ? `<section class="s"><div class="wrap">
 
 ${longa ? `<section class="s final"><div class="wrap">
   <h2 class="rv">Seu próximo fim de semana pode encher o seu <span class="serif">calendário.</span></h2>
-  <p class="rv" style="--d:.1s">${quando}. De R$ ${PRECO.de} por <b>R$ ${PRECO.por}</b>.</p>
+  <p class="rv" style="--d:.1s">${quando}. De R$ ${PRECO.de} por <b>R$ ${POR}</b>.</p>
   <div class="rv" style="--d:.2s">${botao("Quero meu ingresso", "grande")}</div>
   ${contador("final")}
 </div></section>` : ""}
@@ -744,7 +770,7 @@ ${longa ? `<section class="s final"><div class="wrap">
 </div></footer>
 
 <div class="barra" id="barra" aria-hidden="true">
-  <div class="pr"><small>de ${precoDe} por</small><b>R$ ${PRECO.por}</b></div>
+  <div class="pr"><small>de ${precoDe} por</small><b>R$ ${POR}</b></div>
   ${botao("Garantir")}
 </div>
 

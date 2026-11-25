@@ -27,7 +27,7 @@ function estourou(ip: string): boolean {
   return v.n > LIMITE;
 }
 
-const VARIANTES = ["longa", "curta"];
+const VARIANTES = ["longa", "curta", "adesivos"];
 const ehData = (s: unknown): s is string => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s);
 const str = (s: unknown, max: number) => (typeof s === "string" && s.trim() ? s.trim().slice(0, max) : null);
 
