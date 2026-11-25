@@ -28,6 +28,8 @@ function ehLpPublica(p: string): boolean {
     (p.startsWith("/internos/") && !ehInternoComLogin(p)) ||
     // LP do Max (análise grátis no WhatsApp) e o rosto dele.
     p === "/max" || p.startsWith("/max/") ||
+    // Variante da LP do Max pra tráfego frio.
+    p === "/max-ia" ||
     p.startsWith("/marca/") ||
     p === "/icon-192.png" ||
     p === "/t/pv" ||
