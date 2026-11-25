@@ -4,7 +4,7 @@ import { garantirTurma, horaSP, registrarClique, somaDias, turmaParaCompra, turm
 import { lpHtml, PIXEL_PADRAO, type LpTurma, type Variante } from "@/lib/imersao-lp";
 import { horaHumana } from "@/lib/imersao-pagina";
 
-// Serve a LP de venda da Imersão A5E numa das versões (longa, curta).
+// Serve a LP de venda da Imersão A5E numa das versões (longa, curta, adesivos).
 //
 // Mostra a turma à venda agora (próximo sábado cujo 9h ainda não chegou — a
 // mesma regra que o webhook usa pra dar turma a quem compra), com contador.
@@ -77,13 +77,17 @@ export async function servirLp(req: NextRequest, variante: Variante): Promise<Re
           turma.sala_abre_sabado,
           turma.sala_abre_domingo
         );
-      await registrarClique(supabase, { headers: req.headers, params }, {
-        rota: "lp",
-        turma_data: turmaData,
-        momento: "visita",
-        destino: null,
-        variante,
-      });
+      // A versão dos adesivos fica fora do funil da turma (rotas "lp"/"checkout",
+      // que alimentam o painel e o placar da campanha): ela conta pelo link
+      // rastreado (Links & QR) e pelo contador do navegador (lp_pv/lp_click).
+      if (variante !== "adesivos")
+        await registrarClique(supabase, { headers: req.headers, params }, {
+          rota: "lp",
+          turma_data: turmaData,
+          momento: "visita",
+          destino: null,
+          variante,
+        });
     } catch {
       /* a LP abre mesmo se o banco falhar */
     }
@@ -95,8 +99,9 @@ export async function servirLp(req: NextRequest, variante: Variante): Promise<Re
   for (const [k, v] of params) {
     if (k !== "v" && v) q.set(k, v);
   }
-  if (variante !== "longa") q.set("v", variante);
-  const comprar = `${LP_BASE}/comprar${q.size ? `?${q}` : ""}`;
+  if (variante === "curta") q.set("v", variante);
+  const base = variante === "adesivos" ? `${LP_BASE}/adesivos` : LP_BASE;
+  const comprar = `${base}/comprar${q.size ? `?${q}` : ""}`;
 
   return new Response(lpHtml(t, comprar, process.env.IMERSAO_META_PIXEL_ID?.trim() || PIXEL_PADRAO, variante), {
     headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
