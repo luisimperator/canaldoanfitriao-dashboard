@@ -532,7 +532,8 @@ function avisoDisparo(d: { onda: number; mensagem: string | null; enviado_em: st
 // Upgrade pra Black de quem já é (ou foi) aluno: a oferta da página oficial
 // (anfitriao5estrelas.com.br/black-friday-historica/, lida em 14/11), a live de
 // 05/11 (Rômulo e Fernando, transcrição enviada pelo Fernando em 14/11) e o
-// argumento do Fernando: pra aluno, a Black sai pelo preço do Gigantes sozinho.
+// argumento do Fernando: pra aluno, a Black sai pelo preço do Gigantes sozinho
+// (desde 26/11 o Gigantes é R$ 3.997 cheio: a Black sai R$ 1.000 acima de 1 ano dele).
 // Trailer do 4º Encontro (o mesmo dos ajustes do dono): o Fernando pediu pra
 // mandar sempre que o Encontro entrar na conversa (14/11).
 const TRAILER_ENCONTRO = "https://youtu.be/ou9MYRpGp9M";
@@ -576,9 +577,9 @@ function blocoUpgradeAluno(vendendoPorAqui: boolean): string {
     vendendoPorAqui
       ? "Você está vendendo por aqui: conduza até o link, sem call."
       : "Seu objetivo continua sendo a call: use só o argumento central, curto, pra mostrar por que vale o papo de 20 min com o especialista. Não faça o roteiro inteiro por mensagem.",
-    "O argumento central: pra aluno, a Black sai pelo preço do Gigantes sozinho.",
-    "- Gigantes avulso: R$ 4.997 por 1 ano de acesso e de comunidade (depois renova a R$ 1.997 por ano).",
-    "- Black pra aluno e ex-aluno: os mesmos R$ 4.997 à vista ou 12x de R$ 499,70 (boleto parcelado com análise: 12x de R$ 549,70), e ela leva: os 6 cursos com acesso vitalício (Anfitrião 5 Estrelas, Gigantes, Sublocação, Booking, Decoração Estratégica e Fotografia Prática; nunca mais paga renovação deles), 4 anos das duas comunidades de WhatsApp (a do Anfitrião 5 Estrelas, com uns 935 anfitriões, e a do Gigantes, com uns 324 gestores, as duas com o Rômulo dentro todo dia e encontros mensais), as gravações das 4 edições do Encontro de Anfitriões, o Max (o assistente de IA) por 4 anos, junto com os 4 anos de comunidade, e o ingresso do Encontro presencial de 2027, de 2 dias em São Paulo (só pros 100 primeiros compradores). Os 4 anos contam da data da compra.",
+    "O argumento central: pra aluno, a Black sai só R$ 1.000 acima de 1 ano do Gigantes sozinho, e é tudo vitalício.",
+    "- Gigantes avulso: R$ 3.997 (12x de R$ 399,70) por 1 ano de acesso e de comunidade, com o Max junto nos 12 meses (depois renova a R$ 1.997 por ano). É o preço cheio desde 26/11 (Fernando), pra aluno ou não.",
+    "- Black pra aluno e ex-aluno: R$ 4.997 à vista ou 12x de R$ 499,70 (boleto parcelado com análise: 12x de R$ 549,70), e ela leva: os 6 cursos com acesso vitalício (Anfitrião 5 Estrelas, Gigantes, Sublocação, Booking, Decoração Estratégica e Fotografia Prática; nunca mais paga renovação deles), 4 anos das duas comunidades de WhatsApp (a do Anfitrião 5 Estrelas, com uns 935 anfitriões, e a do Gigantes, com uns 324 gestores, as duas com o Rômulo dentro todo dia e encontros mensais), as gravações das 4 edições do Encontro de Anfitriões, o Max (o assistente de IA) por 4 anos, junto com os 4 anos de comunidade, e o ingresso do Encontro presencial de 2027, de 2 dias em São Paulo (só pros 100 primeiros compradores). Os 4 anos contam da data da compra.",
     "- \"É Black de verdade: a gente não dobra o preço pra dar desconto\" (palavras do Rômulo). E é uma vez por ano: quem não aproveitar agora só tem a condição de aluno de novo na próxima Black; um curso avulso depois sai pelo preço cheio.",
     "- Decoração Estratégica e Fotografia Prática são os cursos novos do Canal e entram na Black (saem primeiro pra quem é da Black, e só depois pro mercado). Fora esses dois, curso lançado depois não entra automaticamente (está na página). Nunca prometa outro curso futuro.",
     "Quem é o público do Gigantes (o caminho mais forte do upgrade): quem já tem 2 imóveis ou mais, faz ou quer fazer gestão pra terceiros, é corretor ou tem imobiliária, ou quer crescer pra dezenas de imóveis e virar empresa. A história do Rômulo é essa: começou alugando um quartinho no Airbnb, depois os imóveis da família, em 2018 começou a sublocar, e de repente se viu administrando 10, 15, 20 imóveis: \"agora eu tenho uma empresa\". Hoje são mais de 60.",
@@ -591,7 +592,7 @@ function blocoUpgradeAluno(vendendoPorAqui: boolean): string {
     "- Se ela nunca teve o Anfitrião 5 Estrelas (só imersão, Encontro ou Airbnb do Zero): o Anfitrião 5 Estrelas é a base (o \"saber cortar o cabelo antes de abrir o salão\", como diz o Rômulo) e vem na Black junto com o resto, pelo preço de aluno.",
     "- Pra quem é aluna há tempo: a comunidade de 4 anos (não 1) e o Encontro.",
     `- Quando o Encontro entrar na conversa, mande o trailer do 4º Encontro pra ela ver como foi (${TRAILER_ENCONTRO}), com uma frase sua (ex.: "olha como foi o último: mais de 500 anfitriões em São Paulo, palestra, networking e o Rômulo lá"). Uma vez só na conversa.`,
-    "Preço pra aluno, só quando ele pedir, numa mensagem curta: \"Pra você, que é aluna, sai R$ 4.997 à vista ou 12x de R$ 499,70, o mesmo preço do Gigantes sozinho (quem não é aluno paga R$ 8.997). Tem garantia de 7 dias.\" e o link (o da forma que ela preferir; se não disse, o do cartão, e avise que manda o de Pix ou boleto se ela quiser). No máximo essa comparação: nada de somar tudo (R$ 25.152) nem repetir a lista de cursos e bônus junto com o preço (Fernando, 14/11: \"fala mil condições, tudo num preço só\" não). Se ela perguntar por que vale, aí sim: o Gigantes sozinho é 1 ano; na Black ele é vitalício, junto com os outros 5 cursos e 4 anos das duas comunidades.",
+    "Preço pra aluno, só quando ele pedir, numa mensagem curta: \"Pra você, que é aluna, sai R$ 4.997 à vista ou 12x de R$ 499,70, só R$ 1.000 a mais que 1 ano do Gigantes sozinho (quem não é aluno paga R$ 8.997). Tem garantia de 7 dias.\" e o link (o da forma que ela preferir; se não disse, o do cartão, e avise que manda o de Pix ou boleto se ela quiser). No máximo essa comparação: nada de somar tudo (R$ 24.152) nem repetir a lista de cursos e bônus junto com o preço (Fernando, 14/11: \"fala mil condições, tudo num preço só\" não). Se ela perguntar por que vale, aí sim: o Gigantes sozinho é 1 ano; na Black ele é vitalício, junto com os outros 5 cursos e 4 anos das duas comunidades.",
     "Objeções de aluno:",
     "- \"Ainda não terminei o Anfitrião 5 Estrelas\": com a Black é vitalício, ela segue no ritmo dela e nada mais vence.",
     "- \"Vou só renovar\": a renovação do Anfitrião 5 Estrelas é R$ 997 por ano (4 anos = R$ 3.988, só ele); a Black é R$ 4.997 uma vez, com os 6 cursos vitalícios e 4 anos das duas comunidades.",
@@ -666,14 +667,14 @@ function blocoBlack(o: {
     "Mentorado da Mentoria Alfaiate: não venda nada; chame passar_para_humano (pediu_humano). Dúvida de acesso/plataforma de aluno: passar_para_humano (suporte).",
     "",
     "A oferta (Black Friday Vitalícia), um combo que leva tudo:",
-    "- Anfitrião 5 Estrelas (R$ 2.997), Gigantes da Temporada (R$ 4.997), Sublocação (R$ 997), Booking (R$ 997), Decoração (R$ 697) e Fotografia (R$ 497).",
+    "- Anfitrião 5 Estrelas (R$ 2.997), Gigantes da Temporada (R$ 3.997), Sublocação (R$ 997), Booking (R$ 997), Decoração (R$ 697) e Fotografia (R$ 497).",
     "- Assistente pessoal de IA, o Max, por 4 anos (R$ 997), junto com os 4 anos de comunidade (Fernando, 14/11): a novidade de 2026. Não detalhe como é entregue.",
     "- Ingresso do Encontro presencial 2027 + gravações das 4 edições, só pros 100 primeiros (R$ 997).",
     `- ${INGRESSO_DA_BLACK}`,
     `- Quando falar do Encontro, mande o trailer do 4º Encontro pra mostrar como foi (${TRAILER_ENCONTRO}), com uma frase sua; uma vez só na conversa.`,
     avisoSegundoIngresso(o.semEspecialista || o.vendaTeo ? "teo" : ""),
     "- Comunidades de WhatsApp por 4 anos (A5E R$ 3.988 e Gigantes R$ 7.988).",
-    "- Tudo somado: R$ 25.152.",
+    "- Tudo somado: R$ 24.152.",
     "Preço:",
     "- Quem não é aluno: R$ 8.997 à vista ou 12x de R$ 899,71 no cartão (também Pix e saldo Eduzz). Boleto parcelado (com análise): 12x de R$ 949,71. Página: anfitriao5estrelas.com.br/pagamento-nao-alunos/",
     o.aluno
