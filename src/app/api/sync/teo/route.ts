@@ -490,7 +490,7 @@ async function disparoDoLead(
     .select("onda, template, mensagem, enviado_em")
     .like("telefone", `%${t8}`)
     .not("enviado_em", "is", null)
-    .gte("enviado_em", new Date(Date.now() - 14 * 86400_000).toISOString())
+    .gte("enviado_em", new Date(Date.now() - 30 * 86400_000).toISOString())
     .order("enviado_em", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -636,7 +636,7 @@ function blocoBlack(o: {
           "Não ofereça call. Se ela mesma pedir call, aí marque normalmente com os horários da lista.",
           "Só chame passar_para_humano (motivo \"black\", resumo de uma linha) se ela pedir pra falar com uma pessoa, ou se precisar de algo que só o time decide: condição fora da tabela, outra forma de pagamento, abater curso já comprado, curso avulso.",
         ].join(" ")
-      : "Seu objetivo é MARCAR A CALL de 20 min com o especialista (no Teams), como no fluxo normal: é na call que ele apresenta a Black e passa a melhor condição pro caso da pessoa. Tire a dúvida com as informações abaixo e emende com a call, oferecendo horários da lista.",
+      : "Seu objetivo é MARCAR A CALL de 20 min com o especialista (no Teams), como no fluxo normal: é na call que ele apresenta a Black e passa a melhor condição pro caso da pessoa. Tire a dúvida com as informações abaixo e emende com a call, oferecendo horários da lista, depois da qualificação de \"Caminhos\" (quer resolver agora e tem como investir).",
     "QUEM JÁ ESTÁ FECHANDO NÃO VAI PRA CALL: se a pessoa já decidiu comprar (pede o link, pergunta como paga, diz que vai fechar, ou a única dúvida que sobrou é de pagamento e você sabe responder), marcar call só adia a venda. Não ofereça call: passe o link de pagamento certo e ajude a concluir aqui mesmo. Call só se ela pedir.",
     o.vendaTeo
       ? ""
@@ -651,7 +651,7 @@ function blocoBlack(o: {
           "Não chame passar_para_humano por causa da Black de novo; só pra suporte, mentorado, se a pessoa pedir uma pessoa, ou se ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado).",
         ].join(" ")
       : [
-          'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda numa frase com as informações abaixo (preço só se ela insistir: na primeira vez, o especialista explica na call) e ofereça os três horários da lista pra call com o especialista (a não ser que ela já esteja fechando: aí feche por aqui).',
+          'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda numa frase com as informações abaixo (preço só se ela insistir: na primeira vez, o especialista explica na call) e, se ela passar na qualificação de "Caminhos" (quer resolver agora e tem como investir), ofereça os três horários da lista pra call com o especialista (a não ser que ela já esteja fechando: aí feche por aqui).',
           o.plantao
             ? 'Só chame passar_para_humano (motivo "black", com um resumo de uma linha: se é aluna e o que quer) se a pessoa pedir pra falar com uma pessoa, ou se, sem call, ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado, outra forma de pagamento). Nesse caso diga que esse ponto o especialista responde por aqui; o resto você mesmo resolve.'
             : o.fds
@@ -2590,7 +2590,24 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // Depois do prazo (Fernando, 14/11): quem o Téo atendeu na venda direta, e
     // quem recebeu o disparo pros alunos, continua com ele até o próximo dia útil
     // às 10h; sem compra até lá, volta o fluxo de call.
-    const disparo = blackAtiva(cfg) ? await disparoDoLead(supabase, c.telefone).catch(() => null) : null;
+    const disparo = await disparoDoLead(supabase, c.telefone).catch(() => null);
+    // Triagem dos leads (Fernando, 26/11, "acho que as reclamações do Flávio e
+    // do Breno procedem"): desde 05/11, aluno do A5E chamado pela onda deu 0
+    // venda em 32 calls e quem acabou de fazer a Imersão, 0 em 9. Esses não
+    // recebem call: o Téo vende por mensagem (call só se pedirem). Quem já
+    // está com alguém do time segue com o time.
+    const imersaoDepois = disparo
+      ? null
+      : ((await supabase.rpc("teo_imersao_depois", { p_telefone: c.telefone }).then((r) => r.data, () => null)) as
+          | string
+          | null);
+    const semCall = doTime
+      ? null
+      : disparo
+        ? `aluno ou ex-aluno do Anfitrião 5 Estrelas chamado pela onda de alunos (onda ${disparo.onda}); pra esse público a call não vende (Fernando, 26/11)`
+        : imersaoDepois
+          ? `fez a Imersão de ${imersaoDepois.slice(8, 10)}/${imersaoDepois.slice(5, 7)} há poucos dias; logo depois do evento a call não vende (Fernando, 26/11)`
+          : null;
     const semDono = blackAtiva(cfg) && !doTime && !especialista;
     const prazoDia = cfg.venda_direta_ate ? new Date(cfg.venda_direta_ate).getTime() : 0;
     const prorrogacao = prazoDia ? proximoDiaUtil10h(prazoDia) : 0;
@@ -2608,6 +2625,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     }
     const vendaTeo =
       vendaDia ||
+      (Boolean(semCall) && blackAtiva(cfg)) ||
       (blackAtiva(cfg) && !doTime && (c.venda_teo === true || !especialista)
         ? await sortearVendaTeo(supabase, cfg, c).catch(() => false)
         : false);
@@ -2688,7 +2706,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
             ? avisoJaTemGigantes(Boolean(upgrade.recente), utmDoLead(especialista))
             : null,
           upgrade?.recente ? avisoCompraRecente(upgrade.recente, utmDoLead(especialista)) : null,
-          disparo && !jaComprouBlack ? avisoDisparo(disparo, vendaTeo) : null,
+          disparo && blackAtiva(cfg) && !jaComprouBlack ? avisoDisparo(disparo, vendaTeo) : null,
           cupom ? avisoCupom(cupom, !cupomEsperando) : null,
         ]
           .filter(Boolean)
@@ -2698,6 +2716,7 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
       retomar,
       acompanhamento,
       especialista: especialista ? primeiroNomeVendedor(especialista) : null,
+      semCall,
       horariosLivres: (await horariosLivres(supabase, cfg, especialista, c.contact_id)).map(
         (l) => `${l.horario} (com ${primeiroNomeVendedor(l.vendedor)})`
       ),
