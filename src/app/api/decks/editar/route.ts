@@ -9,8 +9,9 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // pub/<pasta>/backup/. Sem sessão: exige o header x-deck-chave (segredo
 // deck_editar_chave do Vault, migração 0155), chamado pelo banco.
 //
-// Corpo: { pasta, base?, trocas?: [{ de, para }], imagens?: { "max.jpg": { url, lado?, alto? } }, testar? }
+// Corpo: { pasta, base?, trocas?: [{ de, para }], imagens?: { "max.jpg": { url, lado?, alto?, recorte? } }, testar? }
 // A imagem sai com "lado" de largura e "alto" de altura (sem "alto", quadrada).
+// "recorte" ({ x, y, w, h }, frações de 0 a 1 da imagem original) corta antes de redimensionar.
 // Cada "de" tem que aparecer exatamente uma vez; senão nada é gravado.
 // "base" (outra pasta) cria um deck novo a partir dela quando a pasta ainda
 // não tem deck.txt: as trocas valem sobre a cópia (ex.: deck-alfaiate, 26/11).
@@ -23,7 +24,7 @@ interface Pedido {
   pasta?: string;
   base?: string;
   trocas?: { de: string; para: string }[];
-  imagens?: Record<string, { url: string; lado?: number; alto?: number }>;
+  imagens?: Record<string, { url: string; lado?: number; alto?: number; recorte?: { x: number; y: number; w: number; h: number } }>;
   testar?: boolean;
 }
 
@@ -89,7 +90,17 @@ export async function POST(req: NextRequest) {
     }
     const lado = Math.min(Math.max(img.lado ?? 800, 64), 2000);
     const alto = Math.min(Math.max(img.alto ?? lado, 64), 2000);
-    const jpg = await sharp(Buffer.from(await f.arrayBuffer()))
+    let fonte = sharp(Buffer.from(await f.arrayBuffer()));
+    if (img.recorte) {
+      const { width = 0, height = 0 } = await fonte.metadata();
+      const fr = (v: number) => Math.min(Math.max(Number(v) || 0, 0), 1);
+      const left = Math.round(fr(img.recorte.x) * width);
+      const top = Math.round(fr(img.recorte.y) * height);
+      const w = Math.max(1, Math.min(width - left, Math.round(fr(img.recorte.w) * width)));
+      const h = Math.max(1, Math.min(height - top, Math.round(fr(img.recorte.h) * height)));
+      fonte = sharp(await fonte.extract({ left, top, width: w, height: h }).toBuffer());
+    }
+    const jpg = await fonte
       .resize(lado, alto, { fit: "cover" })
       .jpeg({ quality: 84, mozjpeg: true })
       .toBuffer();
