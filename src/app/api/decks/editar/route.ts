@@ -9,7 +9,8 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 // pub/<pasta>/backup/. Sem sessão: exige o header x-deck-chave (segredo
 // deck_editar_chave do Vault, migração 0155), chamado pelo banco.
 //
-// Corpo: { pasta, base?, trocas?: [{ de, para }], imagens?: { "max.jpg": { url, lado? } }, testar? }
+// Corpo: { pasta, base?, trocas?: [{ de, para }], imagens?: { "max.jpg": { url, lado?, alto? } }, testar? }
+// A imagem sai com "lado" de largura e "alto" de altura (sem "alto", quadrada).
 // Cada "de" tem que aparecer exatamente uma vez; senão nada é gravado.
 // "base" (outra pasta) cria um deck novo a partir dela quando a pasta ainda
 // não tem deck.txt: as trocas valem sobre a cópia (ex.: deck-alfaiate, 26/11).
@@ -22,7 +23,7 @@ interface Pedido {
   pasta?: string;
   base?: string;
   trocas?: { de: string; para: string }[];
-  imagens?: Record<string, { url: string; lado?: number }>;
+  imagens?: Record<string, { url: string; lado?: number; alto?: number }>;
   testar?: boolean;
 }
 
@@ -87,8 +88,9 @@ export async function POST(req: NextRequest) {
       continue;
     }
     const lado = Math.min(Math.max(img.lado ?? 800, 64), 2000);
+    const alto = Math.min(Math.max(img.alto ?? lado, 64), 2000);
     const jpg = await sharp(Buffer.from(await f.arrayBuffer()))
-      .resize(lado, lado, { fit: "cover" })
+      .resize(lado, alto, { fit: "cover" })
       .jpeg({ quality: 84, mozjpeg: true })
       .toBuffer();
     deck = deck.replace(re, () => `"${nome}":"data:image/jpeg;base64,${jpg.toString("base64")}"`);
