@@ -31,7 +31,7 @@ function ehLpPublica(p: string): boolean {
     // Variante da LP do Max pra tráfego frio.
     p === "/max-ia" ||
     // Decks de venda (HTML no bucket público, ver src/lib/deck-publico.ts).
-    p === "/deck-black" || p === "/deck-gigantes" ||
+    p === "/deck-black" || p === "/deck-gigantes" || p === "/deck-alfaiate" ||
     p.startsWith("/marca/") ||
     p === "/icon-192.png" ||
     p === "/t/pv" ||
