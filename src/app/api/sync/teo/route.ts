@@ -516,14 +516,14 @@ function avisoDisparo(d: { onda: number; mensagem: string | null; enviado_em: st
       ? "Ele está dizendo quantos imóveis tem: agradeça numa frase e use o número pra escolher o caminho (2 ou mais, ou gestão pra terceiros: o Gigantes no centro; 1 ou nenhum: o vitalício e o curso da perna bamba dele)." +
         (porAqui
           ? " Venda por permissão (Fernando, 14/11: \"primeiro pergunta se a pessoa tá interessada, em vez de sair falando um preço\"): nesta resposta diga numa frase por que perguntou e pergunte se ele quer saber mais, SEM PREÇO e sem lista (ex.: \"Perguntei porque, pra quem já foi aluno, a Black do Rômulo tem uma condição que junta o Gigantes e os outros cursos, e com X imóveis ela encaixa bem. Quer saber mais?\"). Se ele quiser: o que serve pro caso dele em 2 ou 3 pontos curtos, sem preço, e \"faz sentido pra você ou não tem nada a ver?\"; se fizer, \"quer saber o preço?\". Preço e link só quando ele pedir (passo 4 do roteiro)."
-          : " Nesta resposta diga numa frase por que perguntou, SEM PREÇO e sem lista, e já ofereça a call com os três horários (ex.: \"Perguntei porque, pra quem já foi aluno, a Black do Rômulo tem uma condição que junta o Gigantes e os outros cursos, e com X imóveis ela encaixa bem. O especialista te mostra na call: hoje às 15h com o Breno, às 16h30 com o Flávio ou amanhã às 10h?\").")
+          : " Nesta resposta diga numa frase por que perguntou, SEM PREÇO e sem lista, e pergunte se ele quer saber dessa condição (ex.: \"Perguntei porque, pra quem já foi aluno, a Black do Rômulo tem uma condição que junta o Gigantes e os outros cursos, e com X imóveis ela encaixa bem. Quer saber mais?\"). Se ele quiser, aí ofereça a call com os três horários.")
       : "Ele pediu pra saber da condição, então o \"quer saber mais?\" já foi respondido." +
         (porAqui
           ? " Venda por permissão (Fernando, 14/11: \"deixa a pessoa pedir o preço; ela pedindo o preço, você fecha\"): nesta resposta conte o que é, curto e SEM PREÇO: a Black do Rômulo, que junta os cursos com acesso vitalício e 4 anos de comunidade, com um preço especial pra quem é ou foi aluno (2 ou 3 pontos, nunca a lista inteira). Termine com UMA pergunta: se faz sentido pra ele e se quer saber o valor (ex.: \"Faz sentido pra você? Quer que eu te passe o valor?\"). Se ele pedir o valor, aí sim: o preço dele, a garantia de 7 dias e o link, numa mensagem curta (passo 4 do roteiro)."
           : " Nesta resposta diga numa frase o que é, SEM PREÇO (a Black do Rômulo, que junta os cursos com acesso vitalício e 4 anos de comunidade, com uma condição especial pra quem é ou foi aluno), e já ofereça a call de 20 min com o especialista, que mostra essa condição pro caso dele (os três horários da lista)."),
     porAqui
       ? ""
-      : "O objetivo aqui é a CALL com o especialista (Fernando, 16/11 e 18/11): nada de \"quer saber mais?\" nem \"faz sentido?\" antes, vá direto pros horários. Se ele perguntar o preço pela primeira vez, diga que o especialista mostra a condição dele na call e emende os horários; se insistir, diga o preço dele (em parcelas) e emende a call. Não mande link de pagamento, a não ser que ele diga que já quer comprar (aí vale a regra de quem já está fechando). Se ele não quiser call, entenda numa frase o que ele quer e passe pro especialista (passar_para_humano, motivo \"black\").",
+      : "CALL SÓ PRA QUEM TEM INTERESSE NA BLACK (Fernando, 26/11: \"O Téo podia subir quem for aluno A5E, só quem tiver interesse na black\"; vale acima do objetivo de lotar a agenda). Interesse é ele querer saber da condição, perguntar o preço ou dizer que quer a Black: aí ofereça a call com o especialista, com os três horários (preço: na primeira vez, o especialista mostra a condição dele na call; se insistir, diga o preço dele em parcelas e emende a call). Sem interesse na Black (só quer tirar dúvida do curso que já tem, suporte, conversa, ou diz que não quer agora), não ofereça call nem chame passar_para_humano por causa da Black: responda o que ele perguntou, curto, e encerre com gentileza, deixando a porta aberta. Não mande link de pagamento, a não ser que ele diga que já quer comprar (aí vale a regra de quem já está fechando).",
   ]
     .filter(Boolean)
     .join(" ");
@@ -2596,18 +2596,18 @@ async function tratar(supabase: SupabaseClient, c: Conversa, cfg: Config): Promi
     // venda em 32 calls e quem acabou de fazer a Imersão, 0 em 9. Esses não
     // recebem call: o Téo vende por mensagem (call só se pedirem). Quem já
     // está com alguém do time segue com o time.
+    // Aluno da onda: a call (subir pro especialista) é só pra quem mostrar
+    // interesse na Black (Fernando, 26/11: "O Téo podia subir quem for aluno
+    // A5E, só quem tiver interesse na black"); isso vai em avisoDisparo.
     const imersaoDepois = disparo
       ? null
       : ((await supabase.rpc("teo_imersao_depois", { p_telefone: c.telefone }).then((r) => r.data, () => null)) as
           | string
           | null);
-    const semCall = doTime
-      ? null
-      : disparo
-        ? `aluno ou ex-aluno do Anfitrião 5 Estrelas chamado pela onda de alunos (onda ${disparo.onda}); pra esse público a call não vende (Fernando, 26/11)`
-        : imersaoDepois
-          ? `fez a Imersão de ${imersaoDepois.slice(8, 10)}/${imersaoDepois.slice(5, 7)} há poucos dias; logo depois do evento a call não vende (Fernando, 26/11)`
-          : null;
+    const semCall =
+      !doTime && imersaoDepois
+        ? `fez a Imersão de ${imersaoDepois.slice(8, 10)}/${imersaoDepois.slice(5, 7)} há poucos dias; logo depois do evento a call não vende (Fernando, 26/11)`
+        : null;
     const semDono = blackAtiva(cfg) && !doTime && !especialista;
     const prazoDia = cfg.venda_direta_ate ? new Date(cfg.venda_direta_ate).getTime() : 0;
     const prorrogacao = prazoDia ? proximoDiaUtil10h(prazoDia) : 0;
