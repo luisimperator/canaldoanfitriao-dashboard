@@ -636,7 +636,7 @@ function blocoBlack(o: {
           "Não ofereça call. Se ela mesma pedir call, aí marque normalmente com os horários da lista.",
           "Só chame passar_para_humano (motivo \"black\", resumo de uma linha) se ela pedir pra falar com uma pessoa, ou se precisar de algo que só o time decide: condição fora da tabela, outra forma de pagamento, abater curso já comprado, curso avulso.",
         ].join(" ")
-      : "Seu objetivo é MARCAR A CALL de 20 min com o especialista (no Teams), como no fluxo normal: é na call que ele apresenta a Black e passa a melhor condição pro caso da pessoa. Tire a dúvida com as informações abaixo e emende com a call, oferecendo horários da lista.",
+      : "Seu objetivo é MARCAR A CALL de 20 min com o especialista (no Teams), como no fluxo normal: é na call que ele apresenta a Black e passa a melhor condição pro caso da pessoa. Tire a dúvida com as informações abaixo e emende com a call, oferecendo horários da lista, depois da qualificação de \"Caminhos\" (quer resolver agora e tem como investir).",
     "QUEM JÁ ESTÁ FECHANDO NÃO VAI PRA CALL: se a pessoa já decidiu comprar (pede o link, pergunta como paga, diz que vai fechar, ou a única dúvida que sobrou é de pagamento e você sabe responder), marcar call só adia a venda. Não ofereça call: passe o link de pagamento certo e ajude a concluir aqui mesmo. Call só se ela pedir.",
     o.vendaTeo
       ? ""
@@ -651,7 +651,7 @@ function blocoBlack(o: {
           "Não chame passar_para_humano por causa da Black de novo; só pra suporte, mentorado, se a pessoa pedir uma pessoa, ou se ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado).",
         ].join(" ")
       : [
-          'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda numa frase com as informações abaixo (preço só se ela insistir: na primeira vez, o especialista explica na call) e ofereça os três horários da lista pra call com o especialista (a não ser que ela já esteja fechando: aí feche por aqui).',
+          'Cumprimente, diga quem você é (Téo, da equipe do Rômulo) e, se a dúvida não estiver clara, pergunte em UMA frase o que a pessoa quer saber. Responda numa frase com as informações abaixo (preço só se ela insistir: na primeira vez, o especialista explica na call) e, se ela passar na qualificação de "Caminhos" (quer resolver agora e tem como investir), ofereça os três horários da lista pra call com o especialista (a não ser que ela já esteja fechando: aí feche por aqui).',
           o.plantao
             ? 'Só chame passar_para_humano (motivo "black", com um resumo de uma linha: se é aluna e o que quer) se a pessoa pedir pra falar com uma pessoa, ou se, sem call, ela precisar de algo que só o time decide (condição fora da tabela, abater curso já comprado, outra forma de pagamento). Nesse caso diga que esse ponto o especialista responde por aqui; o resto você mesmo resolve.'
             : o.fds
