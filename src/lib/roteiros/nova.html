@@ -217,6 +217,12 @@ footer { margin-top: 12px; background: #1c1c1c; color: rgba(255, 255, 255, 0.7);
 footer .wrap { padding-block: 22px calc(30px + env(safe-area-inset-bottom, 0px)); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; align-items: center; }
 footer img { width: 92px; height: auto; display: block; }
 
+/* troca entre os roteiros (A5E, Gigantes, Black) */
+.outros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: var(--label); font-weight: 600; font-size: 12.5px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.outros a { text-decoration: none; color: #fff; padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.35); }
+.outros a:hover { background: rgba(255, 255, 255, 0.14); }
+.outros a[aria-current="page"] { background: #fff; color: var(--ink); border-color: #fff; }
+
 @media (max-width: 1100px) {
   .closer { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .step { grid-template-columns: 130px minmax(0, 1fr); }
@@ -265,6 +271,7 @@ footer img { width: 92px; height: auto; display: block; }
       <b>Postura</b>
       <span>Ela clicou, se cadastrou e agendou: veio porque quis. Você está aqui pra ajudar a resolver o problema dela, e quem decide é ela. Sem pressa de fechar e sem técnica agressiva: quem sente desespero pela comissão desconfia.</span>
     </div>
+    <nav class="outros" aria-label="Roteiros">Roteiros: <a href="/roteiro-sales-call-nova" aria-current="page">Anfitrião 5 Estrelas</a><a href="/roteiro-sales-call-gigantes">Gigantes</a><a href="/roteiro-sales-call-black">Black</a></nav>
   </div>
 </header>
 
@@ -614,6 +621,7 @@ footer img { width: 92px; height: auto; display: block; }
         <div class="step"><span class="price">R$ 4.497</span><span class="when">Preço travando depois de tratar o “caro”</span><span class="line">Cupom: 12x de R$ 449,70, válido até amanhã às 13h.</span></div>
         <div class="step"><span class="price">R$ 3.997</span><span class="when">Só com uma trava concreta</span><span class="line">“Consegui aprovar R$ 3.997 (12x de R$ 399,70), válido até amanhã às 13h.” O preço não baixa mais.</span></div>
       </div>
+      <a class="btn" href="/roteiro-sales-call-black">Roteiro completo da Black ↗</a>
       <p class="note">Não aluno: R$ 8.997, ou 12x de R$ 899,71. Com trava concreta e aprovação, R$ 5.000 (12x de R$ 500), e o preço não baixa mais. Nunca dê desconto “por ser aluno”: R$ 4.997 já é o preço de aluno.</p>
     </section>
 
