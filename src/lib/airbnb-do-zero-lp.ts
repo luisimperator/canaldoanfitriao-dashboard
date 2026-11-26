@@ -552,17 +552,11 @@ var io=new IntersectionObserver(function(x){if(x[0].isIntersecting){io.disconnec
 })();
 </script>
 <script>
-/* rastreamento: os parâmetros do anúncio vão em todos os botões de compra; no clique, InitiateCheckout e só então o checkout */
+/* rastreamento: os parâmetros do anúncio vão em todos os botões de compra. O InitiateCheckout NÃO sai daqui: vem só do checkout da Eduzz (mesmo pixel), senão a Meta conta em dobro */
 (function(){
 var q=[];try{new URLSearchParams(location.search).forEach(function(v,k){v=v.trim();if(v)q.push([k,v])})}catch(e){}
 var bt=[].slice.call(document.querySelectorAll('a[href^="${AIRBNB_DO_ZERO_CHECKOUT}"]'));
-bt.forEach(function(a){try{var u=new URL(a.href);q.forEach(function(p){if(!u.searchParams.has(p[0]))u.searchParams.set(p[0],p[1])});a.href=u.toString()}catch(e){}
-a.addEventListener('click',function(e){
-if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey)return;
-e.preventDefault();
-try{if(window.fbq)fbq('track','InitiateCheckout',{value:197,currency:'BRL',content_name:'Airbnb do Zero'})}catch(x){}
-setTimeout(function(){location.href=a.href},350);
-})});
+bt.forEach(function(a){try{var u=new URL(a.href);q.forEach(function(p){if(!u.searchParams.has(p[0]))u.searchParams.set(p[0],p[1])});a.href=u.toString()}catch(e){}});
 })();
 </script>
 </body></html>
