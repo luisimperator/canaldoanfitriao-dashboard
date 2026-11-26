@@ -3,7 +3,7 @@
 // texto); aqui ele sai como página. Atualizar = reenviar o deck.txt, sem deploy.
 const BASE = "https://xajrfrqpdxxkoogcyodw.supabase.co/storage/v1/object/public/pub";
 
-export async function servirDeck(pasta: "deck-black" | "deck-gigantes"): Promise<Response> {
+export async function servirDeck(pasta: "deck-black" | "deck-gigantes" | "deck-alfaiate"): Promise<Response> {
   // ?v= fura o cache do CDN do Storage.
   const r = await fetch(`${BASE}/${pasta}/deck.txt?v=${Date.now()}`, { cache: "no-store" }).catch(() => null);
   if (!r || !r.ok) {

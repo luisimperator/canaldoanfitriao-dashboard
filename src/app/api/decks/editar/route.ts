@@ -4,20 +4,23 @@ import sharp from "sharp";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 // Edita um deck público (pub/<pasta>/deck.txt no Storage, servido em
-// /deck-black, /deck-gigantes e /deck): trocas de texto exatas e troca de
+// /deck-black, /deck-gigantes, /deck-alfaiate e /deck): trocas de texto exatas e troca de
 // imagem do IMGS embutido. Antes de gravar, guarda a versão atual em
 // pub/<pasta>/backup/. Sem sessão: exige o header x-deck-chave (segredo
 // deck_editar_chave do Vault, migração 0155), chamado pelo banco.
 //
-// Corpo: { pasta, trocas?: [{ de, para }], imagens?: { "max.jpg": { url, lado? } }, testar? }
+// Corpo: { pasta, base?, trocas?: [{ de, para }], imagens?: { "max.jpg": { url, lado? } }, testar? }
 // Cada "de" tem que aparecer exatamente uma vez; senão nada é gravado.
+// "base" (outra pasta) cria um deck novo a partir dela quando a pasta ainda
+// não tem deck.txt: as trocas valem sobre a cópia (ex.: deck-alfaiate, 26/11).
 
 export const maxDuration = 60;
 
-const PASTAS = new Set(["deck-black", "deck-gigantes", "deck-a5e"]);
+const PASTAS = new Set(["deck-black", "deck-gigantes", "deck-a5e", "deck-alfaiate"]);
 
 interface Pedido {
   pasta?: string;
+  base?: string;
   trocas?: { de: string; para: string }[];
   imagens?: Record<string, { url: string; lado?: number }>;
   testar?: boolean;
@@ -48,10 +51,17 @@ export async function POST(req: NextRequest) {
   if (!p.pasta || !PASTAS.has(p.pasta)) return NextResponse.json({ error: "pasta inválida." }, { status: 400 });
 
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const r = await fetch(`${base}/storage/v1/object/public/pub/${p.pasta}/deck.txt?v=${Date.now()}`, { cache: "no-store" });
+  const ler = (pasta: string) =>
+    fetch(`${base}/storage/v1/object/public/pub/${pasta}/deck.txt?v=${Date.now()}`, { cache: "no-store" });
+  let r = await ler(p.pasta);
+  let novo = false;
+  if (!r.ok && p.base && PASTAS.has(p.base) && p.base !== p.pasta) {
+    r = await ler(p.base);
+    novo = true;
+  }
   if (!r.ok) return NextResponse.json({ error: `não li o deck (${r.status})` }, { status: 502 });
-  const antes = await r.text();
-  let deck = antes;
+  const antes = novo ? "" : await r.text();
+  let deck = novo ? await r.text() : antes;
 
   const erros: string[] = [];
   for (const t of p.trocas ?? []) {
@@ -92,10 +102,12 @@ export async function POST(req: NextRequest) {
 
   const quando = new Date().toISOString().replace(/[:.]/g, "-");
   const tipo = "text/plain; charset=utf-8";
-  const bk = await supabase.storage
-    .from("pub")
-    .upload(`${p.pasta}/backup/deck-${quando}.txt`, new Blob([antes], { type: tipo }), { contentType: tipo, upsert: false });
-  if (bk.error) return NextResponse.json({ error: `backup: ${bk.error.message}` }, { status: 500 });
+  if (!novo) {
+    const bk = await supabase.storage
+      .from("pub")
+      .upload(`${p.pasta}/backup/deck-${quando}.txt`, new Blob([antes], { type: tipo }), { contentType: tipo, upsert: false });
+    if (bk.error) return NextResponse.json({ error: `backup: ${bk.error.message}` }, { status: 500 });
+  }
   const up = await supabase.storage
     .from("pub")
     .upload(`${p.pasta}/deck.txt`, new Blob([deck], { type: tipo }), { contentType: tipo, upsert: true, cacheControl: "60" });
