@@ -88,6 +88,11 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/webhooks") || pathname.startsWith("/api/import")) {
     return NextResponse.next();
   }
+  // Edição dos decks públicos (chamada pelo banco): sem sessão, exige o header
+  // x-deck-chave (segredo deck_editar_chave do Vault) e responde 401 sem ele.
+  if (pathname.startsWith("/api/decks/")) {
+    return NextResponse.next();
+  }
   // Rotas do Foley (agente dos grupos no WhatsApp): sem sessão, exigem o
   // Bearer FOLEY_API_TOKEN e respondem 401 sem ele.
   if (pathname.startsWith("/api/foley/")) {
