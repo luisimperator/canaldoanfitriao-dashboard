@@ -310,6 +310,13 @@ html.mv .passo.mvi:not(.on) li{opacity:0}html.mv .passo.mvi.on li{animation:mvso
 .sp-c.dois small,.sp-c.dois b,.sp-c.dois p{color:#fff}.sp-c.dois p{font-weight:700}
 .sp-c.dois .sp-b{background:rgba(255,255,255,.3)}.sp-c.dois .sp-b i{background:#fff}
 .sp-ex{max-width:720px;margin:34px auto 0;text-align:center;font-family:var(--title);font-weight:600;font-size:clamp(1.15rem,2.6vw,1.5rem);line-height:1.35;color:var(--ink);text-wrap:balance}
+.sp-pot{display:flex;align-items:center;justify-content:space-between;gap:28px;max-width:960px;margin:30px auto 0;padding:28px 34px;border-radius:24px;background:var(--teal-wash);border:1px solid #cfe5e8;color:var(--ink);box-shadow:var(--shadow)}
+.sp-pot small{display:block;font-family:var(--label);font-weight:700;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+.sp-pot h3{font-family:var(--title);font-weight:800;font-size:clamp(1.3rem,2.6vw,1.65rem);line-height:1.2;letter-spacing:-.02em;color:var(--ink);margin:8px 0 8px;text-wrap:balance}
+.sp-pot p{font-weight:500;line-height:1.45;color:var(--ink-2);text-wrap:pretty}
+.sp-pot b{flex:none;font-family:var(--title);font-weight:800;font-size:clamp(2.1rem,4vw,2.9rem);line-height:1;letter-spacing:-.03em;white-space:nowrap;color:var(--teal)}
+.sp-pot b span{font-size:.45em;font-weight:700;letter-spacing:0;color:var(--muted);margin-left:4px}
+@media(max-width:760px){.sp-pot{flex-direction:column;align-items:flex-start;gap:14px;padding:22px 22px 24px;margin-top:24px}}
 .sp-ct{margin-top:28px;text-align:center}
 .sp-nt{text-wrap:balance;max-width:640px;margin:18px auto 0;text-align:center;font-size:.9rem;color:var(--muted)}
 html.mv .sp .sp-b i{transition:transform 1s var(--mve) calc(var(--d,0s) + .35s)}
@@ -412,15 +419,16 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 </div></div></section>
 
 <section class="branco" id="se-paga"><div class="wrap">
-<div class="cab centro"><span class="label">A conta é simples</span><h2>O curso se paga na <span class="c">primeira ou segunda reserva</span>.</h2></div>
+<div class="cab centro"><span class="label">A conta é simples</span><h2>O curso se paga na <span class="c">primeira&nbsp;reserva</span>.</h2></div>
 <div class="sp">
 <div class="sp-c"><small>O curso</small><b>R$ 197</b><span class="sp-b" style="--w:49.25%" aria-hidden="true"><i></i></span><p>Acesso imediato.</p></div>
-<div class="sp-c um" style="--d:.15s"><small>1 diária</small><b>R$ 200</b><span class="sp-b" style="--w:50%" aria-hidden="true"><i></i></span><p>Descontadas as taxas, chega perto.</p></div>
-<div class="sp-c dois" style="--d:.3s"><small>2 diárias</small><b>R$ 400</b><span class="sp-b" style="--w:100%" aria-hidden="true"><i></i></span><p>Duas noites já pagam o curso.</p></div>
+<div class="sp-c um" style="--d:.15s"><small>1 diária</small><b>R$ 200</b><span class="sp-b" style="--w:50%" aria-hidden="true"><i></i></span><p>Praticamente paga o curso.</p></div>
+<div class="sp-c dois" style="--d:.3s"><small>2 diárias</small><b>R$ 400</b><span class="sp-b" style="--w:100%" aria-hidden="true"><i></i></span><p>Paga o curso e ainda sobra uns R$&nbsp;190.</p></div>
 </div>
-<p class="sp-ex">Exemplo: com diária de R$&nbsp;200, uma reserva de 2&nbsp;noites já paga o curso.</p>
+<p class="sp-ex">Exemplo: com diária de R$&nbsp;200, a primeira reserva de 2&nbsp;noites já paga o curso e ainda dá lucro.</p>
+<div class="sp-pot"><div class="sp-pt"><small>Potencial por mês</small><h3>E o seu potencial por mês é ainda maior.</h3><p>Com diária de R$&nbsp;200 e só metade do mês ocupado (15&nbsp;noites), são R$&nbsp;3.000 de faturamento bruto por mês.</p></div><b>R$&nbsp;3.000<span>/mês</span></b></div>
 <p class="sp-ct"><a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar agora</a></p>
-<p class="sp-nt">Exemplo ilustrativo, antes das taxas da plataforma. O valor da diária e o número de reservas variam conforme o imóvel e a cidade. Não é promessa de ganho.</p>
+<p class="sp-nt">Exemplo ilustrativo, antes das taxas da plataforma. O valor da diária, a ocupação e o número de reservas variam conforme o imóvel e a cidade. Não é promessa de ganho.</p>
 </div></section>
 
 <section class="dark glow" id="oferta"><div class="wrap">
