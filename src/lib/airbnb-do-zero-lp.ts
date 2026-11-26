@@ -23,6 +23,7 @@ export function airbnbDoZeroHtml(): string {
 --title:"Poppins","Raleway",system-ui,sans-serif;--body:"Raleway",system-ui,-apple-system,"Segoe UI",sans-serif;--label:"Barlow","Raleway",system-ui,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%;overflow-x:hidden}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 body{font-family:var(--body);color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 img{display:block;max-width:100%} a{color:inherit}
 .wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 20px}
@@ -322,7 +323,7 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 </head><body>
 <script>if('IntersectionObserver' in window&&window.matchMedia&&matchMedia('(prefers-reduced-motion: no-preference)').matches)document.documentElement.classList.add('mv')</script>
 <section class="hero dark glow"><div class="fundo" style="background-image:url(/lp/airbnb-do-zero/balneario.webp)"></div>
-<div class="topo"><div class="wrap"><a class="marca"><img src="/marca/cda-icone.png" alt=""><span>CANAL DO ANFITRIÃO</span></a><a class="mini" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero começar</a></div></div>
+<div class="topo"><div class="wrap"><a class="marca"><img src="/marca/cda-icone.png" alt=""><span>CANAL DO ANFITRIÃO</span></a><a class="mini" href="#pra-quem">Quero começar</a></div></div>
 <div class="wrap"><div class="grid">
 <div class="h-a">
 <p class="prom"><span>Curso:</span> monte seu primeiro anúncio no Airbnb, do zero</p>
@@ -330,7 +331,7 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 </div>
 <div class="h-b">
 <p class="lead"><b>Passo a passo, tela por tela, pra você tirar seu primeiro anúncio do papel:</b> arrumar o imóvel, fazer as fotos com o celular, definir o preço e publicar. O mesmo caminho do apartamento que começou sem nenhuma reserva.</p>
-<a class="cta" href="${AIRBNB_DO_ZERO_CHECKOUT}">Quero montar meu anúncio · R$ 197</a>
+<a class="cta" href="#pra-quem">Quero ver como funciona</a>
 <p class="nota">Acesso imediato · Garantia de 7 dias · Pagamento seguro pela Eduzz</p>
 <div class="chips"><span><b>✓</b> Do imóvel vazio ao anúncio no ar</span><span><b>✓</b> Tela por tela</span><span><b>✓</b> Faça junto</span></div>
 <p class="aviso">R$ 7.828 é o faturamento bruto total do primeiro mês cheio no ar de um imóvel administrado pelo Rômulo. O resultado varia conforme o imóvel, a cidade e a sua dedicação. Não é promessa de ganho.</p>
@@ -347,7 +348,7 @@ html.mv .sp.on .sp-c{animation:mvsobe .8s var(--mve) var(--d,0s) backwards}
 <div class="quem"><span class="av"><img src="/lp/airbnb-do-zero/romulo-avatar.webp" width="192" height="192" alt=""></span><div><b>Rômulo Villela</b><span>anfitrião desde 2016</span></div></div></div>
 </div></div></section>
 
-<section><div class="wrap">
+<section id="pra-quem"><div class="wrap">
 <div class="cab"><span class="label">Pra quem é</span><h2>Isso é pra você que <span class="c">ainda não anunciou</span>.</h2></div>
 <div class="cards">
 <div class="card"><div class="ic">1</div><h3>Tem um imóvel parado</h3><p>Apartamento vazio, casa de praia que fica fechada quase o ano todo ou um quarto sobrando.</p></div>
