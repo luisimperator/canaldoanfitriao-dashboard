@@ -7,6 +7,7 @@ import { ImersaoTurmaForm, type TurmaFormValores } from "@/components/ImersaoTur
 import { brl, num } from "@/lib/format";
 import { TAG_FIXA, TURMA_COLS, diaSP, tagDatada, turmaParaCompra, type Turma } from "@/lib/imersao";
 import { PlacarImersao, type Placar } from "@/components/PlacarImersao";
+import { RoasTurmas, type RoasTurma } from "@/components/RoasTurmas";
 
 // Lançamento pago semanal (Imersão A5E, R$ 27): turmas, compradores, cliques
 // nos links fixos (/imersao e /vip) e o funil de cada turma.
@@ -174,6 +175,9 @@ export default async function LancamentoPagoPage({
     ? await supabase.rpc("imersao_placar", { p_turma: foco.turma_data })
     : { data: null };
   const placar = (placarRaw ?? null) as Placar | null;
+  // ROAS de cada turma no formato do card do Foley (migração 0153).
+  const { data: roasRaw } = await supabase.rpc("imersao_roas_turmas", { p_n: 6 });
+  const roas = (Array.isArray(roasRaw) ? roasRaw : []) as RoasTurma[];
 
   // Sala agora (turma ativa = a mais próxima com fim_domingo >= agora).
   const ativa = [...turmas]
@@ -224,6 +228,7 @@ export default async function LancamentoPagoPage({
       />
 
       {placar && <PlacarImersao placar={placar} hoje={diaSP(agora)} />}
+      <RoasTurmas turmas={roas} />
 
       {errTurmas && (
         <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
