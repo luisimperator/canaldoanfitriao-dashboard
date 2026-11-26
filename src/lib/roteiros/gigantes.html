@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Roteiro da Call · Gigantes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Raleway:wght@400;500;600;700&family=Barlow:wght@300;400;600&family=Roboto:wght@800&display=swap">
+<style>
+/* Roteiro do Gigantes, adaptado de nova.html (roteiro do Anfitrião 5 Estrelas), mesmo visual.
+   Visual no padrão do site do Anfitrião 5 Estrelas (anfitriao5estrelas.com.br):
+   fundo claro, coral #E23D59, teal #24757F, Poppins nos títulos, Raleway no texto,
+   Barlow fina nos rótulos e botão em pílula coral. Menu fixo à esquerda com as 8
+   etapas da call; à direita, cada etapa num card branco. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f6;
+  --card: #ffffff;
+  --ink: #333333;
+  --ink-2: #4a4a4a;
+  --muted: #69727d;
+  --line: #ececec;
+  --line-2: #dadada;
+  --coral: #e23d59;
+  --coral-dark: #c92e49;
+  --coral-wash: #fdeef1;
+  --teal: #24757f;
+  --teal-2: #2a8995;
+  --teal-light: #aadbe1;
+  --teal-wash: #eaf5f6;
+  --shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+  --title: "Poppins", "Raleway", system-ui, sans-serif;
+  --body: "Raleway", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --label: "Barlow", "Raleway", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 18px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 900px) { .wrap { padding-left: max(40px, env(safe-area-inset-left, 0px)); padding-right: max(40px, env(safe-area-inset-right, 0px)); } }
+strong { font-weight: 700; color: var(--ink); }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--teal-light); outline-offset: 3px; border-radius: 8px; }
+.c { color: var(--coral); }
+
+/* topo, como o hero do site: foto do Rômulo à direita sobre fundo escuro */
+.hero { position: relative; color: #fff; background: #1c1c1c url("/marca/a5e-hero.webp") right center / cover no-repeat; padding-top: env(safe-area-inset-top, 0px); }
+.hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(20, 20, 20, 0.92) 0%, rgba(20, 20, 20, 0.78) 45%, rgba(20, 20, 20, 0.15) 75%, transparent 100%); }
+.hero .wrap { position: relative; padding-block: 40px 120px; display: grid; gap: 22px; max-width: 1280px; }
+.hero .logo { width: 168px; height: auto; display: block; }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; font-family: var(--label); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: 13px; padding: 6px 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); }
+.pill.coral { background: var(--coral); border-color: var(--coral); }
+h1 { font-family: var(--title); font-weight: 700; font-size: clamp(40px, 5.6vw, 68px); line-height: 1.05; letter-spacing: -0.01em; margin: 0; max-width: 13ch; }
+.lede { max-width: 56ch; font-size: 20px; color: rgba(255, 255, 255, 0.86); margin: 0; }
+.lede strong { color: #fff; }
+.postura { max-width: 60ch; display: grid; gap: 4px; padding: 16px 18px; border-radius: 14px; background: rgba(255, 255, 255, 0.10); border: 1px solid rgba(255, 255, 255, 0.22); font-size: 16.5px; color: rgba(255, 255, 255, 0.9); }
+.postura b { font-family: var(--label); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; font-size: 12.5px; color: var(--teal-light); }
+
+/* as 8 etapas em cards brancos sobre a borda do topo */
+.closer { position: relative; z-index: 2; margin-top: -78px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; }
+.closer a { text-decoration: none; padding: 14px 12px 14px; display: grid; gap: 2px; min-width: 0; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); border: 1px solid var(--line); transition: transform 0.2s, border-color 0.2s; }
+.closer a:hover { transform: translateY(-2px); border-color: var(--coral); }
+.closer b { font-family: var(--title); font-weight: 700; font-size: 28px; line-height: 1; color: var(--coral); }
+.closer span { font-family: var(--body); font-weight: 600; font-size: 14.5px; line-height: 1.2; color: var(--ink); }
+
+/* corpo com menu */
+.layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 36px; padding-block: 36px 24px; }
+.nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; display: grid; gap: 2px; padding: 14px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); border: 1px solid var(--line); }
+.nav .label { font-family: var(--label); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; font-size: 12px; color: var(--muted); margin: 2px 8px 8px; }
+.nav a { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; text-decoration: none; color: var(--ink-2); font-weight: 600; font-size: 15.5px; }
+.nav a b { font-family: var(--title); font-weight: 700; color: var(--line-2); font-size: 18px; }
+.nav a:hover { background: var(--bg); }
+.nav a.on { background: var(--coral-wash); color: var(--coral-dark); }
+.nav a.on b { color: var(--coral); }
+.nav .rule { margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--teal-wash); font-size: 13.5px; color: var(--teal); line-height: 1.45; font-weight: 500; }
+.nav .rule strong { color: var(--teal); }
+
+/* etapas */
+main { display: grid; gap: 22px; min-width: 0; }
+.stage { scroll-margin-top: 20px; display: grid; gap: 20px; padding: 32px 34px 34px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); border: 1px solid var(--line); min-width: 0; }
+.stage-head { display: grid; gap: 10px; justify-items: start; }
+.tag { display: inline-block; font-family: var(--title); font-weight: 600; font-size: 14px; letter-spacing: 0.02em; color: #fff; background: var(--coral); padding: 6px 14px; border-radius: 8px; }
+.tag.teal { background: var(--teal); }
+h2 { font-family: var(--title); font-weight: 600; font-size: clamp(30px, 3.4vw, 44px); line-height: 1.08; letter-spacing: -0.01em; margin: 0; color: var(--coral); text-wrap: balance; }
+h2 .t { color: var(--teal); }
+.intro { margin: 0; max-width: 66ch; font-size: 18.5px; color: var(--ink-2); }
+
+/* falas: balões como os do grupo de WhatsApp no site */
+.says { display: grid; gap: 12px; justify-items: start; }
+.say { margin: 0; max-width: 46ch; padding: 16px 22px 18px; border-radius: 20px 20px 20px 6px; background: var(--coral); color: #fff; font-size: 22px; line-height: 1.38; font-weight: 600; box-shadow: 0 8px 20px rgba(226, 61, 89, 0.18); }
+.say::before { content: "FALA"; display: block; font-family: var(--label); font-weight: 600; font-size: 11.5px; letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.78); margin-bottom: 2px; }
+.say.small { font-size: 19px; max-width: 58ch; }
+.say .slot { color: #fff; border-bottom: 2px dashed rgba(255, 255, 255, 0.7); }
+.say.lead { background: #fff; color: var(--ink); border: 1px solid var(--line-2); border-radius: 20px 20px 6px 20px; box-shadow: none; justify-self: end; }
+.say.lead::before { content: "LEAD"; color: var(--muted); }
+
+.do, .dont { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
+.do li, .dont li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 17.5px; color: var(--ink-2); }
+.do li::before, .dont li::before { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-family: var(--body); font-size: 13px; font-weight: 700; margin-top: 1px; }
+.do li::before { content: "✓"; background: var(--teal); color: #fff; }
+.dont li::before { content: "✕"; background: var(--coral); color: #fff; }
+.dontbox { padding: 16px 20px; border-radius: 14px; background: var(--coral-wash); display: grid; gap: 8px; }
+.kicker { font-family: var(--label); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; font-size: 12.5px; color: var(--muted); }
+.dontbox .kicker { color: var(--coral-dark); }
+
+.example { padding: 18px 22px; border-radius: 14px; background: var(--teal-wash); border-left: 4px solid var(--teal); display: grid; gap: 4px; }
+.example .kicker { color: var(--teal); }
+.example p { margin: 0; font-size: 18.5px; font-style: italic; color: var(--ink); }
+
+.why { padding: 16px 20px; border-radius: 14px; border: 1px dashed var(--teal-light); display: grid; gap: 4px; }
+.why .kicker { color: var(--teal); }
+.why p { margin: 0; font-size: 17px; color: var(--ink-2); }
+
+/* fórmula do rótulo */
+.formula { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.formula div { padding: 14px 16px; border-radius: 12px; border: 2px solid var(--teal-light); display: grid; gap: 2px; min-width: 0; }
+.formula b { font-family: var(--title); font-weight: 600; font-size: 20px; color: var(--teal); }
+.formula span { font-size: 14px; color: var(--muted); }
+
+/* ciclo da dor */
+.loop { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.loop div { position: relative; padding: 16px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); font-size: 17.5px; line-height: 1.35; font-weight: 600; min-width: 0; }
+.loop div::after { content: "→"; position: absolute; right: -15px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; background: var(--teal); color: #fff; font-size: 12px; display: grid; place-items: center; z-index: 1; }
+.loop div:last-child::after { content: "↺"; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.box { padding: 18px 20px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.box h3 { margin: 0; font-family: var(--title); font-weight: 600; font-size: 19px; line-height: 1.2; color: var(--teal); }
+.box p { margin: 0; color: var(--ink-2); font-size: 16.5px; }
+.box q { color: var(--ink); font-weight: 600; quotes: "“" "”"; }
+
+/* mesinha de 3 pernas */
+.mesa { display: grid; gap: 0; margin-top: 4px; }
+.tampo { height: 20px; border-radius: 10px; background: linear-gradient(90deg, var(--teal-2), var(--teal), var(--teal-2)); box-shadow: 0 10px 30px rgba(36, 117, 127, 0.25); }
+.pernas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.perna { display: grid; grid-template-rows: auto 1fr; justify-items: center; min-width: 0; }
+.perna i { width: 10px; height: 40px; background: linear-gradient(var(--teal), var(--teal-light)); border-radius: 0 0 4px 4px; }
+.perna .box { width: 100%; background: var(--card); border: 2px solid var(--teal-light); }
+.perna .box b { font-family: var(--title); font-weight: 700; font-size: 30px; line-height: 1; color: var(--teal); }
+.perna .box h3 { color: var(--ink); }
+.perna .box p { color: var(--ink-2); font-size: 16.5px; }
+.perna .box .ok { font-family: var(--label); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--coral); font-size: 13px; }
+.cai { text-align: center; font-family: var(--title); font-weight: 600; font-size: 22px; margin: 16px 0 0; color: var(--ink); }
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: s; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; align-items: start; }
+.steps > li::before { content: counter(s); font-family: var(--title); font-weight: 700; font-size: 22px; line-height: 44px; height: 44px; color: #fff; text-align: center; background: var(--teal); border-radius: 12px; }
+.steps h3 { margin: 6px 0 2px; font-family: var(--title); font-weight: 600; font-size: 21px; line-height: 1.2; color: var(--ink); }
+.steps p { margin: 0; color: var(--ink-2); font-size: 17px; }
+.trailer { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: var(--teal); background: var(--teal-wash); border-radius: 999px; padding: 4px 12px; margin-top: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; justify-self: start; text-decoration: none; font-family: "Roboto", var(--body); font-weight: 800; font-size: 16px; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; background: var(--coral); padding: 14px 26px; border-radius: 999px; box-shadow: 0 10px 24px rgba(226, 61, 89, 0.28); transition: background 0.2s, transform 0.2s; }
+.btn:hover { background: var(--coral-dark); transform: translateY(-1px); }
+
+/* escada de preço */
+.ladder { display: grid; gap: 8px; }
+.step { display: grid; grid-template-columns: 140px 210px minmax(0, 1fr); gap: 16px; align-items: center; padding: 14px 18px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); }
+.step .price { font-family: var(--title); font-weight: 700; font-size: 28px; line-height: 1; color: var(--coral); font-variant-numeric: tabular-nums; }
+.step .when { font-family: var(--label); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.step .line { font-size: 17px; line-height: 1.4; }
+.step:nth-child(1) { margin-right: 54px; }
+.step:nth-child(2) { margin-right: 36px; }
+.step:nth-child(3) { margin-right: 18px; }
+.step.bonus { background: var(--teal-wash); border-color: var(--teal-light); }
+.step.bonus .price { color: var(--teal); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; font-variant-numeric: tabular-nums; min-width: 560px; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-family: var(--label); font-weight: 600; color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.save { color: var(--teal); font-weight: 700; }
+.note { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+/* objeções */
+.virada { padding: 18px 22px; border-radius: 16px; border: 1px dashed var(--teal-light); display: grid; gap: 10px; }
+.virada .kicker { color: var(--teal); }
+.virada ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; font-size: 17px; color: var(--ink-2); }
+.virada ol li::marker { color: var(--teal); font-weight: 700; }
+.virada b { color: var(--ink); }
+.virada .slot, .obj .slot { border-bottom: 2px dashed var(--coral); }
+.obj .links { display: flex; flex-wrap: wrap; gap: 8px; }
+.cofre-link { justify-self: start; font-family: var(--label); font-weight: 600; font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; color: var(--teal); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--teal-light); }
+.cofre-link:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+.jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.jump a { font-size: 14px; font-weight: 600; text-decoration: none; padding: 6px 14px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--ink-2); }
+.jump a:hover { border-color: var(--coral); color: var(--coral); }
+.objs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.obj { padding: 20px 22px; border-radius: 16px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 10px; align-content: start; min-width: 0; scroll-margin-top: 20px; }
+.obj:target { border-color: var(--coral); background: var(--coral-wash); }
+.obj header { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; }
+.obj header b { font-family: var(--title); font-weight: 700; font-size: 17px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--coral); }
+.obj h3 { margin: 0; font-family: var(--title); font-weight: 600; font-size: 20px; line-height: 1.2; color: var(--ink); }
+.obj .resp { margin: 0; font-size: 17.5px; line-height: 1.5; color: var(--ink); }
+.obj .resp em { font-style: normal; font-weight: 700; color: var(--teal); }
+.obj ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 17px; }
+.obj ol li::marker { color: var(--coral); font-weight: 700; }
+.obj .tip { font-size: 14.5px; color: var(--muted); border-top: 1px solid var(--line-2); padding-top: 10px; margin: 0; }
+.obj.wide { grid-column: 1 / -1; }
+
+/* depois do sim: faixa teal, como os bônus do site */
+.stage.teal { background: var(--teal); color: #fff; border-color: var(--teal); }
+.stage.teal h2 { color: #fff; }
+.stage.teal h2 .t { color: var(--teal-light); }
+.stage.teal .tag { background: #fff; color: var(--teal); }
+.stage.teal .say { background: #fff; color: var(--ink); box-shadow: none; }
+.stage.teal .say::before { color: var(--coral); }
+.stage.teal .say .slot { color: var(--coral); border-bottom-color: var(--coral); }
+.stage.teal .do li { color: rgba(255, 255, 255, 0.9); }
+.stage.teal .do li::before { background: #fff; color: var(--teal); }
+.after-yes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; counter-reset: a; }
+.after-yes div { counter-increment: a; padding: 16px 18px; border-radius: 14px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.after-yes div::before { content: counter(a); font-family: var(--title); font-weight: 700; font-size: 26px; line-height: 1; color: var(--teal-light); }
+.after-yes b { font-family: var(--title); font-weight: 600; font-size: 18px; line-height: 1.2; }
+.after-yes span { font-size: 15.5px; color: rgba(255, 255, 255, 0.85); line-height: 1.42; }
+
+footer { margin-top: 12px; background: #1c1c1c; color: rgba(255, 255, 255, 0.7); }
+footer .wrap { padding-block: 22px calc(30px + env(safe-area-inset-bottom, 0px)); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; align-items: center; }
+footer img { width: 92px; height: auto; display: block; }
+
+@media (max-width: 1100px) {
+  .closer { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .step { grid-template-columns: 130px minmax(0, 1fr); }
+  .step .line { grid-column: 1 / -1; }
+  .after-yes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .loop { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .loop div::after { display: none; }
+}
+@media (max-width: 900px) {
+  .hero { background-position: 70% center; }
+  .hero::before { background: linear-gradient(180deg, rgba(20, 20, 20, 0.86), rgba(20, 20, 20, 0.92)); }
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-top: 16px; }
+  .nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; gap: 6px; overflow-x: auto; padding: 10px max(16px, env(safe-area-inset-left, 0px)); border-radius: 0; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); border-width: 0 0 1px; box-shadow: none; }
+  .nav .label, .nav .rule { display: none; }
+  .nav a { flex: none; grid-template-columns: auto auto; padding: 6px 12px; font-size: 14.5px; border: 1px solid var(--line); border-radius: 999px; }
+  .nav a b { font-size: 15px; }
+  .stage { padding: 24px 20px 26px; }
+}
+@media (max-width: 720px) {
+  body { font-size: 17px; }
+  .hero .wrap { padding-block: 28px 104px; }
+  .hero .logo { width: 132px; }
+  .closer { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: -70px; }
+  .say { font-size: 19px; padding: 14px 18px 16px; }
+  .say.small { font-size: 17.5px; }
+  .formula, .grid2, .pernas, .objs, .after-yes, .loop { grid-template-columns: minmax(0, 1fr); }
+  .perna i, .tampo { display: none; }
+  .step { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .step:nth-child(n) { margin-right: 0; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .closer a, .btn { transition: none; } }
+
+/* roteiros do Gigantes e da Black: logo do Canal no topo, troca entre roteiros e nome do slide do deck */
+.hero .logo.cda { width: 88px; }
+.outros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: var(--label); font-weight: 600; font-size: 12.5px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.outros a { text-decoration: none; color: #fff; padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.35); }
+.outros a:hover { background: rgba(255, 255, 255, 0.14); }
+.outros a[aria-current="page"] { background: #fff; color: var(--ink); border-color: #fff; }
+.sl { display: inline-block; vertical-align: middle; margin-left: 6px; font-family: var(--label); font-weight: 600; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line-2); border-radius: 999px; padding: 1px 10px; max-width: 100%; }
+.mapa td:first-child { font-weight: 600; color: var(--ink); }
+.mapa td { white-space: normal; }
+.mapa table { min-width: 0; }
+footer img.cda { width: 48px; }
+@media (max-width: 720px) { .hero .logo.cda { width: 72px; } .mapa th, .mapa td { padding: 10px; } }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <img class="logo cda" src="/marca/cda-logo-branco.png" alt="Canal do Anfitrião" width="282" height="247">
+    <div class="pills">
+      <span class="pill">Roteiro do Gigantes · time comercial</span>
+      <span class="pill">Call de 30 min no Teams</span>
+      <span class="pill coral">Etapas do CLOSER</span>
+    </div>
+    <h1>O roteiro <span class="c">do Gigantes</span></h1>
+    <p class="lede">Quem chega aqui já cuida de imóvel, e quase sempre é aluno do Anfitrião 5 Estrelas. <strong>A venda é a empresa: comercial, gestão e operação. Só mostra o Gigantes depois que a pessoa disse quantos imóveis tem, quantos quer e o que trava.</strong></p>
+    <div class="postura">
+      <b>Postura</b>
+      <span>Ela já conhece o Rômulo e o método: não reapresente o Anfitrião 5 Estrelas, mostre a diferença. O nome é só “Gigantes da Temporada” (ou “o Gigantes”). É curso com comunidade, não mentoria. Quem decide é ela; sem pressa de fechar.</span>
+    </div>
+    <nav class="outros" aria-label="Roteiros">Roteiros: <a href="/roteiro-sales-call-nova">Anfitrião 5 Estrelas</a><a href="/roteiro-sales-call-gigantes" aria-current="page">Gigantes</a><a href="/roteiro-sales-call-black">Black</a></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="closer" aria-label="As 8 etapas">
+    <a href="#e1"><b>1</b><span>Clarificar</span></a>
+    <a href="#e2"><b>2</b><span>Rotular</span></a>
+    <a href="#e3"><b>3</b><span>Ciclo da dor</span></a>
+    <a href="#e4"><b>4</b><span>Transição</span></a>
+    <a href="#e5"><b>5</b><span>Vender a viagem</span></a>
+    <a href="#e6"><b>6</b><span>Fechamento</span></a>
+    <a href="#e7"><b>7</b><span>Objeções</span></a>
+    <a href="#e8"><b>8</b><span>Depois do sim</span></a>
+  </nav>
+</div>
+
+<div class="wrap layout">
+  <nav class="nav" aria-label="Etapas da call">
+    <span class="label">Etapas</span>
+    <a href="#e1"><b>1</b>Clarificar</a>
+    <a href="#e2"><b>2</b>Rotular</a>
+    <a href="#e3"><b>3</b>Ciclo da dor</a>
+    <a href="#e4"><b>4</b>Transição</a>
+    <a href="#e5"><b>5</b>Vender a viagem</a>
+    <a href="#e6"><b>6</b>Fechamento</a>
+    <a href="#e7"><b>7</b>Objeções</a>
+    <a href="#e8"><b>8</b>Depois do sim</a>
+    <a href="#cola"><b>✓</b>Cola de fatos</a>
+    <div class="rule">Pergunta e escuta <strong>antes</strong> de mostrar. O Gigantes só entra na etapa 5, e o preço só depois do “faz sentido”. Use o deck do Gigantes: o nome de cada slide está nas etapas.</div>
+  </nav>
+
+  <main>
+    <!-- 1 -->
+    <section class="stage" id="e1">
+      <div class="stage-head"><span class="tag">Etapa 1 · Clarificar</span><h2>Quantos imóveis, <span class="t">e quantos quer</span></h2></div>
+      <p class="intro">A capa do deck fica na tela enquanto você cumprimenta e pergunta. <span class="sl">slide: Capa</span></p>
+      <div class="says">
+        <p class="say">O Téo me contou que você <span class="slot">[o que está na ficha: quantos imóveis, seus ou de proprietários, o que trava]</span>. É isso mesmo?</p>
+        <p class="say small">Quantos imóveis você tem hoje? São seus ou de outros proprietários?</p>
+        <p class="say small">Você quer administrar imóveis de outras pessoas? Quantos, daqui a um ano?</p>
+        <p class="say small">E o que mais trava hoje: conseguir proprietário, organizar o financeiro e os contratos, ou dar conta da operação?</p>
+      </div>
+      <ul class="do">
+        <li>Comece pela ficha do Téo: confirme numa frase o que ele já levantou e pergunte só o que faltou.</li>
+        <li>Depois da pergunta, só escuta. Quando ela parar, “me conta mais” e “e que mais?”. É aqui que aparecem o proprietário que pediu ajuda, a planilha que não fecha e a faxineira que faltou.</li>
+        <li>Sem tour e sem trailer do Anfitrião 5 Estrelas: ela já conhece.</li>
+        <li><span>Só tem o próprio imóvel e não quer cuidar do de ninguém? O Gigantes não é pra agora: não force. Se ela quer todos os cursos, vitalício, vá pro <a href="/roteiro-sales-call-black">roteiro da Black</a>.</span></li>
+      </ul>
+      <div class="dontbox">
+        <span class="kicker">Nessa etapa, não</span>
+        <ul class="dont">
+          <li>Nada de módulos, masterclasses ou preço.</li>
+          <li>Não chame de mentoria: mentoria é outro produto.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="stage" id="e2">
+      <div class="stage-head"><span class="tag">Etapa 2 · Rotular</span><h2>Devolver o problema <span class="t">nas palavras dela</span></h2></div>
+      <div class="says">
+        <p class="say">Deixa eu ver se entendi: hoje você <span class="slot">[situação]</span>, quer chegar em <span class="slot">[meta]</span>, e o que trava é <span class="slot">[trava]</span>. É isso?</p>
+      </div>
+      <div class="formula" aria-hidden="true">
+        <div><b>Onde está</b><span>quantos imóveis, de quem</span></div>
+        <div><b>Meta</b><span>quantos quer, em quanto tempo</span></div>
+        <div><b>Trava</b><span>comercial, gestão ou operação</span></div>
+      </div>
+      <div class="example">
+        <span class="kicker">Exemplo do jeito certo</span>
+        <p>“Hoje você cuida dos seus 2 apartamentos e de 3 de vizinhos do prédio, tudo combinado de boca, quer chegar em 15 imóveis de terceiros até o fim do ano que vem, e o que trava é que você não sabe quanto cobrar nem tem contrato. É isso?”</p>
+      </div>
+      <div class="why">
+        <span class="kicker">Por que funciona</span>
+        <p>Quando você diz o problema dela melhor do que ela mesma conseguiu dizer, ela sente que foi entendida, e daí pra frente confia na solução.</p>
+      </div>
+      <ul class="do"><li>Se ela corrigir, rotula de novo até ouvir “é isso”.</li></ul>
+    </section>
+
+    <!-- 3 -->
+    <section class="stage" id="e3">
+      <div class="stage-head"><span class="tag">Etapa 3 · Visão geral</span><h2>O ciclo <span class="t">da dor</span></h2></div>
+      <p class="intro">Pergunte em sequência e repita até ela dizer que é só isso.</p>
+      <div class="loop">
+        <div>O que você já tentou pra crescer ou pra organizar a gestão?</div>
+        <div>E como foi?</div>
+        <div>O que funcionou? E o que não funcionou?</div>
+        <div>Tentou mais alguma coisa?</div>
+      </div>
+      <div class="grid2">
+        <div class="box"><h3>Ache o pé bambo da empresa</h3><p><q>Se você pegasse 5 imóveis amanhã, o que quebrava primeiro: conseguir e fechar com proprietário, organizar o dinheiro e os resultados, ou dar conta de hóspede, limpeza e manutenção?</q></p><p>É a mesinha do gestor: comercial, gestão e operacional. Na etapa 5, demore no pé que ela apontou.</p></div>
+        <div class="box"><h3>Munição pra calculadora</h3><p><q>Quanto um imóvel fatura por mês aí na sua região? Que comissão você cobra, ou cobraria?</q></p><p>Esses números vão pra Calculadora do gestor no deck e voltam no slide do preço. Se ela não souber, pergunte aproximado. Nunca invente.</p></div>
+        <div class="box"><h3>Quem decide e como quer</h3><p><q>Alguém decide isso junto com você? Tem sócio?</q></p><p><q>Você quer montar uma empresa com equipe ou cuidar de poucos imóveis você mesma?</q></p></div>
+        <div class="box"><h3>O que ela gostou vira ponte</h3><p><q>Se você gostou disso, vai adorar…</q> Do que ela não gostou, você não fala nada parecido: se reclamou de curso com aula demais, não fale das horas de aula.</p></div>
+      </div>
+      <div class="why">
+        <span class="kicker">Objeção no fim é pergunta que faltou no começo</span>
+        <p>O “vou pensar” do final quase sempre é algo que não foi perguntado aqui. Capriche no diagnóstico e o fechamento fica leve.</p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="stage" id="e4">
+      <div class="stage-head"><span class="tag">Etapa 4 · Transição</span><h2>Pedir licença <span class="t">e combinar</span></h2></div>
+      <div class="says">
+        <p class="say">Acho que você vai gostar do que a gente tem pra quem quer crescer na gestão. Posso te mostrar?</p>
+        <p class="say small">Antes, um combinado. No final você pode ter dois sentimentos. Um é: “faz muito sentido pro meu momento, resolve o meu problema”. Aí a gente já vê como você começa. O outro é: “não era isso que eu precisava agora”. E tudo bem: pode ser 100% sincero comigo. Combinado?</p>
+      </div>
+      <ul class="do">
+        <li>Pedir licença deixa a pessoa pronta pra ouvir e menos impaciente com a apresentação.</li>
+        <li>O combinado tira a pressão e já deixa acertado que no fim vem um sim ou um não, em vez de “vou pensar”.</li>
+        <li>Diga com as suas palavras e espere o “combinado”.</li>
+      </ul>
+    </section>
+
+    <!-- 5 -->
+    <section class="stage" id="e5">
+      <div class="stage-head"><span class="tag">Etapa 5 · Vender a viagem</span><h2>A empresa, <span class="t">não o módulo</span></h2></div>
+      <p class="intro">Fale do resultado: a empresa que cuida de vários imóveis sem você apagar incêndio, o proprietário recebendo certo e indicando você, mais imóveis entrando. Siga o deck na ordem e pare onde está a trava dela.</p>
+      <ol class="steps">
+        <li><div><h3>Trailer do Gigantes <span class="sl">slide: Trailer</span></h3><p>É o vídeo da página do Gigantes. Compartilhe a tela com o som do computador e mostre só o começo, ou pule.</p><span class="trailer">▶ 24min57 · só o começo</span></div></li>
+        <li><div><h3>As dores <span class="sl">slide: Você se sente assim</span></h3><p>Vários imóveis e você sobrecarregado; dúvida no contrato e nos serviços; financeiro misturado. Uma por clique, e pare na que ela contou.</p></div></li>
+      </ol>
+      <div class="says">
+        <p class="say small">Dessas três, qual é a sua hoje?</p>
+        <p class="say small">Se ela só tem o próprio imóvel: “Se um vizinho te pedisse amanhã pra cuidar do apê dele, você saberia quanto cobrar e o que pôr no contrato?”</p>
+      </div>
+      <ol class="steps" start="3" style="counter-reset: s 2">
+        <li><div><h3>O que muda pra quem já é aluno <span class="sl">slide: O que muda</span></h3><p>Não reapresente o que ela já tem. Ela fica nos dois: não force a troca de um pelo outro.</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">O Anfitrião 5 Estrelas faz o imóvel render. O Gigantes ensina a montar a empresa que cuida de vários: como conseguir proprietário, como organizar o dinheiro e os contratos, e como dar conta da operação.</p></div>
+      <ol class="steps" start="4" style="counter-reset: s 3">
+        <li><div><h3>A mesinha do gestor <span class="sl">slide: A mesinha da gestão</span></h3><p>A mesma mesinha que ela já conhece, agora com os pés da empresa. Um pé por clique, com um “Faz sentido?” depois de cada um.</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">Você lembra da mesinha de 3 pernas. A empresa de gestão também tem três.</p></div>
+      <div class="mesa" aria-label="A mesinha do gestor">
+        <div class="tampo"></div>
+        <div class="pernas">
+          <div class="perna"><i></i><div class="box"><b>1</b><h3>Comercial</h3><p>Marketing e vendas pra crescer a empresa: como conseguir proprietário, apresentar o serviço e fechar.</p><span class="ok">Faz sentido?</span></div></div>
+          <div class="perna"><i></i><div class="box"><b>2</b><h3>Gestão</h3><p>Pra organizar e trazer resultado: comissão, contrato, repasse, impostos e o preço de vários imóveis.</p><span class="ok">Faz sentido?</span></div></div>
+          <div class="perna"><i></i><div class="box"><b>3</b><h3>Operacional</h3><p>Pra manter hóspedes e proprietários felizes: check-in, limpeza, manutenção e a equipe que faz isso.</p><span class="ok">Faz sentido?</span></div></div>
+        </div>
+        <p class="cai">“Com os três em pé, o proprietário recebe certo e indica você. <span class="c">Se um falhar, a mesa cai.</span>”</p>
+      </div>
+      <div class="says"><p class="say small">Se você pegasse 5 imóveis amanhã, qual desses três quebrava primeiro?</p></div>
+      <ol class="steps" start="5" style="counter-reset: s 4">
+        <li><div><h3>Por dentro, sem tour <span class="sl">slide: 12 módulos</span></h3><p>Quatro módulos por clique. Pare só no que resolve a trava dela.</p></div></li>
+      </ol>
+      <div class="tablewrap mapa">
+        <table>
+          <thead><tr><th>Se ela diz</th><th>Mostre</th><th>Pé da mesa</th></tr></thead>
+          <tbody>
+            <tr><td>“Como eu consigo imóvel?”</td><td>Módulo 9 e a apresentação comercial pronta</td><td>Comercial</td></tr>
+            <tr><td>“Não sei quanto cobrar”</td><td>Módulo 1: comissão e taxa de implantação</td><td>Gestão</td></tr>
+            <tr><td>“CNPJ, imposto, CRECI”</td><td>Módulo 2</td><td>Gestão</td></tr>
+            <tr><td>“Repasse e caução”</td><td>Módulo 3</td><td>Gestão</td></tr>
+            <tr><td>“Contrato com o proprietário”</td><td>Módulo 8 e o modelo de contrato</td><td>Gestão</td></tr>
+            <tr><td>“Preço de vários imóveis”</td><td>Módulo 11</td><td>Gestão</td></tr>
+            <tr><td>“Não dou conta sozinha”</td><td>Módulo 12: equipe</td><td>Operacional</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ol class="steps" start="6" style="counter-reset: s 5">
+        <li><div><h3>Modelos prontos <span class="sl">slide: Modelos prontos</span></h3><p>O contrato é um modelo pra se basear: não diga que substitui advogado.</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">Você não começa do zero. O modelo de contrato de administração já vem, o laudo de vistoria também, e a apresentação pra levar na reunião com o proprietário.</p></div>
+      <ol class="steps" start="7" style="counter-reset: s 6">
+        <li><div><h3>Comunidade, indicação e o Max <span class="sl">slide: Comunidade</span></h3><p>Se puder, mostre o grupo funcionando na tela, sem expor telefone.</p></div></li>
+      </ol>
+      <div class="says">
+        <p class="say small">No grupo do Gigantes você conversa com quem administra vários imóveis, e o Rômulo está lá. Todo mês tem encontro no Zoom, que fica gravado.</p>
+        <p class="say small">E o Canal recebe muito proprietário do Brasil inteiro querendo contratar gestor. O que não dá pra atender é repassado no grupo.</p>
+        <p class="say small">E você tem o Max, o Concierge: uma IA que fica no seu WhatsApp e no grupo, 24 horas, e que estudou todas as aulas do Rômulo. Vem junto nos 12 meses do Gigantes.</p>
+      </div>
+      <ul class="do">
+        <li>Não prometa quantidade de indicações, nem que vai ter proprietário na cidade dela.</li>
+        <li>Max: mostre o suficiente pra ver o valor (a dúvida das 23h respondida em segundos), sem fazer a consultoria inteira antes do pedido.</li>
+      </ul>
+      <ol class="steps" start="8" style="counter-reset: s 7">
+        <li><div><h3>As 7 masterclasses <span class="sl">slide: Masterclasses</span></h3><p>Uma por clique, uma frase cada. Destaque a que conversa com o caso dela.</p></div></li>
+      </ol>
+      <div class="tablewrap mapa">
+        <table>
+          <thead><tr><th>Se ela…</th><th>Destaque</th></tr></thead>
+          <tbody>
+            <tr><td>está em cidade turística</td><td>Temporada em cidade turística · Vitor Menna e Dani Reichembach, Vamos Gramado</td></tr>
+            <tr><td>precisa de equipe</td><td>Montando e gerindo grandes equipes · Omar Farhat, Omar do Rio</td></tr>
+            <tr><td>tem prédio ou fala com construtora</td><td>Parceria com incorporadoras e expansão · Samuel Gondim, Carpediem Homes</td></tr>
+            <tr><td>tem imóvel de alto padrão</td><td>Gestão de imóveis de luxo · Mariana Cavalieri e Thaisa Barcella, Luga</td></tr>
+            <tr><td>sofre com avaliação</td><td>Como manter 4,92 estrelas como gestor · Judson Sales, Airbnb no Copan</td></tr>
+            <tr><td>quer escala e sistema</td><td>Tecnologia pra administrar 2 mil imóveis · Debora Beda e Vitor Buzatti, 360 Suites</td></tr>
+            <tr><td>pensa no longo prazo</td><td>Pioneirismo e longevidade na temporada · William Astolfi, Bhomy</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ol class="steps" start="9" style="counter-reset: s 8">
+        <li><div><h3>Calculadora do gestor <span class="sl">slide: Calculadora do gestor</span></h3><p>Os campos começam vazios de propósito: coloque só o número que ela te deu na etapa 3.</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">Com cinco imóveis a mais, é isso aqui a mais de comissão no ano.</p></div>
+      <ul class="do">
+        <li>É comissão bruta, sem descontar o custo da operação. É uma conta, não promessa de resultado.</li>
+        <li><span>Os casos de alunos ficam para as objeções: use o mais parecido com ela, no <a href="/cofre?perfil=gestor" target="_blank" rel="noopener">Cofre de Cases</a>.</span></li>
+      </ul>
+    </section>
+
+    <!-- 6 -->
+    <section class="stage" id="e6">
+      <div class="stage-head"><span class="tag">Etapa 6 · Fechamento</span><h2>Primeiro o resumo, <span class="t">depois o preço</span></h2></div>
+      <ol class="steps">
+        <li><div><h3>Tudo o que vem junto <span class="sl">slide: Tudo o que vem junto</span></h3><p>Um item por clique, falando do que cada coisa resolve pra ela: 12 módulos; grupo exclusivo com o Rômulo; encontro mensal no Zoom, gravado; modelos de contrato, laudo e apresentação comercial; 7 masterclasses; indicação de potenciais clientes; o Max, o Concierge, nos 12 meses.</p></div></li>
+        <li><div><h3>Uma prova, curta <span class="sl">slides: Depoimentos · O que dizem</span></h3><p>O vídeo de depoimentos tem 25min41: um trecho só, ou pule pros relatos. Leia só a fala que parece com ela. É o resultado de cada um: não prometa o mesmo.</p></div></li>
+      </ol>
+      <div class="says">
+        <p class="say">Então, resumindo: você entra no Gigantes com os 12 módulos, os modelos de contrato, laudo e apresentação, as 7 masterclasses, o grupo dos gestores com o Rômulo dentro, o encontro mensal e o Max. E continua no Anfitrião 5 Estrelas.</p>
+        <p class="say small">Lembra que você me disse que <span class="slot">[o que trava]</span>? É exatamente isso que a gente resolve com <span class="slot">[o módulo, o modelo ou o grupo]</span>.</p>
+        <p class="say small">Faz sentido pra você? Ficou alguma dúvida?</p>
+        <p class="say small">E lembra do nosso combinado? Qual dos dois sentimentos ficou?</p>
+        <p class="say">O Gigantes é R$ 4.997. Pra você, que já é aluno do Anfitrião 5 Estrelas, sai R$ 3.997, ou 12x de R$ 399,70, e você continua nos dois. São 12 meses de acesso e de grupo; pra continuar depois, a renovação é R$ 1.997 por ano. E você tem 14 dias de garantia: a lei dá 7, a gente dá 14. Se não for o que eu te disse, devolvemos 100%. Cartão ou Pix? Te mando o link agora.</p>
+      </div>
+      <p class="intro"><span class="sl">slides: Investimento · Garantia</span></p>
+      <ul class="do">
+        <li>Antes do preço, faça a pessoa dizer que entendeu. Se ficou dúvida, volte e explique: preço só depois de clareza.</li>
+        <li>Sempre o cheio antes do de aluno, e a renovação dita com clareza.</li>
+        <li>Se a calculadora foi preenchida, o 4º clique do slide do preço mostra em quantos meses de comissão de um único imóvel o Gigantes se paga.</li>
+        <li>Preço sempre junto da garantia, e peça a decisão: “Cartão ou Pix?”. Qualquer resposta que não seja “sim” vai para as objeções (etapa 7).</li>
+        <li>O link vai durante a call. Confira no checkout que ele sai R$ 3.997 antes de mandar.</li>
+      </ul>
+
+      <span class="kicker">Preço do Gigantes · o de aluno já é o desconto</span>
+      <div class="ladder" aria-label="Preço do Gigantes">
+        <div class="step"><span class="price">R$ 4.997</span><span class="when">Sempre dito primeiro</span><span class="line">12x de R$ 499,70. É o preço de quem não é aluno.</span></div>
+        <div class="step"><span class="price">R$ 3.997</span><span class="when">Aluno do Anfitrião 5 Estrelas</span><span class="line">12x de R$ 399,70. Já é o preço de aluno: o desconto de R$ 1.000 está aí.</span></div>
+        <div class="step bonus"><span class="price">Pediu mais?</span><span class="when">Depois de tratar o “caro”</span><span class="line">Pergunte no grupo antes, sem prometer nada pra ela. Nunca dê desconto “por ser aluno” em cima do preço de aluno.</span></div>
+      </div>
+      <p class="note">Quer mais que o Gigantes (todos os cursos, vitalício)? É a Black: R$ 4.997 pra aluno, até 30/11. Use o <a href="/roteiro-sales-call-black">roteiro da Black</a>.</p>
+
+      <span class="kicker">Reclamou dos juros? Menos parcelas</span>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Preço à vista</th><th>12x (total)</th><th>6x (total)</th><th>4x (total)</th><th>6x economiza</th></tr></thead>
+          <tbody>
+            <tr><td>R$ 3.997 (aluno)</td><td>R$ 399,70 (R$ 4.796)</td><td>R$ 735,88 (R$ 4.415)</td><td>R$ 1.073,24 (R$ 4.293)</td><td class="save">R$ 381</td></tr>
+            <tr><td>R$ 4.997 (tabela)</td><td>R$ 499,70 (R$ 5.996)</td><td>R$ 919,99 (R$ 5.520)</td><td>R$ 1.341,76 (R$ 5.367)</td><td class="save">R$ 476</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Taxa da Eduzz de 2,92% ao mês. Confira no checkout antes de usar.</p>
+    </section>
+
+    <!-- 7 -->
+    <section class="stage" id="e7">
+      <div class="stage-head"><span class="tag">Etapa 7 · Objeções</span><h2>As que mais aparecem <span class="t">no Gigantes</span></h2></div>
+      <p class="intro">Quem já cuida de imóvel trava em três lugares: “já tenho o curso”, “não sei se dou conta de crescer” e o preço. Cada objeção tem a fala, o jeito de virar e o caso mais parecido. <span class="sl">slide: Quem já fez</span></p>
+      <a class="btn" href="/cofre?perfil=gestor" target="_blank" rel="noopener">Abrir o Cofre de Cases: gestores ↗</a>
+
+      <div class="virada">
+        <span class="kicker">Antes de responder qualquer objeção</span>
+        <ol>
+          <li><b>Acolha.</b> “Faz sentido.” “Sem problema.” Não discuta nem rebata de primeira.</li>
+          <li><b>Descubra a de verdade.</b> “O que está te pegando?” Com mais intimidade, em voz mais baixa: “O que você tem medo que aconteça?”</li>
+          <li><b>Isole.</b> “Tirando isso, tem mais alguma coisa que te impede de começar hoje?”</li>
+          <li><b>Responda com lógica e prova.</b> A fala da objeção e um caso só, o mais parecido com ela.</li>
+          <li><b>Volte à dor e peça de novo.</b> “Lembra que você me disse que <span class="slot">[o que trava]</span>? Faz sentido? Bora começar?”</li>
+          <li><b>Não fechou? Data e hora.</b> “Amanhã às 11h eu te chamo pra você me dar a resposta, pode ser?”</li>
+        </ol>
+        <p class="note">Sem promessa de ganho nem de indicação: mostre o que outro gestor fez. A garantia de 14 dias é pra quem está com receio.</p>
+      </div>
+
+      <nav class="jump" aria-label="Ir para a objeção">
+        <a href="#o1">Já tenho o curso</a><a href="#o2">Só tenho o meu imóvel</a><a href="#o3">Preço</a><a href="#o4">Como consigo proprietário</a><a href="#o5">Contrato e imposto</a><a href="#o6">Não dou conta</a><a href="#o7">Vou pensar</a><a href="#o8">Cônjuge ou sócio</a><a href="#o9">Renovação</a><a href="#o10">Juros</a><a href="#o11">E a Black?</a>
+      </nav>
+      <div class="objs">
+        <article class="obj" id="o1">
+          <header><b>1</b><h3>Já tenho o Anfitrião 5 Estrelas</h3></header>
+          <p class="resp">“E ele continua com você. O Anfitrião 5 Estrelas faz o imóvel render. O Gigantes monta a empresa: como conseguir proprietário, o contrato, o repasse, a comissão e a equipe. Uma coisa não está no outro.”</p>
+          <p class="resp"><em>Prova:</em> a Thalita fez o Anfitrião 5 Estrelas e depois o Gigantes: “em 2024, esse foi o ano da virada”.</p>
+          <a class="cofre-link" href="/cofre?q=gigantes" target="_blank" rel="noopener">Cofre: quem fez o Gigantes ↗</a>
+        </article>
+        <article class="obj" id="o2">
+          <header><b>2</b><h3>Só tenho o meu imóvel</h3></header>
+          <p class="resp">“Você quer administrar o de outras pessoas?” Se não quer, o Gigantes não é pra agora. Não force: ofereça o que serve ao caso dela.</p>
+          <p class="resp"><em>Se quer, mas acha cedo:</em> “É o melhor momento: o primeiro proprietário você já pega com contrato, comissão certa e apresentação na mão, sem combinar de boca.”</p>
+          <p class="resp"><em>Prova:</em> a Luciana alugava a própria casa pra fechar as contas. Pegou o primeiro cliente em julho de 2024, fechou o ano com 19 imóveis e chegou a 80 no começo de 2026, com os filhos.</p>
+          <a class="cofre-link" href="/cofre?objecoes=sem-imovel&amp;perfil=gestor" target="_blank" rel="noopener">Cofre: começou do próprio imóvel ↗</a>
+        </article>
+        <article class="obj" id="o3">
+          <header><b>3</b><h3>Preço</h3></header>
+          <p class="resp">Primeiro descubra qual é o “caro”: “Tirando o preço, faz sentido pra você? O que pesa: o valor total, a parcela no mês ou a dúvida se volta?”</p>
+          <p class="resp"><em>Se é o retorno:</em> volte pra calculadora. “Com a comissão de <span class="slot">[x]</span> por imóvel, um imóvel novo paga o Gigantes em <span class="slot">[y]</span> meses.” O 4º clique do slide do preço já mostra essa conta.</p>
+          <p class="resp"><em>Se é a parcela:</em> 12x, Pix e cartão juntos ou dois cartões quando o limite trava.</p>
+          <p class="resp">“R$ 3.997 já é o preço de aluno: o desconto de R$ 1.000 está aí.” Pediu mais? Pergunte no grupo antes, sem prometer.</p>
+          <a class="cofre-link" href="/cofre?objecoes=preco&amp;perfil=gestor" target="_blank" rel="noopener">Cofre: casos pra preço ↗</a>
+        </article>
+        <article class="obj" id="o4">
+          <header><b>4</b><h3>Não sei se consigo proprietário</h3></header>
+          <p class="resp">É o pé comercial da mesa. “É o que mais trava quem está começando, e por isso tem módulo só disso (o 9), a apresentação pronta pra levar na reunião com o proprietário e o grupo, onde o Canal repassa os pedidos de gestão que não dá pra atender.”</p>
+          <p class="resp"><em>Prova:</em> a Beth entrou com 16 imóveis e um ano depois tinha 45, quase todos de terceiros, e diz que o curso ajudou na captação.</p>
+          <p class="tip">Nunca prometa quantidade de indicações nem que vai ter na cidade dela.</p>
+          <a class="cofre-link" href="/cofre?q=capta%C3%A7%C3%A3o" target="_blank" rel="noopener">Cofre: captação ↗</a>
+        </article>
+        <article class="obj" id="o5">
+          <header><b>5</b><h3>Medo de errar no contrato, no imposto, no CNPJ</h3></header>
+          <p class="resp">É o pé da gestão. “Esse medo é o que faz muita gente combinar de boca: ‘cobro 20%, pode deixar que eu cuido’. Cuida do quê? No Gigantes você tem o modelo de contrato de administração, o módulo de CNPJ e imposto, o de repasse e caução e o de comissão.”</p>
+          <p class="resp"><em>Prova:</em> o Vittor e a Lu rodavam de forma amadora desde 2019. Largaram o CLT depois do Gigantes e hoje fazem a gestão de 70 imóveis de terceiros.</p>
+          <p class="tip">O contrato é um modelo pra se basear: não diga que substitui advogado.</p>
+          <a class="cofre-link" href="/cofre?objecoes=medo-de-errar&amp;perfil=gestor" target="_blank" rel="noopener">Cofre: medo de errar ↗</a>
+        </article>
+        <article class="obj" id="o6">
+          <header><b>6</b><h3>Não dou conta / não tenho tempo</h3></header>
+          <p class="resp">É o pé operacional. “Hoje, quanto do seu dia vai em responder hóspede, mexer em preço e resolver limpeza? A falta de tempo vem justamente de fazer tudo sem processo e sem equipe. É o que o módulo 12 e a masterclass do Omar do Rio ensinam a montar.”</p>
+          <p class="resp"><em>Prova:</em> a Laís só baixava o preço quando não alugava. Foi de 6 pra 15 imóveis e passou o atendimento e o preço pra assistente.</p>
+          <p class="resp">“E o Max responde as dúvidas do dia a dia em segundos, a qualquer hora.”</p>
+          <a class="cofre-link" href="/cofre?objecoes=tempo&amp;perfil=gestor" target="_blank" rel="noopener">Cofre: casos de tempo ↗</a>
+        </article>
+        <article class="obj" id="o7">
+          <header><b>7</b><h3>Vou pensar</h3></header>
+          <p class="resp">“Sem problema, a gente não quer que você feche com pressa. Mas me ajuda a te ajudar: o que está te pegando? É o dinheiro, o momento, alguém de casa ou alguma dúvida sobre o Gigantes?” A resposta leva pra objeção certa.</p>
+          <p class="resp"><em>Se não aparece nada concreto,</em> uma pergunta por vez: “Você acha que com o Gigantes chega nos <span class="slot">[meta]</span> imóveis mais rápido do que sozinha?” “Tem como pagar?” Dois sins: “Então você já decidiu com a cabeça. O que sobra é o frio na barriga, e isso é normal.”</p>
+          <p class="tip">Se mesmo assim quiser pensar: “Fechado. Que horas amanhã eu te chamo pra você me dar a resposta? Lembra do combinado: sim ou não, as duas estão ótimas.”</p>
+        </article>
+        <article class="obj wide" id="o8">
+          <header><b>8</b><h3>Cônjuge ou sócio</h3></header>
+          <p class="resp"><em>Melhor ainda:</em> chamar o sócio pra call. Se não veio: “Ele está aí perto? Chama ele, que eu explico em 5 minutos.” Se não dá: “O que você acha que ele vai te perguntar? Às vezes eu já te respondo agora.” Depois, nesta ordem:</p>
+          <ol>
+            <li>“E se ele não topar?”</li>
+            <li>“Do que ele seria contra?” (responda o motivo, não a pessoa)</li>
+            <li>“Ele sabe que vocês querem crescer na gestão? Ele aprova ficar como está? Então por que seria contra organizar a empresa?”</li>
+            <li>“Acho que você está pedindo permissão quando precisa de apoio.”</li>
+            <li>“Entra hoje e mostra pra ele lá dentro: o contrato, o módulo de comissão, o grupo. Se ele não topar, você tem 14 dias e recebe tudo de volta.”</li>
+          </ol>
+          <p class="tip">Sócio que já trabalha junto costuma ser o maior aliado: a empresa é dos dois.</p>
+          <a class="cofre-link" href="/cofre?objecoes=conjuge-socio" target="_blank" rel="noopener">Cofre: casais e sócios ↗</a>
+        </article>
+        <article class="obj" id="o9">
+          <header><b>9</b><h3>E depois dos 12 meses?</h3></header>
+          <p class="resp">Diga com clareza: “São 12 meses de acesso e de grupo. Pra continuar no grupo depois, a renovação é R$ 1.997 por ano. Quem cresce costuma renovar só pra continuar no grupo.”</p>
+          <p class="tip">Nunca esconda a renovação: ela aparece no checkout.</p>
+        </article>
+        <article class="obj" id="o10">
+          <header><b>10</b><h3>Juros</h3></header>
+          <p class="resp">“O juros não é nosso, é da Eduzz. Mas dá pra pagar bem menos: em 6x fica R$ 735,88 por mês, uns R$ 381 a menos que no 12x. E no Pix à vista não tem juros.”</p>
+          <p class="resp">Quase sempre o problema é a parcela caber no mês. Ache o número de parcelas que cabe.</p>
+          <p class="tip">Valores na tabela da etapa 6.</p>
+        </article>
+        <article class="obj" id="o11">
+          <header><b>11</b><h3>E a Black?</h3></header>
+          <p class="resp">Até 30/11, se ela quiser mais que o Gigantes: “Na Black, por R$ 4.997, o Gigantes fica vitalício, junto com os outros 5 cursos, 4 anos das duas comunidades e o Max por 4 anos.”</p>
+          <p class="resp">Recomende uma coisa só, a que serve ao caso dela: quer só montar a empresa, Gigantes; quer tudo e não quer mais renovar, Black.</p>
+          <p class="tip">Garantias diferentes: Gigantes 14 dias, Black 7. Não misture.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="stage teal" id="e8">
+      <div class="stage-head"><span class="tag">Etapa 8 · Reforçar depois do sim</span><h2>O sim <span class="t">não é o fim</span></h2></div>
+      <div class="says">
+        <p class="say small">Parabéns pela decisão! Me manda o comprovante que a minha equipe já acompanha a sua liberação.</p>
+        <p class="say small">Decisão certa, porque <span class="slot">[a meta dela, nas palavras dela]</span>. Você vai adorar o grupo dos gestores.</p>
+      </div>
+      <ul class="do">
+        <li>Essa fala tira a ansiedade do “será que fiz besteira?”, que bate logo depois de pagar.</li>
+        <li>O link vai durante a call. Se não fechar, dia e hora do retorno na agenda.</li>
+        <li><span>Os primeiros passos, como no último slide do deck: <span class="sl">slide: Depois do sim</span></span></li>
+      </ul>
+      <div class="after-yes">
+        <div><b>Pagar pelo link</b><span>Agora, na call.</span></div>
+        <div><b>Curso liberado</b><span>Na área de membros, depois da confirmação do pagamento.</span></div>
+        <div><b>Entrar no grupo dos gestores</b><span>E se apresentar: quantos imóveis tem e quantos quer.</span></div>
+        <div><b>Começar pelo módulo da trava</b><span>O que ela contou na etapa 1: proprietário, contrato, financeiro ou equipe. E chamar o Max no WhatsApp.</span></div>
+      </div>
+    </section>
+
+    <!-- Cola de fatos -->
+    <section class="stage" id="cola">
+      <div class="stage-head"><span class="tag">Cola · deixe aberta na call</span><h2>Os fatos <span class="t">certos</span></h2></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Gigantes da Temporada</th><th>Preço</th><th>Garantia</th><th>Boleto parcelado (TMB)</th><th>Pix + cartão ou 2 cartões</th></tr></thead>
+          <tbody>
+            <tr><td>Aluno do Anfitrião 5 Estrelas</td><td>R$ 3.997 ou 12x de R$ 399,70</td><td>14 dias</td><td>até 8x</td><td>sim, se o limite travar</td></tr>
+            <tr><td>Quem não é aluno</td><td>R$ 4.997 ou 12x de R$ 499,70</td><td>14 dias</td><td>até 8x</td><td>sim, se o limite travar</td></tr>
+            <tr><td>Renovação, depois de 12 meses</td><td>R$ 1.997 por ano</td><td>·</td><td>·</td><td>·</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="do">
+        <li><span><b>O que vem:</b> 12 módulos; grupo exclusivo com o Rômulo; encontro mensal no Zoom, gravado; modelos de contrato de administração, laudo de vistoria e apresentação comercial; 7 masterclasses; indicação de potenciais clientes; o Max, o Concierge, nos 12 meses.</span></li>
+        <li><span><b>A mesinha do gestor:</b> comercial (marketing e vendas pra crescer a empresa), gestão (pra organizar e trazer resultado) e operacional (pra manter hóspedes e proprietários felizes).</span></li>
+        <li><span><b>Ela continua no Anfitrião 5 Estrelas:</b> o Gigantes não substitui, soma.</span></li>
+        <li><span><b>Preço:</b> só depois do “faz sentido”, sempre o cheio antes do de aluno e sempre junto da garantia. Se perguntarem antes: “Já te falo. Antes, deixa eu entender <span class="slot">[x]</span> pra te passar a condição certa.”</span></li>
+        <li><span><b>Black, até 30/11:</b> R$ 4.997 pra aluno, com o Gigantes vitalício e mais 5 cursos. Garantia de 7 dias.</span></li>
+      </ul>
+      <span class="kicker">Nunca</span>
+      <ul class="dont">
+        <li><span>Chamar o Gigantes de mentoria.</span></li>
+        <li><span>Prometer resultado, quantidade de indicações ou proprietário na cidade dela. Mostre o que outro gestor fez, com o número certo do Cofre.</span></li>
+        <li><span>Dizer que o modelo de contrato substitui advogado.</span></li>
+        <li><span>Falar de patrimônio, faturamento ou sociedade do Rômulo ou da empresa.</span></li>
+        <li><span>Dar desconto sem a pessoa trazer o “caro”, ou baixar do preço de aluno sem perguntar no grupo.</span></li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <img class="cda" src="/marca/cda-logo-branco.png" alt="Canal do Anfitrião" width="282" height="247">
+    <span>Roteiro do Gigantes, adaptado do roteiro novo da call (12/11/2026) e do deck do Gigantes. Vamos testar por um tempo: o que funcionar fica.</span>
+    <span>Uso interno do time comercial</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav a'));
+  var stages = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function update() {
+    var y = window.scrollY + window.innerHeight * 0.3;
+    var idx = 0;
+    for (var i = 0; i < stages.length; i++) { if (stages[i] && stages[i].offsetTop <= y) idx = i; }
+    links.forEach(function (a, i) {
+      var on = i === idx;
+      a.classList.toggle('on', on);
+      if (on) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current');
+    });
+    var cur = links[idx];
+    var nav = cur && cur.parentElement;
+    if (nav && nav.scrollWidth > nav.clientWidth) {
+      var left = cur.offsetLeft - nav.clientWidth / 2 + cur.clientWidth / 2;
+      if (Math.abs(nav.scrollLeft - left) > 40) nav.scrollLeft = left;
+    }
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+</script>
+</body>
+</html>

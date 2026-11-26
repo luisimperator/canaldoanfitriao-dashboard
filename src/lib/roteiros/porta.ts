@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Porta das páginas do time comercial (/roteiro-sales-call-atual,
-// /roteiro-sales-call-nova e /cofre): ficam fora do login do painel e pedem só uma
+// /roteiro-sales-call-nova, -gigantes, -black e /cofre): ficam fora do login do painel e pedem só uma
 // senha, guardada na variável ROTEIRO_SENHA da Vercel. Quem acerta ganha um
 // cookie de 30 dias que abre todas elas. Trocar a senha na Vercel
 // invalida os cookies antigos (o cookie é derivado da senha).

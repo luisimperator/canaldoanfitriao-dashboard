@@ -126,7 +126,12 @@ export async function proxy(request: NextRequest) {
   }
   // Páginas de roteiro da call: fora do login do painel, com senha própria
   // (src/lib/roteiros/porta.ts, ROTEIRO_SENHA na Vercel).
-  if (pathname === "/roteiro-sales-call-atual" || pathname === "/roteiro-sales-call-nova") {
+  if (
+    pathname === "/roteiro-sales-call-atual" ||
+    pathname === "/roteiro-sales-call-nova" ||
+    pathname === "/roteiro-sales-call-gigantes" ||
+    pathname === "/roteiro-sales-call-black"
+  ) {
     return NextResponse.next();
   }
   // Calculadora de Ganhos (pública: só faz conta, vai pro lead na call e na

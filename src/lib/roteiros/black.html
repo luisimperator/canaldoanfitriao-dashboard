@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Roteiro da Call · Black</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Raleway:wght@400;500;600;700&family=Barlow:wght@300;400;600&family=Roboto:wght@800&display=swap">
+<style>
+/* Roteiro da Black, adaptado de nova.html (roteiro do Anfitrião 5 Estrelas), mesmo visual.
+   Visual no padrão do site do Anfitrião 5 Estrelas (anfitriao5estrelas.com.br):
+   fundo claro, coral #E23D59, teal #24757F, Poppins nos títulos, Raleway no texto,
+   Barlow fina nos rótulos e botão em pílula coral. Menu fixo à esquerda com as 8
+   etapas da call; à direita, cada etapa num card branco. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f6;
+  --card: #ffffff;
+  --ink: #333333;
+  --ink-2: #4a4a4a;
+  --muted: #69727d;
+  --line: #ececec;
+  --line-2: #dadada;
+  --coral: #e23d59;
+  --coral-dark: #c92e49;
+  --coral-wash: #fdeef1;
+  --teal: #24757f;
+  --teal-2: #2a8995;
+  --teal-light: #aadbe1;
+  --teal-wash: #eaf5f6;
+  --shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+  --title: "Poppins", "Raleway", system-ui, sans-serif;
+  --body: "Raleway", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --label: "Barlow", "Raleway", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 18px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 900px) { .wrap { padding-left: max(40px, env(safe-area-inset-left, 0px)); padding-right: max(40px, env(safe-area-inset-right, 0px)); } }
+strong { font-weight: 700; color: var(--ink); }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--teal-light); outline-offset: 3px; border-radius: 8px; }
+.c { color: var(--coral); }
+
+/* topo, como o hero do site: foto do Rômulo à direita sobre fundo escuro */
+.hero { position: relative; color: #fff; background: #1c1c1c url("/marca/a5e-hero.webp") right center / cover no-repeat; padding-top: env(safe-area-inset-top, 0px); }
+.hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(20, 20, 20, 0.92) 0%, rgba(20, 20, 20, 0.78) 45%, rgba(20, 20, 20, 0.15) 75%, transparent 100%); }
+.hero .wrap { position: relative; padding-block: 40px 120px; display: grid; gap: 22px; max-width: 1280px; }
+.hero .logo { width: 168px; height: auto; display: block; }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; font-family: var(--label); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: 13px; padding: 6px 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); }
+.pill.coral { background: var(--coral); border-color: var(--coral); }
+h1 { font-family: var(--title); font-weight: 700; font-size: clamp(40px, 5.6vw, 68px); line-height: 1.05; letter-spacing: -0.01em; margin: 0; max-width: 13ch; }
+.lede { max-width: 56ch; font-size: 20px; color: rgba(255, 255, 255, 0.86); margin: 0; }
+.lede strong { color: #fff; }
+.postura { max-width: 60ch; display: grid; gap: 4px; padding: 16px 18px; border-radius: 14px; background: rgba(255, 255, 255, 0.10); border: 1px solid rgba(255, 255, 255, 0.22); font-size: 16.5px; color: rgba(255, 255, 255, 0.9); }
+.postura b { font-family: var(--label); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; font-size: 12.5px; color: var(--teal-light); }
+
+/* as 8 etapas em cards brancos sobre a borda do topo */
+.closer { position: relative; z-index: 2; margin-top: -78px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; }
+.closer a { text-decoration: none; padding: 14px 12px 14px; display: grid; gap: 2px; min-width: 0; border-radius: 14px; background: var(--card); box-shadow: var(--shadow); border: 1px solid var(--line); transition: transform 0.2s, border-color 0.2s; }
+.closer a:hover { transform: translateY(-2px); border-color: var(--coral); }
+.closer b { font-family: var(--title); font-weight: 700; font-size: 28px; line-height: 1; color: var(--coral); }
+.closer span { font-family: var(--body); font-weight: 600; font-size: 14.5px; line-height: 1.2; color: var(--ink); }
+
+/* corpo com menu */
+.layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 36px; padding-block: 36px 24px; }
+.nav { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; display: grid; gap: 2px; padding: 14px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); border: 1px solid var(--line); }
+.nav .label { font-family: var(--label); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; font-size: 12px; color: var(--muted); margin: 2px 8px 8px; }
+.nav a { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; text-decoration: none; color: var(--ink-2); font-weight: 600; font-size: 15.5px; }
+.nav a b { font-family: var(--title); font-weight: 700; color: var(--line-2); font-size: 18px; }
+.nav a:hover { background: var(--bg); }
+.nav a.on { background: var(--coral-wash); color: var(--coral-dark); }
+.nav a.on b { color: var(--coral); }
+.nav .rule { margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--teal-wash); font-size: 13.5px; color: var(--teal); line-height: 1.45; font-weight: 500; }
+.nav .rule strong { color: var(--teal); }
+
+/* etapas */
+main { display: grid; gap: 22px; min-width: 0; }
+.stage { scroll-margin-top: 20px; display: grid; gap: 20px; padding: 32px 34px 34px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); border: 1px solid var(--line); min-width: 0; }
+.stage-head { display: grid; gap: 10px; justify-items: start; }
+.tag { display: inline-block; font-family: var(--title); font-weight: 600; font-size: 14px; letter-spacing: 0.02em; color: #fff; background: var(--coral); padding: 6px 14px; border-radius: 8px; }
+.tag.teal { background: var(--teal); }
+h2 { font-family: var(--title); font-weight: 600; font-size: clamp(30px, 3.4vw, 44px); line-height: 1.08; letter-spacing: -0.01em; margin: 0; color: var(--coral); text-wrap: balance; }
+h2 .t { color: var(--teal); }
+.intro { margin: 0; max-width: 66ch; font-size: 18.5px; color: var(--ink-2); }
+
+/* falas: balões como os do grupo de WhatsApp no site */
+.says { display: grid; gap: 12px; justify-items: start; }
+.say { margin: 0; max-width: 46ch; padding: 16px 22px 18px; border-radius: 20px 20px 20px 6px; background: var(--coral); color: #fff; font-size: 22px; line-height: 1.38; font-weight: 600; box-shadow: 0 8px 20px rgba(226, 61, 89, 0.18); }
+.say::before { content: "FALA"; display: block; font-family: var(--label); font-weight: 600; font-size: 11.5px; letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.78); margin-bottom: 2px; }
+.say.small { font-size: 19px; max-width: 58ch; }
+.say .slot { color: #fff; border-bottom: 2px dashed rgba(255, 255, 255, 0.7); }
+.say.lead { background: #fff; color: var(--ink); border: 1px solid var(--line-2); border-radius: 20px 20px 6px 20px; box-shadow: none; justify-self: end; }
+.say.lead::before { content: "LEAD"; color: var(--muted); }
+
+.do, .dont { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
+.do li, .dont li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; align-items: start; font-size: 17.5px; color: var(--ink-2); }
+.do li::before, .dont li::before { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-family: var(--body); font-size: 13px; font-weight: 700; margin-top: 1px; }
+.do li::before { content: "✓"; background: var(--teal); color: #fff; }
+.dont li::before { content: "✕"; background: var(--coral); color: #fff; }
+.dontbox { padding: 16px 20px; border-radius: 14px; background: var(--coral-wash); display: grid; gap: 8px; }
+.kicker { font-family: var(--label); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; font-size: 12.5px; color: var(--muted); }
+.dontbox .kicker { color: var(--coral-dark); }
+
+.example { padding: 18px 22px; border-radius: 14px; background: var(--teal-wash); border-left: 4px solid var(--teal); display: grid; gap: 4px; }
+.example .kicker { color: var(--teal); }
+.example p { margin: 0; font-size: 18.5px; font-style: italic; color: var(--ink); }
+
+.why { padding: 16px 20px; border-radius: 14px; border: 1px dashed var(--teal-light); display: grid; gap: 4px; }
+.why .kicker { color: var(--teal); }
+.why p { margin: 0; font-size: 17px; color: var(--ink-2); }
+
+/* fórmula do rótulo */
+.formula { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.formula div { padding: 14px 16px; border-radius: 12px; border: 2px solid var(--teal-light); display: grid; gap: 2px; min-width: 0; }
+.formula b { font-family: var(--title); font-weight: 600; font-size: 20px; color: var(--teal); }
+.formula span { font-size: 14px; color: var(--muted); }
+
+/* ciclo da dor */
+.loop { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.loop div { position: relative; padding: 16px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); font-size: 17.5px; line-height: 1.35; font-weight: 600; min-width: 0; }
+.loop div::after { content: "→"; position: absolute; right: -15px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; background: var(--teal); color: #fff; font-size: 12px; display: grid; place-items: center; z-index: 1; }
+.loop div:last-child::after { content: "↺"; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.box { padding: 18px 20px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.box h3 { margin: 0; font-family: var(--title); font-weight: 600; font-size: 19px; line-height: 1.2; color: var(--teal); }
+.box p { margin: 0; color: var(--ink-2); font-size: 16.5px; }
+.box q { color: var(--ink); font-weight: 600; quotes: "“" "”"; }
+
+/* mesinha de 3 pernas */
+.mesa { display: grid; gap: 0; margin-top: 4px; }
+.tampo { height: 20px; border-radius: 10px; background: linear-gradient(90deg, var(--teal-2), var(--teal), var(--teal-2)); box-shadow: 0 10px 30px rgba(36, 117, 127, 0.25); }
+.pernas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.perna { display: grid; grid-template-rows: auto 1fr; justify-items: center; min-width: 0; }
+.perna i { width: 10px; height: 40px; background: linear-gradient(var(--teal), var(--teal-light)); border-radius: 0 0 4px 4px; }
+.perna .box { width: 100%; background: var(--card); border: 2px solid var(--teal-light); }
+.perna .box b { font-family: var(--title); font-weight: 700; font-size: 30px; line-height: 1; color: var(--teal); }
+.perna .box h3 { color: var(--ink); }
+.perna .box p { color: var(--ink-2); font-size: 16.5px; }
+.perna .box .ok { font-family: var(--label); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--coral); font-size: 13px; }
+.cai { text-align: center; font-family: var(--title); font-weight: 600; font-size: 22px; margin: 16px 0 0; color: var(--ink); }
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: s; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; align-items: start; }
+.steps > li::before { content: counter(s); font-family: var(--title); font-weight: 700; font-size: 22px; line-height: 44px; height: 44px; color: #fff; text-align: center; background: var(--teal); border-radius: 12px; }
+.steps h3 { margin: 6px 0 2px; font-family: var(--title); font-weight: 600; font-size: 21px; line-height: 1.2; color: var(--ink); }
+.steps p { margin: 0; color: var(--ink-2); font-size: 17px; }
+.trailer { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: var(--teal); background: var(--teal-wash); border-radius: 999px; padding: 4px 12px; margin-top: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; justify-self: start; text-decoration: none; font-family: "Roboto", var(--body); font-weight: 800; font-size: 16px; letter-spacing: 0.02em; text-transform: uppercase; color: #fff; background: var(--coral); padding: 14px 26px; border-radius: 999px; box-shadow: 0 10px 24px rgba(226, 61, 89, 0.28); transition: background 0.2s, transform 0.2s; }
+.btn:hover { background: var(--coral-dark); transform: translateY(-1px); }
+
+/* escada de preço */
+.ladder { display: grid; gap: 8px; }
+.step { display: grid; grid-template-columns: 140px 210px minmax(0, 1fr); gap: 16px; align-items: center; padding: 14px 18px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); }
+.step .price { font-family: var(--title); font-weight: 700; font-size: 28px; line-height: 1; color: var(--coral); font-variant-numeric: tabular-nums; }
+.step .when { font-family: var(--label); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.step .line { font-size: 17px; line-height: 1.4; }
+.step:nth-child(1) { margin-right: 54px; }
+.step:nth-child(2) { margin-right: 36px; }
+.step:nth-child(3) { margin-right: 18px; }
+.step.bonus { background: var(--teal-wash); border-color: var(--teal-light); }
+.step.bonus .price { color: var(--teal); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; font-variant-numeric: tabular-nums; min-width: 560px; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-family: var(--label); font-weight: 600; color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.save { color: var(--teal); font-weight: 700; }
+.note { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+/* objeções */
+.virada { padding: 18px 22px; border-radius: 16px; border: 1px dashed var(--teal-light); display: grid; gap: 10px; }
+.virada .kicker { color: var(--teal); }
+.virada ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; font-size: 17px; color: var(--ink-2); }
+.virada ol li::marker { color: var(--teal); font-weight: 700; }
+.virada b { color: var(--ink); }
+.virada .slot, .obj .slot { border-bottom: 2px dashed var(--coral); }
+.obj .links { display: flex; flex-wrap: wrap; gap: 8px; }
+.cofre-link { justify-self: start; font-family: var(--label); font-weight: 600; font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; color: var(--teal); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--teal-light); }
+.cofre-link:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+.jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.jump a { font-size: 14px; font-weight: 600; text-decoration: none; padding: 6px 14px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--ink-2); }
+.jump a:hover { border-color: var(--coral); color: var(--coral); }
+.objs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.obj { padding: 20px 22px; border-radius: 16px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 10px; align-content: start; min-width: 0; scroll-margin-top: 20px; }
+.obj:target { border-color: var(--coral); background: var(--coral-wash); }
+.obj header { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; }
+.obj header b { font-family: var(--title); font-weight: 700; font-size: 17px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--coral); }
+.obj h3 { margin: 0; font-family: var(--title); font-weight: 600; font-size: 20px; line-height: 1.2; color: var(--ink); }
+.obj .resp { margin: 0; font-size: 17.5px; line-height: 1.5; color: var(--ink); }
+.obj .resp em { font-style: normal; font-weight: 700; color: var(--teal); }
+.obj ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 17px; }
+.obj ol li::marker { color: var(--coral); font-weight: 700; }
+.obj .tip { font-size: 14.5px; color: var(--muted); border-top: 1px solid var(--line-2); padding-top: 10px; margin: 0; }
+.obj.wide { grid-column: 1 / -1; }
+
+/* depois do sim: faixa teal, como os bônus do site */
+.stage.teal { background: var(--teal); color: #fff; border-color: var(--teal); }
+.stage.teal h2 { color: #fff; }
+.stage.teal h2 .t { color: var(--teal-light); }
+.stage.teal .tag { background: #fff; color: var(--teal); }
+.stage.teal .say { background: #fff; color: var(--ink); box-shadow: none; }
+.stage.teal .say::before { color: var(--coral); }
+.stage.teal .say .slot { color: var(--coral); border-bottom-color: var(--coral); }
+.stage.teal .do li { color: rgba(255, 255, 255, 0.9); }
+.stage.teal .do li::before { background: #fff; color: var(--teal); }
+.after-yes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; counter-reset: a; }
+.after-yes div { counter-increment: a; padding: 16px 18px; border-radius: 14px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.after-yes div::before { content: counter(a); font-family: var(--title); font-weight: 700; font-size: 26px; line-height: 1; color: var(--teal-light); }
+.after-yes b { font-family: var(--title); font-weight: 600; font-size: 18px; line-height: 1.2; }
+.after-yes span { font-size: 15.5px; color: rgba(255, 255, 255, 0.85); line-height: 1.42; }
+
+footer { margin-top: 12px; background: #1c1c1c; color: rgba(255, 255, 255, 0.7); }
+footer .wrap { padding-block: 22px calc(30px + env(safe-area-inset-bottom, 0px)); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; align-items: center; }
+footer img { width: 92px; height: auto; display: block; }
+
+@media (max-width: 1100px) {
+  .closer { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .step { grid-template-columns: 130px minmax(0, 1fr); }
+  .step .line { grid-column: 1 / -1; }
+  .after-yes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .loop { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .loop div::after { display: none; }
+}
+@media (max-width: 900px) {
+  .hero { background-position: 70% center; }
+  .hero::before { background: linear-gradient(180deg, rgba(20, 20, 20, 0.86), rgba(20, 20, 20, 0.92)); }
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding-top: 16px; }
+  .nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; gap: 6px; overflow-x: auto; padding: 10px max(16px, env(safe-area-inset-left, 0px)); border-radius: 0; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); border-width: 0 0 1px; box-shadow: none; }
+  .nav .label, .nav .rule { display: none; }
+  .nav a { flex: none; grid-template-columns: auto auto; padding: 6px 12px; font-size: 14.5px; border: 1px solid var(--line); border-radius: 999px; }
+  .nav a b { font-size: 15px; }
+  .stage { padding: 24px 20px 26px; }
+}
+@media (max-width: 720px) {
+  body { font-size: 17px; }
+  .hero .wrap { padding-block: 28px 104px; }
+  .hero .logo { width: 132px; }
+  .closer { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: -70px; }
+  .say { font-size: 19px; padding: 14px 18px 16px; }
+  .say.small { font-size: 17.5px; }
+  .formula, .grid2, .pernas, .objs, .after-yes, .loop { grid-template-columns: minmax(0, 1fr); }
+  .perna i, .tampo { display: none; }
+  .step { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .step:nth-child(n) { margin-right: 0; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .closer a, .btn { transition: none; } }
+
+/* roteiros do Gigantes e da Black: logo do Canal no topo, troca entre roteiros e nome do slide do deck */
+.hero .logo.cda { width: 88px; }
+.outros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: var(--label); font-weight: 600; font-size: 12.5px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.outros a { text-decoration: none; color: #fff; padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.35); }
+.outros a:hover { background: rgba(255, 255, 255, 0.14); }
+.outros a[aria-current="page"] { background: #fff; color: var(--ink); border-color: #fff; }
+.sl { display: inline-block; vertical-align: middle; margin-left: 6px; font-family: var(--label); font-weight: 600; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line-2); border-radius: 999px; padding: 1px 10px; max-width: 100%; }
+.mapa td:first-child { font-weight: 600; color: var(--ink); }
+.mapa td { white-space: normal; }
+.mapa table { min-width: 0; }
+footer img.cda { width: 48px; }
+@media (max-width: 720px) { .hero .logo.cda { width: 72px; } .mapa th, .mapa td { padding: 10px; } }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <img class="logo cda" src="/marca/cda-logo-branco.png" alt="Canal do Anfitrião" width="282" height="247">
+    <div class="pills">
+      <span class="pill">Roteiro da Black · time comercial</span>
+      <span class="pill">Call de 15 min no Teams</span>
+      <span class="pill coral">Até 30/11, 23h59</span>
+    </div>
+    <h1>O roteiro <span class="c">da Black</span></h1>
+    <p class="lede">Quem chega aqui quase sempre já é ou foi aluno: conhece o Rômulo, a comunidade e o resultado. <strong>A venda é a conta da renovação: pagar uma vez e levar tudo vitalício, com 4 anos das duas comunidades e o Max.</strong></p>
+    <div class="postura">
+      <b>Postura</b>
+      <span>Sem tour e sem trailer do Anfitrião 5 Estrelas. Nada de narrativa de dor: a linha é “você já conhece o resultado, agora leva tudo”. E é Black de verdade: “a gente não dobra o preço pra dar desconto”, como diz o Rômulo.</span>
+    </div>
+    <nav class="outros" aria-label="Roteiros">Roteiros: <a href="/roteiro-sales-call-nova">Anfitrião 5 Estrelas</a><a href="/roteiro-sales-call-gigantes">Gigantes</a><a href="/roteiro-sales-call-black" aria-current="page">Black</a></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="closer" aria-label="As 8 etapas">
+    <a href="#e1"><b>1</b><span>Clarificar</span></a>
+    <a href="#e2"><b>2</b><span>Rotular</span></a>
+    <a href="#e3"><b>3</b><span>Ponto fraco</span></a>
+    <a href="#e4"><b>4</b><span>Transição</span></a>
+    <a href="#e5"><b>5</b><span>Vender a viagem</span></a>
+    <a href="#e6"><b>6</b><span>Fechamento</span></a>
+    <a href="#e7"><b>7</b><span>Objeções</span></a>
+    <a href="#e8"><b>8</b><span>Depois do sim</span></a>
+  </nav>
+</div>
+
+<div class="wrap layout">
+  <nav class="nav" aria-label="Etapas da call">
+    <span class="label">Etapas</span>
+    <a href="#e1"><b>1</b>Clarificar</a>
+    <a href="#e2"><b>2</b>Rotular</a>
+    <a href="#e3"><b>3</b>Ponto fraco</a>
+    <a href="#e4"><b>4</b>Transição</a>
+    <a href="#e5"><b>5</b>Vender a viagem</a>
+    <a href="#e6"><b>6</b>Fechamento</a>
+    <a href="#e7"><b>7</b>Objeções</a>
+    <a href="#e8"><b>8</b>Depois do sim</a>
+    <a href="#nao-aluno"><b>☆</b>Não aluno</a>
+    <a href="#cola"><b>✓</b>Cola de fatos</a>
+    <div class="rule">Duas perguntas e a conta da renovação. Só o que serve ao caso dela, <strong>nunca a lista inteira</strong>. Preço só depois do “faz sentido”. Use o deck da Black: o nome de cada slide está nas etapas.</div>
+  </nav>
+
+  <main>
+    <!-- 1 -->
+    <section class="stage" id="e1">
+      <div class="stage-head"><span class="tag">Etapa 1 · Clarificar</span><h2>Duas perguntas, <span class="t">no máximo</span></h2></div>
+      <p class="intro">A capa do deck fica na tela enquanto você cumprimenta e pergunta. A call é de 15 minutos. <span class="sl">slide: Capa</span></p>
+      <div class="says">
+        <p class="say">O Téo me contou que você <span class="slot">[o que está na ficha: quantos imóveis, qual curso tem, o que pesa]</span>. É isso mesmo?</p>
+        <p class="say small">Quantos imóveis você tem hoje?</p>
+        <p class="say small">E o que está mais fraco hoje: preço, fotos, Booking, decoração, a operação?</p>
+      </div>
+      <ul class="do">
+        <li>Comece pela ficha do Téo e pergunte só o que faltou. Depois da pergunta, só escuta: “me conta mais”, “e que mais?”.</li>
+        <li><span>Aluno, pra Black, é quem já comprou curso (inclusive o Airbnb do Zero), imersão ou ingresso de algum Encontro. Adesivo, Piloto Automático e Checklist não contam. Não é aluno? Veja <a href="#nao-aluno">Não aluno</a>.</span></li>
+        <li>Aluno com 1 imóvel não está “fora do perfil”: o vitalício e o curso do ponto fraco já vendem. Não desqualifique.</li>
+      </ul>
+      <div class="dontbox">
+        <span class="kicker">Nessa etapa, não</span>
+        <ul class="dont">
+          <li>Nada de lista de cursos nem de preço.</li>
+          <li>Não faça interrogatório sobre metas e tempo: o que faltar aparece depois, se ela travar.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="stage" id="e2">
+      <div class="stage-head"><span class="tag">Etapa 2 · Rotular</span><h2>Devolver o problema <span class="t">nas palavras dela</span></h2></div>
+      <div class="says">
+        <p class="say">Deixa eu ver se entendi: hoje você <span class="slot">[situação]</span> e o que pesa é <span class="slot">[o mais fraco]</span>. É isso?</p>
+      </div>
+      <div class="formula" aria-hidden="true">
+        <div><b>Onde está</b><span>imóveis e o que já tem</span></div>
+        <div><b>O mais fraco</b><span>a perna bamba</span></div>
+        <div><b>O gatilho</b><span>quando vence o acesso</span></div>
+      </div>
+      <div class="example">
+        <span class="kicker">Exemplo do jeito certo</span>
+        <p>“Hoje você tem 2 apartamentos e está no Anfitrião 5 Estrelas, a ocupação vai bem, mas as fotos são de celular e você depende só do Airbnb. E o seu acesso vence em março. É isso?”</p>
+      </div>
+      <ul class="do"><li>Se ela corrigir, rotula de novo até ouvir “é isso”.</li></ul>
+    </section>
+
+    <!-- 3 -->
+    <section class="stage" id="e3">
+      <div class="stage-head"><span class="tag">Etapa 3 · Visão geral</span><h2>O ponto fraco <span class="t">e o gatilho</span></h2></div>
+      <p class="intro">Curto: é o que liga a Black ao caso dela. Pergunte em sequência até ela dizer que é só isso.</p>
+      <div class="loop">
+        <div>O que você já fez pra resolver <span class="c">[o mais fraco]</span>?</div>
+        <div>E como foi?</div>
+        <div>O que o curso que você tem não cobriu?</div>
+        <div>Mais alguma coisa?</div>
+      </div>
+      <div class="grid2">
+        <div class="box"><h3>Ache a perna bamba</h3><p>Anúncio (foto, imóvel sem cara) → Fotografia Prática e Decoração Estratégica.</p><p>Algoritmo (só no Airbnb) → Booking.com.</p><p>Experiência, operação ou quer mais imóveis → Gigantes, as duas comunidades e o Max.</p></div>
+        <div class="box"><h3>O gatilho da renovação</h3><p><q>Quando vence o seu acesso hoje?</q></p><p>O tempo que ainda falta soma com os 4 anos da comunidade. É o que faz a conta da etapa 5 pesar.</p></div>
+        <div class="box"><h3>Munição pra calculadora</h3><p><q>Qual é a sua diária média? E quantas noites você teve no mês passado?</q></p><p>Se ela não souber, pergunte aproximado. Nunca invente o número. A diária volta no slide do preço.</p></div>
+        <div class="box"><h3>Quem decide e se quer crescer</h3><p><q>Alguém decide isso junto com você?</q></p><p><q>Você pensa em pegar mais imóveis, seus ou de outras pessoas?</q> Se sim, o Gigantes vai pro centro.</p></div>
+      </div>
+      <div class="why">
+        <span class="kicker">Objeção no fim é pergunta que faltou no começo</span>
+        <p>Sem saber quando vence o acesso e qual é o ponto fraco, o fechamento vira “vou só renovar”. Com os dois, a conta fala sozinha.</p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="stage" id="e4">
+      <div class="stage-head"><span class="tag">Etapa 4 · Transição</span><h2>Pedir licença <span class="t">e combinar</span></h2></div>
+      <div class="says">
+        <p class="say">Acho que a Black resolve isso, e ainda tira a renovação da sua vida. Posso te mostrar o que muda pra você?</p>
+        <p class="say small">Antes, um combinado. No final você pode ter dois sentimentos. Um é: “faz sentido, resolve o meu problema”. Aí a gente já vê como você começa. O outro é: “não era isso agora”. E tudo bem: pode ser 100% sincero comigo. Combinado?</p>
+      </div>
+      <ul class="do">
+        <li>O combinado deixa acertado que no fim vem um sim ou um não, em vez de “vou pensar”.</li>
+        <li>Diga com as suas palavras e espere o “combinado”.</li>
+      </ul>
+    </section>
+
+    <!-- 5 -->
+    <section class="stage" id="e5">
+      <div class="stage-head"><span class="tag">Etapa 5 · Vender a viagem</span><h2>A conta, <span class="t">não a lista</span></h2></div>
+      <p class="intro">Pra aluno a Black não é tour: é a conta da renovação e o que resolve o ponto fraco dele. Siga o deck, demore na conta e na perna bamba, e passe rápido pelo que não serve ao caso.</p>
+      <ol class="steps">
+        <li><div><h3>O que muda <span class="sl">slide: O que muda</span></h3><p>Não reapresente o que ela já tem. Mostre só a diferença. Se for aluno do Gigantes ou ex-aluno sem acesso, adapte a primeira fala.</p></div></li>
+      </ol>
+      <div class="says">
+        <p class="say small">Hoje você tem o Anfitrião 5 Estrelas, com a comunidade, e renova todo ano pra continuar.</p>
+        <p class="say small">Na Black o curso fica seu pra sempre, e entram mais cinco. As duas comunidades por 4 anos, o Max junto e as gravações de todos os Encontros.</p>
+      </div>
+      <ol class="steps" start="2" style="counter-reset: s 1">
+        <li><div><h3>A conta da renovação <span class="sl">slide: A conta da renovação</span></h3><p>É o slide que vende pra aluno. Um ano por clique, sem pressa.</p></div></li>
+      </ol>
+      <div class="says">
+        <p class="say">Renovar o Anfitrião 5 Estrelas custa R$ 997 por ano. Em 4 anos, são R$ 3.988 só pro grupo.</p>
+        <p class="say">Na Black você paga uma vez e o curso fica vitalício, com 4 anos das duas comunidades, o Max junto, o <span class="slot">[curso do ponto fraco]</span> e o ingresso do Encontro 2027. Faz sentido pra você?</p>
+      </div>
+      <ul class="do">
+        <li>Vitalício são os 6 cursos e as gravações. A comunidade e o Max são 4 anos; depois disso, pra ficar na comunidade, renova.</li>
+        <li>Saiba responder quando o acesso dela vence: o tempo que falta soma com os 4 anos.</li>
+      </ul>
+      <ol class="steps" start="3" style="counter-reset: s 2">
+        <li><div><h3>Qual perna está bamba <span class="sl">slide: Qual perna está bamba</span></h3><p>Ela já conhece a mesinha: não explique o método de novo. Aqui a mesa liga o ponto fraco dela ao que a Black acrescenta. Demore só na perna que ela apontou.</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">Você lembra da mesinha de 3 pernas. Das três, qual está mais bamba hoje?</p></div>
+      <div class="mesa" aria-label="A mesinha de 3 pernas, pela perna fraca">
+        <div class="tampo"></div>
+        <div class="pernas">
+          <div class="perna"><i></i><div class="box"><b>1</b><h3>Anúncio</h3><p>Foto fraca ou imóvel sem cara: Fotografia Prática (com o celular) e Decoração Estratégica.</p><span class="ok">Faz sentido?</span></div></div>
+          <div class="perna"><i></i><div class="box"><b>2</b><h3>Algoritmo</h3><p>Depende só do Airbnb: o curso de Booking.com.</p><span class="ok">Faz sentido?</span></div></div>
+          <div class="perna"><i></i><div class="box"><b>3</b><h3>Experiência</h3><p>Pega na operação ou quer mais imóveis: o Gigantes, as duas comunidades e o Max.</p><span class="ok">Faz sentido?</span></div></div>
+        </div>
+        <p class="cai">“Uma perna falha, a mesa cai. <span class="c">É por isso que a Black vem com as três.</span>”</p>
+      </div>
+      <ol class="steps" start="4" style="counter-reset: s 3">
+        <li><div><h3>Os 6 cursos vitalícios <span class="sl">slide: 6 cursos vitalícios</span></h3><p>Um por clique, uma frase em cada, e pare no curso do ponto fraco dela. O preço ao lado é o de cada curso separado.</p></div></li>
+      </ol>
+      <div class="tablewrap mapa">
+        <table>
+          <thead><tr><th>Curso</th><th>A frase</th><th>Separado</th></tr></thead>
+          <tbody>
+            <tr><td>Anfitrião 5 Estrelas</td><td>O que ela já conhece, agora sem prazo.</td><td>R$ 2.997</td></tr>
+            <tr><td>Gigantes da Temporada</td><td>Estruturar a empresa de gestão de imóveis de terceiros.</td><td>R$ 4.997</td></tr>
+            <tr><td>Sublocação</td><td>Ganhar com imóvel que não é seu: contrato, negociação e operação.</td><td>R$ 997</td></tr>
+            <tr><td>Booking.com</td><td>Anúncio e preço fora do Airbnb.</td><td>R$ 997</td></tr>
+            <tr><td>Decoração Estratégica</td><td>Investir no que sobe a diária.</td><td>R$ 697</td></tr>
+            <tr><td>Fotografia Prática</td><td>Foto boa, só com o celular.</td><td>R$ 497</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ol class="steps" start="5" style="counter-reset: s 4">
+        <li><div><h3>O Gigantes <span class="sl">slide: Gigantes da Temporada</span></h3><p>Use se ela tem ou quer mais imóveis, próprios ou de terceiros. Se não for o caso, passe rápido: “quando você for pro segundo imóvel, já está lá”.</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">O Gigantes é pra quem quer estruturar uma empresa de gestão de Airbnb pra terceiros, com processo, sistemas e controle. Vem inteiro na Black, vitalício.</p></div>
+      <ol class="steps" start="6" style="counter-reset: s 5">
+        <li><div><h3>As duas comunidades <span class="sl">slide: Duas comunidades</span></h3><p>Se puder, mostre o grupo funcionando na tela. Pela renovação, as duas por 4 anos somam R$ 11.976 (R$ 3.988 + R$ 7.988).</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">A comunidade do Anfitrião 5 Estrelas você já conhece. Na Black você fica 4 anos nela e entra na do Gigantes, com quem administra vários imóveis. O Rômulo participa das duas.</p></div>
+      <ol class="steps" start="7" style="counter-reset: s 6">
+        <li><div><h3>O Max <span class="sl">os 5 slides do Max</span></h3><p>Muito aluno comprou antes do Max: comece pela dor, não pelo produto. Em “Max em ação” e “O que dizem do Max”, deixe ela ler; leia um ou dois depoimentos, não todos.</p></div></li>
+      </ol>
+      <div class="says">
+        <p class="say small">Sabe aquela dúvida às 23h, com hóspede esperando e ninguém pra perguntar? Já te aconteceu? Você já usa o Max?</p>
+        <p class="say small">Agora tem o Max. É uma IA que fica no seu WhatsApp e no grupo, 24 horas, e que estudou todas as aulas do Rômulo. É como ter o Rômulo no seu bolso. Na Black ele vem junto por 4 anos.</p>
+      </div>
+      <ul class="do">
+        <li>A página da Black ainda diz “1 ano de assistente de IA”. O certo é 4 anos, junto com a comunidade.</li>
+        <li>Os prints são o resultado de cada aluna. Não prometa o mesmo.</li>
+      </ul>
+      <ol class="steps" start="8" style="counter-reset: s 7">
+        <li><div><h3>O ingresso de 2027 <span class="sl">slide: Ingresso 2027</span></h3><p>Primeiro o ingresso, que vem de graça na Black; o vídeo do Encontro vem depois.</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">Quem está entre os 100 primeiros da Black leva 1 ingresso Standard do Encontro Presencial 2027: 2 dias, com o Rômulo e outros anfitriões.</p></div>
+      <ul class="do">
+        <li>É 1 ingresso, não 2. O 2º (pra quem vai junto) sai com 20% de desconto.</li>
+        <li>Não diga quantos já foram vendidos nem invente data ou cidade: a previsão é maio de 2027, a confirmar.</li>
+      </ul>
+      <ol class="steps" start="9" style="counter-reset: s 8">
+        <li><div><h3>O Encontro <span class="sl">slide: Encontro de Anfitriões</span></h3><p>Compartilhe a tela com o som do computador e clique no vídeo. Se o tempo estiver curto, pule.</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">E na Black você leva as gravações de todos os Encontros que já aconteceram. Nunca foram vendidas separadas.</p></div>
+      <ol class="steps" start="10" style="counter-reset: s 9">
+        <li><div><h3>Calculadora de ganhos <span class="sl">slide: Calculadora de ganhos</span></h3><p>Os campos começam vazios de propósito: coloque só a diária e as noites que ela te deu na etapa 3.</p></div></li>
+      </ol>
+      <div class="says"><p class="say small">Com esses números, hoje dá isso por mês. Só com 10% a mais na diária e 3 noites a mais, entra isso aqui a mais no ano.</p></div>
+      <ul class="do">
+        <li>É uma conta, não uma promessa de resultado. A diária volta no slide do preço: o deck calcula sozinho em quantas diárias a Black se paga.</li>
+      </ul>
+    </section>
+
+    <!-- 6 -->
+    <section class="stage" id="e6">
+      <div class="stage-head"><span class="tag">Etapa 6 · Fechamento</span><h2>Primeiro o resumo, <span class="t">depois o preço</span></h2></div>
+      <ol class="steps">
+        <li><div><h3>Tudo o que vem junto <span class="sl">slide: Tudo o que vem junto</span></h3><p>Um item por clique, falando do que cada coisa resolve pra ela: 6 cursos vitalícios; 2 comunidades por 4 anos; Max por 4 anos; gravações de todos os Encontros; ingresso do Encontro 2027 pros 100 primeiros; nunca mais renova os 6 cursos.</p></div></li>
+        <li><div><h3>Quanto vale separado <span class="sl">slide: Separado</span></h3><p>Comprando separado, o primeiro ano sai R$ 13.176. Com as duas comunidades por 4 anos, R$ 25.152. Diga uma vez e siga: nada de repetir a lista junto com o preço.</p></div></li>
+      </ol>
+      <div class="says">
+        <p class="say small">Lembra que você me disse que <span class="slot">[o mais fraco]</span>? É isso que a gente resolve com <span class="slot">[o curso do ponto fraco, o Max ou a comunidade]</span>. E você nunca mais renova.</p>
+        <p class="say small">Faz sentido pra você? Ficou alguma dúvida?</p>
+        <p class="say small">E lembra do nosso combinado? Qual dos dois sentimentos ficou?</p>
+        <p class="say">Pra quem nunca foi aluno, é R$ 8.997. Pra você, que é aluno, sai R$ 4.997, ou 12x de R$ 499,70, o mesmo preço do Gigantes sozinho. E tem 7 dias de garantia incondicional: se não for o que eu te disse, devolvemos 100%. Cartão ou Pix? Te mando o link agora.</p>
+      </div>
+      <p class="intro"><span class="sl">slides: Investimento · Garantia</span></p>
+      <ul class="do">
+        <li>Preço só depois do “faz sentido”. Se for o segundo sentimento, pergunte o que faltou: é uma objeção (etapa 7).</li>
+        <li>Sempre o cheio antes do de aluno. No máximo essa comparação: nada de somar tudo de novo nem repetir a lista junto com o preço.</li>
+        <li>Se a calculadora foi preenchida, o 4º clique do slide do preço mostra em quantas diárias dela a Black se paga.</li>
+        <li>A Black é 7 dias de garantia. Os 14 dias são do Anfitrião 5 Estrelas e do Gigantes avulsos: não misture.</li>
+        <li>O link vai durante a call. Dois cartões pode; boleto parcelado só se a pessoa pedir.</li>
+      </ul>
+
+      <span class="kicker">Escada da Black de aluno · só depois de tratar o “caro”, um degrau por vez, com prazo</span>
+      <div class="ladder" aria-label="Escada da Black de aluno">
+        <div class="step"><span class="price">R$ 4.997</span><span class="when">Sempre o primeiro</span><span class="line">12x de R$ 499,70, com garantia de 7 dias.</span></div>
+        <div class="step"><span class="price">R$ 4.497</span><span class="when">Preço travando depois de tratar o “caro”</span><span class="line">“Tenho um cupom que deixa em R$ 4.497, ou 12x de R$ 449,70. Ele vale até amanhã às 13h.”</span></div>
+        <div class="step"><span class="price">R$ 3.997</span><span class="when">Só com uma trava concreta</span><span class="line">“Conversei com a minha equipe e consegui aprovar R$ 3.997 (12x de R$ 399,70), válido até amanhã às 13h.” O preço não baixa mais.</span></div>
+      </div>
+      <p class="note">Nunca dê desconto “por ser aluno”: R$ 4.997 já é o preço de aluno, R$ 4.000 a menos que o de quem não é. Sem abatimento de compra anterior (veja a objeção 8).</p>
+
+      <span class="kicker">Reclamou dos juros? Menos parcelas</span>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Preço à vista</th><th>12x (total)</th><th>6x (total)</th><th>4x (total)</th><th>6x economiza</th></tr></thead>
+          <tbody>
+            <tr><td>R$ 4.997 (aluno)</td><td>R$ 499,70 (R$ 5.996)</td><td>R$ 919,99 (R$ 5.520)</td><td>R$ 1.341,76 (R$ 5.367)</td><td class="save">R$ 476</td></tr>
+            <tr><td>R$ 4.497 (cupom)</td><td>R$ 449,70 (R$ 5.396)</td><td>R$ 827,94 (R$ 4.968)</td><td>R$ 1.207,50 (R$ 4.830)</td><td class="save">R$ 429</td></tr>
+            <tr><td>R$ 3.997 (aprovação)</td><td>R$ 399,70 (R$ 4.796)</td><td>R$ 735,88 (R$ 4.415)</td><td>R$ 1.073,24 (R$ 4.293)</td><td class="save">R$ 381</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Taxa da Eduzz de 2,92% ao mês. Confira no checkout antes de usar.</p>
+    </section>
+
+    <!-- 7 -->
+    <section class="stage" id="e7">
+      <div class="stage-head"><span class="tag">Etapa 7 · Objeções</span><h2>Renovar <span class="t">ou levar tudo</span></h2></div>
+      <p class="intro">Com aluno, quase toda objeção é a mesma pergunta: por que não só renovar? A resposta é sempre a conta e o ponto fraco dela. <span class="sl">slide: Quem já fez</span></p>
+      <a class="btn" href="/cofre" target="_blank" rel="noopener">Abrir o Cofre de Cases ↗</a>
+
+      <div class="virada">
+        <span class="kicker">Antes de responder qualquer objeção</span>
+        <ol>
+          <li><b>Acolha.</b> “Faz sentido.” “Sem problema.” Não discuta nem rebata de primeira.</li>
+          <li><b>Descubra a de verdade.</b> “O que está te pegando?”</li>
+          <li><b>Isole.</b> “Tirando isso, tem mais alguma coisa que te impede de começar hoje?”</li>
+          <li><b>Responda com lógica e prova.</b> A conta da renovação, e um caso só, o mais parecido com ela.</li>
+          <li><b>Volte à dor e peça de novo.</b> “Lembra que você me disse que <span class="slot">[o mais fraco]</span>? Faz sentido? Bora?”</li>
+          <li><b>Não fechou? Data e hora.</b> “Amanhã às 11h eu te chamo pra você me dar a resposta, pode ser?” A Black acaba em 30/11, às 23h59.</li>
+        </ol>
+        <p class="note">Sem promessa de ganho: mostre o que outro aluno fez. A garantia de 7 dias é pra quem está com receio.</p>
+      </div>
+
+      <nav class="jump" aria-label="Ir para a objeção">
+        <a href="#o1">Vou só renovar</a><a href="#o2">Já tenho o curso</a><a href="#o3">Acabei de renovar</a><a href="#o4">Meu acesso não venceu</a><a href="#o5">Não vi as aulas</a><a href="#o6">Tenho 1 imóvel</a><a href="#o7">Preço</a><a href="#o8">Acabei de comprar</a><a href="#o9">Vou pensar</a><a href="#o10">Cônjuge ou sócio</a><a href="#o11">Dúvidas do combo</a><a href="#o12">Juros</a>
+      </nav>
+      <div class="objs">
+        <article class="obj" id="o1">
+          <header><b>1</b><h3>Vou só renovar</h3></header>
+          <p class="resp">“Faz sentido, é o que a maioria faz. Faz a conta comigo: a renovação é R$ 997 por ano. Em 4 anos, R$ 3.988, só pro Anfitrião 5 Estrelas e o grupo. Na Black são R$ 4.997 uma vez, e você leva os 6 cursos vitalícios, as duas comunidades por 4 anos e o Max.”</p>
+          <p class="resp">“E o <span class="slot">[curso do ponto fraco]</span> resolve justamente o <span class="slot">[o mais fraco]</span>, que a renovação não resolve.”</p>
+        </article>
+        <article class="obj" id="o2">
+          <header><b>2</b><h3>Já tenho o curso</h3></header>
+          <p class="resp">Volte pra conta: R$ 3.988 em 4 anos só pra continuar onde está. E o ponto fraco que o curso atual não resolve: “o que está mais fraco hoje é <span class="slot">[x]</span>, e é isso que entra na Black”.</p>
+          <a class="cofre-link" href="/cofre?objecoes=ja-fiz-curso" target="_blank" rel="noopener">Cofre: quem voltou pra mais um curso ↗</a>
+        </article>
+        <article class="obj" id="o3">
+          <header><b>3</b><h3>Acabei de renovar</h3></header>
+          <p class="resp">Quem pagou a renovação anual (R$ 997) de julho de 2026 em diante tem esse valor devolvido pelo time depois da compra da Black. Renovação paga antes de julho não é devolvida.</p>
+          <p class="tip">Siga com o link e anote na ficha: “renovou em [mês]: devolver R$ 997 da renovação”.</p>
+        </article>
+        <article class="obj" id="o4">
+          <header><b>4</b><h3>Meu acesso ainda não venceu</h3></header>
+          <p class="resp">“Melhor ainda: o tempo que falta no seu plano soma com os 4 anos da comunidade. Você não perde nada entrando agora, e a condição de aluno só volta na próxima Black.”</p>
+        </article>
+        <article class="obj" id="o5">
+          <header><b>5</b><h3>Não vi nem metade das aulas</h3></header>
+          <p class="resp">“Por isso mesmo: com o vitalício você segue no seu ritmo e nada mais vence. E o Max acha a aula certa pro problema do dia, na hora.”</p>
+          <a class="cofre-link" href="/cofre?objecoes=tempo" target="_blank" rel="noopener">Cofre: casos de tempo ↗</a>
+        </article>
+        <article class="obj" id="o6">
+          <header><b>6</b><h3>Tenho 1 imóvel, o Gigantes não é pra mim</h3></header>
+          <p class="resp">“Nem precisa ser agora. Os outros cursos e o vitalício já pagam a Black: <span class="slot">[o curso do ponto fraco]</span> resolve o que você me contou. O Gigantes fica pronto pra quando você for pro segundo imóvel.”</p>
+          <p class="tip">Não desqualifique: aluno com 1 imóvel compra o vitalício e o curso do ponto fraco.</p>
+        </article>
+        <article class="obj" id="o7">
+          <header><b>7</b><h3>Preço</h3></header>
+          <p class="resp">Primeiro descubra qual é o “caro”: “O que pesa: o valor total, a parcela no mês ou a dúvida se volta pra você?”</p>
+          <p class="resp"><em>Se é o retorno:</em> o slide do preço já mostra em quantas diárias dela a Black se paga. “12x de R$ 499,70 é menos que <span class="slot">[x]</span> diárias suas por mês.”</p>
+          <p class="resp"><em>Se é a parcela:</em> 12x, Pix e cartão juntos, dois cartões ou boleto parcelado com análise. Só aí entra a escada da etapa 6, um degrau por vez.</p>
+          <a class="cofre-link" href="/cofre?objecoes=preco" target="_blank" rel="noopener">Cofre: casos pra preço ↗</a>
+        </article>
+        <article class="obj" id="o8">
+          <header><b>8</b><h3>Acabei de comprar o curso / ainda estou pagando</h3></header>
+          <p class="resp">“A sua condição é a de aluno: R$ 4.000 a menos que o preço de quem não é aluno.” Não ofereça abatimento.</p>
+          <p class="tip">Se ela comprou de outubro pra frente e pedir pra abater o que pagou, existe uma condição individual do Fernando. Não cite valor: pergunte no grupo antes e volte com a resposta.</p>
+        </article>
+        <article class="obj" id="o9">
+          <header><b>9</b><h3>Vou pensar</h3></header>
+          <p class="resp">“Sem problema. Mas me ajuda a te ajudar: o que está te pegando? É o dinheiro, o momento, alguém de casa ou alguma dúvida sobre a Black?”</p>
+          <p class="resp">“E é uma vez por ano: quem não aproveita agora só tem a condição de aluno de novo na próxima Black. Curso avulso depois sai pelo preço cheio. A Black acaba dia 30/11, às 23h59.”</p>
+          <p class="tip">Se mesmo assim quiser pensar: “Fechado. Que horas amanhã eu te chamo pra você me dar a resposta?”</p>
+        </article>
+        <article class="obj wide" id="o10">
+          <header><b>10</b><h3>Cônjuge ou sócio</h3></header>
+          <p class="resp"><em>Melhor ainda:</em> chamar o cônjuge pra call. Se não dá: “O que você acha que ele vai te perguntar? Às vezes eu já te respondo agora.” Depois, nesta ordem:</p>
+          <ol>
+            <li>“Do que ele seria contra?” (responda o motivo, não a pessoa)</li>
+            <li>“Ele sabe que você renova todo ano? Faz a conta com ele: R$ 3.988 em 4 anos só pra continuar.”</li>
+            <li>“E ele pode ir junto no Encontro: o 2º ingresso sai com 20% de desconto (Standard R$ 797,60, VIP R$ 1.117,60).”</li>
+            <li>“Entra hoje e mostra pra ele lá dentro. Se ele não topar, você tem 7 dias e recebe tudo de volta.”</li>
+          </ol>
+          <a class="cofre-link" href="/cofre?objecoes=conjuge-socio" target="_blank" rel="noopener">Cofre: casais e sócios ↗</a>
+        </article>
+        <article class="obj" id="o11">
+          <header><b>11</b><h3>Dúvidas do combo</h3></header>
+          <p class="resp"><em>“E se lançar curso novo?”</em> Não entra automaticamente. O vitalício vale pros 6 cursos atuais e as gravações dos Encontros. Decoração e Fotografia são os novos e já estão dentro.</p>
+          <p class="resp"><em>“E o VIP?”</em> O ingresso da Black é o Standard. Quem quiser o VIP paga só a diferença (R$ 400 pelos preços da pré-venda). O que o VIP tem a mais ainda não foi anunciado: não precisa decidir agora.</p>
+          <p class="resp"><em>“Quando é o Encontro?”</em> A previsão é maio de 2027, em São Paulo, a confirmar.</p>
+        </article>
+        <article class="obj" id="o12">
+          <header><b>12</b><h3>Juros</h3></header>
+          <p class="resp">“O juros não é nosso, é da Eduzz. Em 6x fica R$ 919,99 por mês, uns R$ 476 a menos que no 12x. E no Pix à vista não tem juros.”</p>
+          <p class="tip">Valores na tabela da etapa 6.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="stage teal" id="e8">
+      <div class="stage-head"><span class="tag">Etapa 8 · Reforçar depois do sim</span><h2>O sim <span class="t">não é o fim</span></h2></div>
+      <div class="says">
+        <p class="say small">Parabéns pela decisão! Me manda o comprovante que a minha equipe já acompanha a sua liberação.</p>
+        <p class="say small">Decisão certa, porque <span class="slot">[o ponto fraco dela, nas palavras dela]</span>. Agora é seu pra sempre.</p>
+      </div>
+      <ul class="do">
+        <li>Essa fala tira a ansiedade do “será que fiz besteira?”, que bate logo depois de pagar.</li>
+        <li><span>Se não fechar, dia e hora do retorno na agenda. Os próximos passos, como no último slide do deck: <span class="sl">slide: Depois do sim</span></span></li>
+      </ul>
+      <div class="after-yes">
+        <div><b>Pagar pelo link</b><span>Agora, na call.</span></div>
+        <div><b>Cursos liberados</b><span>Depois da confirmação do pagamento.</span></div>
+        <div><b>No grupo</b><span>Em alguns minutos.</span></div>
+        <div><b>Chamar o Max</b><span>No WhatsApp, já com a primeira dúvida.</span></div>
+      </div>
+    </section>
+
+    <!-- Não aluno -->
+    <section class="stage" id="nao-aluno">
+      <div class="stage-head"><span class="tag teal">Black · quem não é aluno</span><h2>Primeiro o caso, <span class="t">depois o combo</span></h2></div>
+      <p class="intro">Quem nunca comprou curso, imersão nem ingresso de Encontro não conhece o método: faça as etapas 1 a 4 do <a href="/roteiro-sales-call-nova">roteiro do Anfitrião 5 Estrelas</a> (diagnóstico, ciclo da dor, combinado) e só então mostre a Black como o pacote completo. Recomende uma coisa só, ligada ao que ela contou.</p>
+      <div class="says">
+        <p class="say">A Black é R$ 8.997, ou 12x de R$ 899,71, com 7 dias de garantia. Cartão ou Pix?</p>
+      </div>
+      <ul class="do">
+        <li><span>Se o combo for demais pra ela, ofereça o produto avulso que serve ao caso, no preço da tabela: o Anfitrião 5 Estrelas pra quem tem de 1 a 5 imóveis; o Gigantes pra quem faz ou quer fazer gestão pra terceiros.</span></li>
+        <li><span>Diz que é aluna, que fez imersão ou que foi a um Encontro? Confirme pelo e-mail da compra antes de passar o preço de aluno.</span></li>
+        <li><span>Boleto parcelado, com análise: 12x de R$ 949,71.</span></li>
+      </ul>
+      <span class="kicker">Escada de quem não é aluno</span>
+      <div class="ladder" aria-label="Escada da Black de não aluno">
+        <div class="step"><span class="price">R$ 8.997</span><span class="when">Sempre o primeiro</span><span class="line">12x de R$ 899,71, com garantia de 7 dias.</span></div>
+        <div class="step"><span class="price">R$ 5.000</span><span class="when">Quer a Black completa e trouxe trava concreta</span><span class="line">12x de R$ 500, com aprovação e prazo. O preço não baixa mais.</span></div>
+      </div>
+    </section>
+
+    <!-- Cola de fatos -->
+    <section class="stage" id="cola">
+      <div class="stage-head"><span class="tag">Cola · deixe aberta na call</span><h2>Os fatos <span class="t">certos</span></h2></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Black Friday Histórica</th><th>Preço</th><th>Garantia</th><th>Boleto parcelado</th><th>Pix + cartão ou 2 cartões</th></tr></thead>
+          <tbody>
+            <tr><td>Aluno ou ex-aluno</td><td>R$ 4.997 ou 12x de R$ 499,70</td><td>7 dias</td><td>12x de R$ 549,70, com análise</td><td>sim</td></tr>
+            <tr><td>Quem não é aluno</td><td>R$ 8.997 ou 12x de R$ 899,71</td><td>7 dias</td><td>12x de R$ 949,71, com análise</td><td>sim</td></tr>
+            <tr><td>Renovação do Anfitrião 5 Estrelas (a conta)</td><td>R$ 997 por ano · 4 anos = R$ 3.988</td><td>·</td><td>·</td><td>·</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="do">
+        <li><span><b>O que vem:</b> Anfitrião 5 Estrelas, Gigantes, Sublocação, Booking, Decoração e Fotografia vitalícios; 4 anos das duas comunidades com o Max junto; as gravações de todos os Encontros; 1 ingresso Standard do Encontro 2027, pros 100 primeiros. Até 30/11, às 23h59.</span></li>
+        <li><span><b>Vitalício x 4 anos:</b> os 6 cursos e as gravações são vitalícios. As comunidades e o Max, 4 anos.</span></li>
+        <li><span><b>Encontro 2027:</b> 1 ingresso Standard, não 2. O 2º sai com 20% de desconto. VIP: paga a diferença.</span></li>
+        <li><span><b>Separado:</b> R$ 13.176 no primeiro ano; R$ 25.152 com as duas comunidades por 4 anos.</span></li>
+        <li><span><b>Preço:</b> só depois do “faz sentido”, sempre o cheio antes do de aluno e sempre junto da garantia. Se perguntarem antes: “Já te falo. Antes, deixa eu entender <span class="slot">[x]</span> pra te passar a condição certa.”</span></li>
+        <li><span><b>Rômulo:</b> “mais de 70 imóveis”.</span></li>
+      </ul>
+      <span class="kicker">Nunca</span>
+      <ul class="dont">
+        <li><span>Despejar a lista inteira do combo, ou repetir a lista junto com o preço.</span></li>
+        <li><span>Prometer resultado ou curso futuro. Mostre o que outro aluno fez, com o número certo do Cofre.</span></li>
+        <li><span>Falar de patrimônio, faturamento ou sociedade do Rômulo ou da empresa.</span></li>
+        <li><span>Dar desconto sem a pessoa trazer o “caro”, ou dizer “vou ver um valor melhor com a equipe” antes de tratar a objeção.</span></li>
+        <li><span>Misturar garantias: Black 7 dias; Anfitrião 5 Estrelas e Gigantes avulsos, 14.</span></li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <img class="cda" src="/marca/cda-logo-branco.png" alt="Canal do Anfitrião" width="282" height="247">
+    <span>Roteiro da Black, adaptado do roteiro novo da call (12/11/2026) e do deck da Black. Vale até 30/11/2026.</span>
+    <span>Uso interno do time comercial</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav a'));
+  var stages = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function update() {
+    var y = window.scrollY + window.innerHeight * 0.3;
+    var idx = 0;
+    for (var i = 0; i < stages.length; i++) { if (stages[i] && stages[i].offsetTop <= y) idx = i; }
+    links.forEach(function (a, i) {
+      var on = i === idx;
+      a.classList.toggle('on', on);
+      if (on) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current');
+    });
+    var cur = links[idx];
+    var nav = cur && cur.parentElement;
+    if (nav && nav.scrollWidth > nav.clientWidth) {
+      var left = cur.offsetLeft - nav.clientWidth / 2 + cur.clientWidth / 2;
+      if (Math.abs(nav.scrollLeft - left) > 40) nav.scrollLeft = left;
+    }
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+</script>
+</body>
+</html>
