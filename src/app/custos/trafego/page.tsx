@@ -2,15 +2,20 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { Card, KpiCard, PageHeader } from "@/components/ui";
 import { AlertasIntegracao } from "@/components/AlertasIntegracao";
 import { CiclosChart } from "@/components/TrafegoMeta";
+import Link from "next/link";
 import {
   brl,
   brl2,
   diaBR,
+  diasNoMes as diasDoMes,
+  entradasPrevistas,
   faturaDoCiclo,
   faturamento,
   normalizar,
+  normalizarFuturo,
   rotuloCiclo,
   situacao,
+  somarMeses,
   vezes,
   type CicloMeta,
 } from "@/lib/trafego-meta";
@@ -61,7 +66,11 @@ function Selo({ c, hoje }: { c: CicloMeta; hoje: string }) {
   return <span className={`${base} text-ink-2`}>Cobrado no cartão</span>;
 }
 
-export default async function TrafegoMetaPage() {
+const OPCOES_FUTURO = [3, 6, 12];
+
+export default async function TrafegoMetaPage({ searchParams }: { searchParams: Promise<{ futuro?: string }> }) {
+  const sp = await searchParams;
+  const nFuturo = OPCOES_FUTURO.includes(Number(sp.futuro)) ? Number(sp.futuro) : 6;
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     return (
@@ -71,7 +80,10 @@ export default async function TrafegoMetaPage() {
       </div>
     );
   }
-  const { data, error } = await supabase.rpc("painel_meta_trafego", { p_meses: 12 });
+  const [{ data, error }, { data: dataFuturo }] = await Promise.all([
+    supabase.rpc("painel_meta_trafego", { p_meses: 12 }),
+    supabase.rpc("painel_caixa_futuro", { p_meses: nFuturo }),
+  ]);
   if (error) {
     return (
       <div>
@@ -113,15 +125,44 @@ export default async function TrafegoMetaPage() {
     .map((c) => ({ c, real: faturaDoCiclo(c) ?? 0 }))
     .filter(({ c, real }) => real > 0 && Math.abs(real - (c.provisao ?? 0)) / real > 0.1);
 
-  const grafico = [...ciclos]
-    .slice(0, 8)
-    .reverse()
-    .map((c) => ({
-      rotulo: rotuloCiclo(c.mes),
-      fatura: Math.round(faturaDoCiclo(c) ?? c.gasto),
-      faturamento: Math.round(faturamento(c)),
-      prevista: c.fatura == null && c.fatura_prevista != null,
-    }));
+  // Meses pra frente (Fernando, 27/11): entradas que já se sabe que caem no
+  // caixa e a fatura da Meta que vence em cada mês. A fatura do ciclo M vence
+  // por volta do dia 1 de M+2; a dos ciclos que ainda não fecharam sai pelo
+  // ritmo de gasto (o do ciclo aberto, pela projeção acima).
+  const futuro = normalizarFuturo(dataFuturo);
+  const faturaEstimada = (ciclo: string): { valor: number; como: "real" | "prevista" | "ritmo" } => {
+    const c = p.ciclos.find((x) => x.mes === ciclo);
+    if (c?.fatura != null) return { valor: 0, como: "real" }; // já emitida: entra pelo vencimento real
+    if (ciclo === mesAtual) return { valor: projecaoGasto * fator, como: "ritmo" };
+    if (ciclo < mesAtual) return { valor: c?.fatura_prevista ?? 0, como: "prevista" };
+    return { valor: media7 * diasDoMes(ciclo) * fator, como: "ritmo" };
+  };
+  const mesesFuturos = futuro.meses.map((m) => {
+    const cicloQueVence = somarMeses(m.mes, -2);
+    const est = faturaEstimada(cicloQueVence);
+    const meta = m.meta_aberta + est.valor;
+    const entra = entradasPrevistas(m);
+    return { m, cicloQueVence, est, meta, entra, sobra: entra - meta };
+  });
+
+  const grafico = [
+    ...[...ciclos]
+      .slice(0, 8)
+      .reverse()
+      .map((c) => ({
+        rotulo: rotuloCiclo(c.mes),
+        fatura: Math.round(faturaDoCiclo(c) ?? c.gasto),
+        faturamento: Math.round(faturamento(c)),
+        prevista: c.fatura == null && c.fatura_prevista != null,
+      })),
+    ...mesesFuturos.map(({ m, entra }) => ({
+      rotulo: rotuloCiclo(m.mes),
+      fatura: Math.round(media7 * diasDoMes(m.mes) * fator),
+      faturamento: Math.round(entra),
+      prevista: true,
+      futuro: true,
+    })),
+  ];
 
   const erros = p.ultima_sync?.erros?.filter(Boolean) ?? [];
 
@@ -179,10 +220,92 @@ export default async function TrafegoMetaPage() {
       </div>
 
       <Card title="Fatura × faturamento por ciclo" className="mb-4 min-w-0">
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-ink-2">
+          <span>Meses à frente:</span>
+          {OPCOES_FUTURO.map((n) => (
+            <Link
+              key={n}
+              href={`?futuro=${n}`}
+              className={`rounded-full border px-3 py-1 font-semibold ${
+                n === nFuturo ? "border-ink bg-ink text-surface" : "border-line text-ink-2 hover:text-ink"
+              }`}
+            >
+              {n}
+            </Link>
+          ))}
+        </div>
         <CiclosChart data={grafico} />
         <p className="mt-2 text-xs text-ink-2">
           Fatura com impostos (a do ciclo aberto é prevista, pelo gasto até agora). Faturamento = tudo o que foi pago no
-          mês: Eduzz, TMB e ingressos da Imersão.
+          mês: Eduzz, TMB e ingressos da Imersão. Nos meses futuros: a fatura é estimada pelo ritmo de gasto dos últimos 7
+          dias e o faturamento é o que já se sabe que entra no caixa (tabela abaixo); vai subindo conforme as vendas entram.
+        </p>
+      </Card>
+
+      <Card title="Próximos meses: caixa previsto" className="mb-4 min-w-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-line">
+                <th className={TH}>Mês</th>
+                <th className={`${TH} text-right`}>Eduzz já vendido</th>
+                <th className={`${TH} text-right`}>TMB (parcelas)</th>
+                <th className={`${TH} text-right`}>Renovações</th>
+                <th className={`${TH} text-right`}>Outras cobranças</th>
+                <th className={`${TH} text-right`}>Entradas previstas</th>
+                <th className={`${TH} text-right`}>Fatura da Meta que vence</th>
+                <th className={`${TH} text-right`}>Sobra</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mesesFuturos.map(({ m, cicloQueVence, est, meta, entra, sobra }) => (
+                <tr key={m.mes} className="border-b border-line/60 align-top">
+                  <td className="whitespace-nowrap px-2 py-2 font-medium text-ink">{rotuloCiclo(m.mes)}</td>
+                  <td className={`${TD} text-right text-ink`}>
+                    {brl(m.eduzz_liberar)}
+                    {m.eduzz_liberar_n > 0 && <div className="text-[11px] text-ink-2">{m.eduzz_liberar_n} vendas a liberar</div>}
+                  </td>
+                  <td className={`${TD} text-right text-ink`}>
+                    {brl(m.tmb)}
+                    {m.tmb_n > 0 && <div className="text-[11px] text-ink-2">{m.tmb_n} parcelas</div>}
+                  </td>
+                  <td className={`${TD} text-right text-ink`}>
+                    {brl(m.renovacao_esperada)}
+                    {m.renovacao_n > 0 && (
+                      <div className="text-[11px] text-ink-2">
+                        {m.renovacao_n} vencem · {brl(m.renovacao_potencial)} se todos renovarem
+                      </div>
+                    )}
+                  </td>
+                  <td className={`${TD} text-right text-ink-2`}>{brl(m.eduzz_agendado)}</td>
+                  <td className={`${TD} text-right font-semibold text-ink`}>{brl(entra)}</td>
+                  <td className={`${TD} text-right text-ink`}>
+                    {meta > 0 ? brl(meta) : "—"}
+                    <div className="text-[11px] text-ink-2">
+                      {m.meta_aberta > 0 && est.valor > 0
+                        ? `emitida ${brl(m.meta_aberta)} + ciclo de ${rotuloCiclo(cicloQueVence)} ≈ ${brl(est.valor)}`
+                        : m.meta_aberta > 0
+                          ? "fatura já emitida"
+                          : est.valor > 0
+                            ? `ciclo de ${rotuloCiclo(cicloQueVence)} ${est.como === "ritmo" ? "(pelo ritmo)" : "(prevista)"}`
+                            : ""}
+                    </div>
+                  </td>
+                  <td className={`${TD} text-right font-semibold ${sobra >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
+                    {brl(sobra)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-xs text-ink-2">
+          Só o que já se sabe hoje, sem vendas novas: o dinheiro das vendas da Eduzz já pagas que ainda vai ser liberado, as
+          parcelas dos boletos da TMB em dia (menos a taxa), as renovações anuais que vencem no mês (pela taxa histórica de
+          renovação, hoje {Math.round(futuro.taxa_renovacao * 1000) / 10}%; o “se todos renovarem” é o teto) e as cobranças
+          avulsas agendadas na Eduzz. Valores líquidos. A fatura da Meta de cada ciclo vence por volta do dia 1 do segundo mês
+          seguinte; a dos ciclos que ainda não fecharam é estimada pelo ritmo de gasto. Os meses vão sendo corrigidos conforme
+          as vendas entram.
         </p>
       </Card>
 

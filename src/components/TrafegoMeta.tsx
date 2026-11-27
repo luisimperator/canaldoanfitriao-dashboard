@@ -1,15 +1,18 @@
 "use client";
 
 // Gráfico do Tráfego da Meta: por ciclo de cobrança, a fatura (com impostos;
-// a do ciclo aberto é prevista) ao lado do faturamento do mesmo mês.
+// a do ciclo aberto é prevista) ao lado do faturamento do mesmo mês. Os meses
+// futuros (mais claros) trazem a fatura estimada pelo ritmo de gasto e as
+// entradas que já se sabe que caem no caixa.
 
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export interface PontoCiclo {
   rotulo: string;
   fatura: number;
   faturamento: number;
   prevista: boolean;
+  futuro?: boolean;
 }
 
 const SERIES = [
@@ -29,8 +32,8 @@ function Dica({ active, payload }: { active?: boolean; payload?: { payload?: Pon
         <div key={s.key} className="flex items-center justify-between gap-4 text-ink-2">
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 rounded-[2px]" style={{ background: s.cor }} />
-            {s.nome}
-            {s.key === "fatura" && d.prevista ? " (prevista)" : ""}
+            {d.futuro ? (s.key === "fatura" ? "Fatura (estimada pelo ritmo)" : "Entradas previstas no caixa") : s.nome}
+            {!d.futuro && s.key === "fatura" && d.prevista ? " (prevista)" : ""}
           </span>
           <span className="font-medium tabular-nums text-ink">{brl(d[s.key])}</span>
         </div>
@@ -49,6 +52,7 @@ export function CiclosChart({ data }: { data: PontoCiclo[] }) {
             {s.nome}
           </span>
         ))}
+        {data.some((d) => d.futuro) && <span>Mais claro = meses futuros (previsão)</span>}
       </div>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap="22%" barGap={2}>
@@ -63,7 +67,11 @@ export function CiclosChart({ data }: { data: PontoCiclo[] }) {
           />
           <Tooltip content={<Dica />} cursor={{ fill: "rgba(100,116,139,0.08)" }} />
           {SERIES.map((s) => (
-            <Bar key={s.key} dataKey={s.key} name={s.nome} fill={s.cor} maxBarSize={28} radius={[4, 4, 0, 0]} />
+            <Bar key={s.key} dataKey={s.key} name={s.nome} fill={s.cor} maxBarSize={28} radius={[4, 4, 0, 0]}>
+              {data.map((d) => (
+                <Cell key={d.rotulo} fillOpacity={d.futuro ? 0.4 : 1} />
+              ))}
+            </Bar>
           ))}
         </BarChart>
       </ResponsiveContainer>
