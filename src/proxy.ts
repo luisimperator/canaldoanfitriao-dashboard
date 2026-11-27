@@ -32,6 +32,8 @@ function ehLpPublica(p: string): boolean {
     p === "/max-ia" ||
     // Decks de venda (HTML no bucket público, ver src/lib/deck-publico.ts).
     p === "/deck-black" || p === "/deck-gigantes" || p === "/deck-alfaiate" ||
+    // LP do Checklist Essencial (HTML no bucket público, ver src/app/checklist-essencial).
+    p === "/checklist-essencial" ||
     p.startsWith("/marca/") ||
     p === "/icon-192.png" ||
     p === "/t/pv" ||
