@@ -50,6 +50,34 @@ export function escolherTurmaPorCodigo<T extends TurmaEscolhivel>(turmas: T[], c
   return { tipo: "turma", turma };
 }
 
+// ---------- obrigado da Eduzz (/imersao/obrigado) ----------
+//
+// Quem acabou de comprar vai pra turma À VENDA agora: a de turma_data mais
+// próxima, ativa, cujo corte de vendas (inicio_sabado = sábado 10h SP, mesma
+// regra do turmaParaCompra) ainda não chegou. Assim o obrigado muda sozinho
+// quando a turma vira, sem trocar URL na Eduzz a cada semana (Gusta, 27/11).
+// Turma à venda sem codigo (não tem /i/) ou nenhuma cadastrada: "sem_turma_a_venda"
+// (página de compra confirmada + alerta).
+
+export interface TurmaVendivel {
+  turma_data: string;
+  inicio_sabado: string;
+  ativa: boolean;
+  codigo: string | null;
+}
+
+export type EscolhaObrigado<T> =
+  | { tipo: "redireciona"; turma: T }
+  | { tipo: "sem_turma_a_venda"; turma: T | null };
+
+export function escolherTurmaAVenda<T extends TurmaVendivel>(turmas: T[], agora: Date): EscolhaObrigado<T> {
+  const aVenda = turmas
+    .filter((t) => t.ativa && new Date(t.inicio_sabado).getTime() > agora.getTime())
+    .sort((a, b) => a.turma_data.localeCompare(b.turma_data))[0];
+  if (aVenda && aVenda.codigo) return { tipo: "redireciona", turma: aVenda };
+  return { tipo: "sem_turma_a_venda", turma: aVenda ?? null };
+}
+
 // ---------- faixa grande da página de espera ----------
 
 const SP = "America/Sao_Paulo";

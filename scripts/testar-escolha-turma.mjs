@@ -1,7 +1,7 @@
 // Testa a escolha de turma do /imersao e do /i/<codigo> com datas simuladas.
 // Rodar: node scripts/testar-escolha-turma.mjs   (Node 22.18+: importa o .ts direto, type stripping)
 import assert from "node:assert/strict";
-import { destaqueAntes, escolherTurmaImersao, escolherTurmaPorCodigo } from "../src/lib/imersao-escolha.ts";
+import { destaqueAntes, escolherTurmaAVenda, escolherTurmaImersao, escolherTurmaPorCodigo } from "../src/lib/imersao-escolha.ts";
 import { turmaParaCompra } from "../src/lib/imersao.ts";
 
 // Espelho das linhas de imersao_turmas em produção (21/11/2026).
@@ -50,6 +50,27 @@ caso(`(d) /i/${CODIGO_28} 2026-12-05T13:00Z`, resumo(escolherTurmaPorCodigo(turm
 caso("(e) /i/codigo-errado", resumo(escolherTurmaPorCodigo(turmas, "codigo-errado", em("2026-11-28T13:00:00Z"))), "nao_encontrada");
 caso("(e) /i/<codigo em minúsculas>", resumo(escolherTurmaPorCodigo(turmas, CODIGO_28.toLowerCase(), em("2026-11-28T13:00:00Z"))), "nao_encontrada");
 caso("(e) /i/ vazio", resumo(escolherTurmaPorCodigo(turmas, "", em("2026-11-28T13:00:00Z"))), "nao_encontrada");
+
+// (f): /imersao/obrigado -> turma À VENDA (corte = inicio_sabado, sábado 10h SP = 13:00Z)
+const vendas = [
+  { turma_data: "2026-11-21", inicio_sabado: "2026-11-21T13:00:00Z", ativa: true, codigo: null },
+  { turma_data: "2026-11-28", inicio_sabado: "2026-11-28T13:00:00Z", ativa: true, codigo: CODIGO_28 },
+];
+const v05 = { turma_data: "2026-12-05", inicio_sabado: "2026-12-05T13:00:00Z", ativa: true, codigo: "OutroCodigo05" };
+const resumoV = (e) => (e.tipo === "redireciona" ? `redireciona:${e.turma.codigo}` : `${e.tipo}:${e.turma?.turma_data ?? "-"}`);
+caso("(f) obrigado 2026-11-27T22:00Z (sexta) -> 28", resumoV(escolherTurmaAVenda(vendas, em("2026-11-27T22:00:00Z"))), `redireciona:${CODIGO_28}`);
+caso("(f) obrigado 2026-11-22T15:00Z (domingo da 21) -> 28", resumoV(escolherTurmaAVenda(vendas, em("2026-11-22T15:00:00Z"))), `redireciona:${CODIGO_28}`);
+caso("(f) obrigado 2026-11-28T12:59:59Z (9h59 SP) -> 28", resumoV(escolherTurmaAVenda(vendas, em("2026-11-28T12:59:59Z"))), `redireciona:${CODIGO_28}`);
+caso("(f) obrigado 2026-11-28T13:00Z (10h em ponto, sem 05/12) -> confirmação", resumoV(escolherTurmaAVenda(vendas, em("2026-11-28T13:00:00Z"))), "sem_turma_a_venda:-");
+caso("(f) obrigado 2026-11-28T15:00Z (sem 05/12) -> confirmação", resumoV(escolherTurmaAVenda(vendas, em("2026-11-28T15:00:00Z"))), "sem_turma_a_venda:-");
+caso("(f) obrigado 2026-11-27T22:00Z com 28 e 05/12 -> 28", resumoV(escolherTurmaAVenda([...vendas, v05], em("2026-11-27T22:00:00Z"))), `redireciona:${CODIGO_28}`);
+caso("(f) obrigado 2026-11-28T13:00Z com 05/12 -> 05/12", resumoV(escolherTurmaAVenda([...vendas, v05], em("2026-11-28T13:00:00Z"))), "redireciona:OutroCodigo05");
+caso("(f) obrigado 2026-11-29T20:00Z com 05/12 -> 05/12", resumoV(escolherTurmaAVenda([...vendas, v05], em("2026-11-29T20:00:00Z"))), "redireciona:OutroCodigo05");
+caso("(f) obrigado depois do corte com 05/12 SEM codigo -> confirmação", resumoV(escolherTurmaAVenda([...vendas, { ...v05, codigo: null }], em("2026-11-28T13:01:00Z"))), "sem_turma_a_venda:2026-12-05");
+caso("(f) obrigado depois do corte com 05/12 desativada -> confirmação", resumoV(escolherTurmaAVenda([...vendas, { ...v05, ativa: false }], em("2026-11-28T13:01:00Z"))), "sem_turma_a_venda:-");
+caso("(f) obrigado antes do corte com a 28 desativada e 05/12 -> 05/12", resumoV(escolherTurmaAVenda([vendas[0], { ...vendas[1], ativa: false }, v05], em("2026-11-27T22:00:00Z"))), "redireciona:OutroCodigo05");
+caso("(f) obrigado sem nenhuma turma", resumoV(escolherTurmaAVenda([], em("2026-11-27T22:00:00Z"))), "sem_turma_a_venda:-");
+caso("(f) obrigado com inicio_sabado no formato do banco (+00)", resumoV(escolherTurmaAVenda([{ ...vendas[1], inicio_sabado: "2026-11-28 13:00:00+00" }], em("2026-11-28T12:59:00Z"))), `redireciona:${CODIGO_28}`);
 
 // Faixa da espera: "Começamos às 10:00" só no dia (início 28/11 13:00Z = 10:00 SP).
 const ini28 = em("2026-11-28T13:00:00Z");
