@@ -271,6 +271,8 @@ export default async function AssinaturasPage({
           </table>
         </div>
         <p className="mt-3 text-xs text-ink-2">
+          Black Friday (2025 e 2026): quem comprou tem 4 anos de comunidade, nos dois grupos (A5E e Gigantes), contados do pagamento; o vencimento de cada compra é
+          essa data. Junta a Eduzz e o boleto da TMB (no boleto, o total pago só conta quando quita; boleto em atraso aparece como atrasada).
           A5E junta o curso (1702138 e 1783828), a renovação do grupo e as cadeiras adicionais; Gigantes junta a pessoa adicional.
           Contagem por assinatura (um aluno pode ter mais de uma). Alunos = e-mails que já pagaram algo no produto. LTV no produto = total pago no produto ÷ alunos; LTV do aluno = tudo o que
           ele pagou na Eduzz, em qualquer produto.
