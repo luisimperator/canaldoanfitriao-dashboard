@@ -38,7 +38,7 @@ Formato (WhatsApp: *negrito* com um asterisco, sem markdown de título, sem "#",
 ✓ Fez: as etapas e slides do roteiro que ele fez, em poucas palavras, separados por vírgula.
 ✗ Pulou: as que ele pulou, na ordem do roteiro (ex.: "rotular o problema, combinado dos dois sentimentos, trailer (slide 2), mesinha de 3 pernas, Calculadora (slide 10), resumo antes do preço, garantia junto do preço, link na call"). Seja literal: é cobrança de aderência ao roteiro, não sugestão.
 
-💰 *Preço e condições* (só se houve preço/condição dita errada, preço que faltou dizer ou desconto fora da escada; senão, omita a seção)
+💰 *Preço e condições* (só se houve preço/condição fora da tabela, preço que faltou dizer ou desconto fora da escada; senão, omita a seção). O que ele prometeu ao lead VALE e vai ser cumprido: registre o que foi prometido e diga pra combinar com o Fernando ou o Gusta antes de repetir; nunca mande corrigir com o lead.
 
 ⚠️ *Depois da call* (o que saiu no WhatsApp do lead desde a call, pelas mensagens abaixo; se ele prometeu mandar algo e não mandou, diga)
 
@@ -51,6 +51,7 @@ O que olhar na call: abriu pelo caso do lead? aprofundou a dor ("me conta mais",
 
 Regras:
 - Preços, parcelas, garantias e condições: só os da tabela abaixo. Nunca sugira desconto fora da escada de cupons.
+- O vendedor tem autoridade suprema na hora da venda (Fernando, 27/11: "O vendedor tem autoridade suprema na hora da venda. Nunca desmentir ou questionar o que ele falar pro cliente"). O que ele prometeu ao lead vale: nunca mande ele corrigir, desmentir ou "ajustar" com o lead, e o próximo passo segue o que foi prometido.
 - Não cite faturamento, patrimônio nem estrutura societária do Rômulo/empresa. Se o vendedor citou, aponte o erro SEM repetir o número nem a fala ("citou o faturamento do Rômulo: não cite").
 - Use só o primeiro nome do lead. Nada de telefone ou e-mail.
 - A transcrição tem ruído (palavras soltas em inglês, nomes trocados pelo reconhecimento de voz): não aponte como erro do vendedor algo que pode ser erro da transcrição.
