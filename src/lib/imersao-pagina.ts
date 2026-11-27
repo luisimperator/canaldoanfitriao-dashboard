@@ -150,12 +150,10 @@ h1 .serif{font-family:"Instrument Serif",Georgia,serif;font-style:italic;font-we
   });
 }
 
-// Suporte no WhatsApp: o mesmo da LP (SUPORTE_WHATSAPP em src/lib/imersao-lp.ts).
-const SUPORTE_WHATSAPP = { texto: "(11) 92507-2167", link: "https://wa.me/5511925072167" };
-
 // Turma que já acabou (/imersao sem turma antiga em andamento, ou /i/<codigo>
 // depois do fim_domingo da turma). Mesma cara da página de espera, sem
-// contagem, sem horário, sem citar próxima turma nem replay.
+// contagem, sem horário, sem citar próxima turma nem replay. Só informativa:
+// sem WhatsApp nem contato (Gusta 27/11: lead não chega no comercial por aqui).
 export function paginaEncerrada(): Response {
   const A = "/lp/imersao";
   const titulo = "Esta turma da Imersão já foi encerrada";
@@ -191,9 +189,6 @@ main{width:100%;max-width:440px;text-align:center}
 .quem b{color:var(--tinta)}
 h1{margin:26px 0 0;font-size:clamp(26px,7vw,34px);font-weight:800;letter-spacing:-.03em;line-height:1.1}
 .texto{margin:14px auto 0;max-width:380px;color:var(--tinta2);font-size:16px}
-.wa{display:inline-flex;align-items:center;gap:8px;margin:24px 0 0;padding:14px 22px;border-radius:999px;background:#25d366;color:#fff;
-  font-weight:800;text-decoration:none;box-shadow:0 14px 30px -16px rgba(18,140,70,.7)}
-.wa:hover{filter:brightness(.96)}
 @media (prefers-reduced-motion:reduce){.aurora i{animation:none}}
 </style>
 </head>
@@ -204,8 +199,7 @@ h1{margin:26px 0 0;font-size:clamp(26px,7vw,34px);font-weight:800;letter-spacing
   <div class="foto" role="img" aria-label="Rômulo Villela"><i></i></div>
   <p class="quem">com <b>Rômulo Villela</b></p>
   <h1>${esc(titulo)}</h1>
-  <p class="texto">A Imersão Chuva de Reservas desta turma já aconteceu. Ficou com alguma dúvida? Fala com o nosso suporte.</p>
-  <a class="wa" href="${SUPORTE_WHATSAPP.link}" target="_blank" rel="noopener">Suporte no WhatsApp ${esc(SUPORTE_WHATSAPP.texto)}</a>
+  <p class="texto">A Imersão Chuva de Reservas desta turma já aconteceu.</p>
 </main>
 </body>
 </html>`;

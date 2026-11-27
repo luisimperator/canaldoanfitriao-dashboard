@@ -12,7 +12,7 @@ const turmas = [
 ];
 const em = (iso) => new Date(iso);
 const resumo = (e) =>
-  e.tipo === "turma" || e.tipo === "encerrada" ? `${e.tipo}:${e.turma.turma_data}` : e.tipo;
+  e.tipo === "turma" || e.tipo === "encerrada" || e.tipo === "redireciona" ? `${e.tipo}:${e.turma.turma_data}` : e.tipo;
 
 let ok = 0;
 function caso(nome, obtido, esperado) {
@@ -25,10 +25,19 @@ function caso(nome, obtido, esperado) {
 caso("(a) /imersao 2026-11-21T12:30Z", resumo(escolherTurmaImersao(turmas, em("2026-11-21T12:30:00Z"))), "turma:2026-11-21");
 caso("(b) /imersao 2026-11-22T17:59Z", resumo(escolherTurmaImersao(turmas, em("2026-11-22T17:59:00Z"))), "turma:2026-11-21");
 caso("(b') /imersao exatamente no fim 18:00Z", resumo(escolherTurmaImersao(turmas, em("2026-11-22T18:00:00Z"))), "turma:2026-11-21");
-// (c): depois do fim da 21 -> encerrada, NUNCA a 28 (que tem codigo)
-caso("(c) /imersao 2026-11-22T18:01Z", resumo(escolherTurmaImersao(turmas, em("2026-11-22T18:01:00Z"))), "encerrada:2026-11-21");
-caso("(c') /imersao 2026-11-28T13:00Z (durante a 28)", resumo(escolherTurmaImersao(turmas, em("2026-11-28T13:00:00Z"))), "encerrada:2026-11-21");
-caso("(c'') /imersao sem nenhuma turma antiga", resumo(escolherTurmaImersao(turmas.filter((t) => t.codigo), em("2026-11-28T13:00:00Z"))), "sem_turma");
+// (c): depois do fim da 21 -> redireciona pra 28 (turma com codigo ativa mais próxima; Gusta 27/11)
+caso("(c) /imersao 2026-11-22T18:01Z", resumo(escolherTurmaImersao(turmas, em("2026-11-22T18:01:00Z"))), "redireciona:2026-11-28");
+caso("(c') /imersao 2026-11-28T13:00Z (durante a 28)", resumo(escolherTurmaImersao(turmas, em("2026-11-28T13:00:00Z"))), "redireciona:2026-11-28");
+caso("(c'') /imersao sem nenhuma turma antiga", resumo(escolherTurmaImersao(turmas.filter((t) => t.codigo), em("2026-11-28T13:00:00Z"))), "redireciona:2026-11-28");
+caso("(c3) /imersao 2026-11-29T18:00Z (fim exato da 28)", resumo(escolherTurmaImersao(turmas, em("2026-11-29T18:00:00Z"))), "redireciona:2026-11-28");
+// encerrada só quando não sobra turma ativa no futuro
+caso("(c4) /imersao 2026-11-29T18:01Z (todas terminadas)", resumo(escolherTurmaImersao(turmas, em("2026-11-29T18:01:00Z"))), "encerrada:2026-11-28");
+const com05 = [...turmas, { turma_data: "2026-12-05", fim_domingo: "2026-12-06T18:00:00Z", ativa: true, codigo: "OutroCodigo05" }];
+caso("(c5) /imersao 2026-11-29T18:01Z com turma 05/12", resumo(escolherTurmaImersao(com05, em("2026-11-29T18:01:00Z"))), "redireciona:2026-12-05");
+caso("(c6) /imersao 2026-11-27T22:00Z com 28 e 05/12 -> a mais próxima", resumo(escolherTurmaImersao(com05, em("2026-11-27T22:00:00Z"))), "redireciona:2026-11-28");
+const inativa28 = turmas.map((t) => (t.codigo ? { ...t, ativa: false } : t));
+caso("(c7) /imersao 2026-11-27T22:00Z com a 28 desativada", resumo(escolherTurmaImersao(inativa28, em("2026-11-27T22:00:00Z"))), "encerrada:2026-11-21");
+caso("(c8) /imersao sem nenhuma turma", resumo(escolherTurmaImersao([], em("2026-11-27T22:00:00Z"))), "sem_turma");
 // (d): /i/<codigo da 28> presa à 28
 for (const iso of ["2026-11-21T12:30:00Z", "2026-11-22T18:01:00Z", "2026-11-28T13:00:00Z", "2026-11-29T17:59:00Z"]) {
   caso(`(d) /i/${CODIGO_28} ${iso}`, resumo(escolherTurmaPorCodigo(turmas, CODIGO_28, em(iso))), "turma:2026-11-28");

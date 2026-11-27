@@ -13,12 +13,11 @@ export type TurmaComCodigo = Turma & { codigo: string | null };
 const COLS = `${TURMA_COLS}, codigo`;
 const ABRE_ANTES_MS = 30 * 60 * 1000;
 
-/** Turmas antigas (codigo IS NULL), candidatas do /imersao. */
-export async function turmasSemCodigo(supabase: SupabaseClient): Promise<TurmaComCodigo[]> {
+/** Todas as turmas (com e sem codigo), candidatas do /imersao. */
+export async function turmasParaImersao(supabase: SupabaseClient): Promise<TurmaComCodigo[]> {
   const { data } = await supabase
     .from("imersao_turmas")
     .select(COLS)
-    .is("codigo", null)
     .order("turma_data", { ascending: true });
   return (data as TurmaComCodigo[] | null) ?? [];
 }
@@ -54,6 +53,15 @@ export async function responderSala(
       momento,
       destino,
     });
+
+  if (escolha.tipo === "redireciona" && escolha.turma.codigo) {
+    // /imersao sem turma antiga em andamento: manda pro link da turma com
+    // codigo ativa mais próxima, levando UTMs e dados do participante.
+    const destino = req.nextUrl.clone();
+    destino.pathname = `/i/${encodeURIComponent(escolha.turma.codigo)}`;
+    await clique("redireciona", destino.pathname);
+    return NextResponse.redirect(destino, 302);
+  }
 
   if (escolha.tipo === "encerrada") {
     await clique("encerrada", null);
