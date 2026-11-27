@@ -1,9 +1,11 @@
 // Escolha da turma dos links da sala (/imersao e /i/<codigo>). Função pura
 // (sem banco), pra testar com datas simuladas: scripts/testar-escolha-turma.ts.
 //
-// - /imersao: SÓ turmas antigas (codigo IS NULL). Turma = a de turma_data mais
-//   próxima, ativa, com fim_domingo >= agora. Sem nenhuma, mas com turma antiga
-//   já terminada: "encerrada". Nunca escolhe turma que tem codigo.
+// - /imersao: primeiro as turmas antigas (codigo IS NULL): a de turma_data mais
+//   próxima, ativa, com fim_domingo >= agora. Sem turma antiga em andamento, vai
+//   pra turma COM codigo ativa mais próxima (fim_domingo >= agora): "redireciona"
+//   (302 pro /i/<codigo>; quem compra cai no obrigado /imersao, Gusta 27/11).
+//   "encerrada" só quando não sobra nenhuma turma ativa no futuro.
 // - /i/<codigo>: presa à turma de codigo exato (case-sensitive). Sem turma com
 //   esse codigo: "nao_encontrada" (404). Depois do fim_domingo dela (ou se ela
 //   foi desativada): "encerrada", nunca outra turma.
@@ -17,19 +19,24 @@ export interface TurmaEscolhivel {
 
 export type Escolha<T> =
   | { tipo: "turma"; turma: T }
+  | { tipo: "redireciona"; turma: T }
   | { tipo: "encerrada"; turma: T }
   | { tipo: "sem_turma" }
   | { tipo: "nao_encontrada" };
 
 const terminou = (t: TurmaEscolhivel, agora: Date) => new Date(t.fim_domingo).getTime() < agora.getTime();
 
-export function escolherTurmaImersao<T extends TurmaEscolhivel>(turmas: T[], agora: Date): Escolha<T> {
-  const antigas = turmas.filter((t) => t.codigo == null);
-  const ativa = antigas
+const maisProxima = <T extends TurmaEscolhivel>(turmas: T[], agora: Date) =>
+  turmas
     .filter((t) => t.ativa && !terminou(t, agora))
     .sort((a, b) => a.turma_data.localeCompare(b.turma_data))[0];
+
+export function escolherTurmaImersao<T extends TurmaEscolhivel>(turmas: T[], agora: Date): Escolha<T> {
+  const ativa = maisProxima(turmas.filter((t) => t.codigo == null), agora);
   if (ativa) return { tipo: "turma", turma: ativa };
-  const ultima = antigas
+  const comCodigo = maisProxima(turmas.filter((t) => t.codigo != null), agora);
+  if (comCodigo) return { tipo: "redireciona", turma: comCodigo };
+  const ultima = turmas
     .filter((t) => terminou(t, agora))
     .sort((a, b) => b.turma_data.localeCompare(a.turma_data))[0];
   if (ultima) return { tipo: "encerrada", turma: ultima };
