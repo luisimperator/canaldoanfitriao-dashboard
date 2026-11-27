@@ -35,6 +35,8 @@ function ehLpPublica(p: string): boolean {
     // LP do Checklist Essencial (HTML no bucket público, ver src/app/checklist-essencial).
     p === "/checklist-essencial" ||
     p === "/checklist-essencial/app" ||
+    // Obrigado da Eduzz da Imersão: 302 pro /i/<codigo> da turma à venda.
+    p === "/imersao/obrigado" ||
     p.startsWith("/marca/") ||
     p === "/icon-192.png" ||
     p === "/t/pv" ||
