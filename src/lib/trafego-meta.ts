@@ -118,3 +118,62 @@ export function vezes(a: number, b: number | null): string {
   if (!b || b <= 0) return "—";
   return `${(a / b).toLocaleString("pt-BR", { maximumFractionDigits: 1, minimumFractionDigits: 1 })}x`;
 }
+
+// Meses pra frente (Fernando, 27/11): o que já se sabe que entra no caixa em
+// cada mês futuro e a fatura da Meta que vence nele. RPC painel_caixa_futuro
+// (migração 0158).
+export interface MesFuturo {
+  mes: string; // YYYY-MM-01
+  eduzz_liberar: number;
+  eduzz_liberar_n: number;
+  eduzz_agendado: number;
+  eduzz_agendado_n: number;
+  renovacao_potencial: number;
+  renovacao_esperada: number;
+  renovacao_n: number;
+  tmb: number;
+  tmb_n: number;
+  meta_aberta: number;
+}
+
+export interface CaixaFuturo {
+  meses: MesFuturo[];
+  taxa_renovacao: number;
+  fator_liquido: number;
+}
+
+export function normalizarFuturo(p: unknown): CaixaFuturo {
+  const j = (p ?? {}) as Partial<CaixaFuturo>;
+  return {
+    meses: (j.meses ?? []).map((m) => ({
+      mes: m.mes,
+      eduzz_liberar: num(m.eduzz_liberar),
+      eduzz_liberar_n: num(m.eduzz_liberar_n),
+      eduzz_agendado: num(m.eduzz_agendado),
+      eduzz_agendado_n: num(m.eduzz_agendado_n),
+      renovacao_potencial: num(m.renovacao_potencial),
+      renovacao_esperada: num(m.renovacao_esperada),
+      renovacao_n: num(m.renovacao_n),
+      tmb: num(m.tmb),
+      tmb_n: num(m.tmb_n),
+      meta_aberta: num(m.meta_aberta),
+    })),
+    taxa_renovacao: num(j.taxa_renovacao),
+    fator_liquido: num(j.fator_liquido),
+  };
+}
+
+/** Entradas que já se sabe que caem no mês (renovação pela taxa histórica). */
+export function entradasPrevistas(m: MesFuturo): number {
+  return m.eduzz_liberar + m.eduzz_agendado + m.renovacao_esperada + m.tmb;
+}
+
+/** "2026-11-01" + n meses → "YYYY-MM-01". */
+export function somarMeses(mes: string, n: number): string {
+  const d = new Date(Date.UTC(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)) - 1 + n, 1));
+  return d.toISOString().slice(0, 10);
+}
+
+export function diasNoMes(mes: string): number {
+  return new Date(Date.UTC(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)), 0)).getUTCDate();
+}
