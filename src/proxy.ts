@@ -34,6 +34,7 @@ function ehLpPublica(p: string): boolean {
     p === "/deck-black" || p === "/deck-gigantes" || p === "/deck-alfaiate" ||
     // LP do Checklist Essencial (HTML no bucket público, ver src/app/checklist-essencial).
     p === "/checklist-essencial" ||
+    p === "/checklist-essencial/app" ||
     p.startsWith("/marca/") ||
     p === "/icon-192.png" ||
     p === "/t/pv" ||
