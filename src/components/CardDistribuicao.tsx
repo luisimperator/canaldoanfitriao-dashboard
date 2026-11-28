@@ -218,6 +218,57 @@ export function CardDistribuicao({
         />
       </div>
 
+      {/* De onde sai o saldo do vale — a receita projetada à vista
+          (Fernando, 28/11: "alguma receita vai existir"). */}
+      {p.composicao && p.composicao.dia && (
+        <div className="mt-3 border-t border-emerald-200/70 dark:border-emerald-500/20 pt-3">
+          <div className="mb-1.5 text-[11px] font-semibold text-slate-600 dark:text-zinc-300">
+            De onde sai o saldo de {shortDate(p.composicao.dia)} (daqui a {p.composicao.dias}{" "}
+            dia{p.composicao.dias === 1 ? "" : "s"})
+          </div>
+          <div className="space-y-1 text-xs">
+            <Linha rotulo="Caixa de hoje (Inter + Eduzz + Asaas)" valor={brl(p.composicao.caixaHoje)} />
+            <Linha
+              rotulo="+ Já vendido, ainda vai cair (Eduzz + Asaas)"
+              valor={`+ ${brl(p.composicao.entradasContratadas)}`}
+            />
+            <div className="-mx-2 rounded-md bg-emerald-100/70 dark:bg-emerald-500/10 px-2 py-1">
+              <Linha
+                rotulo="+ Vendas novas projetadas"
+                valor={`+ ${brl(p.composicao.vendasNovas)}`}
+                tom="emerald"
+              />
+              <div className="mt-0.5 text-[11px] text-slate-500 dark:text-zinc-400">
+                {brl((p.entradaNovaPorDia ?? 0) * 30)}/mês ·{" "}
+                {pct(p.composicao.fatorReceitaNova)} do que a Eduzz liberou por dia nos últimos
+                60 dias ({brl(p.composicao.ritmoCreditoDia)}/dia) — conservador de propósito
+              </div>
+            </div>
+            {p.composicao.tmb > 0 && (
+              <Linha rotulo="+ TMB (média dos últimos 90 dias)" valor={`+ ${brl(p.composicao.tmb)}`} />
+            )}
+            <Linha
+              rotulo="− Gasto do dia a dia (mediana dos últimos 3 meses)"
+              valor={`− ${brl(p.composicao.rotina)}`}
+              tom="rose"
+            />
+            <Linha
+              rotulo="− Contas na provisão (Meta, Simples, boletos)"
+              valor={`− ${brl(p.composicao.saidasProvisao)}`}
+              tom="rose"
+            />
+            {p.composicao.saidasExtras > 0 && (
+              <Linha
+                rotulo="− Contas que a prévia acrescenta (abaixo)"
+                valor={`− ${brl(p.composicao.saidasExtras)}`}
+                tom="rose"
+              />
+            )}
+            <Linha rotulo={`= Saldo em ${shortDate(p.composicao.dia)}`} valor={brl(p.composicao.saldo)} forte />
+          </div>
+        </div>
+      )}
+
       {/* Prévia do mês que vem: o que entra na conta além da provisão */}
       {projecao && projecao.extras.length > 0 && (
         <div className="mt-3 border-t border-emerald-200/70 dark:border-emerald-500/20 pt-3">
@@ -275,7 +326,7 @@ export function CardDistribuicao({
           <>
             {" "}
             A fatura da Meta sem linha na provisão sai pelo ritmo de gasto dos últimos 7 dias (com
-            o imposto das últimas faturas) e o Simples pelo faturamento dos últimos 60 dias; os
+            o imposto das últimas faturas) e o Simples sobre as mesmas vendas projetadas acima; os
             dois viram valor real quando a Meta fatura e o mês fecha.
           </>
         )}
@@ -322,7 +373,7 @@ function Linha({
 }: {
   rotulo: string;
   valor: string;
-  tom?: "rose";
+  tom?: "rose" | "emerald";
   forte?: boolean;
 }) {
   return (
@@ -334,7 +385,9 @@ function Linha({
         className={`tabular-nums ${
           tom === "rose"
             ? "text-rose-600 dark:text-rose-400"
-            : forte
+            : tom === "emerald"
+              ? "font-semibold text-emerald-700 dark:text-emerald-300"
+              : forte
               ? "font-semibold text-slate-900 dark:text-zinc-100"
               : "text-slate-700 dark:text-zinc-200"
         }`}
