@@ -31,6 +31,51 @@ export interface PoliticaDistribuicao {
   entradaTmbPorDia: number;
   /** Saídas programadas vencidas que ainda não apareceram no extrato. */
   saidasVencidas: number;
+  /** Vendas novas projetadas por dia (ritmo de crédito × fator da política). */
+  entradaNovaPorDia?: number;
+  /** De onde sai o saldo do dia do vale (migração 0160). */
+  composicao?: ComposicaoVale | null;
+}
+
+export interface ComposicaoVale {
+  dia: string;
+  dias: number;
+  caixaHoje: number;
+  /** Vendido/cobrado e ainda não creditado (Eduzz + Asaas), até o vale. */
+  entradasContratadas: number;
+  /** Vendas que ainda não aconteceram, pela premissa da política. */
+  vendasNovas: number;
+  tmb: number;
+  /** Gasto do dia a dia (mediana dos últimos 3 meses). */
+  rotina: number;
+  /** Contas cadastradas na provisão (Meta, Simples, boletos). */
+  saidasProvisao: number;
+  /** Contas que a prévia do mês que vem acrescenta. */
+  saidasExtras: number;
+  saldo: number;
+  /** O que a Eduzz liberou por dia nos últimos 60 dias (100%). */
+  ritmoCreditoDia: number;
+  fatorReceitaNova: number;
+}
+
+export function parseComposicao(j: unknown): ComposicaoVale | null {
+  if (!j || typeof j !== "object") return null;
+  const c = j as Record<string, unknown>;
+  const n = (k: string) => Number(c[k] ?? 0);
+  return {
+    dia: String(c.dia ?? ""),
+    dias: n("dias"),
+    caixaHoje: n("caixa_hoje"),
+    entradasContratadas: n("entradas_contratadas"),
+    vendasNovas: n("vendas_novas"),
+    tmb: n("tmb"),
+    rotina: n("rotina"),
+    saidasProvisao: n("saidas_provisao"),
+    saidasExtras: n("saidas_extras"),
+    saldo: n("saldo"),
+    ritmoCreditoDia: n("ritmo_credito_dia"),
+    fatorReceitaNova: n("fator_receita_nova"),
+  };
 }
 
 interface RpcShape {

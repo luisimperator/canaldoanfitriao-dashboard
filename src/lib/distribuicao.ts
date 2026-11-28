@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import type { PoliticaDistribuicao } from "@/lib/politica-distribuicao";
+import { parseComposicao, type PoliticaDistribuicao } from "@/lib/politica-distribuicao";
 
 // Distribuição dos sócios: o valor fica VIVO (recalculando com o caixa real)
 // até o dia útil anterior à transferência, quando crava. Depois de cravado é
@@ -88,7 +88,7 @@ interface RpcShape {
 // A RPC chama provisao_caixa() por dentro (varredura de ~2,3s). TTL curto de
 // propósito: é dinheiro na tela e mudança de parâmetro (piso, %) tem que
 // aparecer rápido. A chave leva versão — bumpar invalida na hora do deploy.
-const getDistribuicaoCached = unstable_cache(fetchDistribuicao, ["distribuicao-v2"], {
+const getDistribuicaoCached = unstable_cache(fetchDistribuicao, ["distribuicao-v3"], {
   revalidate: 60,
   tags: ["provisao"],
 });
@@ -120,6 +120,8 @@ function parsePolitica(j: Record<string, unknown> | null): PoliticaDistribuicao 
     progressoMeta: j.progresso_meta == null ? null : Number(j.progresso_meta),
     entradaTmbPorDia: n("entrada_tmb_por_dia"),
     saidasVencidas: n("saidas_vencidas"),
+    entradaNovaPorDia: n("entrada_nova_por_dia"),
+    composicao: parseComposicao(j.composicao),
   };
 }
 
@@ -206,7 +208,7 @@ interface RpcProxima {
   politica: Record<string, unknown> | null;
 }
 
-const getDistribuicaoProximaCached = unstable_cache(fetchDistribuicaoProxima, ["distribuicao-proxima-v1"], {
+const getDistribuicaoProximaCached = unstable_cache(fetchDistribuicaoProxima, ["distribuicao-proxima-v2"], {
   revalidate: 60,
   tags: ["provisao"],
 });
