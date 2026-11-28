@@ -190,14 +190,14 @@ export async function POST(req: NextRequest) {
   // do vendedor (ex.: "breno", "flavio", "flaviov"); "teo", "facebook" ou
   // "recuperacao_unnichat" não casam com ninguém.
   let vendedorDoLink: string | null = null;
+  // Só vendedor ativo leva venda — pelo link ou como dono do lead no CRM
+  // (Fernando, 28/11: "O Diego nem tá mais na empresa").
+  const { data: ativos } = await supabase.from("sellers").select("id, name").eq("is_active", true);
+  const idsAtivos = new Set((ativos ?? []).map((s) => s.id as string));
   const utmSource = semAcento(String(utm?.source ?? utm?.utm_source ?? "").toLowerCase());
   if (utmSource) {
     const palavras = utmSource.split(/[^a-z0-9]+/).filter(Boolean);
-    const { data: sellers } = await supabase
-      .from("sellers")
-      .select("id, name")
-      .eq("is_active", true);
-    const match = (sellers ?? []).find((s) => {
+    const match = (ativos ?? []).find((s) => {
       const nome = semAcento(s.name.split(" ")[0].toLowerCase());
       return palavras.some((p) => p.startsWith(nome)); // "flavio", "flaviov"
     });
@@ -218,7 +218,7 @@ export async function POST(req: NextRequest) {
     const lead = (matches ?? []).find((l) => l.seller_id) ?? (matches ?? [])[0] ?? null;
     if (lead) {
       leadId = lead.id;
-      sellerId = vendedorDoLink ?? lead.seller_id;
+      sellerId = vendedorDoLink ?? (lead.seller_id && idsAtivos.has(lead.seller_id) ? lead.seller_id : null);
       // Adiciona tags do que a Eduzz mandou (compra) no lead, sem apagar as
       // que já existem: marca como cliente e guarda o produto comprado.
       const extra = (lead.extra ?? {}) as Record<string, unknown>;
@@ -231,6 +231,23 @@ export async function POST(req: NextRequest) {
     }
   }
   if (!sellerId) sellerId = vendedorDoLink;
+
+  // Renovação de assinatura (cobrança anual depois da primeira) não é venda
+  // de vendedor: chega com a UTM da venda original — às vezes de quem já
+  // saiu — e cairia na conta de alguém (Fernando, 28/11: "Não coloca no
+  // painel dos vendedores como venda o que for renovação de assinatura").
+  // Regra no banco: venda_eh_renovacao (migrações 0161/0162).
+  const contrato = data.contractId ?? data.contract?.id ?? null;
+  let renovacao = false;
+  if (contrato && invoiceId) {
+    const { data: ehRenov } = await supabase.rpc("venda_eh_renovacao", {
+      p_fatura: invoiceId,
+      p_contrato: String(contrato),
+      p_dia: saleDate,
+    });
+    renovacao = ehRenov === true;
+  }
+  if (renovacao) sellerId = null;
 
   const { error } = await supabase.from("sales").upsert(
     {
@@ -273,6 +290,7 @@ export async function POST(req: NextRequest) {
       vendedor,
       parcelas,
       metodo: typeof data.paymentMethod === "string" ? data.paymentMethod : (data.payment?.method ?? null),
+      renovacao,
     });
   });
   return NextResponse.json({ ok: true, action: "paid" });

@@ -142,6 +142,8 @@ export interface VendaNova {
   parcelas?: number | null;
   /** creditCard, pix, bankslip... (paymentMethod da Eduzz). */
   metodo?: string | null;
+  /** Cobrança anual de assinatura que já existia (não é venda nova). */
+  renovacao?: boolean;
 }
 
 function nomeDoMetodo(m: string | null | undefined): string | null {
@@ -165,7 +167,7 @@ export async function notificarVenda(v: VendaNova): Promise<void> {
   await pushParaTodos({
     // Fernando, 16/11: o preço do produto, não o total com juros (os juros do
     // parcelamento não vêm pra empresa), e em quantas vezes foi.
-    title: `💰 Venda nova · ${brl(v.valor)}${v.parcelas && v.parcelas > 1 ? ` em ${v.parcelas}x` : ""}`,
+    title: `${v.renovacao ? "🔁 Renovação" : "💰 Venda nova"} · ${brl(v.valor)}${v.parcelas && v.parcelas > 1 ? ` em ${v.parcelas}x` : ""}`,
     body: [v.produto, v.plataforma, nomeDoMetodo(v.metodo), v.vendedor ? `Vendedor: ${v.vendedor}` : null]
       .filter(Boolean)
       .join(" · "),
