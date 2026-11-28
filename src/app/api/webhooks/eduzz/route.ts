@@ -219,6 +219,11 @@ export async function POST(req: NextRequest) {
   const { data: ativos } = await supabase.from("sellers").select("id, name").eq("is_active", true);
   const idsAtivos = new Set((ativos ?? []).map((s) => s.id as string));
   const utmSource = semAcento(String(utm?.source ?? utm?.utm_source ?? "").toLowerCase());
+  // Venda que veio de anúncio (utm_medium paid/cpc ou público FB_QUENTE/FRIO)
+  // não é do dono do lead no CRM: só vai pra vendedor se o link for dele
+  // (Fernando, 28/11, sobre o "Airbnb do Zero" da Meta que caiu pro Flávio).
+  const utmMedium = semAcento(String(utm?.medium ?? utm?.utm_medium ?? "").toLowerCase());
+  const vendaDeAnuncio = /^(paid|cpc|ppc|fb_)/.test(utmMedium);
   if (utmSource) {
     const palavras = utmSource.split(/[^a-z0-9]+/).filter(Boolean);
     const match = (ativos ?? []).find((s) => {
@@ -242,7 +247,9 @@ export async function POST(req: NextRequest) {
     const lead = (matches ?? []).find((l) => l.seller_id) ?? (matches ?? [])[0] ?? null;
     if (lead) {
       leadId = lead.id;
-      sellerId = vendedorDoLink ?? (lead.seller_id && idsAtivos.has(lead.seller_id) ? lead.seller_id : null);
+      sellerId =
+        vendedorDoLink ??
+        (!vendaDeAnuncio && lead.seller_id && idsAtivos.has(lead.seller_id) ? lead.seller_id : null);
       // Adiciona tags do que a Eduzz mandou (compra) no lead, sem apagar as
       // que já existem: marca como cliente e guarda o produto comprado.
       const extra = (lead.extra ?? {}) as Record<string, unknown>;
