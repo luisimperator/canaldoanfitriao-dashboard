@@ -40,6 +40,28 @@ function spDay(iso: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d);
 }
 
+// Itens da fatura: o produto principal e os order bumps. A Eduzz às vezes
+// manda o bump primeiro (28/11: "Airbnb do Zero" + bump "Seu imóvel no piloto
+// automático" chegou como se a venda fosse o bump) — o principal é o item
+// com isBump = false.
+interface ItemFatura {
+  name?: string;
+  isBump?: boolean;
+  price?: { value?: number };
+}
+function itensDaFatura(data: { items?: unknown; product?: { name?: string } }): {
+  principal: string | null;
+  bumps: { nome: string; valor: number | null }[];
+} {
+  const itens = (Array.isArray(data.items) ? data.items : []) as ItemFatura[];
+  const principal = itens.find((i) => i.isBump === false) ?? itens.find((i) => !i.isBump) ?? itens[0];
+  const bumps = itens
+    .filter((i) => i !== principal && i.isBump)
+    .map((i) => ({ nome: String(i.name ?? ""), valor: i.price?.value != null ? Number(i.price.value) : null }))
+    .filter((b) => b.nome);
+  return { principal: principal?.name ?? data.product?.name ?? null, bumps };
+}
+
 export async function POST(req: NextRequest) {
   const expectedKey = process.env.EDUZZ_WEBHOOK_KEY;
   if (!expectedKey) {
@@ -144,7 +166,8 @@ export async function POST(req: NextRequest) {
           chave: `eduzz:${invoiceId}`,
           plataforma: "Eduzz",
           valor: Number(data.price?.value ?? data.items?.[0]?.price?.value ?? data.paid?.value ?? 0),
-          produto: String(data.items?.[0]?.name ?? "Imersão"),
+          produto: itensDaFatura(data).principal ?? "Imersão",
+          bumps: itensDaFatura(data).bumps,
           parcelas: Number(data.installments ?? 0) || null,
           metodo: typeof data.paymentMethod === "string" ? data.paymentMethod : (data.payment?.method ?? null),
         });
@@ -168,7 +191,8 @@ export async function POST(req: NextRequest) {
     data.paid?.value ?? data.price?.paid?.value ?? data.price?.value ?? data.value ?? 0
   );
   const saleDate = spDay(String(data.paidAt ?? data.createdAt ?? new Date().toISOString()));
-  const product = String(data.items?.[0]?.name ?? data.product?.name ?? "Canal do Anfitrião");
+  const { principal, bumps } = itensDaFatura(data);
+  const product = principal ?? "Canal do Anfitrião";
   // Preço do produto (com cupom, sem os juros do parcelamento): o que a
   // empresa recebe. amount continua com o valor pago, como no histórico.
   const preco = Number(data.price?.value ?? data.items?.[0]?.price?.value ?? 0) || null;
@@ -287,6 +311,7 @@ export async function POST(req: NextRequest) {
       plataforma: "Eduzz",
       valor: preco ?? amount,
       produto: product,
+      bumps,
       vendedor,
       parcelas,
       metodo: typeof data.paymentMethod === "string" ? data.paymentMethod : (data.payment?.method ?? null),
