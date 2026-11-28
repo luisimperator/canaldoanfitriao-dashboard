@@ -2,9 +2,10 @@ import { num, shortDate } from "@/lib/format";
 
 // ROAS por turma do lançamento pago semanal, no formato do card "ROAS total"
 // que o Foley manda no grupo (Fernando, 25/11). Os números vêm de
-// imersao_roas_turmas() no Supabase (migração 0153): ingressos + vendas do
-// pós-Imersão (sábado a segunda), menos taxas da Eduzz e imposto, contra o
-// gasto das campanhas CDR no Meta e os modelos de WhatsApp da turma.
+// imersao_roas_turmas() no Supabase (migrações 0153 e 0161): ingressos + vendas
+// do pós-Imersão (sábado 10h a segunda), menos taxas da Eduzz e imposto, contra
+// o gasto das campanhas CDR no Meta e os modelos de WhatsApp da turma. Tudo
+// troca de turma no sábado às 10h (imersao_corte), não à meia-noite.
 
 export interface RoasTurma {
   turma: string;
