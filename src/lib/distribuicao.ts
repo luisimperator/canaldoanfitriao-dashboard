@@ -170,3 +170,90 @@ async function fetchDistribuicao(): Promise<DistribuicaoStatus | null> {
 export function foiPaga(d: DistribuicaoStatus): boolean {
   return d.realizado.total > 0;
 }
+
+// ── Prévia do mês que vem ────────────────────────────────────────────────
+// Mesma conta da distribuição, na data do mês seguinte, com o que ainda não
+// está na provisão: a distribuição deste mês (como saída), a fatura da Meta
+// dos ciclos sem linha e o Simples dos meses sem linha (estimados). RPC
+// distribuicao_proxima() (migração 0159).
+
+export interface SaidaExtraProjecao {
+  dia: string;
+  valor: number;
+  tipo: "distribuicao" | "meta" | "simples" | string;
+  descricao: string;
+}
+
+export interface DistribuicaoProxima {
+  status: DistribuicaoStatus;
+  extras: SaidaExtraProjecao[];
+  /** Fatia do cofre da distribuição deste mês, já somada ao cofre da prévia. */
+  cofreExtra: number;
+}
+
+interface RpcProxima {
+  hoje: string;
+  competencia: string;
+  data_distribuicao: string;
+  data_fechamento: string;
+  valor: number;
+  valor_bruto: number;
+  arredondamento: number;
+  sobra_arredondamento: number;
+  socios: Omit<RpcSocio, "pago" | "pago_em">[] | null;
+  extras: SaidaExtraProjecao[] | null;
+  cofre_extra: number;
+  politica: Record<string, unknown> | null;
+}
+
+const getDistribuicaoProximaCached = unstable_cache(fetchDistribuicaoProxima, ["distribuicao-proxima-v1"], {
+  revalidate: 60,
+  tags: ["provisao"],
+});
+
+export async function getDistribuicaoProxima(): Promise<DistribuicaoProxima | null> {
+  return getDistribuicaoProximaCached();
+}
+
+async function fetchDistribuicaoProxima(): Promise<DistribuicaoProxima | null> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+  try {
+    const { data, error } = await admin.rpc("distribuicao_proxima");
+    if (error || !data) return null;
+    const r = data as RpcProxima;
+    const valor = Number(r.valor ?? 0);
+    return {
+      status: {
+        hoje: r.hoje,
+        competencia: r.competencia,
+        dataDistribuicao: r.data_distribuicao,
+        dataFechamento: r.data_fechamento,
+        fechado: false,
+        fechadoEm: null,
+        fechadoPor: null,
+        podeFechar: false,
+        valor,
+        valorVivo: valor,
+        valorBruto: Number(r.valor_bruto ?? 0),
+        arredondamento: Number(r.arredondamento ?? 0),
+        sobraArredondamento: Number(r.sobra_arredondamento ?? 0),
+        socios: (r.socios ?? []).map((s) => ({
+          id: s.id,
+          nome: s.nome,
+          destino: s.destino,
+          percentual: Number(s.percentual),
+          valor: Number(s.valor),
+          pago: 0,
+          pagoEm: null,
+        })),
+        realizado: { total: 0, primeiraData: null, ultimaData: null, lancamentos: [] },
+        politica: parsePolitica(r.politica),
+      },
+      extras: (r.extras ?? []).map((e) => ({ ...e, valor: Number(e.valor) })),
+      cofreExtra: Number(r.cofre_extra ?? 0),
+    };
+  } catch {
+    return null;
+  }
+}
