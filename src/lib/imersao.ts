@@ -82,7 +82,12 @@ export function ehSabado(dia: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(dia) && diaDaSemana(dia) === 6;
 }
 
-/** Hora (em SP) do sábado a partir da qual a compra já vai para a turma seguinte. */
+/**
+ * Hora (em SP) do sábado a partir da qual a compra já vai para a turma seguinte.
+ * O mesmo corte divide o custo (gasto CDR no Meta, WhatsApp) e o pós-Imersão no
+ * placar e no ROAS: imersao_corte() no Supabase (migração 0161). Mudou aqui,
+ * muda lá.
+ */
 export const HORA_CORTE_SABADO = 10;
 
 /**
