@@ -1,6 +1,5 @@
 import webpush from "web-push";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { brl } from "@/lib/format";
 
 // Web push do painel: avisa no celular/computador de quem ativou o sino no
 // menu (tabela push_assinaturas). As chaves VAPID vêm das envs
@@ -144,6 +143,37 @@ export interface VendaNova {
   metodo?: string | null;
   /** Cobrança anual de assinatura que já existia (não é venda nova). */
   renovacao?: boolean;
+  /** Order bumps da mesma fatura (o produto acima é o principal). */
+  bumps?: { nome: string; valor: number | null }[];
+}
+
+// R$ 197 / R$ 49,75 — centavo só quando tem (o brl() do painel arredonda).
+function reais(v: number): string {
+  const inteiro = Math.abs(v - Math.round(v)) < 0.005;
+  return v.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: inteiro ? 0 : 2,
+    maximumFractionDigits: inteiro ? 0 : 2,
+  });
+}
+
+// "Seu imóvel no piloto automático - Variação 1" → "Seu imóvel no piloto automático"
+function semVariacao(nome: string): string {
+  return nome.replace(/\s*-\s*Varia[çc][ãa]o\s*\d+\s*$/i, "").trim();
+}
+
+// "Airbnb do Zero (R$ 197) + order bump: Seu imóvel no piloto automático (R$ 49,75)"
+function descreverProdutos(v: VendaNova): string {
+  const bumps = (v.bumps ?? []).filter((b) => b.nome);
+  if (bumps.length === 0) return semVariacao(v.produto);
+  const totalBumps = bumps.reduce((a, b) => a + (b.valor ?? 0), 0);
+  const principalValor = v.valor - totalBumps;
+  const comValor = (nome: string, valor: number | null) =>
+    valor != null && valor > 0 ? `${semVariacao(nome)} (${reais(valor)})` : semVariacao(nome);
+  return `${comValor(v.produto, principalValor > 0 ? principalValor : null)} + order bump: ${bumps
+    .map((b) => comValor(b.nome, b.valor))
+    .join(", ")}`;
 }
 
 function nomeDoMetodo(m: string | null | undefined): string | null {
@@ -167,8 +197,8 @@ export async function notificarVenda(v: VendaNova): Promise<void> {
   await pushParaTodos({
     // Fernando, 16/11: o preço do produto, não o total com juros (os juros do
     // parcelamento não vêm pra empresa), e em quantas vezes foi.
-    title: `${v.renovacao ? "🔁 Renovação" : "💰 Venda nova"} · ${brl(v.valor)}${v.parcelas && v.parcelas > 1 ? ` em ${v.parcelas}x` : ""}`,
-    body: [v.produto, v.plataforma, nomeDoMetodo(v.metodo), v.vendedor ? `Vendedor: ${v.vendedor}` : null]
+    title: `${v.renovacao ? "🔁 Renovação" : "💰 Venda nova"} · ${reais(v.valor)}${v.parcelas && v.parcelas > 1 ? ` em ${v.parcelas}x` : ""}`,
+    body: [descreverProdutos(v), v.plataforma, nomeDoMetodo(v.metodo), v.vendedor ? `Vendedor: ${v.vendedor}` : null]
       .filter(Boolean)
       .join(" · "),
     url: "/vendas",
