@@ -136,6 +136,11 @@ export default async function VisaoGeralPage({
   const spendP = sum(noPeriodo(data.adSpend, (a) => a.date).map((a) => a.amount));
   const cac = vendasP > 0 && spendP > 0 ? spendP / vendasP : null;
   const leadsPorVenda = vendasP > 0 ? leadsP.length / vendasP : null;
+  // Quanto cada lead (e cada MQL) do período rendeu em faturamento — o mesmo
+  // faturamento do card (Eduzz + TMB + imersão). Ao lado, o custo de tráfego
+  // por lead/MQL, pra comparar (Fernando, 27/11).
+  const fatPorLead = leadsP.length > 0 ? revenueP / leadsP.length : null;
+  const custoPorLead = leadsP.length > 0 && spendP > 0 ? spendP / leadsP.length : null;
 
   const stages = funnelStages(leadsP);
 
@@ -147,6 +152,8 @@ export default async function VisaoGeralPage({
   const mqlSemVendedor = mqlsP.filter((l) => !l.sellerId).length;
   const taxaMqlP = leadsP.length > 0 ? (mqlsP.length / leadsP.length) * 100 : null;
   const mqlPerDay = mqlsP.length / diasPeriodo;
+  const fatPorMql = mqlsP.length > 0 ? revenueP / mqlsP.length : null;
+  const custoPorMql = mqlsP.length > 0 && spendP > 0 ? spendP / mqlsP.length : null;
   const mqlCap = mqlPerSeller(data, 90, today);
   // MQLs (dia em que a tag de qualificação chegou) e leads (dia em que entraram)
   // por dia, agrupados pelo conjunto de tags: o gráfico troca MQLs ↔ Leads e
@@ -253,6 +260,18 @@ export default async function VisaoGeralPage({
           label={`Leads por venda ${sufixo}`}
           value={leadsPorVenda ? num(leadsPorVenda, 1) : "—"}
           hint={`${num(leadsP.length)} leads · ${num(vendasP)} vendas`}
+        />
+        <KpiCard
+          label={`Faturamento por lead ${sufixo}`}
+          value={fatPorLead !== null ? brl(fatPorLead) : "—"}
+          tone="good"
+          hint={`${num(leadsP.length)} leads${custoPorLead !== null ? ` · custo ${brl(custoPorLead)}/lead` : ""}`}
+        />
+        <KpiCard
+          label={`Faturamento por MQL ${sufixo}`}
+          value={fatPorMql !== null ? brl(fatPorMql) : "—"}
+          tone="good"
+          hint={`${num(mqlsP.length)} MQL${custoPorMql !== null ? ` · custo ${brl(custoPorMql)}/MQL` : ""}`}
         />
         <KpiCard
           label={`Custo por venda ${sufixo}`}
