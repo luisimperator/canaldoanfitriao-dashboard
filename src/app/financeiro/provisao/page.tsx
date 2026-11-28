@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getDashboardData } from "@/lib/data";
+import { supabaseConfigured } from "@/lib/data";
 import { getProvisaoCaixa, somaAte, METODO_LABEL } from "@/lib/provisao-caixa";
 import { getSaidasInter } from "@/lib/saidas-inter";
 import { fundeDias, getProvisaoAsaas } from "@/lib/provisao-asaas";
@@ -12,6 +12,7 @@ import { SaldoEduzzForm } from "@/components/SaldoEduzzForm";
 import { SaidasProgramadas } from "@/components/SaidasProgramadas";
 import { CardDistribuicao } from "@/components/CardDistribuicao";
 import { CardRaspagem } from "@/components/CardRaspagem";
+import { SeletorDistribuicao } from "@/components/SeletorDistribuicao";
 import { getDistribuicao, getDistribuicaoProxima } from "@/lib/distribuicao";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +59,10 @@ export default async function ProvisaoPage({
   // saída do meta e tal").
   const sp = await searchParams;
   const verProximo = sp.dist === "proximo";
-  const data = await getDashboardData();
+  // A página só precisava de getDashboardData() pro aviso de demonstração — e
+  // ela traz o painel inteiro (~25 MB, grande demais pro cache), o que deixava
+  // cada abertura da Provisão com 10–20 s. O aviso só depende do Supabase.
+  const isDemo = !supabaseConfigured();
   const p = await getProvisaoCaixa();
   // distribuicao_status() já traz a política por dentro — pedir as duas coisas
   // separadas fazia a página varrer eduzz_sales_raw uma vez a mais.
@@ -82,7 +86,7 @@ export default async function ProvisaoPage({
     return (
       <div>
         <PageHeader title="Provisão de caixa" subtitle="Quanto já caiu e quando o resto libera na Eduzz" />
-        <DemoBanner show={data.isDemo} />
+        <DemoBanner show={isDemo} />
         <Card title="Sem dados">
           <p className="text-sm text-slate-600 dark:text-zinc-400">
             A provisão precisa do Supabase configurado, das vendas da Eduzz e do extrato do Inter.
@@ -210,39 +214,23 @@ export default async function ProvisaoPage({
           ← Financeiro
         </Link>
       </div>
-      <DemoBanner show={data.isDemo} />
+      <DemoBanner show={isDemo} />
 
       {politica && distrib && (
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-500 dark:text-zinc-400">Distribuição</span>
-          <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-0.5">
-            {[
-              {
-                label: `${nomeDoMes(distrib.dataDistribuicao)} (${shortDate(distrib.dataDistribuicao)})`,
-                href: "/financeiro/provisao",
-                ativo: !verProximo,
-              },
-              {
-                label: `${nomeDoMes(proximoMes(distrib.dataDistribuicao))} (prévia)`,
-                href: "/financeiro/provisao?dist=proximo",
-                ativo: verProximo,
-              },
-            ].map((o) => (
-              <Link
-                key={o.href}
-                href={o.href}
-                scroll={false}
-                className={`rounded-md px-2.5 py-1 text-xs font-semibold capitalize transition-colors ${
-                  o.ativo
-                    ? "bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 text-white"
-                    : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
-                }`}
-              >
-                {o.label}
-              </Link>
-            ))}
-          </div>
-        </div>
+        <SeletorDistribuicao
+          opcoes={[
+            {
+              label: `${nomeDoMes(distrib.dataDistribuicao)} (${shortDate(distrib.dataDistribuicao)})`,
+              href: "/financeiro/provisao",
+              ativo: !verProximo,
+            },
+            {
+              label: `${nomeDoMes(proximoMes(distrib.dataDistribuicao))} (prévia)`,
+              href: "/financeiro/provisao?dist=proximo",
+              ativo: verProximo,
+            },
+          ]}
+        />
       )}
 
       {verProximo && proxima && politicaProxima ? (
