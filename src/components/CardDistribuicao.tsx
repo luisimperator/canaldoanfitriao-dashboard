@@ -1,5 +1,5 @@
 import type { PoliticaDistribuicao } from "@/lib/politica-distribuicao";
-import type { DistribuicaoStatus } from "@/lib/distribuicao";
+import type { DistribuicaoStatus, SaidaExtraProjecao } from "@/lib/distribuicao";
 import { brl, shortDate } from "@/lib/format";
 import { FecharDistribuicao } from "@/components/FecharDistribuicao";
 
@@ -17,20 +17,29 @@ function pct(n: number): string {
 export function CardDistribuicao({
   p,
   d,
+  projecao,
 }: {
   p: PoliticaDistribuicao;
   d?: DistribuicaoStatus | null;
+  /** Prévia do mês que vem: o que ela desconta além da provisão. */
+  projecao?: { extras: SaidaExtraProjecao[]; cofreExtra: number } | null;
 }) {
   const progresso = Math.max(0, Math.min(100, p.progressoMeta ?? 0));
   const faltaMeta = Math.max(0, p.metaValor - p.cofreDepois);
   const jaPassou = p.dataDistribuicao < p.hoje;
   const cofreMandaNoColchao = p.cofreAntes >= p.pisoOperacional;
 
-  const pago = (d?.realizado.total ?? 0) > 0;
-  const cravado = Boolean(d?.fechado);
+  const pago = !projecao && (d?.realizado.total ?? 0) > 0;
+  const cravado = !projecao && Boolean(d?.fechado);
   const valor = d?.valor ?? p.aDistribuir;
   // Depois de cravado o vivo continua andando — mostra a diferença.
   const drift = cravado && d ? d.valorVivo - d.valor : 0;
+  // O caixa livre sai do menor saldo do horizonte; quando o vale não é o dia
+  // da distribuição, a linha do vale aparece pra conta fechar na tela.
+  const valeAntesDaData = p.menorCaixaDoPeriodo < p.caixaNaData - 1;
+  const faltaProColchao = Math.max(0, p.colchaoExigido - p.menorCaixaDoPeriodo);
+  const distribuicaoAnterior = projecao?.extras.find((e) => e.tipo === "distribuicao");
+  const outrasSaidas = projecao?.extras.filter((e) => e.tipo !== "distribuicao") ?? [];
 
   return (
     <div className="mb-4 rounded-xl border border-emerald-200 dark:border-emerald-500/25 bg-emerald-50/60 dark:bg-emerald-500/[0.07] p-5">
@@ -41,7 +50,9 @@ export function CardDistribuicao({
               Distribuição de {shortDate(d?.dataDistribuicao ?? p.dataDistribuicao)}
               {jaPassou && !pago && " (já passou)"}
             </span>
-            {pago ? (
+            {projecao ? (
+              <Selo tom="violet">projeção — muda todo dia</Selo>
+            ) : pago ? (
               <Selo tom="emerald">
                 paga{d?.realizado.primeiraData ? ` em ${shortDate(d.realizado.primeiraData)}` : ""}
               </Selo>
@@ -70,7 +81,24 @@ export function CardDistribuicao({
 
           {d && !pago && (
             <div className="mt-1.5 text-[11px] text-slate-500 dark:text-zinc-400">
-              {cravado ? (
+              {projecao ? (
+                <>
+                  Conta de hoje pro mês que vem, já descontando
+                  {distribuicaoAnterior ? (
+                    <>
+                      {" "}
+                      a distribuição de {shortDate(distribuicaoAnterior.dia)} (
+                      {brl(distribuicaoAnterior.valor)})
+                    </>
+                  ) : (
+                    <> a distribuição deste mês (já paga)</>
+                  )}
+                  {outrasSaidas.length > 0 && <> e as contas que ainda não estão na provisão (abaixo)</>}.
+                  Vira a prévia oficial depois de{" "}
+                  {distribuicaoAnterior ? shortDate(distribuicaoAnterior.dia) : "a distribuição deste mês"}{" "}
+                  e crava em <strong>{shortDate(d.dataFechamento)}</strong>.
+                </>
+              ) : cravado ? (
                 <>
                   {/* Quem cravou não aparece (pedido do Fernando, 09/11). */}
                   Cravada em {shortDate((d.fechadoEm ?? "").slice(0, 10))}.
@@ -163,6 +191,12 @@ export function CardDistribuicao({
           rotulo={`Caixa projetado em ${shortDate(p.dataDistribuicao)}`}
           valor={brl(p.caixaNaData)}
         />
+        {valeAntesDaData && (
+          <Linha
+            rotulo={`Menor saldo até ${shortDate(p.horizonte)} (em ${shortDate(p.diaDoVale)})`}
+            valor={brl(p.menorCaixaDoPeriodo)}
+          />
+        )}
         <Linha
           rotulo={
             cofreMandaNoColchao
@@ -172,7 +206,11 @@ export function CardDistribuicao({
           valor={`− ${brl(p.colchaoExigido)}`}
           tom="rose"
         />
-        <Linha rotulo="= Caixa livre" valor={brl(p.disponivelTotal)} forte />
+        <Linha
+          rotulo={faltaProColchao > 0 ? `= Caixa livre (faltam ${brl(faltaProColchao)} pro colchão)` : "= Caixa livre"}
+          valor={brl(p.disponivelTotal)}
+          forte
+        />
         <Linha
           rotulo={`− Cofre (${pct(p.percentualReserva)})`}
           valor={`− ${brl(p.vaiProCofre)}`}
@@ -180,12 +218,38 @@ export function CardDistribuicao({
         />
       </div>
 
+      {/* Prévia do mês que vem: o que entra na conta além da provisão */}
+      {projecao && projecao.extras.length > 0 && (
+        <div className="mt-3 border-t border-emerald-200/70 dark:border-emerald-500/20 pt-3">
+          <div className="mb-1.5 text-[11px] font-semibold text-slate-600 dark:text-zinc-300">
+            Além do que já está na provisão, a projeção desconta:
+          </div>
+          <div className="space-y-1 text-xs">
+            {projecao.extras.map((e, i) => (
+              <Linha
+                key={i}
+                rotulo={`${shortDate(e.dia)} · ${e.descricao}`}
+                valor={`− ${brl(e.valor)}`}
+                tom="rose"
+              />
+            ))}
+          </div>
+          {projecao.cofreExtra > 0 && (
+            <div className="mt-1.5 text-[11px] text-slate-500 dark:text-zinc-400">
+              O cofre já conta os {brl(projecao.cofreExtra)} que a distribuição deste mês guarda.
+            </div>
+          )}
+        </div>
+      )}
+
       <p className="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-zinc-500">
         O caixa livre é o <strong>menor saldo</strong> projetado entre{" "}
         {shortDate(p.dataDistribuicao)} e {shortDate(p.horizonte)} (o vale cai em{" "}
         {shortDate(p.diaDoVale)}, com {brl(p.menorCaixaDoPeriodo)}), já descontadas as contas
-        do período — inclusive a fatura do Meta do mês que vem. Tirar esse valor não fura o
-        colchão em nenhum dia.
+        do período — inclusive a fatura do Meta do mês que vem.{" "}
+        {faltaProColchao > 0
+          ? `Nesse cenário o saldo fica ${brl(faltaProColchao)} abaixo do colchão, então não sobra nada pra distribuir.`
+          : "Tirar esse valor não fura o colchão em nenhum dia."}
         {p.entradaTmbPorDia > 0 && (
           <>
             {" "}
@@ -207,7 +271,15 @@ export function CardDistribuicao({
             saque é o piso — guardar não custa distribuição neste momento.
           </>
         )}
-        {d && !pago && !cravado && (
+        {projecao && (
+          <>
+            {" "}
+            A fatura da Meta sem linha na provisão sai pelo ritmo de gasto dos últimos 7 dias (com
+            o imposto das últimas faturas) e o Simples pelo faturamento dos últimos 60 dias; os
+            dois viram valor real quando a Meta fatura e o mês fecha.
+          </>
+        )}
+        {d && !pago && !cravado && !projecao && (
           <>
             {" "}
             O valor crava em {shortDate(d.dataFechamento)} e a transferência sai em{" "}

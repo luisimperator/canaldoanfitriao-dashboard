@@ -12,7 +12,7 @@ import { SaldoEduzzForm } from "@/components/SaldoEduzzForm";
 import { SaidasProgramadas } from "@/components/SaidasProgramadas";
 import { CardDistribuicao } from "@/components/CardDistribuicao";
 import { CardRaspagem } from "@/components/CardRaspagem";
-import { getDistribuicao } from "@/lib/distribuicao";
+import { getDistribuicao, getDistribuicaoProxima } from "@/lib/distribuicao";
 
 export const dynamic = "force-dynamic";
 
@@ -31,26 +31,52 @@ function fimDoMes(iso: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Mesmo dia do mês seguinte (só o mês importa: é pro rótulo do botão).
+function proximoMes(iso: string): string {
+  const [y, m] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 15)).toISOString().slice(0, 10);
+}
+
 // 4º Encontro de Anfitriões — marcado na curva de caixa enquanto não passa.
 const EVENTO = { dia: "2026-07-18", label: "4º Encontro" };
 
-export default async function ProvisaoPage() {
+// "dezembro", "janeiro"… do mês de uma data ISO.
+function nomeDoMes(iso: string): string {
+  return new Date(`${iso.slice(0, 7)}-15T12:00:00Z`).toLocaleDateString("pt-BR", {
+    month: "long",
+    timeZone: "UTC",
+  });
+}
+
+export default async function ProvisaoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ dist?: string }>;
+}) {
+  // ?dist=proximo mostra a prévia da distribuição do mês que vem (Fernando,
+  // 28/11: "pra prever janeiro já contando a distribuição do próximo mês e a
+  // saída do meta e tal").
+  const sp = await searchParams;
+  const verProximo = sp.dist === "proximo";
   const data = await getDashboardData();
   const p = await getProvisaoCaixa();
   // distribuicao_status() já traz a política por dentro — pedir as duas coisas
   // separadas fazia a página varrer eduzz_sales_raw uma vez a mais.
-  const [inter, asaas, distrib] = p
+  const [inter, asaas, distrib, proxima] = p
     ? await Promise.all([
         getSaidasInter(p.hoje),
         getProvisaoAsaas(p.hoje),
         getDistribuicao(),
+        verProximo ? getDistribuicaoProxima() : Promise.resolve(null),
       ])
     : [
         { ok: false, saidas: [] as never[] },
         { ok: false, erro: undefined, saldo: 0, pagoPorDia: [], vencerPorDia: [] },
         null,
+        null,
       ];
   const politica = distrib?.politica ?? null;
+  const politicaProxima = proxima?.status.politica ?? null;
 
   if (!p) {
     return (
@@ -186,7 +212,55 @@ export default async function ProvisaoPage() {
       </div>
       <DemoBanner show={data.isDemo} />
 
-      {politica && <CardDistribuicao p={politica} d={distrib} />}
+      {politica && distrib && (
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-slate-500 dark:text-zinc-400">Distribuição</span>
+          <div className="inline-flex rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-surface p-0.5">
+            {[
+              {
+                label: `${nomeDoMes(distrib.dataDistribuicao)} (${shortDate(distrib.dataDistribuicao)})`,
+                href: "/financeiro/provisao",
+                ativo: !verProximo,
+              },
+              {
+                label: `${nomeDoMes(proximoMes(distrib.dataDistribuicao))} (prévia)`,
+                href: "/financeiro/provisao?dist=proximo",
+                ativo: verProximo,
+              },
+            ].map((o) => (
+              <Link
+                key={o.href}
+                href={o.href}
+                scroll={false}
+                className={`rounded-md px-2.5 py-1 text-xs font-semibold capitalize transition-colors ${
+                  o.ativo
+                    ? "bg-slate-900 dark:bg-zinc-100 dark:text-zinc-900 text-white"
+                    : "text-slate-500 dark:text-zinc-400 hover:text-slate-800"
+                }`}
+              >
+                {o.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {verProximo && proxima && politicaProxima ? (
+        <CardDistribuicao
+          p={politicaProxima}
+          d={proxima.status}
+          projecao={{ extras: proxima.extras, cofreExtra: proxima.cofreExtra }}
+        />
+      ) : (
+        <>
+          {verProximo && (
+            <div className="mb-2 rounded-lg border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+              Não consegui calcular a prévia do mês que vem agora. Mostrando a deste mês.
+            </div>
+          )}
+          {politica && <CardDistribuicao p={politica} d={distrib} />}
+        </>
+      )}
 
       {/* O saldo do Asaas acima não fica parado lá: a raspagem traz pro Inter. */}
       <div className="mb-4">
